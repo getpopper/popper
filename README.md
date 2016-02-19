@@ -1,4 +1,6 @@
-# The Popper Convention: Treating Academic Papers as Code Projects
+# The Popper Convention
+
+> Treating Academic Papers as Code Projects
 
 This project describes a convention for generating falsifiable 
 research. There are two main goals:
