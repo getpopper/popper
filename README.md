@@ -127,5 +127,5 @@ datasets we can use `git-lfs`.
 
 In [@dolfi_model_2014], the authors introduce a "paper model" of 
 reproducible research. We are generalizing this by introducing binary 
-reproducibility (docker images) and experiment orchestration 
-(ansible).
+reproducibility (docker images) and experiment re-execution 
+(ansible/docker).
