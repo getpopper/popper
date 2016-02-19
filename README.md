@@ -95,9 +95,6 @@ forth.
 
 ## Convention For Paper Dependencies
 
-Dependencies can be tracked via submodules (e.g. placed in the 
-`vendor/` folder).
-
 ### Executables
 
 For every execution element in the high-level script, there is a repo 
@@ -106,13 +103,21 @@ holds the output of the "pointed-to" version. In our example, we use
 git and docker. So, let's say the execution that resulted in `fig1` 
 refers to code of a `foo` codebase. Then:
 
-  * there's a git repo for foo and there's a tag/sha1 that we refer to 
-    in the paper repo.
+  * there's a git repo for `foo` and there's a tag/sha1 that we refer 
+    to in the paper repo. This can optionally be also 
+    referenced/tracked via git submodules (e.g. placed in the 
+    `vendor/` folder).
 
   * for the version that we are pointing to, there is a docker image 
     in the docker hub. E.g. if foo#tag1 is what we refer to, then 
     there's a docker image <repo>/foo:tag1. We can optionally track 
     the image's source (dockerfile) with submodules.
+
+### Datasets
+
+Input/output files should be also versioned. For small datasets, we 
+can can put them in the git repo (as in the example). For large 
+datasets we can use `git-lfs`.
 
 # Examples
 
