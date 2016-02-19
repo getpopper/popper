@@ -21,8 +21,8 @@ forth.
 
     ```
     paper/
-      figures/
-        fig1/
+      experiments/
+        exp1/
           assertions.aver
           fig1.png
           inventory
@@ -41,21 +41,22 @@ forth.
   * There is a `build.sh` command that generates the output format 
     (e.g. `PDF`).
 
-  * Every figure in the paper has a corresponding folder in the repo. 
-    For example, `fig1` referred in a paper, there is a 
-    `figures/fig1/` folder in the repo.
+  * Every experiment in the paper has a corresponding folder in the 
+    repo. For example, `exp1` referred in a paper, there is a 
+    `experiments/exp1/` folder in the repo.
 
   * Every figure in the paper has a `[source]` link in its caption 
-    that points to the URL of the corresponding figure folder in the 
-    web interface of the VCS (e.g. github).
+    that points to the URL of the corresponding experiment folder in 
+    the web interface of the VCS (e.g. github).
 
   * `notebook.ipynb` contains the notebook that, at the very least, 
-    displays the figure. It can serve as an "extended" version of what 
-    the figure in the paper displays, including other figures that 
-    contain analysis that show similar results. If the repo is checked 
-    out locally into another person's machine, it's a nice way of 
-    having readers play with the result's data (although they need to 
-    know how to instantiate a local notebook server).
+    displays the figures for the experiment. It can serve as an 
+    "extended" version of what figures in the paper display, including 
+    other figures that contain analysis that show similar results. If 
+    the repo is checked out locally into another person's machine, 
+    it's a nice way of having readers play with the result's data 
+    (although they need to know how to instantiate a local notebook 
+    server).
 
   * If desired, the experiment can be re-executed. The high-level data 
     flow is the following:
@@ -78,22 +79,24 @@ forth.
     consumed by a postprocessing script, or directly by the notebook. 
     The output can be in any format (CSVs, HDF, NetCDF, etc.).
 
-    As part of the experiment execution, the image is generated 
-    (`fig1.png` in the example).
-
   * `output.csv` is the ultimate output of the experiment and what it 
-    gets displayed in the figure.
+    gets displayed in the notebook.
 
-  * `playbook.yml`, `inventory`, `vars.yml`. Are the files for 
-    `ansible`. An important component of the playbook is that it 
-    should `assert` the environment and corroborate as much 
-    assumptions as possible (e.g. via the `assert` task). `vars.yml` 
-    contains the parametrization of the experiment.
+  * `playbook.yml`, `inventory`, `vars.yml`. Files for `ansible`. An 
+    important component of the playbook is that it should `assert` the 
+    environment and corroborate as much assumptions as possible (e.g. 
+    via the `assert` task). `vars.yml` contains the parametrization of 
+    the experiment.
 
   * `assertions.aver`. An optional file that contains assertions on 
     the output data in the _aver_ language.
 
 ## Convention For Paper Dependencies
+
+Dependencies can be tracked via submodules (e.g. placed in the 
+`vendor/` folder).
+
+### Executables
 
 For every execution element in the high-level script, there is a repo 
 that has the source code of the executables, and an artifact repo that 
@@ -102,12 +105,11 @@ git and docker. So, let's say the execution that resulted in `fig1`
 refers to code of a `foo` codebase. Then:
 
   * there's a git repo for foo and there's a tag/sha1 that we refer to 
-    in the paper repo. We can optionally track this via git 
-    submodules.
+    in the paper repo.
 
   * for the version that we are pointing to, there is a docker image 
     in the docker hub. E.g. if foo#tag1 is what we refer to, then 
-    there's a docker image <repo>/foo:tag1 . We can optionally track 
+    there's a docker image <repo>/foo:tag1. We can optionally track 
     the image's source (dockerfile) with submodules.
 
 # Examples
