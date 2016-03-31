@@ -1,0 +1,25 @@
+docker run \
+  --rm \
+  --workdir="/root" \
+  -v `pwd`/vendor/pandoc-templates:/root/.pandoc/templates \
+  -v `pwd`/vendor/latex-files:/root/texmf/tex/latex \
+  -v `pwd`/vendor/bibtools/ieee.csl:/root/ieee.csl \
+  -v `pwd`/vendor/bibfile/zotero.bib:/root/citations.bib \
+  -v `pwd`/main.md:/root/main.md \
+  -v `pwd`/figures:/root/figures \
+  -v `pwd`/out:/root/out \
+  ivotron/pandoc:1.13.2 \
+    --standalone \
+    --highlight-style tango \
+    --filter pandoc-citeproc \
+    --output=out/main.pdf main.md 2> build.log
+
+if [ $? != "0" ] ; then
+  echo "ERROR"
+  cat build.log
+  exit 1
+fi
+
+echo "SUCCESS: check out/ folder for output"
+
+exit 0
