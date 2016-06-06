@@ -17,4 +17,4 @@ Every project has 4 components: manuscript, packaging, orchestration,
 and visualization. We currently maintain templates for the following:
 
   * [Markdown, Docker, Ansible and 
-    Jupyter](/ivotron/popper/tree/markdown-docker-ansible-jupyter).
+    Jupyter](https://github.com/ivotron/popper/tree/markdown-docker-ansible-jupyter).
