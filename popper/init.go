@@ -15,36 +15,14 @@ var initCmd = &cobra.Command{
 		if len(args) != 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
-		// check for dependencies
-		if _, err := sh.Command("wget", "--version").Output(); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := sh.Command("unzip", "-v").Output(); err != nil {
-			log.Fatalln(err)
-		}
 
 		// check for git repo and popperized repo
-		if !sh.Test("dir", ".git") {
-			log.Fatalln("Current directory not a .git project.")
-		}
 		if sh.Test("file", ".popper.yml") {
-			log.Fatalln("Looks like this is already a popperized repo.")
+			log.Fatalln("Looks like this repo is already popperized (.popper.yml exists).")
 		}
 
-		// download templates
-		templates_repo := "systemslab/popper-templates"
-		templates_url := "https://github.com/" + templates_repo + "/archive/master.zip"
-
-		if _, err := sh.Command("wget", templates_url, "-O", "t.zip").CombinedOutput(); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := sh.Command("unzip", "t.zip").CombinedOutput(); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := sh.Command("mv", "popper-templates-master", ".popper_files").CombinedOutput(); err != nil {
-			log.Fatalln(err)
-		}
-		if _, err := sh.Command("rm", "t.zip").CombinedOutput(); err != nil {
+		repo, err := get_templates()
+		if err != nil {
 			log.Fatalln(err)
 		}
 
@@ -52,8 +30,12 @@ var initCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		if _, err := sh.Command("mkdir", "experiments").CombinedOutput(); err != nil {
+			log.Fatalln(err)
+		}
+
 		// mark repo as popperized
-		if _, err := sh.Command("echo", templates_repo).Command("tee", "-a", ".popper.yml").CombinedOutput(); err != nil {
+		if _, err := sh.Command("echo", repo).Command("tee", "-a", ".popper.yml").CombinedOutput(); err != nil {
 			log.Fatalln(err)
 		}
 	},
