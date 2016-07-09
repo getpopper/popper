@@ -3,6 +3,7 @@
 docker run -d \
   -v `pwd`:/home/jovyan/work \
   -p 8888:8888 \
-  --name jupyter-scipy \
+  --name jupyter-bww \
   bww/jupyter
 
+python -mwebbrowser localhost:8888 &> /dev/null
