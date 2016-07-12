@@ -6,4 +6,5 @@ docker run -d \
   --name jupyter-bww \
   bww/jupyter
 
-python -mwebbrowser localhost:8888 &> /dev/null
+python -mwebbrowser \
+  http://localhost:8888/notebooks/xray-tutorial-with-answers.ipynb &> /dev/null
