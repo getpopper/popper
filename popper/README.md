@@ -5,7 +5,7 @@ A CLI tool to help bootstrap projects that follow the
 
 ## Install
 
-See [[popper/releases]].
+See [popper/releases](https://github.com/systemslab/popper/releases).
 
 ## Usage
 
