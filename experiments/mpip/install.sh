@@ -1,11 +1,10 @@
 #!/bin/bash
 
+source ./.common.sh
+find_or_install_spack
+
 # installs dependencies of the experiment using Spack
-
-export SPACK_ROOT=/path/to/spack
-source $SPACK_ROOT/share/spack/setup-env.sh
-export PATH=$SPACK_ROOT/bin:$PATH
-
 # TODO install architecture-specific versions
 
+spack install openmpi@2.0.1
 spack install lulesh+mpip
