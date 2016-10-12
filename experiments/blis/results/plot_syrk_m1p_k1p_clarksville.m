@@ -50,7 +50,5 @@ xlab = xlabel( ax1,'problem size m = k' );
 ylab = ylabel( ax1,'GFLOPS' );
 
 
-print -dpdf figures/syrk_m1p_k1p_clarksville.pdf
-
 hold off;
 
