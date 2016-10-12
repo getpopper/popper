@@ -1,9 +1,9 @@
 clear all;
 
-run output_trmv_blis
-run output_trmv_openblas
-run output_trmv_atlas
-run output_trmv_mkl
+run trmv_blis
+run trmv_openblas
+run trmv_atlas
+%run trmv_mkl
 
 
 x_axis( :, 1 ) = data_trmv_blis( :, 1 );

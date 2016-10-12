@@ -1,9 +1,9 @@
 clear all;
 
-run output_herk_blis
-run output_herk_openblas
-run output_herk_atlas
-run output_herk_mkl
+run herk_blis
+run herk_openblas
+run herk_atlas
+%run herk_mkl
 
 
 x_axis( :, 1 ) = data_herk_blis( :, 1 );

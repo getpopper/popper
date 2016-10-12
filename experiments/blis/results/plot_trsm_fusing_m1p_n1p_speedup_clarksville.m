@@ -1,13 +1,13 @@
 clear all;
 
-run output_trsm_blis
-run output_trsm_blis_nofus_sse_4x4
-%run output_trsm_blis_nofus_sse_mxn
-%run output_trsm_blis_nofus_fpu_4x4
-run output_trsm_blis_nofus_fpu_mxn
-%run output_trsm_openblas
-%run output_trsm_atlas
-%run output_trsm_mkl
+run trsm_blis
+run trsm_openblas
+run trsm_atlas
+%run trsm_mkl
+%run trsm_blis_nofus_sse_4x4
+%run trsm_blis_nofus_fpu_mxn
+%run trsm_blis_nofus_sse_mxn
+%run trsm_blis_nofus_fpu_4x4
 
 flopscol = 4;
 msize = 4;

@@ -1,9 +1,9 @@
 clear all;
 
-run output_hemv_blis
-run output_hemv_openblas
-run output_hemv_atlas
-run output_hemv_mkl
+run hemv_blis
+run hemv_openblas
+run hemv_atlas
+%run hemv_mkl
 
 
 x_axis( :, 1 ) = data_hemv_blis( :, 1 );

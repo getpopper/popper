@@ -1,9 +1,9 @@
 clear all;
 
-run output_her2_blis
-run output_her2_openblas
-run output_her2_atlas
-run output_her2_mkl
+run her2_blis
+run her2_openblas
+run her2_atlas
+%run her2_mkl
 
 
 x_axis( :, 1 ) = data_her2_blis( :, 1 );

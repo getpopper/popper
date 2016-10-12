@@ -1,9 +1,9 @@
 clear all;
 
-run output_trmm_blis
-run output_trmm_openblas
-run output_trmm_atlas
-run output_trmm_mkl
+run trmm_blis
+run trmm_openblas
+run trmm_atlas
+%run trmm_mkl
 
 
 x_axis( :, 1 ) = data_trmm_blis( :, 1 );

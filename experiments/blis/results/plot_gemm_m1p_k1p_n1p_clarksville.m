@@ -1,9 +1,9 @@
 clear all;
 
-run output_gemm_blis
-run output_gemm_openblas
-run output_gemm_atlas
-run output_gemm_mkl
+run gemm_blis
+run gemm_openblas
+run gemm_atlas
+%run gemm_mkl
 
 
 x_axis( :, 1 ) = data_gemm_blis( :, 1 );

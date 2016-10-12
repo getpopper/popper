@@ -1,9 +1,9 @@
 clear all;
 
-run output_gemv_blis
-run output_gemv_openblas
-run output_gemv_atlas
-run output_gemv_mkl
+run gemv_blis
+run gemv_openblas
+run gemv_atlas
+%run gemv_mkl
 
 
 x_axis( :, 1 ) = data_gemv_blis( :, 1 );

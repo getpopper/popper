@@ -1,9 +1,9 @@
 clear all;
 
-run output_her2k_blis
-run output_her2k_openblas
-run output_her2k_atlas
-run output_her2k_mkl
+run her2k_blis
+run her2k_openblas
+run her2k_atlas
+%run her2k_mkl
 
 
 x_axis( :, 1 ) = data_her2k_blis( :, 1 );

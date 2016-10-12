@@ -1,9 +1,9 @@
 clear all;
 
-run output_trsv_blis
-run output_trsv_openblas
-run output_trsv_atlas
-run output_trsv_mkl
+run trsv_blis
+run trsv_openblas
+run trsv_atlas
+%run trsv_mkl
 
 
 x_axis( :, 1 ) = data_trsv_blis( :, 1 );
