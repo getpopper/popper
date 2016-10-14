@@ -1,6 +1,6 @@
 # Popper
 
-[![Join the chat at https://gitter.im/falsifiable/popper](https://badges.gitter.im/falsibility/Lobby.svg)](https://gitter.im/falsibility/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/systemslab/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Popper is a convention for generating reproducible papers. This 
 repository contains:
