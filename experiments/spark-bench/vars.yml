@@ -1,0 +1,20 @@
+---
+benchmarks:
+- name: spark-bench
+  repetitions: 2
+  measure_runtime: true
+  args: 'run-example SparkPi 100'
+  put:
+  - src: ./spark_slaves
+    dest: /tmp/slaves
+  image: ivotron/spark-bench
+  volumes:
+  - /tmp/slaves:/spark/conf/slaves
+  env:
+    SSHD_PORT: 2222
+    ADD_INSECURE_KEY: true
+    WAIT_SSHD_SECS: 5
+  env_host:
+    issdm-6:
+      MASTER: 1
+  network_mode: host

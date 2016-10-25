@@ -1,0 +1,36 @@
+---
+- name: ensure benchmarks dict exists
+  assert:
+    that:
+    - 'benchmarks is defined'
+
+- name: reset results variable that gets populated in bench.yml
+  set_fact:
+    all_results: []
+
+- name: run benchmarks
+  include: run-bench.yml benchmark={{item}}
+  with_items: '{{ benchmarks }}'
+  loop_control:
+    loop_var: bench
+
+- name: initialize results variable
+  local_action:
+    module: set_fact
+    results: {}
+  run_once: true
+
+- name: populate results variable
+  local_action:
+    module: set_fact
+    results: '{{ results |
+      combine(
+        { item: hostvars[item]["all_results"] },
+        recursive=True)  }}'
+  with_items: '{{ play_hosts }}'
+  when: 'item != "localhost"'
+  run_once: true
+
+- name: store results
+  local_action: copy content={{ results }} dest=./results.json
+  run_once: true
