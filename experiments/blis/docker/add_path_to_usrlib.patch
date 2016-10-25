@@ -1,0 +1,66 @@
+diff --git test/Makefile test/Makefile
+index 92b8c7d..98e69b4 100644
+--- test/Makefile
++++ test/Makefile
+@@ -45,7 +45,7 @@
+ #
+ 
+ .PHONY: all \
+-        blis openblas atlas mkl \
++        blis openblas atlas \
+         clean cleanx
+ 
+ 
+@@ -106,15 +106,15 @@ BLIS_LIB       := $(BLIS_LIB_PATH)/libblis.a
+ # BLAS library path(s). This is where the BLAS libraries reside.
+ BLAS_LIB_PATH  := $(HOME)/flame/lib
+ #MKL_LIB_PATH   := /opt/apps/intel/13/composer_xe_2013.2.146/mkl/lib/intel64
+-MKL_LIB_PATH   := $(HOME)/intel/mkl/lib/intel64
++#MKL_LIB_PATH   := $(HOME)/intel/mkl/lib/intel64
+ ESSL_LIB_PATH  := $(HOME)/path/to/essl/changeme
+ 
+ # OpenBLAS
+-OPENBLAS_LIB   := $(BLAS_LIB_PATH)/libopenblas.a
++OPENBLAS_LIB   := /usr/lib/libopenblas.a
+ 
+ # ATLAS
+-ATLAS_LIB      := $(BLAS_LIB_PATH)/libf77blas.a \
+-                  $(BLAS_LIB_PATH)/libatlas.a
++ATLAS_LIB      := /usr/lib/libf77blas.a \
++                  /usr/lib/libatlas.a
+ 
+ # MKL
+ MKL_LIB        := -L$(MKL_LIB_PATH) \
+@@ -169,7 +169,7 @@ LDFLAGS        += -lgfortran -lm -lpthread -fopenmp
+ #   blis openblas atlas mkl mac essl
+ #
+ #all: blis openblas atlas mkl
+-all: blis openblas mkl
++all: blis openblas atlas
+ 
+ blis: test_gemv_blis.x \
+       test_ger_blis.x \
+diff --git test/runme.sh test/runme.sh
+index edef984..593bfd7 100755
+--- test/runme.sh
++++ test/runme.sh
+@@ -10,7 +10,9 @@ l3_ops="gemm hemm herk her2k trmm trsm"
+ test_ops="${l2_ops} ${l3_ops}"
+ 
+ # Implementations to test
+-test_impls="openblas atlas mkl blis"
++test_impls="openblas atlas blis"
++
++mkdir -p `pwd`/${out_root}
+ 
+ for im in ${test_impls}; do
+ 
+@@ -20,7 +22,7 @@ for im in ${test_impls}; do
+ 		exec_name="${exec_root}_${op}_${im}.x"
+ 
+ 		# Construct the name of the output file.
+-		out_file="${out_root}_${op}_${im}.m"
++                out_file="`pwd`/${out_root}/${op}_${im}.m"
+ 
+ 		echo "Running ${exec_name} > ${out_file}"
+ 
