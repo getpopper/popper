@@ -1,0 +1,10 @@
+data_hemm_openblas(  1, 1:4 ) = [  200  200   1.010e-03  15.835 ];
+data_hemm_openblas(  2, 1:4 ) = [  400  400   4.053e-03  31.583 ];
+data_hemm_openblas(  3, 1:4 ) = [  600  600   1.339e-02  32.268 ];
+data_hemm_openblas(  4, 1:4 ) = [  800  800   3.130e-02  32.720 ];
+data_hemm_openblas(  5, 1:4 ) = [ 1000 1000   6.192e-02  32.299 ];
+data_hemm_openblas(  6, 1:4 ) = [ 1200 1200   1.076e-01  32.128 ];
+data_hemm_openblas(  7, 1:4 ) = [ 1400 1400   1.725e-01  31.811 ];
+data_hemm_openblas(  8, 1:4 ) = [ 1600 1600   2.627e-01  31.179 ];
+data_hemm_openblas(  9, 1:4 ) = [ 1800 1800   3.824e-01  30.504 ];
+data_hemm_openblas( 10, 1:4 ) = [ 2000 2000   5.281e-01  30.298 ];

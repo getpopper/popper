@@ -1,0 +1,37 @@
+mkdir -p out
+
+docker run \
+  --rm \
+  --workdir="/root" \
+  -v `pwd`/.deps/default.latex:/root/.pandoc/templates/default.latex \
+  -v `pwd`/.deps/ieee.csl:/root/ieee.csl \
+  -v `pwd`/.deps/latex-styles:/root/texmf/tex/latex \
+  -v `pwd`/.deps/pandoc-tabularize.py:/root/pandoc-tabularize.py \
+  -v `pwd`/citations.bib:/root/citations.bib \
+  -v `pwd`/paper.md:/root/paper.md \
+  -v `pwd`/figures:/root/figures \
+  -v `pwd`/../experiments:/root/experiments \
+  -v `pwd`/out:/root/out \
+  ivotron/pandoc:1.17 \
+    --standalone \
+    --highlight-style tango \
+    --bibliography citations.bib \
+    --csl ieee.csl \
+    --filter pandoc-crossref \
+    --filter pandoc-tabularize.py \
+    --variable header-includes="\usepackage{booktabs}" \
+    --output=out/paper.pdf \
+    paper.md 2> build.log
+
+if [ $? != "0" ] ; then
+  echo "ERROR"
+  cat build.log
+  rm build.log
+  exit 1
+fi
+
+mv out/paper.pdf .
+rm -r out
+rm build.log
+
+exit 0

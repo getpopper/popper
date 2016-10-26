@@ -1,0 +1,4 @@
+docker run --rm \
+  -v `pwd`:/home/jovyan/work \
+  ivotron/jupyter-bww \
+  nbconvert --stdout --execute xray-tutorial-with-answers.ipynb &> /dev/null

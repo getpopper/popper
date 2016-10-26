@@ -1,0 +1,105 @@
+---
+- name: check that required variables are defined
+  assert:
+    that: 'bench is defined and all_results is defined'
+
+- name: pull image
+  command: 'docker pull {{ bench.image }}'
+
+# upload files
+- name: upload files
+  copy:
+    src: '{{ item.src }}'
+    dest: '{{ item.dest }}'
+  with_items: '{{ bench.put }}'
+
+- name: initialize docker_flags variable
+  set_fact:
+    docker_flags: '--name={{ bench.name }}'
+
+# remove if container exists or is running
+- name: stop container
+  command: 'docker stop {{ bench.name }}'
+  ignore_errors: true
+- name: remove container
+  command: 'docker rm {{ bench.name }}'
+  ignore_errors: true
+
+# environment
+- name: add environment to docker_flags
+  set_fact:
+    docker_flags: '{{ docker_flags}} -e {{ item.key }}="{{ item.value }}"'
+  with_dict: '{{ bench.env }}'
+  when: 'bench.env is defined'
+
+# host-specific environment
+- name: check if there is a host-specific environment
+  set_fact:
+    docker_flags: '{{ docker_flags }} -e {{ item.key }}="{{ item.value }}"'
+  when:
+  - 'bench.env_host is defined'
+  - 'ansible_hostname in bench.env_host'
+  with_dict: '{{ bench.env_host[ansible_hostname] | default({}) }}'
+
+# network_mode
+- name: add network mode to docker_flags
+  set_fact:
+    docker_flags: '{{ docker_flags }} --net={{ bench.network_mode }}'
+  when: 'bench.network_mode is defined'
+
+# ports
+- name: add ports to docker_flags
+  set_fact:
+    docker_flags: '{{ docker_flags }} -p {{ item }}'
+  with_items: '{{ bench.ports | default([]) }}'
+
+# volumes
+- name: add volumes args
+  set_fact:
+    docker_flags: '{{ docker_flags }} -v {{ item }}'
+  with_items: '{{ bench.volumes | default([]) }}'
+
+# container arguments
+- name: set args value
+  set_fact:
+    container_args: '{{ bench.args | default("") }}'
+
+# run
+- name: run container
+  shell: docker run --rm {{ docker_flags }} {{ bench.image }} {{ container_args }}
+  register: docker_output
+  with_sequence: count='{{bench.repetitions}}'
+
+# process results
+- name: add result to all repetitions variable
+  set_fact:
+    all_repetitions: '{{ (all_repetitions | default([])) + (item.stdout | from_json)) }}'
+  with_items: '{{ docker_output.results }}'
+  when: 'bench.measure_runtime == false | default(false)'
+
+- name: measure runtime if requested
+  set_fact:
+    all_repetitions: '{{ (all_repetitions | default([])) + [{
+                           "name": bench.args,
+                           "result": item.delta,
+                           "lower_is_better": true,
+                           "units": "timestamp"
+                         }]
+                      }}'
+  with_items: '{{ docker_output.results }}'
+  when:
+  - 'item.stdout != ""'
+  - 'bench.measure_runtime == true | default(false)'
+
+- name: add results to global variable
+  set_fact:
+    all_results: '{{
+      all_results | union(
+        [{
+          "id": bench.name,
+          "repetitions": bench.repetitions,
+          "tests": all_repetitions
+        }]
+      )
+    }}'
+  when: 'all_repetitions is defined'

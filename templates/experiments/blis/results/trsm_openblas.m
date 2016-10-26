@@ -1,0 +1,10 @@
+data_trsm_openblas(  1, 1:4 ) = [  200  200   1.643e-03   4.869 ];
+data_trsm_openblas(  2, 1:4 ) = [  400  400   2.490e-03  25.707 ];
+data_trsm_openblas(  3, 1:4 ) = [  600  600   8.138e-03  26.542 ];
+data_trsm_openblas(  4, 1:4 ) = [  800  800   1.844e-02  27.772 ];
+data_trsm_openblas(  5, 1:4 ) = [ 1000 1000   3.573e-02  27.989 ];
+data_trsm_openblas(  6, 1:4 ) = [ 1200 1200   6.173e-02  27.992 ];
+data_trsm_openblas(  7, 1:4 ) = [ 1400 1400   9.800e-02  28.001 ];
+data_trsm_openblas(  8, 1:4 ) = [ 1600 1600   1.447e-01  28.307 ];
+data_trsm_openblas(  9, 1:4 ) = [ 1800 1800   2.084e-01  27.991 ];
+data_trsm_openblas( 10, 1:4 ) = [ 2000 2000   2.896e-01  27.621 ];

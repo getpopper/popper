@@ -1,0 +1,8 @@
+.DS_Store
+*.sw?
+.ropeproject
+.ipynb_checkpoints
+experiments/jupyter-bww/air-temperature.png
+experiments/jupyter-bww/another-copy.nc
+experiments/jupyter-bww/datapackages/air-temperature/data/
+experiments/jupyter-bww/in-celsius.nc

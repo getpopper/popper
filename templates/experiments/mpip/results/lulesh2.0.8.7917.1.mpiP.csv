@@ -1,0 +1,2 @@
+Rank,AppTime,MPITime,MPI-pct,Allreduce_Count,Allreduce_Sum,Reduce_Count,Reduce_Sum,Isend_Count,Isend_Sum,Reduce_Count,Reduce_MPI-pct,Irecv_Count,Irecv_MPI-pct,Barrier_Count,Barrier_MPI-pct,Isend_Count,Isend_MPI-pct,Allreduce_Count,Allreduce_MPI-pct,Wait_Count,Wait_MPI-pct,Waitall_Count,Waitall_MPI-pct
+AllRanks,0.779,0.555,71.17,72,576,8,64,21,728,8,0.62,11,0.00,8,3.56,21,0.01,72,35.92,11,0.03,248,0.08
