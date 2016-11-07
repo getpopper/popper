@@ -9,11 +9,17 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var showVersion bool
+
 var RootCmd = &cobra.Command{
 	Use:   "popper",
 	Short: "",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		if showVersion {
+			fmt.Println(versionMsg())
+			os.Exit(0)
+		}
 		fmt.Printf("%s\n", cmd.UsageString())
 	},
 }
@@ -28,9 +34,11 @@ func main() {
 func get_templates() (org_repo_branch string, err error) {
 	// check for dependencies
 	if _, err := sh.Command("wget", "--version").Output(); err != nil {
+		fmt.Println("Can't find wget, please install it.")
 		log.Fatalln(err)
 	}
 	if _, err := sh.Command("unzip", "-v").Output(); err != nil {
+		fmt.Println("Can't find unzip, please install it.")
 		log.Fatalln(err)
 	}
 
@@ -40,12 +48,6 @@ func get_templates() (org_repo_branch string, err error) {
 	branch := "master"
 	url := "https://github.com/" + org + "/" + repo + "/archive/" + branch + ".zip"
 
-	if !sh.Test("dir", ".git") {
-		log.Fatalln("Current directory not the root of a .git project.")
-	}
-	if _, err = sh.Command("rm", "-fr", ".popper_files").CombinedOutput(); err != nil {
-		return
-	}
 	if _, err = sh.Command("wget", url, "-O", "t.zip").CombinedOutput(); err != nil {
 		return
 	}
@@ -60,4 +62,10 @@ func get_templates() (org_repo_branch string, err error) {
 	}
 
 	return org + "/" + repo + "/branch", nil
+}
+
+func init() {
+	RootCmd.Flags().BoolVarP(
+		&showVersion, "version", "v", false,
+		"Show version information and quit")
 }
