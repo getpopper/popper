@@ -26,10 +26,6 @@ var initCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		if _, err := sh.Command("echo", ".popper_files").Command("tee", "-a", ".gitignore").CombinedOutput(); err != nil {
-			log.Fatalln(err)
-		}
-
 		if _, err := sh.Command("mkdir", "experiments").CombinedOutput(); err != nil {
 			log.Fatalln(err)
 		}
