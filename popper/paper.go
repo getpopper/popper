@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
 )
 
@@ -33,6 +34,9 @@ var paperAddCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
 			log.Fatalln("This command takes 1 argument.")
+		}
+		if !sh.Test("dir", ".git") {
+			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
 		addTemplate("paper", args[0], "paper")
 	},

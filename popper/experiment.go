@@ -8,15 +8,15 @@ import (
 )
 
 func checkTemplateFolderExists(template_type string) {
-	if !sh.Test("dir", ".popper_files/"+template_type) {
-		log.Fatalln("Can't find '.popper_files/" + template_type + "'." +
+	if !sh.Test("dir", popperFolder+"/"+template_type) {
+		log.Fatalln("Can't find '" + popperFolder + "/" + template_type + "'." +
 			"This command must be executed from the project's root folder.")
 	}
 }
 
 func listTemplates(template_type string) {
 	checkTemplateFolderExists(template_type)
-	if err := sh.Command("ls", "-1", ".popper_files/"+template_type).Run(); err != nil {
+	if err := sh.Command("ls", "-1", popperFolder+"/"+template_type).Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -28,7 +28,7 @@ func addTemplate(template_type string, template_name string, folder string) {
 		log.Fatalln("Folder " + folder + " already exists.")
 	}
 
-	template := ".popper_files/" + template_type + "/" + template_name
+	template := popperFolder + "/" + template_type + "/" + template_name
 
 	if _, err := sh.Command("cp", "-r", template, folder).CombinedOutput(); err != nil {
 		log.Fatalln(err)
@@ -63,10 +63,8 @@ var experimentAddCmd = &cobra.Command{
 		if len(args) != 2 {
 			log.Fatalln("This command takes 2 arguments.")
 		}
-		if !sh.Test("dir", "experiments") {
-			if _, err := sh.Command("mkdir", "experiments").CombinedOutput(); err != nil {
-				log.Fatalln(err)
-			}
+		if !sh.Test("dir", ".git") {
+			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
 		addTemplate("experiments", args[0], "experiments/"+args[1])
 	},
