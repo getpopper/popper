@@ -29,12 +29,12 @@ var serviceCmd = &cobra.Command{
 	},
 }
 
-type Experiment struct {
+type ExperimentStatus struct {
 	Name   string `json:"name"`
 	Status string `json:"status"`
 }
 
-var repos = map[string]map[string]*Experiment{}
+var repos = map[string]map[string]*ExperimentStatus{}
 
 func handleExperiment(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -44,7 +44,7 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 
 	switch r.Method {
 	case "GET":
-		experiment := new(Experiment)
+		experiment := new(ExperimentStatus)
 
 		repo, ok := repos[repoId]
 		if !ok {
@@ -70,7 +70,7 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprint(w, string(outgoingJSON))
 
 	case "POST":
-		experiment := new(Experiment)
+		experiment := new(ExperimentStatus)
 		decoder := json.NewDecoder(r.Body)
 		error := decoder.Decode(&experiment)
 		if error != nil {
@@ -81,7 +81,7 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 		repo, ok := repos[repoId]
 		if !ok {
 			log.Println("Didn't find repo " + repoId + "; adding it")
-			repos[repoId] = map[string]*Experiment{}
+			repos[repoId] = map[string]*ExperimentStatus{}
 			repo = repos[repoId]
 		}
 		experiment.Name = expId
