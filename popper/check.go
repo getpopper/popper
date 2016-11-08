@@ -59,7 +59,7 @@ func getExperiment() *Experiment {
 }
 
 func check(experiment *Experiment) {
-	experiment.Status = "OK"
+	experiment.Status = "ok"
 
 	// check code dependencies
 	if experiment.Code != nil {
@@ -68,7 +68,7 @@ func check(experiment *Experiment) {
 				"git", "ls-remote", "--exit-code", repo).CombinedOutput()
 			if err != nil {
 				fmt.Println("Can't execute git ls-remote on " + repo)
-				experiment.Status = "FAIL"
+				experiment.Status = "fail"
 				return
 			}
 		}
@@ -78,20 +78,20 @@ func check(experiment *Experiment) {
 	for _, t := range [2]string{"run.sh", "validate.sh"} {
 		if !sh.Test("f", t) {
 			fmt.Println("Can't find file " + t)
-			experiment.Status = "FAIL"
+			experiment.Status = "fail"
 			return
 		}
 		stdout, err := sh.Command("./" + t).Output()
 
 		if err != nil {
 			fmt.Println("Got failure: " + err.Error())
-			experiment.Status = "FAIL"
+			experiment.Status = "fail"
 			return
 		}
 
-		if experiment.Status == "OK" && t == "validate.sh" {
+		if experiment.Status == "ok" && t == "validate.sh" {
 			if strings.ToLower(strings.TrimSpace(string(stdout))) == "true" {
-				experiment.Status = "VALID"
+				experiment.Status = "gold"
 			}
 		}
 	}
