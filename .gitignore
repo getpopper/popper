@@ -1,3 +1,5 @@
 *.sw?
 *.DS_Store
 wiki
+popper/vendor
+popper/app
