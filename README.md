@@ -6,10 +6,10 @@ Popper is a convention for generating reproducible papers. This
 repository contains:
 
   * A [CLI tool](popper/) to help bootstrap research articles that 
-    adhere to the convention by re-using [experiment templates](https://github.com/ivotron/popper-templates).
+    adhere to the convention.
   * [Documentation](https://github.com/ivotron/popper/wiki/Getting-Started) 
     about the convention.
-  * [Experiment templates](templates/) that can be retrieved using the
+  * [Experiment re-usable templates](templates/) that can be retrieved using the
     CLI tool (or by cloning this repo).
 
 We are currently working with researchers in many scientific domains
