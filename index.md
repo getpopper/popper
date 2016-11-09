@@ -22,11 +22,10 @@ experiment. To learn more about Popper you can:
         templates.
       * [Display the status][badge] of an experiment using a badge.
 
-We are currently working with researchers in this domain to include 
-more experiments to our [templates 
-repository](https://github.com/systemslab/popper). If you are 
-interested in contributing one but are not certain on how to start, 
-please feel free to contact us.
+We are currently working with researchers in many domains to extend 
+our [templates repository](https://github.com/systemslab/popper) with 
+more experiments. If you are interested in contributing but are not 
+certain on how to start, please feel free to contact us.
 
 ### About Popper
 
