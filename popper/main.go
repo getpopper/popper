@@ -24,8 +24,6 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-var popperFolder = os.Getenv("HOME") + "/.popper"
-
 func main() {
 	if err := RootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -33,31 +31,23 @@ func main() {
 	}
 }
 
-func get_templates() (org_repo_branch string, err error) {
-	// check for dependencies
-	if _, err := sh.Command("wget", "--version").Output(); err != nil {
-		fmt.Println("Can't find wget, please install it.")
-		log.Fatalln(err)
-	}
-	if _, err := sh.Command("unzip", "-v").Output(); err != nil {
-		fmt.Println("Can't find unzip, please install it.")
-		log.Fatalln(err)
-	}
+var popperFolder = os.Getenv("HOME") + "/.popper"
 
+func get_templates() (org_repo_branch string, err error) {
 	// download or update templates
 	org := "systemslab"
 	repo := "popper"
 	branch := "master"
-	url := "https://github.com/" + org + "/" + repo + "/archive/" + branch + ".zip"
+	url := "https://github.com/" + org + "/" + repo
 
 	if sh.Test("d", popperFolder) {
 		if _, err = sh.Command("git", "-C", popperFolder, "pull").CombinedOutput(); err != nil {
-			log.Fatalln(err)
 			fmt.Println("Remove the " + popperFolder + " folder and try again")
+			log.Fatalln(err)
 		}
 		if _, err = sh.Command("git", "-C", popperFolder, "submodule", "update", "--init", "--recursive").CombinedOutput(); err != nil {
-			log.Fatalln(err)
 			fmt.Println("Remove the " + popperFolder + " folder and try again")
+			log.Fatalln(err)
 		}
 	} else {
 		if _, err = sh.Command("git", "clone", "--recursive", url, popperFolder).CombinedOutput(); err != nil {
