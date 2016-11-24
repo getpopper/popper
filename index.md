@@ -49,3 +49,4 @@ Laboratories, and Lawrence Livermore National Laboratory.
 [badge]: https://github.com/systemslab/popper/wiki/Popper-Badge
 [cli]: https://github.com/systemslab/popper/wiki/Popper-Data-Science#initialize-a-popper-repository
 [pubs]: {{ site.baseurl }}/pubs
+[blog]: {{ site.baseurl }}/blog
