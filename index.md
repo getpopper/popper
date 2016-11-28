@@ -10,7 +10,7 @@ academic article's following a
 researchers to automate the re-execution and validation of an 
 experiment. To learn more about Popper you can:
 
-  * Read the [overview][overview].
+  * Read the [overview][overview] or our [blog][blog].
   * Download our [publications][pubs].
   * [Email us](mailto:ivo@cs.ucsc.edu), 
     [chat](https://gitter.im/systemslab/popper) or [open an 

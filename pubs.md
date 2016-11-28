@@ -14,11 +14,11 @@ On The Popper Convention:
 
 Articles following the convention:
 
-  * Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
-    Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
-    Arpaci-Dusseau. _Characterizing and Reducing Cross-Platform 
-    Performance Using OS-level Virtualization_, Parallel and 
-    Distributed Processing Symposium Workshop, 2016 
+  * Ivo Jimenez, Carlos Maltzahn, Jay Lofstead, Kathryn Mohror, Andrea 
+    Arpaci-Dusseau and Remzi Arpaci-Dusseau. _Characterizing and 
+    Reducing Cross-Platform Performance Using OS-level 
+    Virtualization_, Parallel and Distributed Processing Symposium 
+    Workshop, 2016 
     \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
 
 
