@@ -19,12 +19,16 @@ On The Popper Convention:
 
 Articles following the convention:
 
-  * Ivo Jimenez, Carlos Maltzahn, Jay Lofstead, Kathryn Mohror, Andrea 
-    Arpaci-Dusseau and Remzi Arpaci-Dusseau. _Characterizing and 
+  * Ivo Jimenez et al., _Characterizing and 
     Reducing Cross-Platform Performance Using OS-level 
     Virtualization_, Parallel and Distributed Processing Symposium 
-    Workshop, 2016 
-    \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
+    Workshop, 2016 \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
+
+  * Josh P. Hacker et al., _A containerized mesoscale model and 
+    analysis toolkit to accelerate classroom learning, collaborative 
+    research, and uncertainty quantification_,” Bull. Amer. Meteor. 
+    Soc., Oct. 2016. \[[pdf][bamspdf]\] \[[github][bamsgh]\].
+
 
 
 [techreport]: https://github.com/systemslab/popper-paper/raw/techreport/paper/paper.pdf
@@ -33,3 +37,5 @@ Articles following the convention:
 [poppergh]: https://github.com/systemslab/popper-paper/
 [login]: https://www.usenix.org/publications/login/winter-2016-vol-41-no-4/jimenez
 [poppergh-login]: https://github.com/systemslab/popper-paper/tree/login
+[bamspdf]: http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-15-00255.1
+[bamsgh]: https://github.com/ivotron/bams-popper
