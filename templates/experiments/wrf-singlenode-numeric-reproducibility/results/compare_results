@@ -1,0 +1,37 @@
+#!/usr/bin/env python
+import os
+import filecmp
+import itertools
+
+folder = "."
+machines = os.listdir(folder)
+
+if not machines:
+    raise Exception("No output folders found")
+
+if len(machines) == 1:
+    raise Exception("Only 1 output folder found")
+
+for pair in itertools.combinations(machines, 2):
+    # every pairwise combination
+
+    for thrds in [2**i for i in range(0, 5)]:
+        # threads from 1-16
+
+        if (not os.path.isdir(folder + '/' + pair[0] + '/' + str(thrds)) or
+                not os.path.isdir(folder + '/' + pair[1] + '/' + str(thrds))):
+            continue
+
+        files = os.listdir(folder + '/' + pair[0] + '/' + str(thrds) + '/')
+
+        if len(files) != 13:
+            raise Exception("Expecting 13 files, found " + str(len(files)))
+
+        for f in files:
+            f1 = folder + '/{}/{}/{}'.format(pair[0], str(thrds), f)
+            f2 = folder + '/{}/{}/{}'.format(pair[1], str(thrds), f)
+            if not filecmp.cmp(f1, f2):
+                # 'Error: ' + f1 + ' not equal to ' + f2)
+                print("false")
+                exit(0)
+print("true")

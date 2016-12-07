@@ -1,0 +1,9 @@
+---
+wrf_parameters:
+- param1
+- param2
+threads: [4]
+data_containers:
+- bigwxwrf/geog
+- bigwxwrf/sandy
+remove_data_containers: true
