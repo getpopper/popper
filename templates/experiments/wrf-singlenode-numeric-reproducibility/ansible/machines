@@ -1,2 +1,3 @@
 localhost ansible_connection=local
+#your.uni.edu ansible_user=youruser
 
