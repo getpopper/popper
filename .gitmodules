@@ -1,0 +1,6 @@
+[submodule ".vendor/docker-bench"]
+	path = templates/vendor/docker-bench
+	url = https://github.com/ivotron/docker-bench
+[submodule "templates/vendor/baseliner"]
+	path = templates/vendor/baseliner
+	url = https://github.com/ivotron/baseliner
