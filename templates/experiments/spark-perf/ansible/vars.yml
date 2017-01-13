@@ -1,6 +1,9 @@
 ---
 remote_results_path: "/tmp/results/{{ lookup('pipe', 'date +%s') }}"
 
+enable_monitoring: true
+leave_monitor_running: true
+
 benchmarks:
 - name: spark-perf-ml
   image: ivotron/spark-perf:1.6.3
