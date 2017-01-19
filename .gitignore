@@ -3,3 +3,7 @@
 wiki
 popper/vendor
 popper/app
+.ropeproject/
+.sass-cache/
+templates/experiments/linux-cgroups/vagrant/.vagrant
+templates/experiments/linux-cgroups/vagrant/debs/*deb
