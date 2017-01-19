@@ -1,0 +1,11 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "debian/jessie64"
+
+  # Enable provisioning with a shell script.
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo dpkg -i /vagrant/debs/*.deb
+  SHELL
+end
