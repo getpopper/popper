@@ -2,7 +2,7 @@
 layout: default
 ---
 
-![]({{ site.baseurl }}/images/devops_approach.png)
+![]({{ site.baseurl }}/images/popper.gif)
 
 _Popper_ is a convention for conducting experiments and writing 
 academic article's following a 
