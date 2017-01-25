@@ -86,8 +86,9 @@ echo "Now building the kernel, this will take a while..."
 time fakeroot make-kpkg --jobs "$(getconf _NPROCESSORS_ONLN)" --append-to-version "$VERSION_POSTFIX" --initrd kernel_image
 time fakeroot make-kpkg --jobs "$(getconf _NPROCESSORS_ONLN)" --append-to-version "$VERSION_POSTFIX" --initrd kernel_headers
 
-PACKAGE_NAME="$(ls -m1 linux-image*.deb)"
-HEADERS_PACKAGE_NAME="$(ls -m1 linux-headers*.deb)"
+PACKAGE_NAME="$(ls -m1 /linux-image*.deb)"
+HEADERS_PACKAGE_NAME="$(ls -m1 /linux-headers*.deb)"
 echo "Congratulations! You just build a linux kernel."
 echo "Use the following command to install it: dpkg -i $PACKAGE_NAME $HEADERS_PACKAGE_NAME"
-popd
+
+mv /*.deb /linux/
