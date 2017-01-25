@@ -1,4 +1,6 @@
 .DS_Store
 *.sw?
+.ropeproject
 .sass-cache/
+templates
 wiki
