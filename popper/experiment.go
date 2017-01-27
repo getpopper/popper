@@ -26,11 +26,6 @@ set -e
 exit 0
 `)
 
-var popperYml = []byte(`code: []
-run: docker
-validate: docker
-`)
-
 func checkTemplateFolderExists(template_type string) {
 	if !sh.Test("dir", popperFolder+"/templates/"+template_type) {
 		log.Fatalln("Can't find '" + popperFolder + "/templates/" + template_type + "'." +
@@ -75,17 +70,23 @@ func initExperiment(name string) {
 	if err := ioutil.WriteFile("experiments/"+name+"/validate.sh", validateSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
-	if err := ioutil.WriteFile("experiments/"+name+"/.popper.yml", popperYml, 0644); err != nil {
-		log.Fatalln(err)
-	}
 
 	// add README
+	readme := "# " + name + "\n\n"
+
+	// add Popper badge link, only if we can get repo info
 	usr, repo, err := getRepoInfo()
-	if err != nil {
-		log.Fatalln(err)
+	if err == nil {
+		badgeUrl := "http://popperci.falsifiable.us/repos/" +
+			usr + "/" + repo + "/" + name + "/status.svg"
+
+		mdLink := "[![Popper Status](" + badgeUrl + ")](http://falsifiable.us)\n"
+
+		readme = readme + mdLink
 	}
-	readme := []byte("# " + name + "\n\n[![Popper Status](http://popper-status.falsifiable.us/repos/" + usr + "/" + repo + "/" + name + "/status.svg)](http://falsifiable.us)\n")
-	if err := ioutil.WriteFile("experiments/"+name+"/README.md", readme, 0644); err != nil {
+
+	err = ioutil.WriteFile("experiments/"+name+"/README.md", []byte(readme), 0644)
+	if err != nil {
 		log.Fatalln(err)
 	}
 
@@ -114,17 +115,22 @@ var experimentListCmd = &cobra.Command{
 }
 
 var experimentAddCmd = &cobra.Command{
-	Use:   "add <template> <name>",
+	Use:   "add <template> [<name>]",
 	Short: "Add an experiment to the project",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 2 {
-			log.Fatalln("This command takes 2 arguments.")
+		expname := ""
+		if len(args) == 1 {
+			expname = args[0]
+		} else if len(args) == 2 {
+			expname = args[1]
+		} else {
+			log.Fatalln("See usage.")
 		}
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
-		addTemplate("experiments", args[0], "experiments/"+args[1])
+		addTemplate("experiments", args[0], "experiments/"+expname)
 	},
 }
 
