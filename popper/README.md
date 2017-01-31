@@ -5,7 +5,11 @@ A CLI tool to help bootstrap projects that follow the
 
 ## Install
 
-See [popper/releases](https://github.com/systemslab/popper/releases).
+Download from 
+[popper/releases](https://github.com/systemslab/popper/releases). Note 
+that we have only tested on OSX and Linux (Windows coming soon). Once 
+downloaded, uncompress and place the binary in a folder that is 
+included in your `$PATH` (e.g. `/usr/bin`).
 
 ## Usage
 
