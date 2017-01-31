@@ -91,11 +91,13 @@ Once you have a repo (we'll assume this repo resides at
 ```bash
 $ cd mypaper
 $ mkdir -p experiments/kernel-experiment
-$ git submodule add https://github.com/$youruser/linux experiments/kernel-experiment/linux
+$ git submodule add --depth 1 https://github.com/$youruser/linux experiments/kernel-experiment/linux
 $ git commit -m "adding my kernel repository as a submodule"
 ```
 
-To learn more about submodules, see 
+The `--depth 1` flag passed to the `submodule add` subcommand 
+instructs git to make the submodule shallow so that the whole repo 
+isn't pulled in. To learn more about submodules, see 
 [here](https://github.com/blog/2104-working-with-submodules), 
 [here](https://git-scm.com/book/en/v2/Git-Tools-Submodules) or 
 [here](https://medium.com/@porteneuve/mastering-git-submodules-34c65e940407).
