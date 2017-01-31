@@ -11,9 +11,9 @@ template.
 
 A typical exploration involving Linux consists of code that implements 
 one or more new features in the kernel, and then run experiments in 
-order to test a hypothesis. In this case, Popper is followed to manage 
-and track the changes done to the experiment, analysis and validation 
-of results.
+order to test a hypothesis. In this case, 
+[Popper](http://falsifiable.us) is followed to manage and track the 
+changes done to the experiment, analysis and validation of results.
 
 Requirements:
 
@@ -191,17 +191,36 @@ To learn more about Vagrant, look at
 
 The scripts that we created in the previous sections are part of a 
 Popper template, so one can avoid writing them from scratch by quickly 
-importing the template to a repository. To do so, install the Popper 
-CLI and, assuming you have already create the `mypaper` repo (first 
-[subsection](#gitrepo) above), we do:
+importing the template to a repository. To do so, [install the 
+Popper]() CLI and, assuming you have already create the `mypaper` repo 
+(first [subsection](#gitrepo) above), we do:
 
 ```bash
 $ popper init
-$ popper experiment add linux-cgroups
+$ popper experiment add linux-cgroups my-linux-exp
 ```
 
 You can ignore for now why this template is named `linux-cgroups`. 
-(after reading [part 
-2](http://falsifiable.us/popper-for-linux-research-part-2) this will 
-make more sense). Next, add the submodule for the Linux repository as 
-[we did in above](#submodule).
+(after reading part 2 this will make more sense). The contents of the 
+`experiments/my-linux-exp` would look like the following:
+
+```bash
+$ tree experiments/my-linux-exp/
+experiments/my-linux-exp/
+├── build-kernel.sh
+├── docker
+│   ├── Dockerfile
+│   ├── buildkernel.sh
+│   ├── config-4.6.0-0.bpo.1-amd64
+│   └── kernel_config.sh
+├── run.sh
+└── vagrant
+    └── Vagrantfile
+
+    2 directories, 7 files
+```
+
+Next, we add the submodule for the Linux repository as [we did in 
+above](#submodule) in a `linux/` folder. After this, the 
+`.build-kernel.sh` command will build kernel packages in 
+`vagrant/debs`. The provisioning of the VM is done in `run.sh`.
