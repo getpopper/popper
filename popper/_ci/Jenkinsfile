@@ -1,0 +1,29 @@
+pipeline {
+  agent any
+  parameters {
+    string(
+      name: 'REPO_URL',
+      defaultValue: '',
+      description: 'Git repo URL'
+    )
+    string(
+      name: 'EXPERIMENT',
+      defaultValue: '',
+      description: 'Experiment to execute'
+    )
+  }
+  stages {
+    stage ('clone') {
+      steps {
+	deleteDir()
+	git url: '${REPO_URL}'
+	sh 'git submodule update --init --recursive'
+      }
+    }
+    stage ('run') {
+      steps {
+	sh 'cd experiments/${EXPERIMENT} && ./run.sh'
+      }
+    }
+  }
+}
