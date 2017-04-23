@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/codeskyblue/go-sh"
@@ -39,6 +40,7 @@ var paperAddCmd = &cobra.Command{
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
 		addTemplate("paper", args[0], "paper")
+		fmt.Println("Added " + args[0] + " to paper/ folder.")
 	},
 }
 
