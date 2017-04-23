@@ -11,10 +11,18 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var setupSh = []byte(`#!/bin/bash
+# Any setup required by the experiment goes here. Things like installing
+# packages, allocating resources or deploying software on remote
+# infrastructure can be implemented here.
+set -e
+exit 0
+`)
+
 var runSh = []byte(`#!/bin/bash
-# The point of entry to the experiment. This file should contain the series of
-# steps that are required to execute the experiment. Any non-zero exit code will
-# be interpreted as a failure by the 'popper check' command.
+# This file should contain the series of steps that are required to execute 
+# the experiment. Any non-zero exit code will be interpreted as a failure
+# by the 'popper check' command.
 set -e
 exit 0
 `)
@@ -24,6 +32,12 @@ var validateSh = []byte(`#!/bin/bash
 # Any non-zero exit code will be interpreted as a failure by the 'popper check'
 # command. Additionally, the command should print "true" or "false" for each
 # validation (one per line, each interpreted as a separate validation).
+set -e
+exit 0
+`)
+
+var teardownSh = []byte(`#!/bin/bash
+# Put all your cleanup tasks here.
 set -e
 exit 0
 `)
@@ -83,10 +97,16 @@ func initExperiment(name string) {
 	}
 
 	// create template files
+	if err := ioutil.WriteFile("experiments/"+name+"/setup.sh", setupSh, 0755); err != nil {
+		log.Fatalln(err)
+	}
 	if err := ioutil.WriteFile("experiments/"+name+"/run.sh", runSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
 	if err := ioutil.WriteFile("experiments/"+name+"/validate.sh", validateSh, 0755); err != nil {
+		log.Fatalln(err)
+	}
+	if err := ioutil.WriteFile("experiments/"+name+"/teardown.sh", teardownSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
 
