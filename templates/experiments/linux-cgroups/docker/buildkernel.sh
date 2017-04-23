@@ -65,8 +65,13 @@ cp $BUILD_DIR/kernel_config.sh .
 # If there is a kernel config, move it to a backup
 mv -f ".config .config.old" | true
 
-# copy config
-cp $BUILD_DIR/"$STOCK_CONFIG" .config
+if [ -n "$CONFIG_TO_USE" ] ; then
+  cp "$CONFIG_TO_USE" .config
+else
+  # copy config
+  cp $BUILD_DIR/"$STOCK_CONFIG" .config
+fi
+
 ./kernel_config.sh
 
 # Copies the configuration of the running kernel and applies defaults to all 
@@ -74,8 +79,7 @@ cp $BUILD_DIR/"$STOCK_CONFIG" .config
 # Use the copied configuration and apply defaults to all new settings
 yes "" | make oldconfig
 
-if [ "$BUILD_ONLY_LOADED_MODULES" = "true" ]
-then
+if [ "$BUILD_ONLY_LOADED_MODULES" = "true" ] ; then
   echo "Disabling modules that are not loaded by the running system..."
   make localmodconfig
 fi
