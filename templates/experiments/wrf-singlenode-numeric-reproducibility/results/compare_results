@@ -3,33 +3,34 @@ import os
 import filecmp
 import itertools
 
-folder = "."
+folder = "./wrfoutput"
 machines = os.listdir(folder)
 
 if not machines:
     raise Exception("No output folders found")
 
-if len(machines) == 1:
-    raise Exception("Only 1 output folder found")
-
-for pair in itertools.combinations(machines, 2):
+for pair in itertools.product(*[machines, machines]):
     # every pairwise combination
 
-    for thrds in [2**i for i in range(0, 5)]:
+    threads=[2**i for i in range(0, 5)]
+    for thrds in itertools.product(*[threads, threads]):
         # threads from 1-16
 
-        if (not os.path.isdir(folder + '/' + pair[0] + '/' + str(thrds)) or
-                not os.path.isdir(folder + '/' + pair[1] + '/' + str(thrds))):
+        print("comparing " + folder + '/' + pair[0] + '/' + str(thrds[0]) + " and " + folder + '/' + pair[1] + '/' + str(thrds[1]))
+        if (not os.path.isdir(folder + '/' + pair[0] + '/' + str(thrds[0])) or
+                not os.path.isdir(folder + '/' + pair[1] + '/' + str(thrds[1]))):
             continue
 
-        files = os.listdir(folder + '/' + pair[0] + '/' + str(thrds) + '/')
-
+        files = os.listdir(folder + '/' + pair[0] + '/' + str(thrds[0]) + '/')
+        if len(files) != 13:
+            raise Exception("Expecting 13 files, found " + str(len(files)))
+        files = os.listdir(folder + '/' + pair[1] + '/' + str(thrds[1]) + '/')
         if len(files) != 13:
             raise Exception("Expecting 13 files, found " + str(len(files)))
 
         for f in files:
-            f1 = folder + '/{}/{}/{}'.format(pair[0], str(thrds), f)
-            f2 = folder + '/{}/{}/{}'.format(pair[1], str(thrds), f)
+            f1 = folder + '/{}/{}/{}'.format(pair[0], str(thrds[0]), f)
+            f2 = folder + '/{}/{}/{}'.format(pair[1], str(thrds[1]), f)
             if not filecmp.cmp(f1, f2):
                 # 'Error: ' + f1 + ' not equal to ' + f2)
                 print("false")

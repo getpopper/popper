@@ -4,6 +4,6 @@ wrf_parameters:
 - param2
 threads: [4]
 data_containers:
-- bigwxwrf/geog
-- bigwxwrf/sandy
+- ivotron/geog
+- ivotron/sandy
 remove_data_containers: true
