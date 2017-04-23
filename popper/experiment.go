@@ -42,28 +42,35 @@ set -e
 exit 0
 `)
 
-func checkTemplateFolderExists(template_type string) {
-	if !sh.Test("dir", popperFolder+"/templates/"+template_type) {
-		log.Fatalln("Can't find '" + popperFolder + "/templates/" + template_type + "'." +
+func checkTemplateFolderExists(templateType string) {
+	if !sh.Test("dir", popperFolder+"/templates/"+templateType) {
+		log.Fatalln("Can't find '" + popperFolder + "/templates/" + templateType + "'." +
 			"This command must be executed from the project's root folder.")
 	}
 }
 
-func listTemplates(template_type string) {
-	checkTemplateFolderExists(template_type)
-	if err := sh.Command("ls", "-1", popperFolder+"/templates/"+template_type).Run(); err != nil {
+func showExperimentInfo(experimentName string) {
+	checkTemplateFolderExists("experiments")
+	if err := sh.Command("cat", popperFolder+"/templates/experiments/"+experimentName+"/README.md").Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
 
-func addTemplate(template_type string, template_name string, folder string) {
-	checkTemplateFolderExists(template_type)
+func listTemplates(templateType string) {
+	checkTemplateFolderExists(templateType)
+	if err := sh.Command("ls", "-1", popperFolder+"/templates/"+templateType).Run(); err != nil {
+		log.Fatalln(err)
+	}
+}
+
+func addTemplate(templateType string, templateName string, folder string) {
+	checkTemplateFolderExists(templateType)
 
 	if sh.Test("dir", folder) {
 		log.Fatalln("Folder " + folder + " already exists.")
 	}
 
-	template := popperFolder + "/templates/" + template_type + "/" + template_name
+	template := popperFolder + "/templates/" + templateType + "/" + templateName
 
 	if _, err := sh.Command("cp", "-r", template, folder).CombinedOutput(); err != nil {
 		log.Fatalln(err)
@@ -188,9 +195,22 @@ var experimentInitCmd = &cobra.Command{
 	},
 }
 
+var experimentInfoCmd = &cobra.Command{
+	Use:   "info <name>",
+	Short: "Show information about an experiment.",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			log.Fatalln("This command takes name of experiment as argument.")
+		}
+		showExperimentInfo(args[0])
+	},
+}
+
 func init() {
 	RootCmd.AddCommand(experimentCmd)
 	experimentCmd.AddCommand(experimentListCmd)
 	experimentCmd.AddCommand(experimentAddCmd)
 	experimentCmd.AddCommand(experimentInitCmd)
+	experimentCmd.AddCommand(experimentInfoCmd)
 }
