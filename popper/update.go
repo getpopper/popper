@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/spf13/cobra"
@@ -14,9 +15,10 @@ var updateCmd = &cobra.Command{
 		if len(args) != 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
-		if _, err := get_templates(); err != nil {
+		if err := updateTemplates(); err != nil {
 			log.Fatalln(err)
 		}
+		fmt.Println("Updated Popper repository successfully.")
 	},
 }
 

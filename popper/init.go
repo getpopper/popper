@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/codeskyblue/go-sh"
@@ -21,19 +22,22 @@ var initCmd = &cobra.Command{
 			log.Fatalln("Looks like this repo is already popperized (.popper.yml exists).")
 		}
 
-		repo, err := get_templates()
+		repo, err := getTemplates()
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		if _, err := sh.Command("mkdir", "experiments").CombinedOutput(); err != nil {
+		if err := sh.Command("mkdir", "experiments").Run(); err != nil {
 			log.Fatalln(err)
 		}
 
 		// mark repo as popperized
 		if _, err := sh.Command("echo", repo).Command("tee", "-a", ".popper.yml").CombinedOutput(); err != nil {
+			fmt.Println("Cannot create .popper.yml file.")
 			log.Fatalln(err)
 		}
+
+		fmt.Println("Initialized Popper repository.")
 	},
 }
 

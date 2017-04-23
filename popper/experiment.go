@@ -99,7 +99,7 @@ func initExperiment(name string) {
 		log.Fatalln("Folder " + name + " already exists.")
 	}
 
-	if _, err := sh.Command("mkdir", "experiments/"+name).Output(); err != nil {
+	if err := sh.Command("mkdir", "experiments/"+name).Run(); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -123,7 +123,7 @@ func initExperiment(name string) {
 	// add Popper badge link, only if we can get repo info
 	usr, repo, err := getRepoInfo()
 	if err == nil {
-		badgeUrl := "http://popperci.falsifiable.us/repos/" +
+		badgeUrl := "http://ci.falsifiable.us/" +
 			usr + "/" + repo + "/" + name + "/status.svg"
 
 		mdLink := "[![Popper Status](" + badgeUrl + ")](http://falsifiable.us)\n"
@@ -171,12 +171,14 @@ var experimentAddCmd = &cobra.Command{
 		} else if len(args) == 2 {
 			expname = args[1]
 		} else {
-			log.Fatalln("See usage.")
+			log.Fatalln("Incorrect number of arguments, type 'popper experiment add --help'")
 		}
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
 		addTemplate("experiments", args[0], "experiments/"+expname)
+
+		fmt.Println("Added " + expname + " to experiments/ folder.")
 	},
 }
 

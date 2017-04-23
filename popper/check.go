@@ -33,7 +33,8 @@ else
   exit 1
 fi
 
-echo "Starting Popper check"
+echo ""
+echo "Popper check started"
 docker pull ivotron/popperci-experimenter &> /dev/null
 docker run --rm %s \
   $libltdl_path \
@@ -42,6 +43,7 @@ docker run --rm %s \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --workdir $PWD \
   ivotron/popperci-experimenter %s
+echo "Popper check finished: $(cat popper_status)"
 `
 
 func writePopperCheckScript() {
@@ -61,7 +63,7 @@ func writePopperCheckScript() {
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
-	Short: "Check integrity of an experiment",
+	Short: "Run experiment and check integrity (status) of experiment",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		writePopperCheckScript()

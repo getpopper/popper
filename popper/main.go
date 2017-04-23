@@ -33,29 +33,27 @@ func main() {
 
 var popperFolder = os.Getenv("HOME") + "/.popper"
 
-func get_templates() (org_repo_branch string, err error) {
-	// download or update templates
-	org := "systemslab"
-	repo := "popper"
-	branch := "master"
-	url := "https://github.com/" + org + "/" + repo
+var popperRepoUrl = "https://github.com/systemslab/popper"
 
-	if sh.Test("d", popperFolder) {
-		if _, err = sh.Command("git", "-C", popperFolder, "pull").CombinedOutput(); err != nil {
-			fmt.Println("Remove the " + popperFolder + " folder and try again")
-			log.Fatalln(err)
-		}
-		if _, err = sh.Command("git", "-C", popperFolder, "submodule", "update", "--init", "--recursive").CombinedOutput(); err != nil {
-			fmt.Println("Remove the " + popperFolder + " folder and try again")
-			log.Fatalln(err)
-		}
-	} else {
-		if _, err = sh.Command("git", "clone", "--recursive", url, popperFolder).CombinedOutput(); err != nil {
+func updateTemplates() (err error) {
+	if err = sh.Command("git", "-C", popperFolder, "pull").Run(); err != nil {
+		log.Fatalln(err)
+	}
+	if err = sh.Command("git", "-C", popperFolder, "submodule", "update", "--init", "--recursive").Run(); err != nil {
+		log.Fatalln(err)
+	}
+	return nil
+}
+
+func getTemplates() (org_repo_branch string, err error) {
+
+	if !sh.Test("d", popperFolder) {
+		if err = sh.Command("git", "clone", "--recursive", popperRepoUrl, popperFolder).Run(); err != nil {
 			log.Fatalln(err)
 		}
 	}
 
-	return org + "/" + repo + "/" + branch, nil
+	return popperRepoUrl, nil
 }
 
 func init() {
