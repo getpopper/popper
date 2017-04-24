@@ -33,17 +33,16 @@ else
   exit 1
 fi
 
-echo ""
 echo "Popper check started"
-docker pull ivotron/popperci-experimenter &> /dev/null
-docker run --rm %s \
+docker run --rm -i %s \
   $libltdl_path \
   --volume $PWD:$PWD \
   --volume $docker_path:/usr/bin/docker \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --workdir $PWD \
   ivotron/popperci-experimenter %s
-echo "Popper check finished: $(cat popper_status)"
+echo "Popper check finished"
+echo "status: $(cat popper_status)"
 `
 
 func writePopperCheckScript() {
@@ -54,7 +53,12 @@ func writePopperCheckScript() {
 	if len(volumes) > 0 {
 		env += " -v " + strings.Join(volumes, " -v ")
 	}
-	content := fmt.Sprintf(checksh, env, "--skip "+skip)
+	var content string
+	if len(skip) > 0 {
+		content = fmt.Sprintf(checksh, env, "--skip "+skip)
+	} else {
+		content = fmt.Sprintf(checksh, env, "")
+	}
 	err := ioutil.WriteFile("/tmp/poppercheck", []byte(content), 0755)
 	if err != nil {
 		log.Fatalln("Error writing bash script to /tmp")

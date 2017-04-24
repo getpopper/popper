@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 
+	sh "github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
 )
 
@@ -16,6 +17,9 @@ var updateCmd = &cobra.Command{
 			log.Fatalln("This command doesn't take arguments.")
 		}
 		if err := updateTemplates(); err != nil {
+			log.Fatalln(err)
+		}
+		if err := sh.Command("docker", "pull", "ivotron/popperci-experimenter").Run(); err != nil {
 			log.Fatalln(err)
 		}
 		fmt.Println("Updated Popper repository successfully.")

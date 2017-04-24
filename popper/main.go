@@ -36,6 +36,9 @@ var popperFolder = os.Getenv("HOME") + "/.popper"
 var popperRepoUrl = "https://github.com/systemslab/popper"
 
 func updateTemplates() (err error) {
+	if err = sh.Command("git", "-C", popperFolder, "reset", "--hard", "origin/master").Run(); err != nil {
+		log.Fatalln(err)
+	}
 	if err = sh.Command("git", "-C", popperFolder, "pull").Run(); err != nil {
 		log.Fatalln(err)
 	}
