@@ -46,6 +46,7 @@ echo "status: $(cat popper_status)"
 `
 
 func writePopperCheckScript() {
+
 	env := ""
 	if len(environment) > 0 {
 		env += " -e " + strings.Join(environment, " -e ")
@@ -70,6 +71,9 @@ var checkCmd = &cobra.Command{
 	Short: "Run experiment and check integrity (status) of experiment",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) > 0 {
+			log.Fatalln("This command doesn't take arguments")
+		}
 		writePopperCheckScript()
 		if err := sh.Command("/tmp/poppercheck").Run(); err != nil {
 			log.Fatalln(err)
