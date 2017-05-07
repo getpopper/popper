@@ -99,7 +99,7 @@ func initExperiment(name string) {
 		log.Fatalln("Folder " + name + " already exists.")
 	}
 
-	if err := sh.Command("mkdir", "experiments/"+name).Run(); err != nil {
+	if err := sh.Command("mkdir", "-p", "experiments/"+name).Run(); err != nil {
 		log.Fatalln(err)
 	}
 
