@@ -37,8 +37,8 @@ Laboratories, and Lawrence Livermore National Laboratory.
 
 ### **Contributors**
 
-  * Ivo Jimenez, Michael Sevilla, Noah Watkins and Carlos Maltzahn 
-    (_UC Santa Cruz_)
+  * Ivo Jimenez, Sina Hamedian, Michael Sevilla, Noah Watkins and
+    Carlos Maltzahn (_UC Santa Cruz_)
   * Jay Lofstead (_SNL_)
   * Kathryn Mohror (_LLNL_)
   * Remzi Arpaci-Dusseau, Andrea Arpaci-Dusseau (_UW Madison_)
