@@ -13,6 +13,7 @@ import (
 var environment []string
 var volumes []string
 var skip string
+var timeout string
 var checksh = `#!/bin/bash
 set -e
 type docker >/dev/null 2>&1 || { echo >&2 "Can't find docker command."; exit 1; }
@@ -40,7 +41,7 @@ docker run --rm -i %s \
   --volume $docker_path:/usr/bin/docker \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --workdir $PWD \
-  ivotron/popperci-experimenter %s
+  ivotron/popperci-experimenter %s %s
 echo "Popper check finished"
 echo "status: $(cat popper_status)"
 `
@@ -56,9 +57,9 @@ func writePopperCheckScript() {
 	}
 	var content string
 	if len(skip) > 0 {
-		content = fmt.Sprintf(checksh, env, "--skip "+skip)
+		content = fmt.Sprintf(checksh, env, "--timeout "+timeout, "--skip "+skip)
 	} else {
-		content = fmt.Sprintf(checksh, env, "")
+		content = fmt.Sprintf(checksh, env, "--timeout "+timeout, "")
 	}
 	err := ioutil.WriteFile("/tmp/poppercheck", []byte(content), 0755)
 	if err != nil {
@@ -87,4 +88,5 @@ func init() {
 	checkCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, "Environment variables to be defined inside the test container.")
 	checkCmd.Flags().StringSliceVarP(&volumes, "volume", "v", []string{}, "Volumes to be passed to the test container.")
 	checkCmd.Flags().StringVarP(&skip, "skip", "s", "", "Comma-separated list of stages to skip.")
+	checkCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for experiment (default: 10 hrs).")
 }
