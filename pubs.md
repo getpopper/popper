@@ -16,26 +16,39 @@ On The Popper Convention:
     Arpaci-Dusseau. _Popper: Making Reproducible Systems Performance 
     Evaluation Practical_, Technical Report, UC Santa Cruz, 
     UCSC-SOE-16-10, 2016 \[[pdf][techreport]\] \[[github][poppergh]\].
+  * Ivo Jimenez, Sina Hamedian, Andrea Arpaci-Dusseau, Remzi 
+    Arpaci-Dusseau, Jay Lofstead, Carlos Maltzahn, Kathryn Mohror and 
+    Robert Ricci. _PopperCI: Automated Reproducibility Validation_, 
+    2017 IEEE INFOCOM CNERT Workshop \[[pdf][cnertpdf]\] 
+    \[[github][cnertgh]\].
 
 Articles following the convention:
 
-  * Ivo Jimenez et al., _Characterizing and 
-    Reducing Cross-Platform Performance Using OS-level 
-    Virtualization_, Parallel and Distributed Processing Symposium 
-    Workshop, 2016 \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
+  * Sevilla et al., _Malacology: A Programmable Storage System_. 
+    Proceedings of the 12th European Conference on Computer Systems 
+    (EuroSys '17). \[[pdf][malacologypdf]\] \[[github][malacologygh]\]
 
   * Josh P. Hacker et al., _A containerized mesoscale model and 
     analysis toolkit to accelerate classroom learning, collaborative 
     research, and uncertainty quantification_,” Bull. Amer. Meteor. 
     Soc., Oct. 2016. \[[pdf][bamspdf]\] \[[github][bamsgh]\].
 
+  * Ivo Jimenez et al., _Characterizing and 
+    Reducing Cross-Platform Performance Using OS-level 
+    Virtualization_, Parallel and Distributed Processing Symposium 
+    Workshop, 2016 \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
+
 
 
 [techreport]: https://github.com/systemslab/popper-paper/raw/techreport/paper/paper.pdf
-[varsyspdf]: https://www.researchgate.net/profile/Ivo_Jimenez/publication/305871840_Characterizing_and_Reducing_Cross-Platform_Performance_Variability_Using_OS-Level_Virtualization/links/57d9736008ae5f03b49a071a.pdf
+[varsyspdf]: https://github.com/ivotron/varsys16/raw/master/out/main.pdf
 [varsysgh]: https://github.com/ivotron/varsys16
 [poppergh]: https://github.com/systemslab/popper-paper/
 [login]: https://www.usenix.org/publications/login/winter-2016-vol-41-no-4/jimenez
 [poppergh-login]: https://github.com/systemslab/popper-paper/tree/login
 [bamspdf]: http://journals.ametsoc.org/doi/pdf/10.1175/BAMS-D-15-00255.1
 [bamsgh]: https://github.com/ivotron/bams-popper
+[malacologypdf]: https://github.com/michaelsevilla/malacology-popper/raw/master/paper/paper.pdf
+[malacologygh]: https://github.com/michaelsevilla/malacology-popper
+[cnertpdf]: https://github.com/systemslab/popperci-paper/raw/master/paper/paper.pdf
+[cnertgh]: https://github.com/systemslab/popperci-paper
