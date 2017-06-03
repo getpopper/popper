@@ -7,3 +7,4 @@ popper/app
 .sass-cache/
 templates/experiments/linux-cgroups/vagrant/.vagrant
 templates/experiments/linux-cgroups/vagrant/debs/*deb
+docs/_build
