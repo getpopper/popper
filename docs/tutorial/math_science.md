@@ -1,4 +1,4 @@
-# Popper for papers in the Mathematical Sciences
+## Example: Math Sciences
 
 We describe how to bootstrap a scientific exploration that follows 
 Popper in the mathematical sciences domain. For a generic description 
@@ -14,7 +14,6 @@ Dependencies:
   * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
   * [Docker](https://docs.docker.com/engine/installation/)
 
-# Adding the experiment
 
 We have several experiments available via the Popper-CLI tool 
 (obtained from the [templates 

@@ -1,4 +1,4 @@
-# Popper for HPC papers
+## Example: HPC
 
 We describe how to use Popper in high performance computing (HPC) 
 scenarios. A typical experiment in HPC assumes many things from the 
@@ -17,8 +17,6 @@ We assume that the `$HOME/mypaper` folder is available in the users'
 laptop as well as on the nodes of the machine where the experiment 
 runs.
 
-# Adding the experiment
-
 We have several experiments available via the Popper-CLI tool 
 (obtained from the [templates 
 repository](https://github.com/systemslab/popper)). Assuming the repo 
@@ -36,9 +34,9 @@ In this example we'll make use of the
 experiment:
 
 ```bash
-$ popper experiment add mpip mpip-lulesh
+$ popper experiment add mpip
 
-$ ls experiments/mpip-lulesh
+$ ls experiments/mpip
 total 16K
 -rwxr-x--- 1 ivo ivo  157 Oct  5 10:35 analyze.sh
 -rwxr-x--- 1 ivo ivo  253 Oct  5 10:35 install.sh

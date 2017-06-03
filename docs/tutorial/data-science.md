@@ -1,4 +1,4 @@
-# Popper for Data Science Papers
+# Example: Data Science
 
 The following describes a series of steps to 
 bootstrap a data science paper that follows the Popper convention 
@@ -12,13 +12,13 @@ these can be swapped for equivalent tools. To learn more about how to
 use other tools and how the Popper convention is toolchain-agnostic, 
 see [here](https://github.com/systemslab/popper/wiki/Intro-to-Popper#popper-compliant-tools).
 
-# Requirements
+Requirements:
 
   * [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
   * [docker](https://docs.docker.com/engine/installation/)
   * [popper-cli](https://github.com/systemslab/popper/releases)
 
-# Initialize a Popper Repository
+**Initialize a Popper Repository**
 
 Our Popper-CLI tool assumes a git repository exists. To create one:
 
@@ -45,7 +45,7 @@ options for the CLI tool. This file should be committed to the paper
 repository (git repo we create above). For an explanation on the 
 folder structure of a Popper repo, see [here](getting-started).
 
-# Adding a New Experiment
+**Adding a New Experiment**
 
 The Popper convention outlines how to make it practical to generate 
 reproducible experiments. As part of our effort, we maintain a list 
@@ -114,7 +114,7 @@ data in a cluster of machines. Popper still can be followed in these
 scenarios (e.g. see [[Popper-Distributed-Systems]] and 
 [[Popper-HPC]]).
 
-# Adding More Datasets
+**Adding More Datasets**
 
 Datasets are stored (or referenced) in the `datapackages/` (or 
 `datasets/`) folder of each experiment, with one subfolder for each 
@@ -139,7 +139,7 @@ To display the info for a package, use the `info` command of `dpm`.
 For more info on how to use `dpm` take a look at the official 
 [documentation](https://github.com/frictionlessdata/dpm).
 
-# Generating Image Files For Reference In Manuscripts
+**Generating Image Files For Reference In Manuscripts**
 
 Assume we add a new type of analysis to the notebook and we want to 
 generate an image. For the notebook of our example 
@@ -163,7 +163,7 @@ cd myexperiment
 ./run-notebook
 ```
 
-# Documenting the Experiment
+**Documenting the Experiment**
 
 After we're done with our experiment, we might want to document it and 
 add a paper. We can use the generic `article` latex template or other 
@@ -198,7 +198,7 @@ cd paper
 ./build
 ```
 
-# Documenting Changes to Experiments
+**Documenting Changes to Experiments**
 
 The paper repository is the analogy to the lab notebook in 
 experimental science. There are many ways in which these changes can 

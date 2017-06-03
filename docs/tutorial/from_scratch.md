@@ -1,3 +1,5 @@
+## Implementing an Experiment
+
 This guide shows how to follow Popper when carrying out a scientific 
 exploration. We will use the experimentation workflow shown below to 
 guide our discussion. We assume that the only artifact available at 
@@ -20,9 +22,9 @@ In the following we explore each steps in more detail. For examples of
 already "Popperized" explorations, take a look at 
 [here](Getting-Started#guides-and-examples).
 
-![DevOps approach to Experiments.](figures/workflow_devops.png)
+![DevOps approach to Experiments.](/figures/workflow_devops.png)
 
-# The Popper Repository
+### The Popper Repository
 
 The first thing is to create the repository that will hold all the 
 experiment assets. Any version-control tool can serve this purpose. We 
@@ -54,7 +56,7 @@ to be as verbose and explicit as possible to make it easier for others
 to understand what are the changes in a commit, from the point of view 
 of the experimentation process.
 
-# Packaging
+### Packaging
 
 Usually the piece of code that is used as the basis of study resides 
 in its own repository. Instead of bringing that entire codebase to the 
@@ -89,10 +91,17 @@ parameters (variable values and input datasets) and we obtain results:
             ------
 ```
 
-# Scripting The Experiment
+### Scripting The Experiment
 
 Our goal is to codify the series of steps that are taken as part of 
-the experiment. For experiments that run in a local machine, 
+the experiment. For obtaining the structure of an experiment 
+folder:
+
+```bash
+popper init myexperiment
+```
+
+For experiments that run in a local machine, 
 [`bash`](https://www.gnu.org/software/bash/) is sufficient (see 
 example 
 [here](https://github.com/systemslab/popper/blob/master/templates/experiments/mpip/run.sh)). 
@@ -103,7 +112,7 @@ orchestrate the experiment (see example
 In any case, these scripts should be added to the Popper (Git) 
 repository.
 
-# Dataset Management
+### Dataset Management
 
 For small input (or output) datasets consumed (or generated) by the 
 experiment, they can be added to the repository along with the 
@@ -122,7 +131,7 @@ As mentioned before, when committing changes to the Popper (Git)
 repository, it is a good practice to separate commits that affect the 
 logic of the experiment from those that add new results.
 
-# Analysis and Visualization
+### Analysis and Visualization
 
 Visualizing and analyzing output data should be done with tools that 
 allow to be scripted. Examples are the wide category of "notebooks" 
@@ -142,7 +151,7 @@ stored in the Popper (Git) repository. It is good practice to have a
 single commit to represent both the change to raw results (output 
 datasets) and the visualization of such results (image files).
 
-# Adding Validation Criteria
+### Adding Validation Criteria
 
 Integrity of the experimental results. These domain-specific tests 
 ensure that the claims made in the paper are valid for every 
@@ -166,7 +175,7 @@ level of parallelism exceeds 4 concurrent threads"; or "for dataset A,
 our model predicts the outcome with an error of 95%". For an example, 
 check [here](https://github.com/ivotron/aver#overview).
 
-# Reporting Results
+### Reporting Results
 
 Any markup language can be used for reporting results. Markdown or 
 LATeX are examples. For LATeX, ideally one would like to include all 
