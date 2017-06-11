@@ -1,0 +1,24 @@
+---
+- hosts: mons[0]
+  tasks:
+  - name: run the OSD speeds benchmark
+    shell: >
+      docker run --rm \
+        --name=osdbench \
+        --net=host \
+        -v /etc/ceph:/etc/ceph \
+        -v /var/run/ceph/:/var/run/ceph/ \
+        --entrypoint=/bin/bash \
+        "{{ ceph_mon_docker_username }}/{{ ceph_mon_docker_imagename }}:{{ ceph_mon_docker_image_tag }}" \
+        -c "for i in \`seq 0 {{ groups['osds'] | length - 1}}\`; do
+              ceph tell osd.\$i bench
+            done"
+    register: results
+    with_sequence: count={{ repetitions }}
+
+  - name: spit results to a file
+    local_action: >
+      copy 
+      content={{ item.stderr }} 
+      dest="/popper/results/osdbench-{{ inventory_file | basename }}-run{{ item.item|int - 1 }}-{{ item.start | replace(' ', '_') }}"
+    with_items: "{{ results.results }}"

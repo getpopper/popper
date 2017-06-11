@@ -1,0 +1,30 @@
+---
+
+- hosts: clients
+  become: True
+  tasks:
+  - name: check for the number of files
+    fail: msg="Uh oh. Please define nfiles"
+    when: nfiles is not defined
+
+  - name: drop the os file cache
+    shell: sudo sh -c "$(which echo) 3 > /proc/sys/vm/drop_caches"
+
+  - name: remove oold containers
+    shell: docker rm -f client
+    ignore_errors: True
+      
+  - name: run the metadata benchmark
+    shell: >
+           docker run --rm \
+             --name=client \
+             --volumes-from cephfs \
+             michaelsevilla/mdtest \
+             -F -C -n {{ nfiles }} -d /cephfs/nfiles-{{ nfiles }}-{{ ansible_date_time.date }}-{{ ansible_date_time.time }}-{{ ansible_hostname }}
+    register: results
+  
+  - name: spit results to a file
+    local_action: >
+      copy 
+      content={{ results.stdout }} 
+      dest="{{ playbook_dir|dirname }}/results/mdtest-{{ ansible_hostname }}-{{ results.start | replace(' ', '_') }}.txt"

@@ -1,0 +1,36 @@
+---
+
+################
+# ceph ansible #
+################
+fsid: "e9570dd8-03ad-45f0-8a74-ec9b3bb7095f"
+docker: true
+install_docker: false
+
+#############
+# ceph.conf #
+#############
+ceph_conf_overrides:
+   global:
+     osd pool default size: 1
+     osd pool default pg num: 512
+     osd pool default pgp num: 512
+   mon:
+     debug mon: 1
+   osd:
+     debug osd: 0
+     osd mkfs type: ext4
+     osd max object name len: 256
+     osd max object namespace len: 64
+     osd journal size: 10000
+   mds: 
+     debug ms: 0
+     debug mds: 0
+     max mds: 5
+     mds log: true
+     mds bal max until: -1
+     mds bal mode: 2
+     mds log max expiring: 40
+     mds log max segments: 120
+   client:
+     debug client: 0

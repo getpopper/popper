@@ -4,3 +4,9 @@
 [submodule "templates/vendor/baseliner"]
 	path = templates/vendor/baseliner
 	url = https://github.com/ivotron/baseliner
+[submodule "templates/experiments/ceph-perf/ansible/roles/ceph"]
+	path = templates/experiments/ceph-perf/ansible/roles/ceph
+	url = https://github.com/michaelsevilla/ceph-ansible.git
+[submodule "templates/experiments/ceph-perf/ansible/roles/srl"]
+	path = templates/experiments/ceph-perf/ansible/roles/srl
+	url = https://github.com/systemslab/srl-roles.git

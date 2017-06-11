@@ -1,0 +1,41 @@
+---
+# Defines deployment design and assigns role to server groups
+- hosts: mons
+  become: True
+  roles:
+  - ceph-mon
+
+- hosts: osds
+  become: True
+  roles:
+  - ceph-osd
+
+- hosts: mdss
+  become: True
+  roles:
+  - ceph-mds
+  serial: 1 # Please make the MDSs come in a specific order
+  tasks:
+  - pause: minutes=1
+
+- hosts: clients
+  become: True
+  roles:
+  - ceph-client
+
+- name: grow the pgs
+  hosts: mons[0]
+  tasks:
+  - command:  docker exec {{ ansible_hostname }} ceph osd pool set {{ item[1] }} {{ item[0] }} 
+    with_nested:
+      - "{{ ceph_pgs }}"
+      - ["cephfs_metadata pg_num", "cephfs_data pg_num", "cephfs_metadata pgp_num", "cephfs_data pgp_num"]
+
+- hosts: mons
+  serial: 1
+  tasks:
+  - command:  docker exec {{ ansible_hostname }} ceph -s
+    register: result
+    until:    result.stdout.find("{{ ceph_wait_status }}") != -1
+    retries:  120
+  - debug:    var=result.stdout_lines

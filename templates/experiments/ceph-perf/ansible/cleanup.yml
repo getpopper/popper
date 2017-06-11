@@ -1,0 +1,109 @@
+---
+# Adapted from ceph-ansible's purge_docker_cluster.yml
+# This playbook purges a containerized Ceph cluster
+# It removes: packages, configuration files and ALL THE DATA
+- hosts: localhost
+  become: True
+  tasks:
+  - name: delete the config directory on the ansible server
+    file: path="{{ playbook_dir }}/fetch" state=absent
+
+  - name: delete old logs
+    shell: ls -d {{ playbook_dir|dirname }}/logs/* | grep -v gitkeep
+    register: logs
+    ignore_errors: True
+  - file: path={{ item }} state=absent
+    with_items: 
+    - "{{ logs.stdout_lines }}"
+
+  - name: delete old utilizations
+    shell: ls -d {{ playbook_dir|dirname }}/utilizations/* | grep -v gitkeep
+    register: utilizations
+    ignore_errors: True
+  - file: path={{ item }} state=absent
+    with_items: 
+    - "{{ utilizations.stdout_lines }}"
+
+  - name: delete old results
+    shell: ls -d {{ playbook_dir|dirname }}/results/* | grep -v gitkeep | grep -v visualize
+    register: results
+    ignore_errors: True
+  - file: path={{ item }} state=absent
+    with_items: 
+    - "{{ results.stdout_lines }}"
+
+- hosts: osds
+  tasks:
+  - shell: docker stop {{ ansible_ssh_host }}-osd-ceph_osd_docker_devices
+    ignore_errors: True
+  - shell: docker rm {{ ansible_ssh_host }}-osd-ceph_osd_docker_devices
+    ignore_errors: True
+  - shell: docker stop {{ ansible_ssh_host }}-osd-prepare-{{ item | regex_replace('/', '') }}
+    ignore_errors: True
+    with_items:
+    - "{{ ceph_osd_docker_devices }}"
+  - shell: docker rm {{ ansible_ssh_host }}-osd-prepare-{{ item | regex_replace('/', '') }}
+    ignore_errors: True
+    with_items:
+    - "{{ ceph_osd_docker_devices }}"
+  - shell: docker stop {{ ansible_ssh_host }}-osd-{{ item | regex_replace('/', '') }}
+    ignore_errors: True
+    with_items:
+    - "{{ ceph_osd_docker_devices }}"
+  - shell: docker rm {{ ansible_ssh_host }}-osd-{{ item | regex_replace('/', '') }}
+    ignore_errors: True
+    with_items:
+    - "{{ ceph_osd_docker_devices }}"
+  - shell: docker stop collectl
+    ignore_errors: True
+  - shell: docker rm collectl
+    ignore_errors: True
+
+- hosts: mons
+  tasks:
+  - shell: docker stop {{ ansible_ssh_host }}
+    ignore_errors: True
+  - shell: docker rm {{ ansible_ssh_host }}
+    ignore_errors: True
+
+- hosts: mdss
+  tasks:
+  - shell: docker stop ceph-{{ ansible_host }}-mds
+    ignore_errors: True
+  - shell: docker rm ceph-{{ ansible_host }}-mds
+    ignore_errors: True
+
+- hosts: clients
+  tasks:
+  - shell: docker stop cephfs
+    ignore_errors: True
+  - shell: docker rm cephfs
+    ignore_errors: True
+
+- hosts: graphite
+  tasks:
+  - shell: docker stop graphite
+    ignore_errors: True
+  - shell: docker rm graphite
+    ignore_errors: True
+
+- hosts: all
+  become: True
+  roles:
+  - role: cleanup
+    delete:
+    - /etc/ceph/
+    - /var/lib/ceph
+    - /tmp/graphite
+
+- hosts: osds
+  become: True
+  tasks:
+  - name: disk zap
+    command: sgdisk --zap-all --clear --mbrtogpt -g -- {{ item }}
+    with_items: ceph_osd_docker_devices
+    ignore_errors: True
+  - name: disk zap again
+    command: sgdisk --zap-all --clear --mbrtogpt -g -- {{ item }}
+    with_items: ceph_osd_docker_devices
+    ignore_errors: True

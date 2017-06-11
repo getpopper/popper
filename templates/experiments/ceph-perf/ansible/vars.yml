@@ -1,0 +1,18 @@
+---
+# these variables redirect onto ceph-ansible's scripts
+
+################
+# docker stuff #
+################
+ceph_mon_docker_username:     "{{ ceph_docker_username }}"
+ceph_mon_docker_imagename:    "{{ ceph_docker_imagename }}"
+ceph_mon_docker_image_tag:    "{{ ceph_docker_version }}"
+ceph_osd_docker_username:     "{{ ceph_docker_username }}"
+ceph_osd_docker_imagename:    "{{ ceph_docker_imagename }}"
+ceph_osd_docker_image_tag:    "{{ ceph_docker_version }}"
+ceph_mds_docker_username:     "{{ ceph_docker_username }}"
+ceph_mds_docker_imagename:    "{{ ceph_docker_imagename }}"
+ceph_mds_docker_image_tag:    "{{ ceph_docker_version }}"
+ceph_client_docker_username:  "{{ ceph_docker_username }}"
+ceph_client_docker_imagename: "{{ ceph_docker_imagename }}"
+ceph_client_docker_image_tag: "{{ ceph_docker_version }}"
