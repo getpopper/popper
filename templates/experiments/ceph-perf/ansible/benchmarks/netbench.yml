@@ -1,0 +1,41 @@
+---
+- hosts: all
+  tasks:
+  - name: get rid of any older server container
+    shell: >
+      docker rm -f iperf-server
+    ignore_errors: True
+
+- hosts: mons[0]
+  tasks:
+  - name: run the network benchmark
+    shell: >
+      docker run -d \
+        --name=iperf-server \
+        -p 5001:5001 \
+        moutten/iperf:2.0 \
+        -s --reportstyle C
+
+- hosts: osds, mdss
+  serial: 1
+  tasks: 
+  - name: run the network benchmark
+    shell: >
+      docker run --rm \
+        --name=iperf-client \
+        -p 5001:5001 \
+        moutten/iperf:2.0 \
+        -c {{ groups['mons'][0] }}
+    with_sequence: count={{ repetitions }}
+
+- hosts: mons[0]
+  tasks:
+  - name: get the results (use iperf server so we can get 1 file)
+    shell: docker logs iperf-server    
+    register: results
+
+  - name: spit results to a file
+    local_action: >
+      copy
+      content={{ results.stdout }}
+      dest="{{ playbook_dir|dirname }}/results/netbench-{{ inventory_file | basename }}-{{ results.start | replace(' ', '_') }}"

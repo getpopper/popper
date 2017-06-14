@@ -1,0 +1,22 @@
+---
+- hosts: mons[0]
+  tasks:
+  - name: run the RADOS benchmark
+    shell: >
+      docker run --rm \
+        --name=radosbench \
+        --net=host \
+        -v /etc/ceph:/etc/ceph \
+        -v /var/run/ceph/:/var/run/ceph/ \
+        --entrypoint=/bin/bash \
+        "{{ ceph_mon_docker_username }}/{{ ceph_mon_docker_imagename }}:{{ ceph_mon_docker_image_tag }}" \
+        -c "{{ ceph_radosbench_cmd }}"
+    register: results
+    with_sequence: count={{ repetitions }}
+
+  - name: spit results to a file
+    local_action: >
+      copy 
+      content={{ item.stdout }} 
+      dest="/popper/results/radosbench-{{ inventory_file | basename }}-run{{ item.item|int - 1 }}-{{ item.start | replace(' ', '_') }}"
+    with_items: "{{ results.results }}"
