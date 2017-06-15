@@ -3,18 +3,24 @@ package main
 import (
 	"fmt"
 	"log"
+	"os"
 
 	"github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
 )
 
 var initCmd = &cobra.Command{
-	Use:   "init",
+	Use:   "init [<folder>]",
 	Short: "Initializes a popper repository.",
-	Long:  ``,
+	Long:  "If <folder> is given then the repository is created in that folder, otherwise in the current directory.",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 0 {
-			log.Fatalln("This command doesn't take arguments.")
+		if len(args) > 1 {
+			log.Fatalln("This command takes at most one argument.")
+		}
+
+		if len(args) == 1 {
+			os.MkdirAll(args[0], 0777);
+			os.Chdir(args[0]);
 		}
 
 		// check for git repo and popperized repo
@@ -37,7 +43,8 @@ var initCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		fmt.Println("Initialized Popper repository.")
+		cwd, _ := os.Getwd()
+		fmt.Println("Initialized Popper repository in '" + cwd + "'.")
 	},
 }
 
