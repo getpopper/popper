@@ -5,6 +5,7 @@ import (
 	"log"
 	"os"
 
+	"github.com/casimir/xdg-go"
 	"github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
 )
@@ -31,7 +32,7 @@ func main() {
 	}
 }
 
-var popperFolder = os.Getenv("HOME") + "/.popper"
+var popperFolder = xdg.CacheHome() + "/popper"
 
 var popperRepoUrl = "https://github.com/systemslab/popper"
 
