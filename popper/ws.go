@@ -39,19 +39,45 @@ var wsLogCmd = &cobra.Command{
 		expFolder := getWsExperimentFolderPath()
 		commitFolders, _ := ioutil.ReadDir(expFolder)
 		for _, f := range commitFolders {
+			if strings.HasPrefix(f.Name(), ".") {
+				continue
+			}
 			sha, err := sh.Command("cat", expFolder+"/"+f.Name()+"/commit").CombinedOutput()
 			if err != nil {
+				fmt.Printf("%s\n", string(sha[:]))
 				log.Fatalln(err)
 			}
-			msg, err := sh.Command("cat", expFolder+"/"+f.Name()+"/message").Command("head", "-n1").CombinedOutput()
+			msg, err := sh.
+				Command("cat", expFolder+"/"+f.Name()+"/message").
+				Command("head", "-n1").
+				CombinedOutput()
 			if err != nil {
+				fmt.Printf("%s\n", string(msg[:]))
 				log.Fatalln(err)
 			}
 			fmt.Printf("%s@%s %s\n", f.Name(), bytes.TrimSpace(sha), bytes.TrimSpace(msg))
 		}
 	},
 }
-
+var wsShowCmd = &cobra.Command{
+	Use:   "show <commit-id>",
+	Short: "Show information about a commit.",
+	Long:  "",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 1 {
+			log.Fatalln("This command takes one argument (commit ID).")
+		}
+		commitid := strings.Split(args[0], "@")
+		ts := commitid[0]
+		commitFolder := getWsExperimentFolderPath() + "/" + ts
+		if err := sh.Command("cat", commitFolder+"/message").Run(); err != nil {
+			log.Fatalln(err)
+		}
+		if err := sh.Command("echo", "\n\nfolder: ", commitFolder).Run(); err != nil {
+			log.Fatalln(err)
+		}
+	},
+}
 var wsCheckoutCmd = &cobra.Command{
 	Use:   "checkout <commit-id>",
 	Short: "Checkout a workspace commit.",
@@ -63,7 +89,8 @@ var wsCheckoutCmd = &cobra.Command{
 		commitid := strings.Split(args[0], "@")
 		ts := commitid[0]
 		commitFolder := getWsExperimentFolderPath() + "/" + ts
-		if err := sh.Command("cp", "-r", commitFolder+"/files/.", ".").Run(); err != nil {
+		if out, err := sh.Command("cp", "-r", commitFolder+"/files/.", ".").CombinedOutput(); err != nil {
+			fmt.Println("%s\n", string(out[:]))
 			log.Fatalln(err)
 		}
 	},
@@ -124,6 +151,7 @@ func init() {
 	wsCmd.AddCommand(wsCommitCmd)
 	wsCmd.AddCommand(wsLogCmd)
 	wsCmd.AddCommand(wsCheckoutCmd)
+	wsCmd.AddCommand(wsShowCmd)
 
 	usr, err := user.Current()
 	if err != nil {
