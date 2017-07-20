@@ -43,7 +43,6 @@ docker run --rm -i %s \
   --workdir $PWD \
   ivotron/popperci-experimenter %s %s
 echo "Popper check finished"
-echo "status: $(cat popper_status)"
 `
 
 func writePopperCheckScript() {
