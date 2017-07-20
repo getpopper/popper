@@ -60,6 +60,18 @@ func getTemplates() (org_repo_branch string, err error) {
 	return popperRepoUrl, nil
 }
 
+func ensureExperimentFolder() {
+	if !sh.Test("dir", "../../experiments") {
+		log.Fatalln("Not inside an experiment folder, 'cd' into one first.")
+	}
+}
+
+func ensureRootFolder() {
+	if !sh.Test("dir", "experiments") {
+		log.Fatalln("Can't find experiments/ folder in current directory, 'cd' into project root folder first.")
+	}
+}
+
 func init() {
 	RootCmd.Flags().BoolVarP(
 		&showVersion, "version", "v", false,
