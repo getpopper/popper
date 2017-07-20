@@ -81,12 +81,6 @@ var checkCmd = &cobra.Command{
 	},
 }
 
-func checkWeInExperimentFolder() {
-	if !sh.Test("dir", "../../experiments") {
-		log.Fatalln("Not inside an experiment folder, 'cd' into one first.")
-	}
-}
-
 func init() {
 	RootCmd.AddCommand(checkCmd)
 

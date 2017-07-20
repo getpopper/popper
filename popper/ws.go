@@ -35,7 +35,7 @@ var wsLogCmd = &cobra.Command{
 		if len(args) > 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
-		checkWeInExperimentFolder()
+		ensureExperimentFolder()
 		expFolder := getWsExperimentFolderPath()
 		commitFolders, _ := ioutil.ReadDir(expFolder)
 		for _, f := range commitFolders {
@@ -103,7 +103,7 @@ var wsCommitCmd = &cobra.Command{
 		if len(args) > 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
-		checkWeInExperimentFolder()
+		ensureExperimentFolder()
 		if _, err := sh.Command("rsync", "--version").CombinedOutput(); err != nil {
 			log.Fatalln("Can't invoke rsync.")
 		}
