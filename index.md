@@ -48,6 +48,6 @@ Laboratories, and Lawrence Livermore National Laboratory.
 [overview]: http://popper.readthedocs.io/en/latest/protocol/intro_to_popper.html
 [from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
 [badge]: http://popper.readthedocs.io/en/latest/ci/popperci.html
-[cli]: https://github.com/systemslab/popper/wiki/Popper-Data-Science#initialize-a-popper-repository
+[cli]: http://popper.readthedocs.io/en/latest/tutorial/data-science.html
 [pubs]: {{ site.baseurl }}/pubs
 [blog]: {{ site.baseurl }}/blog
