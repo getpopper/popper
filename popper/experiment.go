@@ -6,6 +6,8 @@ import (
 	"log"
 	"path"
 	"strings"
+	"os"
+	"bufio"
 
 	"github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
@@ -63,6 +65,64 @@ func listTemplates(templateType string) {
 	}
 }
 
+func addSubmodules(template string, folder string) {
+	gitmodules := template + "/.gitmodules"
+	if !sh.Test("file", gitmodules) {
+		return
+	}
+
+	// read our specialized gitmodules file
+	f, _ := os.Open(gitmodules)
+	defer f.Close()
+	s := bufio.NewScanner(f)
+	s.Split(bufio.ScanLines)
+
+	// gs (gitmodule settings): nested map that maps keys of type string to maps
+	var gs map[string]map[string]string = make(map[string]map[string]string)
+
+	// g (gitmodule): the current module we are parsing
+	var g string
+
+	// parse gitmodule settings (this is a hack)
+	for s.Scan() {
+		line := s.Text()
+		if strings.Contains(line, "[submodule") {
+			// we are parsing the beginning of a new submodule
+			words := strings.Split(line, "\"")
+
+			// save off the current gitmodule
+			g = words[1]
+			gs[g] = make(map[string]string)
+		} else {
+			// we are parsing a gitmodule attribute
+			words := strings.Split(line, "=")
+			key := strings.TrimSpace(words[0])
+			val := strings.TrimSpace(words[1])
+
+			// save attribute for current gitmodule
+			switch key {
+			case "path":
+				gs[g]["path"] = val
+			case "url":
+				gs[g]["url"] = val
+			case "hash":
+				gs[g]["hash"] = val
+			}
+		}
+	}
+
+	// use git to add submodule(s)
+	for _, g := range gs {
+		path:= folder + "/" + g["path"]
+		if err := sh.Command("git", "submodule", "add", g["url"], path).Run(); err != nil {
+			log.Fatalln(err)
+		}
+		if err := sh.Command("git", "checkout", "-b", g["hash"], g["hash"], sh.Dir(path)).Run(); err != nil {
+			log.Fatalln(err)
+		}
+	}
+}
+
 func addTemplate(templateType string, templateName string, folder string) {
 	checkTemplateFolderExists(templateType)
 
@@ -75,6 +135,8 @@ func addTemplate(templateType string, templateName string, folder string) {
 	if _, err := sh.Command("cp", "-r", template, folder).CombinedOutput(); err != nil {
 		log.Fatalln(err)
 	}
+
+	addSubmodules(template, folder)
 }
 
 func getRepoInfo() (user, repo string, err error) {

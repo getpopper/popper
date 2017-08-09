@@ -1,0 +1,8 @@
+[submodule "ansible/roles/ceph"]
+	path = ansible/roles/ceph
+	url = https://github.com/michaelsevilla/ceph-ansible.git
+	hash = 20ad686
+[submodule "ansible/roles/srl"]
+	path = ansible/roles/srl
+	url = https://github.com/systemslab/srl-roles.git
+	hash = 4fda609
