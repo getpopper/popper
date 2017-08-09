@@ -6,12 +6,11 @@
 Popper
 ======
 
-Popper is an experimentation protocol for organizing an academic article's 
-artifacts following a DevOps approach. The documentation is organized in three 
-sections. The first section describes the experimentation protocol and gives 
-examples from multiple domains describing how to follow the protocol. The 
-second part describes PopperCI, a continuous validation system for Popperized 
-experiments.
+Popper is an experimentation protocol for organizing a academic article's 
+artifacts following a DevOps approach. This documentation describes the 
+experimentation protocol and the Popper CLI tool; it gives examples from 
+multiple domains showing how to follow the protocol; and also shows how to use 
+a CI system to continuously validate Popperized experiments.
 
 
 .. toctree::
