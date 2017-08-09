@@ -1,13 +1,11 @@
-# PopperCI
+# Popper and CI systems
 
-The idea behind PopperCI is simple: by structuring a project in a 
-commonly agreed way, experiment execution and validation can be 
-automated without the need for manual intervention. In addition to 
-this, the status of an experiment (integrity over time) can be tracked 
-by the service hosted at ci.falsifiable.us. In this section we 
-describe the workflow that one follows in order to make an experiment 
-suitable for automation on the PopperCI service. In the next section, 
-we show a use case that illustrates the usage with a concrete example.
+By following a convention for structuring the files of a project, 
+experiment execution and validation can be automated without the need 
+for manual intervention. In addition to this, the status of an 
+experiment (integrity over time) can be tracked by a CI service. In 
+this section we describe the workflow that one follows in order to 
+make an experiment suitable for automation on CI systems.
 
 ## Experiment Folder Structure
 
@@ -30,13 +28,26 @@ that serve as the interface to the experiment. All these return
 non-zero exit codes if there's a failure. In the case of 
 `validate.sh`, this script should print to standard output one line 
 per validation, denoting whether a validation passed or not. In 
-general, the form for validation results is `[true|false] 
-<statement>`. Examples are shown in @Lst:validations.
+general, the form for validation results is `[true|false] <statement>` 
+(see examples below).
 
 ```{#lst:validations .bash caption="Example output of validations."}
 [true]  algorithm A outperforms B
 [false] network throughput is 2x the IO bandwidth
 ```
+
+The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
+includes an `experiment init` subcommand that can be executed to 
+scaffold an experiment with the above structure. The syntax of this 
+command is the following:
+
+```bash
+popper experiment init <name>
+```
+
+Where `<name>` is the name of the experiment to initialize.
+
+<!--
 
 ## Special Subfolders
 
@@ -62,104 +73,118 @@ By default, when a check invokes the corresponding tool, PopperCI uses
 the latest stable version. If another version is required, users can 
 add a `.popper.yml` file to specify this.
 
+-->
+
+## CI System Configuration
+
+In this section we describe how to configure a CI system so that 
+Popper experiments can be continuously validated. The next section 
+describes the multiple steps that are executed as part of this 
+validation process.
+
+The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
+includes a `ci` subcommand that can be executed to generate 
+configuration files for multiple CI systems. The syntax of this 
+command is the following:
+
+```bash
+popper ci <system-name>
+```
+
+Where `<system-name>` is the name of CI system (see `popper ci --help` 
+to get a list of supported systems). In the following, we show how to 
+link github with some of the supported CI systems.
+
+### Travis CI
+
+For this, we need an account at [Travis CI](http://travis-ci.org). 
+Assuming our Popperized repository is already on GitHub, we can enable 
+it on the TravisCI so that it is continuously validated (see 
+[here](https://docs.travis-ci.com/user/getting-started/) for a guide). 
+Once the project is registered on Travis, we procceed to generate 
+`.travis.yml` file:
+
+```bash
+cd my-popper-repo/
+popper ci travis
+```
+
+And commit the file:
+
+```bash
+git add .travis.yml
+git commit -m 'Adds TravisCI config file'
+```
+
+We then can trigger an execution by pushing to GitHub:
+
+```bash
+git push
+```
+
+After this, one can go to the TravisCI website to see your experiments 
+being executed.
+
 ## CI Functionality
 
-Assuming users have created an account at the PopperCI website and 
-installed a git hook in their local repository, after a new commit is 
-pushed to the repository that stores the experiments, the service goes 
-over the following steps:
+The following is the list of steps that are verified when validating 
+an experiment:
+
+<!--
 
  1. Ensure that every versioned dependency is healthy. For example, 
     ensure that external repos can be cloned correctly.
  2. Check the integrity of every special subfolder (see previous 
     subsection).
- 3. For every experiment, trigger an execution (invokes `run.sh`), 
-    possibly launching the experiment on remote infrastructure (see 
-    next section).
- 4. After the experiment finishes, execute validations on the output 
-    (invoke `validate.sh` command).
- 5. Keep track of every experiment and report their status.
+-->
 
-Once an experiment has been successfully validated by PopperCI, it 
-becomes push-button repeatable. If an experiment has been made public, 
-other users can re-execute it instantly, assuming they have an account 
-at the PopperCI website with the appropriate credentials on the 
-platform where the experiment originally executed (e.g. authentication 
-certificates for CloudLab).
-
-## Experiment Execution
-
-![PopperCI dashboard showing the status of every experiment for every 
-commit.
-](figures/popperci_dashboard_experiments.png){#fig:experiments}
-
-Experiments that run on remote infrastructure specify any preparation 
-tasks in the `setup.sh` script. For example, an experiment can 
-leverage [Terraform](https://terraform.io) to initialize the resources 
-required to execute. In this case, an special `terraform/` folder 
-contains one or more [Terraform configuration 
-files](https://www.terraform.io/docs/configuration/) (JSON-compatible, 
-declarative format) that specify the infrastructure that needs to be 
-instantiated in order for the experiment to execute. The `run.sh` 
-script assumes that there is a `terraform.tfstate` folder that 
-contains the output of the `terraform apply` command. For example, 
-this folder contains information about whether all the nodes in an 
-experiment have initialized correctly.
-
-Terraform is a generic tool that initializes infrastructure in a 
-platform-agnostic way by interposing an abstraction layer that is 
-implemented using platform-specific tools. When a plugin for a 
-particular infrastructure is not available, one can resort to using 
-platform-specific tools directly. For example CloudLab 
-[@ricci_introducing_2014] and Grid500K [@bolze_grid5000_2006] have a 
-set of CLI tools that can be used to manage the request of 
-infrastructure. In general, any tool that fits in this category that 
-has a command line interface (CLI) tool available can be used to 
-automate this process.
-
-## PopperCI Dashboard
-
-The PopperCI website, once users have logged in, shows the status of 
-the experiments for their projects. For each project, there is a table 
-that shows the status of every experiment, for every commit 
-(@Fig:experiments).
+ 1. For every experiment, trigger an execution (invoke `setup.sh` 
+    followed by `run.sh`).
+ 2. After the experiment finishes, execute validations on the output 
+    (invoke `validate.sh`).
+ 3. Keep track of every experiment and report their status.
+ 4. Execute `teardown.sh`
 
 There are three possible statuses for every experiment: `FAIL`, `PASS` 
-and `GOLD`. Clicking an entry on the above table shows a `validations` 
-sub-table with two columns, `validation` and `status`, that shows the 
-status for every validation. There are two possible values for the 
-status of a validation, `FAIL` or `PASS`. When the experiment status 
-is `FAIL`, this list is empty since the experiment execution has 
+and `GOLD`. There are two possible values for the status of a 
+validation, `FAIL` or `PASS`. When the experiment status is `FAIL`, 
+this list of validations is empty since the experiment execution has 
 failed and validations are not able to execute at all. When the 
-experiment status is `GOLD`, the status of all validations is `PASS`. 
+experiment status' is `GOLD`, the status of all validations is `PASS`. 
 When the experiment runs correctly but one or more validations fail 
 (experiment's status is `PASS`), the status of one or more validations 
 is `FAIL`.
 
-PopperCI has a badge service that projects can include in the `README` 
-page of a project on the web interface of the version control system 
-(e.g. GitHub). Badges are commonly used to denote the status of a 
-software project, e.g. whether the latest version can be built without 
-errors, or the percentage of code that unit tests cover (code 
-coverage). Badges available for Popper are shown in @Fig:popperci 
-(step 6).
+## Popper Badges
 
-## Testing Locally
+We maintain a badging service that can be used to keep track of the 
+status of an experiment. In order to enable this, the 
+`--enable-badging` flag has to be passed to the `popper ci` 
+subcommand.
 
-The idea behind PopperCI is simple: by structuring a project in a 
-commonly agreed way, experiment execution and validation can be 
-automated without the need for manual intervention. The structured 
-looks like the following:
+![Badging service.](/figures/cibadges.png)
+
+Badges are commonly used to denote the status of a software project 
+with respect to certain aspect, e.g. whether the latest version can be 
+built without errors, or the percentage of code that unit tests cover 
+(code coverage). Badges available for Popper are shown in the above 
+figure. If badging is enabled, after the execution of an experiment, 
+the status of an experiment is recorded in the badging server, which 
+keeps track of statuses for every revision of every experiment.
+
+Users can include a link to the badge in the `README` page of an 
+experiment, which can be displayed on the web interface of the version 
+control system (GitHub in this case). The CLI tool can generate links 
+for experiments:
 
 ```bash
-paper-repo/experiments/myexp/
-├── README.md
-├── .popper.yml
-├── run.sh
-├── setup.sh
-├── teardown.sh
-└── validate.sh
+popper badge <exp>
 ```
+
+Which prints to `stdout` the text that should be added to the `README` 
+file of the experiment.
+
+## Testing Locally
 
 The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
 includes a `check` subcommand that can be executed to test locally. 
