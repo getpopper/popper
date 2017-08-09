@@ -15,7 +15,8 @@ experiment. To learn more about Popper you can:
   * [Email us](mailto:ivo@cs.ucsc.edu), 
     [chat](https://gitter.im/systemslab/popper) or [open an 
     issue](https://github.com/systemslab/popper/issues/new).
-  * Visit our [wiki page][quick-start], where you can learn how to:
+  * Visit our [documentation][quick-start], where you can learn 
+    how to:
       * Follow the convention to generate [Popper-compliant 
         experiments][from-scratch].
       * Use the [Popper-CLI][cli] tool to obtain existing experiment 
@@ -43,10 +44,10 @@ Laboratories, and Lawrence Livermore National Laboratory.
   * Kathryn Mohror (_LLNL_)
   * Remzi Arpaci-Dusseau, Andrea Arpaci-Dusseau (_UW Madison_)
 
-[quick-start]: https://github.com/systemslab/popper/wiki/Intro-to-Popper
-[overview]: https://github.com/systemslab/popper/wiki/Intro-to-Popper
-[from-scratch]: https://github.com/systemslab/popper/wiki/Popper-From-Scratch
-[badge]: https://github.com/systemslab/popper/wiki/Popper-Badge
+[quick-start]: http://popper.readthedocs.io/en/latest/protocol/getting_started.html
+[overview]: http://popper.readthedocs.io/en/latest/protocol/intro_to_popper.html
+[from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
+[badge]: http://popper.readthedocs.io/en/latest/ci/popperci.html
 [cli]: https://github.com/systemslab/popper/wiki/Popper-Data-Science#initialize-a-popper-repository
 [pubs]: {{ site.baseurl }}/pubs
 [blog]: {{ site.baseurl }}/blog
