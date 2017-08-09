@@ -7,8 +7,8 @@ repository contains:
 
   * A [CLI tool](popper/) to help bootstrap research articles that 
     adhere to the convention.
-  * [Documentation](https://github.com/ivotron/popper/wiki/Getting-Started) 
-    about the convention.
+  * [Documentation](http://popper.readthedocs.io/en/latest/) about the 
+    convention.
   * [Experiment re-usable templates](templates/) that can be retrieved using the
     CLI tool (or by cloning this repo).
 
