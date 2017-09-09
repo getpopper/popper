@@ -3,6 +3,7 @@ package main
 import (
 	"io/ioutil"
 	"log"
+	"fmt"
 	"github.com/spf13/cobra"
 )
 
@@ -39,10 +40,11 @@ var ciTravisCmd = &cobra.Command{
 			log.Fatalln("This command does not take arguments.")
 		}
 		ensureRootFolder()
-		err := ioutil.WriteFile("./.travis.yml", []byte(travisYaml), 0755)
+		err := ioutil.WriteFile("./.travis.yml", []byte(travisYaml), 0644)
 		if err != nil {
 			log.Fatalln("Error writing .travis.yml")
 		}
+		fmt.Println("Created .travis.yml file.")
 	},
 }
 
