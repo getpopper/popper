@@ -19,7 +19,7 @@ var updateCmd = &cobra.Command{
 		if err := updateTemplates(); err != nil {
 			log.Fatalln(err)
 		}
-		if err := sh.Command("docker", "pull", "ivotron/popperci-experimenter").Run(); err != nil {
+		if err := sh.Command("docker", "pull", "ivotron/poppercheck").Run(); err != nil {
 			log.Fatalln(err)
 		}
 		fmt.Println("Updated Popper repository successfully.")
