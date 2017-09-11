@@ -16,8 +16,12 @@ var timeout string
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
-	Short: "Run experiment and report on its integrity (status)",
-	Long:  ``,
+	Short: "Run experiment and report on its status",
+	Long: `Executes an experiment in its own isolated environment (docker container). 
+Environment variables and folders can be made available inside the experiment's environment
+using -e and -v flags respectively. These are analogous to Docker's flags and are passed
+down to the 'docker run' command. The experiment folder is always passed to the experiment
+environment.`,
 	Run: func(cmd *cobra.Command, args []string) {
 
 		env := ""
@@ -51,8 +55,8 @@ var checkCmd = &cobra.Command{
 func init() {
 	RootCmd.AddCommand(checkCmd)
 
-	checkCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, "Environment variables to be defined inside the test container.")
-	checkCmd.Flags().StringSliceVarP(&volumes, "volume", "v", []string{}, "Volumes to be passed to the test container.")
+	checkCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, "Environment variables available to the experiment.")
+	checkCmd.Flags().StringSliceVarP(&volumes, "volume", "v", []string{}, "Volumes available to the experiment.")
 	checkCmd.Flags().StringVarP(&skip, "skip", "s", "", "Comma-separated list of stages to skip.")
-	checkCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for experiment (default: 10 hrs).")
+	checkCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for experiment in seconds.")
 }
