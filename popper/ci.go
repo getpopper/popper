@@ -1,9 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
-	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
@@ -17,7 +18,7 @@ services:
 - docker
 
 install:
-- curl -O https://raw.githubusercontent.com/systemslab/popperci/master/implementations/python/docker/entrypoint.py
+- curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py
 - chmod 755 entrypoint.py
 
 script: ./entrypoint.py
@@ -25,7 +26,7 @@ script: ./entrypoint.py
 
 var ciCmd = &cobra.Command{
 	Use:   "ci",
-	Short: "Generate config files for a CI system.",
+	Short: "Generate configuration files for CI systems.",
 	Long:  "",
 	Run: func(cmd *cobra.Command, args []string) {
 		log.Fatalln("Can't use this subcommand directly. See 'popper help ci' for usage")
