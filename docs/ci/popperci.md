@@ -47,6 +47,34 @@ popper experiment init <name>
 
 Where `<name>` is the name of the experiment to initialize.
 
+<!--
+
+## Special Subfolders
+
+Folders named after a tool (e.g. `docker` or `terraform`) have special 
+meaning. For each of these, tests are executed that check the 
+integrity of the associated files. For example, if we have an 
+experiment that is orchestrated with [Ansible](http://ansible.com), 
+the associated files are stored in an `ansible` folder. When checking 
+the integrity of this experiment, the `ansible` folder is inspected 
+and associated files are checked to see if they are healthy. The 
+following is a list of currently supported folder names and their CI 
+semantics (support for others is in the making):
+
+  * `docker`. An image is created for every `Dockerfile`.
+  * `ansible`. YAML syntax is checked.
+  * `datapackages`. Availability of every dataset is checked.
+  * `vagrant`. Definition of the VM is verified.
+  * `terraform`. Infrastructure configuration files are checked by 
+    running `terraform validate`.
+  * `geni`. Test using the `omni validate` command.
+
+By default, when a check invokes the corresponding tool, PopperCI uses 
+the latest stable version. If another version is required, users can 
+add a `.popper.yml` file to specify this.
+
+-->
+
 ## CI System Configuration
 
 In this section we describe how to configure a CI system so that 
@@ -102,6 +130,14 @@ being executed.
 The following is the list of steps that are verified when validating 
 an experiment:
 
+<!--
+
+ 1. Ensure that every versioned dependency is healthy. For example, 
+    ensure that external repos can be cloned correctly.
+ 2. Check the integrity of every special subfolder (see previous 
+    subsection).
+-->
+
  1. For every experiment, trigger an execution (invoke `setup.sh` 
     followed by `run.sh`).
  2. After the experiment finishes, execute validations on the output 
@@ -150,12 +186,13 @@ file of the experiment.
 
 ## Testing Locally
 
-The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
-includes a `check` subcommand that can be executed to test locally. 
-This subcommand is the same that is executed by the PopperCI service, 
-so the output of its invocation should be, in most cases, the same as 
-the one obtained when PopperCI executes it. This helps in cases where 
-one is testing locally. To execute test locally:
+The 
+[PopperCLI](https://github.com/systemslab/popper/tree/master/popper) 
+tool includes a `check` subcommand that can be executed to test 
+locally. This subcommand is the same that is executed by the PopperCI 
+service, so the output of its invocation should be, in most cases, the 
+same as the one obtained when PopperCI executes it. This helps in 
+cases where one is testing locally. To execute test locally:
 
 ```bash
 cd my/paper/repo
