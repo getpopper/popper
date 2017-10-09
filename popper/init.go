@@ -98,19 +98,31 @@ func initExperiment(name string) {
 }
 
 var initCmd = &cobra.Command{
-	Use:   "init <name>",
-	Short: "Initializes an experiment or paper folder.",
-	Long: `Initializes an experiment or paper folder. If the given name is 'paper',
-then a 'paper' folder is created. Otherwise, an experiment named 'name'
-is created.`,
+	Use:   "init [<name>]",
+	Short: "Initializes a repository, experiment or paper folder.",
+	Long: `Without any arguments, this command initializes a popper repository. If
+an argument is given, an experiment or paper folder is initialized. If the given
+name is 'paper', then a 'paper' folder is created. Otherwise, an experiment named
+'name' is created.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 1 {
-			log.Fatalln("This command takes one argument.")
+		if len(args) > 1 {
+			log.Fatalln("This command takes one argument at most.")
 		}
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
-		initExperiment(args[0])
+		if len(args) == 0 {
+			if sh.Test("file", ".popper.yml") {
+				log.Fatalln("File .popper.yml already exists")
+			}
+			err := ioutil.WriteFile(".popper.yml", []byte(""), 0644)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			fmt.Println("Initialized popper repository.")
+		} else {
+			initExperiment(args[0])
+		}
 	},
 }
 
