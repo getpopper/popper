@@ -57,9 +57,14 @@ var addCmd = &cobra.Command{
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
+
 		if strings.HasPrefix(args[0], "paper-") {
 			addExperiment("paper", args[0], "paper/")
 		} else {
+			// create experiments folder if it doesn't exist
+			if err := sh.Command("mkdir", "-p", "experiments/").Run(); err != nil {
+				log.Fatalln(err)
+			}
 			addExperiment("experiments", args[0], "experiments/"+expname)
 		}
 
