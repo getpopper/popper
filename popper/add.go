@@ -3,29 +3,11 @@ package main
 import (
 	"fmt"
 	"log"
-	"path"
 	"strings"
 
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
 )
-
-func getRepoInfo() (user, repo string, err error) {
-	remoteURL, err := sh.Command(
-		"git", "config", "--get", "remote.origin.url").Output()
-	if err != nil {
-		return
-	}
-	urlAndUser, repo := path.Split(string(remoteURL))
-
-	// get the user or org name
-	user = path.Base(strings.Replace(urlAndUser, ":", "/", -1))
-
-	// trim and remove .git extension, if present
-	repo = strings.TrimSuffix(strings.TrimSpace(repo), ".git")
-
-	return
-}
 
 func addExperiment(templateType string, templateName string, folder string) {
 	checkTemplateFolderExists(templateType)
