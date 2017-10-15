@@ -7,7 +7,10 @@ import (
 
 	sh "github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
+	"github.com/theherk/viper"
 )
+
+var envFlagValue string
 
 var setupSh = []byte(`#!/bin/bash
 # Any setup required by the experiment goes here. Things like installing
@@ -86,10 +89,23 @@ func initExperiment(name string) {
 		log.Fatalln(err)
 	}
 
+	// add environment to .popper.yml
+	err := readPopperConfig()
+	if err != nil {
+		log.Fatalln(err)
+	}
+	values := map[string]string{}
+	if viper.IsSet("envs") {
+		values = viper.GetStringMapString("envs")
+	}
+	values[name] = envFlagValue
+	viper.Set("envs", values)
+	viper.WriteConfig()
+
 	// add README
 	readme := "# " + name + "\n"
 
-	err := ioutil.WriteFile("experiments/"+name+"/README.md", []byte(readme), 0644)
+	err = ioutil.WriteFile("experiments/"+name+"/README.md", []byte(readme), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -127,5 +143,6 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an experiment name
 }
 
 func init() {
+	initCmd.Flags().StringVarP(&envFlagValue, "env", "e", "alpine-3.4", "Environment where popper check will run.")
 	RootCmd.AddCommand(initCmd)
 }
