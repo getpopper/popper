@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/boltdb/bolt"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
@@ -29,10 +30,16 @@ var serviceCmd = &cobra.Command{
 			log.Fatalln("This command doesn't take arguments.")
 		}
 
+		db, err := bolt.Open("status.db", 0600, nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer db.Close()
+
 		router := mux.NewRouter().StrictSlash(true)
 
 		router.
-			HandleFunc("/repos/{repoId}/{expId}", handleExperiment).
+			HandleFunc("/{orgId}/{repoId}/{expId}", handleExperiment).
 			Methods("GET", "POST")
 		router.
 			HandleFunc("/{orgId}/{repoId}/{expId}/status.svg", handleBadge).
@@ -50,17 +57,29 @@ type ExperimentStatus struct {
 func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (exp *ExperimentStatus) {
 	exp = new(ExperimentStatus)
 
-	repo, ok := repos[repoId]
-	if !ok {
-		exp.Status = "invalid"
-		return
-	} else {
-		exp, ok = repo[expId]
-		if !ok {
+	err = db.View(func(tx *bolt.Tx) error {
+		orgBucket := tx.Bucket(orgId)
+		if orgBucket == nil {
 			exp.Status = "invalid"
 			return
 		}
-	}
+
+		repoBucket := orgBucket.Bucket(repoId)
+		if repoBucket == nil {
+			exp.Status = "invalid"
+			return
+		}
+
+		expBucket := repoBucket.Bucket(expId)
+		if expBucket == nil {
+			exp.status = "invalid"
+			return
+		}
+
+		exp = expBucket.Get([]byte("status"))
+
+		return nil
+	})
 
 	return
 }
