@@ -49,7 +49,7 @@ type ExperimentStatus struct {
 }
 
 func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (exp *ExperimentStatus) {
-	exp = new(ExperimentStatus)
+	exp = nil
 
 	db, err := bolt.Open("status.db", 0600, nil)
 	if err != nil {
@@ -76,7 +76,7 @@ func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (ex
 			return nil
 		}
 
-		exp = expBucket.Get([]byte("status"))
+		exp, err = json.Decode(expBucket.Get([]byte("status")))
 
 		return nil
 	})
@@ -130,30 +130,32 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 		defer db.Close()
-		db.Update(func(tx *bolt.tx) error {
+		db.Update(func(tx *bolt.Tx) error {
 			orgBucket, err := tx.CreateBucketIfNotExists([]byte(orgId))
 			if err != nil {
 				log.Println(error.Error())
 				http.Error(w, error.Error(), http.StatusInternalServerError)
-				return
+				return nil
 			}
 			repoBucket, err := orgBucket.CreateBucketIfNotExists([]byte(repoId))
 			if err != nil {
 				log.Println(error.Error())
 				http.Error(w, error.Error(), http.StatusInternalServerError)
-				return
+				return nil
 			}
 			expBucket, err := repoBucket.CreateBucketIfNotExists([]byte(expId))
 			if err != nil {
 				log.Println(error.Error())
 				http.Error(w, error.Error(), http.StatusInternalServerError)
-				return
+				return nil
 			}
 			experiment.Name = expId
 			expBucket.Put([]byte("status"), []byte(experiment))
+
+			return nil
 		})
 
-		repo[expId] = experiment
+		//repo[expId] = experiment
 
 		outgoingJSON, err := json.Marshal(experiment)
 		if err != nil {
