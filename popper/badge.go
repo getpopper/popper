@@ -76,7 +76,7 @@ func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (ex
 			return nil
 		}
 
-		exp, err = json.Decode(expBucket.Get([]byte("status")))
+		exp = expBucket.Get([]byte("status"))
 
 		return nil
 	})
@@ -84,7 +84,7 @@ func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (ex
 	return
 }
 
-var repos = map[string]map[string]*ExperimentStatus{}
+//var repos = map[string]map[string]*ExperimentStatus{}
 var badges = map[string][]byte{
 	"invalid": []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="108" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="108" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="M0 0h47v20H0z"/><path fill="#9f9f9f" d="M47 0h61v20H47z"/><path fill="url(#b)" d="M0 0h108v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="23.5" y="15" fill="#010101" fill-opacity=".3">Popper</text><text x="23.5" y="14">Popper</text><text x="76.5" y="15" fill="#010101" fill-opacity=".3">unknown</text><text x="76.5" y="14">unknown</text></g></svg>`),
 	"fail":    []byte(`<svg xmlns="http://www.w3.org/2000/svg" width="82" height="20"><linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient><mask id="a"><rect width="82" height="20" rx="3" fill="#fff"/></mask><g mask="url(#a)"><path fill="#555" d="M0 0h47v20H0z"/><path fill="#e05d44" d="M47 0h35v20H47z"/><path fill="url(#b)" d="M0 0h82v20H0z"/></g><g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11"><text x="23.5" y="15" fill="#010101" fill-opacity=".3">Popper</text><text x="23.5" y="14">Popper</text><text x="63.5" y="15" fill="#010101" fill-opacity=".3">FAIL</text><text x="63.5" y="14">FAIL</text></g></svg>`),
