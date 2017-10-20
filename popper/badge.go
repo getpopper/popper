@@ -35,7 +35,7 @@ var serviceCmd = &cobra.Command{
 			HandleFunc("/repos/{repoId}/{expId}", handleExperiment).
 			Methods("GET", "POST")
 		router.
-			HandleFunc("/repos/{repoId}/{expId}/status.svg", handleBadge).
+			HandleFunc("/{orgId}/{repoId}/{expId}/status.svg", handleBadge).
 			Methods("GET")
 
 		log.Fatal(http.ListenAndServe(":9090", router))
@@ -47,7 +47,7 @@ type ExperimentStatus struct {
 	Status string `json:"status"`
 }
 
-func getExperimentStatus(w http.ResponseWriter, repoId, expId string) (exp *ExperimentStatus) {
+func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (exp *ExperimentStatus) {
 	exp = new(ExperimentStatus)
 
 	repo, ok := repos[repoId]
@@ -76,12 +76,13 @@ var badges = map[string][]byte{
 func handleExperiment(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
+	orgId := vars["orgId"]
 	repoId := vars["repoId"]
 	expId := vars["expId"]
 
 	switch r.Method {
 	case "GET":
-		exp := getExperimentStatus(w, repoId, expId)
+		exp := getExperimentStatus(w, orgId, repoId, expId)
 		if exp.Status == "invalid" {
 			w.WriteHeader(http.StatusNotFound)
 			fmt.Fprintln(w, string("Repo or user not found"))
@@ -104,10 +105,11 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, error.Error(), http.StatusInternalServerError)
 			return
 		}
-		repo, ok := repos[repoId]
+		// TODO add an org check here
+		repo, ok := repos[repoId] // TODO this needs to be a bucket check
 		if !ok {
 			log.Println("Didn't find repo " + repoId + "; adding it")
-			repos[repoId] = map[string]*ExperimentStatus{}
+			repos[repoId] = map[string]*ExperimentStatus{} // TODO replace this with creating a new bucket
 			repo = repos[repoId]
 		}
 		experiment.Name = expId
@@ -127,12 +129,13 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 
 func handleBadge(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
+	orgId := vars["orgId"]
 	repoId := vars["repoId"]
 	expId := vars["expId"]
 
 	switch r.Method {
 	case "GET":
-		exp := getExperimentStatus(w, repoId, expId)
+		exp := getExperimentStatus(w, orgId, repoId, expId)
 		date := time.Now().Format(http.TimeFormat)
 		log.Printf("%v\n", date)
 		log.Printf("State %v\n", exp)
