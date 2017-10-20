@@ -17,7 +17,7 @@ This repository contains:
 
 ## Contributing
 
-Anyone is welcome to contribute to Popper! To get started, take a look at our [roadmap](https://github.com/systemslab/popper/issues/1) [CONTRIBUTING.md](CONTRIBUTING.md).
+Anyone is welcome to contribute to Popper! To get started, take a look at our [roadmap](https://github.com/systemslab/popper/issues/1) and [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Participation Guidelines
 
