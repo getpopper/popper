@@ -30,12 +30,6 @@ var serviceCmd = &cobra.Command{
 			log.Fatalln("This command doesn't take arguments.")
 		}
 
-		db, err := bolt.Open("status.db", 0600, nil)
-		if err != nil {
-			log.Fatal(err)
-		}
-		defer db.Close()
-
 		router := mux.NewRouter().StrictSlash(true)
 
 		router.
@@ -57,23 +51,29 @@ type ExperimentStatus struct {
 func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId string) (exp *ExperimentStatus) {
 	exp = new(ExperimentStatus)
 
+	db, err := bolt.Open("status.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer db.Close()
+
 	err = db.View(func(tx *bolt.Tx) error {
-		orgBucket := tx.Bucket(orgId)
+		orgBucket := tx.Bucket([]byte(orgId))
 		if orgBucket == nil {
 			exp.Status = "invalid"
-			return
+			return nil
 		}
 
-		repoBucket := orgBucket.Bucket(repoId)
+		repoBucket := orgBucket.Bucket([]byte(repoId))
 		if repoBucket == nil {
 			exp.Status = "invalid"
-			return
+			return nil
 		}
 
-		expBucket := repoBucket.Bucket(expId)
+		expBucket := repoBucket.Bucket([]byte(expId))
 		if expBucket == nil {
-			exp.status = "invalid"
-			return
+			exp.Status = "invalid"
+			return nil
 		}
 
 		exp = expBucket.Get([]byte("status"))
@@ -124,14 +124,34 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, error.Error(), http.StatusInternalServerError)
 			return
 		}
-		// TODO add an org check here
-		repo, ok := repos[repoId] // TODO this needs to be a bucket check
-		if !ok {
-			log.Println("Didn't find repo " + repoId + "; adding it")
-			repos[repoId] = map[string]*ExperimentStatus{} // TODO replace this with creating a new bucket
-			repo = repos[repoId]
+
+		db, err := bolt.Open("status.db", 0600, nil)
+		if err != nil {
+			log.Fatal(err)
 		}
-		experiment.Name = expId
+		defer db.Close()
+		db.Update(func(tx *bolt.tx) error {
+			orgBucket, err := tx.CreateBucketIfNotExists([]byte(orgId))
+			if err != nil {
+				log.Println(error.Error())
+				http.Error(w, error.Error(), http.StatusInternalServerError)
+				return
+			}
+			repoBucket, err := orgBucket.CreateBucketIfNotExists([]byte(repoId))
+			if err != nil {
+				log.Println(error.Error())
+				http.Error(w, error.Error(), http.StatusInternalServerError)
+				return
+			}
+			expBucket, err := repoBucket.CreateBucketIfNotExists([]byte(expId))
+			if err != nil {
+				log.Println(error.Error())
+				http.Error(w, error.Error(), http.StatusInternalServerError)
+				return
+			}
+			experiment.Name = expId
+			expBucket.Put([]byte("status"), []byte(experiment))
+		})
 
 		repo[expId] = experiment
 
