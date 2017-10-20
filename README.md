@@ -17,7 +17,7 @@ This repository contains:
 
 ## Contributing
 
-Anyone is welcome to contribute to Popper! To get started, take a look at [CONTRIBUTING.md](CONTRIBUTING.md).
+Anyone is welcome to contribute to Popper! To get started, take a look at our [roadmap](https://github.com/systemslab/popper/issues/1) [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Participation Guidelines
 
@@ -25,4 +25,4 @@ Popper adheres to our code of conduct, [posted in this repository](CODE_OF_CONDU
 
 ## Hacktoberfest
 
-Join us at [Hacktoberfest](https://hacktoberfest.digitalocean.com/) this month to collaborate on this project and learn from each other.
+Join us for [Hacktoberfest](https://hacktoberfest.digitalocean.com/) this month to collaborate on this project and have a chance to win a Hacktoberfest t-shirt!
