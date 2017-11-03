@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
+	sh "github.com/codeskyblue/go-sh"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
@@ -46,6 +47,31 @@ var serviceCmd = &cobra.Command{
 			Methods("GET")
 
 		log.Fatal(http.ListenAndServe(":9090", router))
+	},
+}
+
+var statusCmd = &cobra.Command{
+	Use:   "status",
+	Short: "Check experiment(s) status stored with badge service.",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		var sha string
+		if len(args) > 1 {
+			log.Fatalln("This command takes one argument at most.")
+		} else if len(args) == 0 {
+			if !sh.Test("dir", "validate.sh") {
+				log.Fatalln("Can't find validate.sh. Are you in the root folder of an experiment?")
+			} else {
+				sha, err := sh.Command("git", "rev-parse", "HEAD").Output()
+				if err != nil {
+					return
+				}
+				// TODO build status request here
+			}
+		} else {
+			sha = args[1]
+			// TODO build status request here
+		}
 	},
 }
 
@@ -190,4 +216,5 @@ func getBadge(w http.ResponseWriter, orgId, repoId, expId, sha string) {
 func init() {
 	RootCmd.AddCommand(badgeCmd)
 	badgeCmd.AddCommand(serviceCmd)
+	badgeCmd.addCommand(statusCmd)
 }
