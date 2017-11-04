@@ -22,6 +22,8 @@ help:
 popper help
 ```
 
+For a quickstart guide on how to use the CLI, look [here](http://popper.readthedocs.io/en/latest/protocol/getting_started.html#quickstart-guide).
+
 ## Contributing
 
 Anyone is welcome to contribute to Popper! To get started, take a look at our [roadmap](https://github.com/systemslab/popper/issues/1) and [CONTRIBUTING.md](CONTRIBUTING.md), then dive in with our [list of good first issues](https://github.com/systemslab/popper/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+label%3Ahacktoberfest).
