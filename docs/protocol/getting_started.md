@@ -98,7 +98,13 @@ Run popper check:
 popper check
 ```
 
-Show logs for blis experiment:
+> **NOTE:** By default, `popper check` runs all commands directly on 
+the host. We recommend running an isolated environment. In order to do 
+this, one can create an experiment using the `--env` flag of the 
+`popper init` command. For example, `popper init <exp> 
+--env=alpine-3.4` runs a command inside an `alpine-3.4` container.
+
+Once an experiment is checked, one can show the logs:
 
 ```bash
 ls -l experiments/blis/popper_logs
