@@ -66,8 +66,8 @@ func runCheck() {
 
 	checkEnv := ""
 	if !viper.IsSet("envs." + expName) {
-		fmt.Println("No environment in .popper.yml, using default (alpine-3.4)")
-		checkEnv = "alpine-3.4"
+		fmt.Println("No environment in .popper.yml, using host")
+		checkEnv = "host"
 	} else {
 		checkEnv = viper.GetString("envs." + expName)
 	}
