@@ -143,6 +143,6 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an experiment name
 }
 
 func init() {
-	initCmd.Flags().StringVarP(&envFlagValue, "env", "e", "alpine-3.4", "Environment where popper check will run.")
+	initCmd.Flags().StringVarP(&envFlagValue, "env", "e", "host", "Environment where popper check will run.")
 	RootCmd.AddCommand(initCmd)
 }
