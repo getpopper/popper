@@ -5,7 +5,7 @@ layout: default
 ![]({{ site.baseurl }}/images/popper.gif)
 
 _Popper_ is a convention for conducting experiments and writing 
-academic article's following a 
+academic articles following a 
 [DevOps](https://en.wikipedia.org/wiki/DevOps) approach that allows 
 researchers to automate the re-execution and validation of an 
 experiment. To learn more about Popper you can:
