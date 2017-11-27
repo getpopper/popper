@@ -39,7 +39,7 @@ var serviceCmd = &cobra.Command{
 		// Get most recent badge
 		router.
 			HandleFunc("/{orgId}/{repoId}/{expId}/status.svg", getLatestBadge).
-			Methods("Get")
+			Methods("GET")
 
 		// Get badge for specific SHA
 		router.
@@ -56,8 +56,19 @@ var statusCmd = &cobra.Command{
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		var sha string
-		if len(args) > 1 {
-			log.Fatalln("This command takes one argument at most.")
+		if len(args) == 1 {
+			sha = args[1]
+			expName, err := getExperimentName()
+			if err != nil {
+				return
+			}
+			orgName, repoName, err := getRepoInfo()
+			if err != nil {
+				return
+			}
+			getString := "http://status.falsifiable.us/" + orgName + "/" + repoName + "/" + expName + "/" + sha + "/status.svg"
+
+			req := http.Get(getString)
 		} else if len(args) == 0 {
 			if !sh.Test("dir", "validate.sh") {
 				log.Fatalln("Can't find validate.sh. Are you in the root folder of an experiment?")
@@ -66,11 +77,20 @@ var statusCmd = &cobra.Command{
 				if err != nil {
 					return
 				}
-				// TODO build status request here
+				expName, err := getExperimentName()
+				if err != nil {
+					return
+				}
+				orgName, repoName, err := getRepoInfo()
+				if err != nil {
+					return
+				}
+				getString := "http://status.falsifiable.us/" + orgName + "/" + repoName + "/" + expName + "/" + sha + "/status.svg"
+
+				req := http.Get(getString)
 			}
 		} else {
-			sha = args[1]
-			// TODO build status request here
+			log.Fatalln("This command takes one argument at most.")
 		}
 	},
 }
