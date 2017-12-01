@@ -19,9 +19,9 @@ services:
 
 install:
 - curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py
-- chmod 755 entrypoint.py
+- chmod 755 check.py
 
-script: ./entrypoint.py
+script: ./check.py
 `
 
 var ciCmd = &cobra.Command{
