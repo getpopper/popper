@@ -27,5 +27,5 @@ var searchCmd = &cobra.Command{
 }
 
 func init() {
-	RootCmd.AddCommand(searchCmd)
+	// RootCmd.AddCommand(searchCmd)
 }

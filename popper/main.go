@@ -39,30 +39,6 @@ var popperFolder = xdg.CacheHome() + "/popper"
 
 var popperRepoUrl = "https://github.com/systemslab/popper"
 
-func updateTemplates() (err error) {
-	if err = sh.Command("git", "-C", popperFolder, "reset", "--hard", "origin/master").Run(); err != nil {
-		log.Fatalln(err)
-	}
-	if err = sh.Command("git", "-C", popperFolder, "pull").Run(); err != nil {
-		log.Fatalln(err)
-	}
-	if err = sh.Command("git", "-C", popperFolder, "submodule", "update", "--init", "--recursive").Run(); err != nil {
-		log.Fatalln(err)
-	}
-	return nil
-}
-
-func getTemplates() (org_repo_branch string, err error) {
-
-	if !sh.Test("d", popperFolder) {
-		if err = sh.Command("git", "clone", "--recursive", popperRepoUrl, popperFolder).Run(); err != nil {
-			log.Fatalln(err)
-		}
-	}
-
-	return popperRepoUrl, nil
-}
-
 func ensureExperimentFolder() {
 	if sh.Test("file", ".popper.yml") {
 		log.Fatalln("File .popper.yml already exists")

@@ -1,3 +1,0 @@
----
-journal_size: 10000
-osd_containerized_deployment: true
