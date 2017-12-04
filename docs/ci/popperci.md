@@ -1,57 +1,15 @@
 # Popper and CI systems
 
-By following a convention for structuring the files of a project, 
-pipeline execution and validation can be automated without the need 
-for manual intervention. In addition to this, the status of a pipeline 
-(integrity over time) can be tracked by a CI service. In this section 
-we describe the workflow that one follows in order to make a pipeline 
-suitable for automation on CI systems.
-
-## Pipeline Folder Structure
-
-A minimal pipeline folder structure for an experiment or analysis is 
-shown below:
-
-```{#lst:repo .bash caption="Basic structure of a Popper repository."}
-$> tree -a paper-repo/pipelines/myexp
-paper-repo/pipelines/myexp/
-|-- README.md
-|-- .popper.yml
-|-- run.sh
-|-- setup.sh
-|-- validate.sh
-|-- teardown.sh
-```
-
-Every pipeline has `setup.sh`, `run.sh` and `validate.sh` scripts that 
-serve as the interface to the pipeline. All these return non-zero exit 
-codes if there's a failure. In the case of `validate.sh`, this script 
-should print to standard output one line per validation, denoting 
-whether a validation passed or not. In general, the form for 
-validation results is `[true|false] <statement>` (see examples below).
-
-```{#lst:validations .bash caption="Example output of validations."}
-[true]  algorithm A outperforms B
-[false] network throughput is 2x the IO bandwidth
-```
-
-The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
-includes an `pipeline init` subcommand that can be executed to 
-scaffold an pipeline with the above structure. The syntax of this 
-command is the following:
-
-```bash
-popper pipeline init <name>
-```
-
-Where `<name>` is the name of the pipeline to initialize.
+By following a convention for structuring the files of a project, an 
+experimentation pipeline execution and validation can be automated 
+without the need for manual intervention. In addition to this, the 
+status of a pipeline (integrity over time) can be tracked by a 
+[continuous integration (CI) 
+service](https://en.wikipedia.org/wiki/Comparison_of_continuous_integration_software). 
+In this section we describe how Popper integrates with some existing 
+CI services.
 
 ## CI System Configuration
-
-In this section we describe how to configure a CI system so that 
-Popper pipelines can be continuously validated. The next section 
-describes the multiple steps that are executed as part of this 
-validation process.
 
 The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
 includes a `ci` subcommand that can be executed to generate 

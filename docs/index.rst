@@ -7,10 +7,11 @@ Popper
 ======
 
 Popper is an experimentation protocol for organizing a academic article's 
-artifacts following a DevOps approach. This documentation describes the 
-experimentation protocol and the Popper CLI tool; it gives examples from 
-multiple domains showing how to follow the protocol; and also shows how to use 
-a CI system to continuously validate Popperized experiments.
+artifacts following a DevOps approach (sometimes referred to as "SciOps"). This 
+documentation describes the experimentation protocol and the Popper CLI tool; 
+it gives examples from multiple domains showing how to follow the protocol; and 
+also shows how to use a CI system to continuously validate Popperized 
+experiments.
 
 
 .. toctree::
@@ -18,16 +19,12 @@ a CI system to continuously validate Popperized experiments.
 
    protocol/getting_started.md
    protocol/intro_to_popper.md
+   ci/popperyml.md
    ci/popperci.md
-   tutorial/from_scratch.md
    tutorial/math_science.md
    tutorial/hpc.md
    tutorial/data-science.md
 
-
-To build this documentation using Docker:
-
-`docker run --rm -v $PWD/docs:/doc ivotron/rtfd build`
 
 This project is supported in part by the National Science Foundation ([award 
 #1450488](http://bigweatherweb.org)), the [Center for Research in Open Source 
