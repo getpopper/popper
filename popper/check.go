@@ -55,7 +55,7 @@ func runInDocker(checkFlags []string, checkEnv string) {
 }
 
 func runCheck() {
-	expName, err := getExperimentName()
+	expName, err := getPipelineName()
 	if err != nil {
 		log.Fatalln(err)
 	}
@@ -86,11 +86,11 @@ func runCheck() {
 
 var checkCmd = &cobra.Command{
 	Use:   "check",
-	Short: "Run experiment and report on its status",
-	Long: `Executes an experiment in its corresponding environment (host or docker). If using docker,
+	Short: "Run pipeline and report on its status",
+	Long: `Executes an pipeline in its corresponding environment (host or docker). If using docker,
 environment variables and folders can be made available inside the container by using -e
 and -v flags respectively. These flags are passed down to the 'docker run' command. The
-experiment folder is bind-mounted. If the environment is 'host', the -v and -e flags are
+pipeline folder is bind-mounted. If the environment is 'host', the -v and -e flags are
 ignored.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
@@ -103,11 +103,11 @@ ignored.`,
 func init() {
 	RootCmd.AddCommand(checkCmd)
 
-	checkCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, `Environment variable available to the experiment. Can be
+	checkCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, `Environment variable available to the pipeline. Can be
                             given multiple times. This flag is ignored when the environment
                             is 'host'.`)
-	checkCmd.Flags().StringSliceVarP(&volume, "volume", "v", []string{}, `Volume available to the experiment. Can be given multiple times
+	checkCmd.Flags().StringSliceVarP(&volume, "volume", "v", []string{}, `Volume available to the pipeline. Can be given multiple times
                             This flag is ignored when the environment is 'host'.`)
 	checkCmd.Flags().StringVarP(&skip, "skip", "s", "", "Comma-separated list of stages to skip.")
-	checkCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for experiment in seconds.")
+	checkCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for pipeline in seconds.")
 }

@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func listAvailableExperiments(templateType string) {
+func listAvailablePipelines(templateType string) {
 	checkTemplateFolderExists(templateType)
 	if err := sh.Command("ls", "-1", popperFolder+"/templates/"+templateType).Run(); err != nil {
 		log.Fatalln(err)
@@ -16,13 +16,13 @@ func listAvailableExperiments(templateType string) {
 
 var searchCmd = &cobra.Command{
 	Use:   "search",
-	Short: "Search for available experiments",
+	Short: "Search for available pipelines",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
-		listAvailableExperiments("experiments")
+		listAvailablePipelines("pipelines")
 	},
 }
 

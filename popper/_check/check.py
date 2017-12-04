@@ -40,7 +40,7 @@ def execute(stage, timeout):
     return p.poll()
 
 
-def check_experiment(skip, timeout):
+def check_pipeline(skip, timeout):
     check_output('rm -rf popper_logs/ popper_status', shell=True)
     check_output('mkdir -p popper_logs/', shell=True)
 
@@ -97,12 +97,12 @@ if __name__ == "__main__":
     args = parser.parse_args()
     sys.stdout = Unbuffered(sys.stdout)
 
-    if path.isdir('./experiments'):
-        for f in os.listdir('experiments'):
-            if not f.startswith('.') and path.isdir('experiments/' + f):
-                print('\nChecking experiment ' + f)
-                os.chdir('experiments/' + f)
-                check_experiment(args.skip, int(args.timeout))
+    if path.isdir('./pipelines'):
+        for f in os.listdir('pipelines'):
+            if not f.startswith('.') and path.isdir('pipelines/' + f):
+                print('\nChecking pipeline ' + f)
+                os.chdir('pipelines/' + f)
+                check_pipeline(args.skip, int(args.timeout))
                 os.chdir('../../')
     else:
-        check_experiment(args.skip, int(args.timeout))
+        check_pipeline(args.skip, int(args.timeout))

@@ -39,17 +39,17 @@ var popperFolder = xdg.CacheHome() + "/popper"
 
 var popperRepoUrl = "https://github.com/systemslab/popper"
 
-func ensureExperimentFolder() {
+func ensurePipelineFolder() {
 	if sh.Test("file", ".popper.yml") {
 		log.Fatalln("File .popper.yml already exists")
 	}
-	if !sh.Test("dir", "../../experiments") {
-		log.Fatalln("Not inside an experiment folder, 'cd' into one first.")
+	if !sh.Test("dir", "../../pipelines") {
+		log.Fatalln("Not inside an pipeline folder, 'cd' into one first.")
 	}
 }
 
-func getExperimentPath() (dir string, err error) {
-	ensureExperimentFolder()
+func getPipelinePath() (dir string, err error) {
+	ensurePipelineFolder()
 	dir, err = os.Getwd()
 	if err != nil {
 		return
@@ -75,9 +75,9 @@ func getRepoInfo() (user, repo string, err error) {
 }
 
 func getProjectPath() (projectPath string, err error) {
-	if sh.Test("dir", "experiments") {
+	if sh.Test("dir", "pipelines") {
 		projectPath, err = os.Getwd()
-	} else if sh.Test("dir", "../../experiments") {
+	} else if sh.Test("dir", "../../pipelines") {
 		expPath, err := os.Getwd()
 		if err == nil {
 			projectPath = expPath + "/../../"
@@ -89,15 +89,15 @@ func getProjectPath() (projectPath string, err error) {
 	return
 }
 
-func getExperimentName() (expName string, err error) {
-	dir, err := getExperimentPath()
+func getPipelineName() (expName string, err error) {
+	dir, err := getPipelinePath()
 	expName = path.Base(dir)
 	return
 }
 
 func ensureRootFolder() {
-	if !sh.Test("dir", "experiments") {
-		log.Fatalln("Can't find experiments/ folder in current directory, 'cd' into project root folder first.")
+	if !sh.Test("dir", "pipelines") {
+		log.Fatalln("Can't find pipelines/ folder in current directory, 'cd' into project root folder first.")
 	}
 }
 
