@@ -9,7 +9,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func addExperiment(templateType string, templateName string, folder string) {
+func addPipeline(templateType string, templateName string, folder string) {
 	checkTemplateFolderExists(templateType)
 
 	if sh.Test("dir", folder) {
@@ -24,8 +24,8 @@ func addExperiment(templateType string, templateName string, folder string) {
 }
 
 var addCmd = &cobra.Command{
-	Use:   "add <experiment> [<name>]",
-	Short: "Add an experiment to the project",
+	Use:   "add <pipeline> [<name>]",
+	Short: "Add a pipeline to the project",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		expname := ""
@@ -34,23 +34,23 @@ var addCmd = &cobra.Command{
 		} else if len(args) == 2 {
 			expname = args[1]
 		} else {
-			log.Fatalln("Incorrect number of arguments, type 'popper experiment add --help'")
+			log.Fatalln("Incorrect number of arguments, type 'popper add --help'")
 		}
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
 
 		if strings.HasPrefix(args[0], "paper-") {
-			addExperiment("paper", args[0], "paper/")
+			addPipeline("paper", args[0], "paper/")
 		} else {
-			// create experiments folder if it doesn't exist
-			if err := sh.Command("mkdir", "-p", "experiments/").Run(); err != nil {
+			// create pipelines folder if it doesn't exist
+			if err := sh.Command("mkdir", "-p", "pipelines/").Run(); err != nil {
 				log.Fatalln(err)
 			}
-			addExperiment("experiments", args[0], "experiments/"+expname)
+			addPipeline("pipelines", args[0], "pipelines/"+expname)
 		}
 
-		fmt.Println("Added " + expname + " to experiments/ folder.")
+		fmt.Println("Added " + expname + " to pipelines/ folder.")
 	},
 }
 

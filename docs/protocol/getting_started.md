@@ -3,7 +3,7 @@
 _Popper_ is a convention for organizing an academic article's 
 artifacts following a [DevOps](https://en.wikipedia.org/wiki/DevOps) 
 approach, with the goal of making it easy for others (and yourself!) 
-to repeat an experiment.
+to repeat an experiment or analysis pipeline.
 
 ## Quickstart Guide
 
@@ -42,9 +42,9 @@ git add .
 git commit -m 'adds .popper.yml file'
 ```
 
-### New experiment
+### New pipeline
 
-Initialize experiment using `init` (scaffolding):
+Initialize pipeline using `init` (scaffolding):
 
 ```bash
 popper init myexp
@@ -53,41 +53,14 @@ popper init myexp
 Show what this did:
 
 ```bash
-ls -l experiments/myexp
+ls -l pipelines/myexp
 ```
 
-Commit the "empty" experiment:
+Commit the "empty" pipeline:
 
 ```bash
-git add experiments/myexp
+git add pipelines/myexp
 git commit -m 'adding myexp scaffold'
-```
-
-### Add existing experiment
-
-List available experiment templates:
-
-```bash
-popper search
-```
-
-Show information about an experiment:
-
-```bash
-popper info blis
-```
-
-Import an available experiment:
-
-```bash
-popper add blis
-```
-
-Commit the new experiment:
-
-```bash
-git add experiments/blis
-git commit -m 'adding blis baseline'
 ```
 
 ### Popper check
@@ -100,14 +73,14 @@ popper check
 
 > **NOTE:** By default, `popper check` runs all commands directly on 
 the host. We recommend running an isolated environment. In order to do 
-this, one can create an experiment using the `--env` flag of the 
-`popper init` command. For example, `popper init <exp> 
---env=alpine-3.4` runs a command inside an `alpine-3.4` container.
+this, one can create a pipeline using the `--env` flag of the `popper 
+init` command. For example, `popper init <pipeline> --env=alpine-3.4` 
+runs a command inside an `alpine-3.4` container.
 
-Once an experiment is checked, one can show the logs:
+Once a pipeline is checked, one can show the logs:
 
 ```bash
-ls -l experiments/blis/popper_logs
+ls -l pipelines/myexp/popper_logs
 ```
 
 ### Adding Project to GitHub

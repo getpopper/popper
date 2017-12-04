@@ -13,7 +13,7 @@ import (
 var envFlagValue string
 
 var setupSh = []byte(`#!/bin/bash
-# Any setup required by the experiment goes here. Things like installing
+# Any setup required by the pipeline goes here. Things like installing
 # packages, allocating resources or deploying software on remote
 # infrastructure can be implemented here.
 set -e
@@ -25,7 +25,7 @@ exit 0
 
 var runSh = []byte(`#!/bin/bash
 # This file should contain the series of steps that are required to execute 
-# the experiment. Any non-zero exit code will be interpreted as a failure
+# the pipeline. Any non-zero exit code will be interpreted as a failure
 # by the 'popper check' command.
 set -e
 
@@ -47,7 +47,7 @@ exit 0
 `)
 
 var validateSh = []byte(`#!/bin/bash
-# The point of entry to the validation of results produced by the experiment.
+# The point of entry to the validation of results produced by the pipeline.
 # Any non-zero exit code will be interpreted as a failure by the 'popper check'
 # command. Additionally, the command should print "true" or "false" for each
 # validation (one per line, each interpreted as a separate validation).
@@ -64,28 +64,28 @@ set -e
 exit 0
 `)
 
-func initExperiment(name string) {
-	if sh.Test("d", "experiments/"+name) {
+func initPipeline(name string) {
+	if sh.Test("d", "pipelines/"+name) {
 		log.Fatalln("Folder " + name + " already exists.")
 	}
 
-	if err := sh.Command("mkdir", "-p", "experiments/"+name).Run(); err != nil {
+	if err := sh.Command("mkdir", "-p", "pipelines/"+name).Run(); err != nil {
 		log.Fatalln(err)
 	}
 
-	if err := ioutil.WriteFile("experiments/"+name+"/setup.sh", setupSh, 0755); err != nil {
+	if err := ioutil.WriteFile("pipelines/"+name+"/setup.sh", setupSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
-	if err := ioutil.WriteFile("experiments/"+name+"/run.sh", runSh, 0755); err != nil {
+	if err := ioutil.WriteFile("pipelines/"+name+"/run.sh", runSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
-	if err := ioutil.WriteFile("experiments/"+name+"/post-run.sh", runSh, 0755); err != nil {
+	if err := ioutil.WriteFile("pipelines/"+name+"/post-run.sh", runSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
-	if err := ioutil.WriteFile("experiments/"+name+"/validate.sh", validateSh, 0755); err != nil {
+	if err := ioutil.WriteFile("pipelines/"+name+"/validate.sh", validateSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
-	if err := ioutil.WriteFile("experiments/"+name+"/teardown.sh", teardownSh, 0755); err != nil {
+	if err := ioutil.WriteFile("pipelines/"+name+"/teardown.sh", teardownSh, 0755); err != nil {
 		log.Fatalln(err)
 	}
 
@@ -105,20 +105,20 @@ func initExperiment(name string) {
 	// add README
 	readme := "# " + name + "\n"
 
-	err = ioutil.WriteFile("experiments/"+name+"/README.md", []byte(readme), 0644)
+	err = ioutil.WriteFile("pipelines/"+name+"/README.md", []byte(readme), 0644)
 	if err != nil {
 		log.Fatalln(err)
 	}
 
-	fmt.Println("Initialized " + name + " experiment.")
+	fmt.Println("Initialized " + name + " pipeline.")
 }
 
 var initCmd = &cobra.Command{
 	Use:   "init [<name>]",
-	Short: "Initializes a repository, experiment or paper folder.",
+	Short: "Initializes a repository, pipeline or paper folder.",
 	Long: `Without any arguments, this command initializes a popper repository. If
-an argument is given, an experiment or paper folder is initialized. If the given
-name is 'paper', then a 'paper' folder is created. Otherwise, an experiment named
+an argument is given, an pipeline or paper folder is initialized. If the given
+name is 'paper', then a 'paper' folder is created. Otherwise, an pipeline named
 'name' is created.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) > 1 {
@@ -137,7 +137,7 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an experiment name
 			}
 			fmt.Println("Initialized popper repository.")
 		} else {
-			initExperiment(args[0])
+			initPipeline(args[0])
 		}
 	},
 }

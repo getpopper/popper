@@ -14,22 +14,22 @@ func checkTemplateFolderExists(templateType string) {
 	}
 }
 
-func showExperimentInfo(experimentName string) {
-	checkTemplateFolderExists("experiments")
-	if err := sh.Command("cat", popperFolder+"/templates/experiments/"+experimentName+"/README.md").Run(); err != nil {
+func showPipelineInfo(pipelineName string) {
+	checkTemplateFolderExists("pipelines")
+	if err := sh.Command("cat", popperFolder+"/templates/pipelines/"+pipelineName+"/README.md").Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
 
 var infoCmd = &cobra.Command{
 	Use:   "info <name>",
-	Short: "Show information about an experiment.",
+	Short: "Show information about an pipeline.",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		if len(args) != 1 {
-			log.Fatalln("This command takes name of experiment as argument.")
+			log.Fatalln("This command takes name of pipeline as argument.")
 		}
-		showExperimentInfo(args[0])
+		showPipelineInfo(args[0])
 	},
 }
 
