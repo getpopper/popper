@@ -40,7 +40,7 @@ func runInDocker(checkFlags []string, checkEnv string) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	cmd_args = append(cmd_args, "--volume", dir+":"+dir, "--workdir", dir, "--volume", "/var/run/docker.sock:/var/run/docker.sock", "ivotron/poppercheck:"+checkEnv)
+	cmd_args = append(cmd_args, "--volume", dir+":"+dir, "--workdir", dir, "--volume", "/var/run/docker.sock:/var/run/docker.sock", "falsifiable/poppercheck:"+checkEnv)
 
 	s := make([]interface{}, len(cmd_args)+len(checkFlags))
 	for i, v := range cmd_args {
