@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+set -e
+
+push_too="false"
+while getopts ":p" o; do
+  case "${o}" in
+    p)
+      push_too="true"
+      ;;
+  esac
+done
+
+for d in ./* ; do
+  if [ ! -d $d ]; then
+    continue
+  fi
+  echo "############"
+  echo "# Building $(basename $d)"
+  echo "############"
+  pushd $d
+  cp ../check.py .
+  docker build -t falsifiable/poppercheck:$(basename $d) .
+  rm check.py
+  popd
+
+  if [ "$push_too" == "true" ]; then
+    docker push falsifiable/poppercheck:$(basename $d)
+  fi
+done
