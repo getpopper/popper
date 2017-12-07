@@ -2,4 +2,4 @@ language: bash
 services: docker
 script:
 - ./build-me.sh
-- ./popper/_check/build_images
+- cd popper/_check && ./build_images

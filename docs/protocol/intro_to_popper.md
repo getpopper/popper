@@ -112,7 +112,6 @@ shown below:
 $> tree -a paper-repo/pipelines/myexp
 paper-repo/pipelines/myexp/
 |-- README.md
-|-- .popper.yml
 |-- run.sh
 |-- setup.sh
 |-- validate.sh
@@ -131,10 +130,9 @@ validation results is `[true|false] <statement>` (see examples below).
 [false] network throughput is 2x the IO bandwidth
 ```
 
-The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
-includes a `pipeline init` subcommand that can be executed to scaffold 
-a pipeline with the above structure. The syntax of this command is the 
-following:
+The [CLI](https://github.com/systemslab/popper/popper) tool includes a 
+`pipeline init` subcommand that can be executed to scaffold a pipeline 
+with the above structure. The syntax of this command is the following:
 
 ```bash
 popper pipeline init <name>
