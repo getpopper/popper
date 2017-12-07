@@ -7,8 +7,6 @@ if [ -z "`which docker`" ]; then
     exit 1
 fi
 
-docker run --rm -v `pwd`/popper:/app -w /app treeder/go vendor
-docker run --rm -v `pwd`/popper:/app -w /app treeder/go build
+docker build -t falsifiable/popper popper/
 
-echo "Success. Popper is available at 'popper/app'."
-echo "Note that the executable requires libc-musl: https://www.musl-libc.org/."
+echo "Success. Popper is available at 'falsifiable/popper'."
