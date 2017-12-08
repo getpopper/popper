@@ -124,6 +124,11 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an pipeline named
 		if len(args) > 1 {
 			log.Fatalln("This command takes one argument at most.")
 		}
+		if !sh.Test("dir", popperFolder) {
+			if err := sh.Command("git", "clone", "https://github.com/systemslab/popper", popperFolder).Run(); err != nil {
+				log.Fatalln(err)
+			}
+		}
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
 		}
