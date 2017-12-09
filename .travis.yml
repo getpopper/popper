@@ -3,5 +3,5 @@ services: docker
 script:
 - ./build-me.sh
 - docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper
-- cd popper/_check && ./build_images
+- pushd popper/_check && ./build_images && popd
 - docker build -t falsifiable/jenkins docs/ci/jenkins/docker
