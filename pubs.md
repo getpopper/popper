@@ -8,6 +8,12 @@ On The Popper Convention:
 
   * Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
     Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
+    Arpaci-Dusseau. _The Popper Convention: Making Reproducible 
+    Systems Evaluation Practical_. In 2017 IEEE International Parallel 
+    and Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017.
+    \[[pdf][repparpdf]\] \[[github][reppargh]\].
+  * Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
+    Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
     Arpaci-Dusseau. _Standing on the Shoulders of Giants by Managing 
     Scientific Experiments Like Software_, USENIX; login, vol. 41, no. 
     4, Nov-2016. \[[login][login]\] \[[github][poppergh-login]\].
@@ -52,3 +58,5 @@ Articles following the convention:
 [malacologygh]: https://github.com/michaelsevilla/malacology-popper
 [cnertpdf]: https://github.com/systemslab/popperci-paper/raw/master/paper/paper.pdf
 [cnertgh]: https://github.com/systemslab/popperci-paper
+[repparpdf]: https://github.com/systemslab/popper-paper/raw/master/paper/paper.pdf
+[reppargh]: https://github.com/systemslab/popper-paper

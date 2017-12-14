@@ -44,6 +44,15 @@ Laboratories, and Lawrence Livermore National Laboratory.
   * Kathryn Mohror (_LLNL_)
   * Remzi Arpaci-Dusseau, Andrea Arpaci-Dusseau (_UW Madison_)
 
+### How to Cite Popper
+
+Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
+Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
+Arpaci-Dusseau. _The Popper Convention: Making Reproducible Systems 
+Evaluation Practical_. In 2017 IEEE International Parallel and 
+Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017. 
+https://doi.org/10.1109/IPDPSW.2017.157.
+
 [quick-start]: http://popper.readthedocs.io/en/latest/protocol/getting_started.html
 [overview]: http://popper.readthedocs.io/en/latest/protocol/intro_to_popper.html
 [from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
