@@ -40,7 +40,7 @@ def execute(stage, timeout):
     return p.poll()
 
 
-def check_pipeline(skip, timeout):
+def check_pipeline(skip, timeout, exit_on_fail=True, show_logs_on_fail=True):
     check_output('rm -rf popper_logs/ popper_status', shell=True)
     check_output('mkdir -p popper_logs/', shell=True)
 
@@ -57,8 +57,13 @@ def check_pipeline(skip, timeout):
         ecode = execute(stage, timeout)
 
         if ecode != 0:
-            print("Stage {} failed. Check logs for details.".format(stage))
+            print("Stage {} failed.".format(stage))
             STATUS = "FAIL"
+            if show_logs_on_fail:
+                print("Logs for {}:.".format(stage))
+                for t in ['.err', '.out']:
+                    with open('popper_logs/{}{}'.format(stage, t), 'r') as f:
+                        print(f.read())
             break
 
         if stage == 'validate.sh':
@@ -75,6 +80,9 @@ def check_pipeline(skip, timeout):
         f.write(STATUS + '\n')
 
     print('status: ' + STATUS)
+
+    if STATUS == 'FAIL' and exit_on_fail:
+        sys.exit(1)
 
 
 class Unbuffered(object):
