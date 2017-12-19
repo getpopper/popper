@@ -10,17 +10,9 @@ import (
 
 var travisYaml = `---
 language: python
-
-python:
-- '2.7'
-
-services:
-- docker
-
-install:
-- curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py
-- chmod 755 check.py
-
+python: 2.7
+services: docker
+install: curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py && chmod 755 check.py
 script: ./check.py
 `
 
