@@ -6,5 +6,9 @@ git init
 popper init
 popper init mypipeline
 popper ci travis
+cat .travis.yml
+popper ci circleci
+cat .circleci/config.yml
+popper workflow mypipeline
 cd pipelines/mypipeline
 popper check

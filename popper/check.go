@@ -96,6 +96,7 @@ ignored.`,
 		if len(args) != 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
+		initPopperFolder()
 		runCheck()
 	},
 }

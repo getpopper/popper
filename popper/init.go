@@ -13,9 +13,9 @@ import (
 var envFlagValue string
 
 var setupSh = []byte(`#!/bin/bash
-# Any setup required by the pipeline goes here. Things like installing
-# packages, allocating resources or deploying software on remote
-# infrastructure can be implemented here.
+# [wf] any setup required by the pipeline.
+# Things like installing packages, allocating resources
+# or deploying software on remote infrastructure can be implemented here.
 set -e
 
 # add commands here:
@@ -24,7 +24,8 @@ exit 0
 `)
 
 var runSh = []byte(`#!/bin/bash
-# This file should contain the series of steps that are required to execute 
+# [wf] series of steps required to execute the pipeline.
+# This file should contain the series of steps that are required to execute
 # the pipeline. Any non-zero exit code will be interpreted as a failure
 # by the 'popper check' command.
 set -e
@@ -35,6 +36,7 @@ exit 0
 `)
 
 var postRunSh = []byte(`#!/bin/bash
+# [wf] run post-processing tasks
 # Any post-run tasks should be included here. For example, post-processing
 # of output data, or updating a dataset with results of execution. Any
 # non-zero exit code will be interpreted as a failure by the 'popper check'
@@ -47,6 +49,7 @@ exit 0
 `)
 
 var validateSh = []byte(`#!/bin/bash
+# [wf] validate the output of pipeline.
 # The point of entry to the validation of results produced by the pipeline.
 # Any non-zero exit code will be interpreted as a failure by the 'popper check'
 # command. Additionally, the command should print "true" or "false" for each
@@ -59,6 +62,7 @@ exit 0
 `)
 
 var teardownSh = []byte(`#!/bin/bash
+# [wf] cleanup tasks.
 # Put all your cleanup tasks here.
 set -e
 exit 0
@@ -124,10 +128,9 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an pipeline named
 		if len(args) > 1 {
 			log.Fatalln("This command takes one argument at most.")
 		}
-		if !sh.Test("dir", popperFolder) {
-			if err := sh.Command("git", "clone", "https://github.com/systemslab/popper", popperFolder).Run(); err != nil {
-				log.Fatalln(err)
-			}
+		err := initPopperFolder()
+		if err != nil {
+			log.Fatalln(err)
 		}
 		if !sh.Test("dir", ".git") {
 			log.Fatalln("Can't find .git folder. Are you on the root folder of project?")
@@ -136,7 +139,7 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an pipeline named
 			if sh.Test("file", ".popper.yml") {
 				log.Fatalln("File .popper.yml already exists")
 			}
-			err := ioutil.WriteFile(".popper.yml", []byte(""), 0644)
+			err = ioutil.WriteFile(".popper.yml", []byte(""), 0644)
 			if err != nil {
 				log.Fatalln(err)
 			}
