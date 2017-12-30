@@ -48,7 +48,7 @@ var ciTravisCmd = &cobra.Command{
 		if len(args) != 0 {
 			log.Fatalln("This command does not take arguments.")
 		}
-		ensureRootFolder()
+		ensureInRootFolder()
 		if sh.Test("f", ".travis.yml") {
 			log.Fatalln("File .travis.yml already exists.")
 		}
@@ -68,7 +68,7 @@ var ciCircleCmd = &cobra.Command{
 		if len(args) != 0 {
 			log.Fatalln("This command does not take arguments.")
 		}
-		ensureRootFolder()
+		ensureInRootFolder()
 		if sh.Test("d", ".circleci") {
 			log.Fatalln("Folder .circleci already exists.")
 		}

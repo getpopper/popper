@@ -64,15 +64,21 @@ func runCheck() {
 		log.Fatalln(err)
 	}
 
+	// get environment
 	checkEnv := ""
-	if !viper.IsSet("envs." + expName) {
+	if viper.IsSet("envs." + expName) {
+		checkEnv = viper.GetString("envs." + expName)
+	} else {
 		fmt.Println("No environment in .popper.yml, using host")
 		checkEnv = "host"
-	} else {
-		checkEnv = viper.GetString("envs." + expName)
 	}
 
+	// TODO: get stages
+
+	// add timeout
 	checkFlags := []string{"--timeout=" + timeout}
+
+	// add skipped stages
 	if len(skip) > 0 {
 		checkFlags = append(checkFlags, "--skip="+skip)
 	}

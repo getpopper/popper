@@ -1,14 +1,44 @@
 #!/bin/bash
 set -ex
+rm -rf /tmp/mypaper
 mkdir /tmp/mypaper
 cd /tmp/mypaper
 git init
+
 popper init
+test -f .popper.yml
+
 popper init mypipeline
+cat .popper.yml | grep 'mypipeline: host'
+test -f pipelines/mypipeline/setup.sh
+test -f pipelines/mypipeline/run.sh
+test -f pipelines/mypipeline/post-run.sh
+test -f pipelines/mypipeline/validate.sh
+test -f pipelines/mypipeline/teardown.sh
+
+# TODO check default stages
+
 popper ci travis
-cat .travis.yml
+test -f .travis.yml
+
 popper ci circleci
-cat .circleci/config.yml
-popper workflow mypipeline
+test -f .circleci/config.yml
+
+popper workflow mypipeline > wf.dot
+cat wf.dot | grep digraph
+cat wf.dot | grep setup
+cat wf.dot | grep post-run
+cat wf.dot | grep validate
+cat wf.dot | grep teardown
+
 cd pipelines/mypipeline
 popper check
+test -d popper_logs
+test -f popper_status
+
+cd /tmp/mypaper
+
+popper init --env=ubuntu-16.04 mypipelineonubuntu
+cat .popper.yml | grep 'mypipelineonubuntu: ubuntu-16.04'
+
+# TODO: check custom stages
