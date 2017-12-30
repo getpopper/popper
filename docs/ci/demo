@@ -1,6 +1,7 @@
 #!/bin/bash
 set -ex
 rm -rf /tmp/mypaper
+
 mkdir /tmp/mypaper
 cd /tmp/mypaper
 git init
@@ -23,6 +24,9 @@ test -f .travis.yml
 
 popper ci circleci
 test -f .circleci/config.yml
+
+popper ci jenkins
+test -f Jenkinsfile
 
 popper workflow mypipeline > wf.dot
 cat wf.dot | grep digraph
