@@ -2,7 +2,6 @@ package main
 
 import (
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -105,9 +104,6 @@ func initPopperFolder() (err error) {
 	}
 	downloadFile(popperFolder+"/check.py", "https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py")
 
-	if err := ioutil.WriteFile(popperFolder+"/repos", []byte(""), 0644); err != nil {
-		log.Fatalln(err)
-	}
 	return
 }
 
