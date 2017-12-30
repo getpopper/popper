@@ -100,9 +100,12 @@ func ensureInRootFolder() {
 
 func initPopperFolder() (err error) {
 	if !sh.Test("dir", popperFolder) {
-		os.Mkdir(popperFolder, 0755)
+		if err = os.MkdirAll(popperFolder, 0755); err != nil {
+			return
+		}
 	}
 	downloadFile(popperFolder+"/check.py", "https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py")
+	os.Chmod(popperFolder+"/check.py", 0755)
 
 	return
 }
@@ -122,7 +125,7 @@ func readPopperConfig() (err error) {
 }
 
 func downloadFile(filepath string, url string) (err error) {
-	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+	if _, err := os.Stat(filepath); err == nil {
 		os.Remove(filepath)
 	}
 	out, err := os.Create(filepath)
@@ -130,7 +133,6 @@ func downloadFile(filepath string, url string) (err error) {
 		return err
 	}
 	defer out.Close()
-
 	resp, err := http.Get(url)
 	if err != nil {
 		return err

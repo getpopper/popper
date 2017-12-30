@@ -21,7 +21,7 @@ func runOnHost(checkFlags []string) {
 	for i, v := range checkFlags {
 		s[i] = v
 	}
-	if err := sh.Command(popperFolder+"/popper/_check/check.py", s...).Run(); err != nil {
+	if err := sh.Command(popperFolder+"/check.py", s...).Run(); err != nil {
 		log.Fatalln(err)
 	}
 }
@@ -102,7 +102,9 @@ ignored.`,
 		if len(args) != 0 {
 			log.Fatalln("This command doesn't take arguments.")
 		}
-		initPopperFolder()
+		if err := initPopperFolder(); err != nil {
+			log.Fatalln(err)
+		}
 		runCheck()
 	},
 }
