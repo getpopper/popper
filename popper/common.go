@@ -1,7 +1,10 @@
 package main
 
 import (
+	"io"
+	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"path"
 	"strings"
@@ -17,19 +20,28 @@ var popperRepoUrl = "https://github.com/systemslab/popper"
 
 var defaultStages = []string{"setup.sh", "run.sh", "post-run.sh", "validate.sh", "teardown.sh"}
 
-func ensurePipelineFolder() {
-	if !sh.Test("dir", "../../pipelines") {
-		log.Fatalln("Not inside an pipeline folder.\n\t'cd' into one first or provide name of one.")
+func ensurePipelineExists(pipelineName string) {
+	ensureInRootFolder()
+	if !sh.Test("dir", "./pipelines/"+pipelineName) {
+		log.Fatalln("Cannot find pipeline " + pipelineName)
 	}
+}
+
+func ensureInPipelineFolder() (pipelineName string) {
+	if !sh.Test("dir", "../../pipelines") {
+		log.Fatalln("Not inside a pipeline folder.\n\t'cd' into one first or provide name of one.")
+	}
+	cwd, _ := os.Getwd()
+	return path.Base(cwd)
 }
 
 // if args is empty, checks if CWD is a pipeline and returns its stages if it is
 func getPipelineStages(args []string) (pipelinePath string, stages []string) {
 	if len(args) > 0 {
-		ensureRootFolder()
-		pipelinePath = "./pipelines" + "/" + args[0]
+		ensureInRootFolder()
+		pipelinePath = "./pipelines/" + args[0]
 	} else {
-		ensurePipelineFolder()
+		ensureInPipelineFolder()
 		pipelinePath = "./"
 	}
 	stages = defaultStages
@@ -38,7 +50,7 @@ func getPipelineStages(args []string) (pipelinePath string, stages []string) {
 }
 
 func getPipelinePath() (dir string, err error) {
-	ensurePipelineFolder()
+	ensureInPipelineFolder()
 	dir, err = os.Getwd()
 	return
 }
@@ -81,7 +93,7 @@ func getPipelineName() (expName string, err error) {
 	return
 }
 
-func ensureRootFolder() {
+func ensureInRootFolder() {
 	if !sh.Test("dir", "pipelines") {
 		log.Fatalln("Can't find pipelines/ folder in current directory.")
 	}
@@ -89,7 +101,12 @@ func ensureRootFolder() {
 
 func initPopperFolder() (err error) {
 	if !sh.Test("dir", popperFolder) {
-		err = sh.Command("git", "clone", "https://github.com/systemslab/popper", popperFolder).Run()
+		os.Mkdir(popperFolder, 0755)
+	}
+	downloadFile(popperFolder+"/check.py", "https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py")
+
+	if err := ioutil.WriteFile(popperFolder+"/repos", []byte(""), 0644); err != nil {
+		log.Fatalln(err)
 	}
 	return
 }
@@ -106,4 +123,28 @@ func readPopperConfig() (err error) {
 		log.Fatalln(err)
 	}
 	return
+}
+
+func downloadFile(filepath string, url string) (err error) {
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		os.Remove(filepath)
+	}
+	out, err := os.Create(filepath)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
