@@ -13,7 +13,7 @@ Popper is a convention and CLI tool for generating reproducible papers. This rep
 
 ## Installation
 
-To get started with the CLI tool, download Popper from  [popper/releases](https://github.com/systemslab/popper/releases). Note  that we have only binaries for macOS and Linux. Once downloaded, uncompress and place the binary in a folder that is  included in your `$PATH` (e.g. `/usr/bin`). For Windows, we recommend using Popper with the [Windows Subsystem for Linux](https://msdn.microsoft.com/en-us/commandline/wsl/install-win10). 
+To get started with the CLI tool, download Popper from  [popper/releases](https://github.com/systemslab/popper/releases). Note  that we have only binaries for macOS and Linux. Once downloaded, uncompress and place the binary in a folder that is  included in your `$PATH` (e.g. `/usr/local/bin`). For Windows, we recommend using Popper with the [Windows Subsystem for Linux](https://msdn.microsoft.com/en-us/commandline/wsl/install-win10). 
 
 To get an overview and list of commands check out the command line 
 help:
