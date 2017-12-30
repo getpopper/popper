@@ -1,5 +1,6 @@
 active-directory:latest
 antisamy-markup-formatter:latest
+blueocean:latest
 build-name-setter:latest
 build-pipeline-plugin:latest
 build-timeout:latest
