@@ -17,7 +17,12 @@ services: docker
 install: curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py && chmod 755 check.py
 script: ./check.py
 `
-
+var jenkinsfile = `stage ('Popper') { node {
+  sh "curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py"
+  sh "chmod 755 check.py"
+  sh "./check.py"
+}}
+`
 var circleYaml = `---
 version: 2
 jobs:
@@ -60,6 +65,26 @@ var ciTravisCmd = &cobra.Command{
 	},
 }
 
+var ciJenkinsCmd = &cobra.Command{
+	Use:   "jenkins",
+	Short: "Generate config file for Jenkins.",
+	Long:  "",
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) != 0 {
+			log.Fatalln("This command does not take arguments.")
+		}
+		ensureInRootFolder()
+		if sh.Test("f", "Jenkinsfile") {
+			log.Fatalln("File Jenkinsfile already exists.")
+		}
+		err := ioutil.WriteFile("./Jenkinsfile", []byte(jenkinsfile), 0644)
+		if err != nil {
+			log.Fatalln("Error writing Jenkinsfile")
+		}
+		fmt.Println("Created Jenkinsfile file.")
+	},
+}
+
 var ciCircleCmd = &cobra.Command{
 	Use:   "circleci",
 	Short: "Generate config file for CircleCI.",
@@ -88,4 +113,5 @@ func init() {
 	RootCmd.AddCommand(ciCmd)
 	ciCmd.AddCommand(ciTravisCmd)
 	ciCmd.AddCommand(ciCircleCmd)
+	ciCmd.AddCommand(ciJenkinsCmd)
 }
