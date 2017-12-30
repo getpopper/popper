@@ -24,13 +24,13 @@ Where `<system-name>` is the name of CI system (see `popper ci --help`
 to get a list of supported systems). In the following, we show how to 
 link github with some of the supported CI systems.
 
-### Travis CI
+### TravisCI
 
 For this, we need an account at [Travis CI](http://travis-ci.org). 
 Assuming our Popperized repository is already on GitHub, we can enable 
-it on the TravisCI so that it is continuously validated (see 
+it on TravisCI so that it is continuously validated (see 
 [here](https://docs.travis-ci.com/user/getting-started/) for a guide). 
-Once the project is registered on Travis, we procceed to generate 
+Once the project is registered on Travis, we proceed to generate a 
 `.travis.yml` file:
 
 ```bash
@@ -51,20 +51,72 @@ We then can trigger an execution by pushing to GitHub:
 git push
 ```
 
-After this, one can go to the TravisCI website to see your pipelines 
-being executed.
+After this, one go to the TravisCI website to see your pipelines being 
+executed. Every new change committed to a public repository will 
+trigger an execution of your pipelines. To avoid triggering an 
+execution for a commit, include a line with `[skip ci]` as part of the 
+commit message.
+
+> **NOTE**: TravisCI has a limit of 2 hours, after which the test is 
+> terminated and failed.
+
+### CircleCI
+
+For [CircleCI](https://circleci.com/), the procedure is similar to 
+what we do for TravisCI (see above):
+
+ 1. Sign in to CircleCI using your github account and enable your 
+    repository.
+
+ 2. Generate config files and add them to the repo:
+
+    ```bash
+    cd my-popper-repo/
+    popper ci circleci
+    git add .circleci
+    git commit -m 'Adds CircleCI config file'
+    git push
+    ```
+
+### Jenkins
+
+For [Jenkins](https://jenkinsci.org), generating a `Jenkinsfile` is 
+done in a similar way:
+
+```bash
+cd my-popper-repo/
+popper ci jenkins
+git add Jenkinsfile
+git commit -m 'Adds Jenkinsfile'
+git push
+```
+
+Jenkins is a self-hosted service and needs to be properly configured 
+in order to be able to read a github project with a `Jenkinsfile` in 
+it. The easiest way to add a new project is to use the [Blue Ocean 
+UI](https://jenkins.io/projects/blueocean/). A step-by-step guide on 
+how to create a new project using the Blue Ocean UI can be found 
+[here](https://jenkins.io/doc/book/blueocean/creating-pipelines/). In 
+particular, the `New Pipeline from a Single Repository` has to be 
+selected (as opposed to `Auto-discover Pipelines`).
+
+As part of our efforts, we provide a ready-to-use Docker image for 
+Jenkins with all the required dependencies. See [here](./jenkins.md) 
+for an example of how to use it. We also host an instance of this 
+image at <http://ci.falsifiable.us> and can provide accounts for users 
+to make use of this Jenkins server (for an account, send an email to 
+<ivo@cs.ucsc.edu>).
 
 ## CI Functionality
 
 The following is the list of steps that are verified when validating 
 an pipeline:
 
- 1. For every pipeline, trigger an execution (invoke `setup.sh` 
-    followed by `run.sh`).
- 2. After the pipeline finishes, execute validations on the output 
-    (invoke `validate.sh`).
+ 1. For every pipeline, trigger an execution by sequentially invoking 
+    all the scripts for all the defined stages of the pipeline.
+ 2. After the pipeline finishes, if a `validate.sh` script is defined, 
+    parse its output.
  3. Keep track of every pipeline and report their status.
- 4. Execute `teardown.sh`
 
 There are three possible statuses for every pipeline: `FAIL`, `PASS` 
 and `GOLD`. There are two possible values for the status of a 
