@@ -2,7 +2,7 @@
 layout: default
 ---
 
-<script src="https://asciinema.org/a/1zxU3oKuAw5LWVh2H1I0dKeAi.js" id="asciicast-1zxU3oKuAw5LWVh2H1I0dKeAi" async></script>
+<script src="https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.js" id="asciicast-xzEYfI3U4H5CWdmjBe0O2CAw8" async></script>
 
 _Popper_ is a convention for conducting experiments and writing 
 academic articles following a 
