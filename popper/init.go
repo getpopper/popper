@@ -68,6 +68,10 @@ set -e
 exit 0
 `)
 
+var gitignore = []byte(`pipelines/*/popper_status
+pipelines/*/popper_logs
+`)
+
 func initPipeline(name string) {
 	if sh.Test("d", "pipelines/"+name) {
 		log.Fatalln("Folder " + name + " already exists.")
@@ -140,6 +144,10 @@ name is 'paper', then a 'paper' folder is created. Otherwise, an pipeline named
 				log.Fatalln("File .popper.yml already exists")
 			}
 			err = ioutil.WriteFile(".popper.yml", []byte(""), 0644)
+			if err != nil {
+				log.Fatalln(err)
+			}
+			err = ioutil.WriteFile(".gitignore", []byte(gitignore), 0644)
 			if err != nil {
 				log.Fatalln(err)
 			}

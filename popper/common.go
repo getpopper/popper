@@ -103,9 +103,9 @@ func initPopperFolder() (err error) {
 		if err = os.MkdirAll(popperFolder, 0755); err != nil {
 			return
 		}
+		downloadFile(popperFolder+"/check.py", "https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py")
+		os.Chmod(popperFolder+"/check.py", 0755)
 	}
-	downloadFile(popperFolder+"/check.py", "https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py")
-	os.Chmod(popperFolder+"/check.py", 0755)
 
 	return
 }
