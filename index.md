@@ -2,8 +2,6 @@
 layout: default
 ---
 
-<script src="https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.js" id="asciicast-xzEYfI3U4H5CWdmjBe0O2CAw8" async></script>
-
 _Popper_ is a convention for conducting experiments and writing 
 academic articles following a 
 [DevOps](https://en.wikipedia.org/wiki/DevOps) approach that allows 
@@ -27,6 +25,12 @@ We are currently working with researchers in many domains to extend
 our [templates repository](https://github.com/systemslab/popper) with 
 more experiments. If you are interested in contributing but are not 
 certain on how to start, please feel free to contact us.
+
+### Demo
+
+<div align=center>
+<script src="https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.js" id="asciicast-xzEYfI3U4H5CWdmjBe0O2CAw8" async></script>
+</div>
 
 ### About Popper
 
