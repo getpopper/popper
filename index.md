@@ -2,16 +2,7 @@
 layout: default
 ---
 
-<style>
-  .col2 {
-    columns: 2 200px;         /* number of columns and width in pixels*/
-    -webkit-columns: 2 200px; /* chrome, safari */
-    -moz-columns: 2 200px;    /* firefox */
-  }
-</style>
-
-<div class="col2">
-<script src="https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.js" id="asciicast-xzEYfI3U4H5CWdmjBe0O2CAw8" async></script>
+<center><script src="https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.js" id="asciicast-xzEYfI3U4H5CWdmjBe0O2CAw8" async></script></center>
 
 _Popper_ is a convention for conducting experiments and writing 
 academic articles following a 
@@ -36,7 +27,6 @@ We are currently working with researchers in many domains to extend
 our [templates repository](https://github.com/systemslab/popper) with 
 more experiments. If you are interested in contributing but are not 
 certain on how to start, please feel free to contact us.
-</div>
 
 ### About Popper
 
