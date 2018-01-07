@@ -8,6 +8,7 @@ import (
 	"log"
 	"strings"
 
+	sh "github.com/codeskyblue/go-sh"
 	"github.com/spf13/cobra"
 	"mvdan.cc/sh/syntax"
 )
@@ -68,7 +69,7 @@ func getDotGraphForStage(pipelinePath, stageFile, previousStageFile string) (dot
 
 			// first comment in a script goes in the root of that stage
 			if _, present := nodesInGraph[hashIt(stage)]; !present {
-				dot += fmt.Sprintf("  %s [shape=record,label=\"{%s|%s}\"];\n", stage, stageFile, label)
+				dot += fmt.Sprintf("  %s [shape=record,style=filled,label=\"{%s|%s}\"];\n", stage, stageFile, label)
 
 				if len(previousStageFile) > 0 {
 					previous := strings.Replace(previousStageFile, ".sh", "", -1)
@@ -97,7 +98,7 @@ func getDotGraphForStage(pipelinePath, stageFile, previousStageFile string) (dot
 					}
 					break
 				}
-				label = cmdValue + ":" + label
+				label = cmdValue + ": " + label
 			case *syntax.ForClause:
 				label = "loop: " + label
 			case *syntax.WhileClause:
@@ -145,6 +146,9 @@ func getDotGraph(pipelinePath string, stages []string) (dot string, err error) {
 
 	for _, stage := range stages {
 
+		if !sh.Test("f", pipelinePath+"/"+stage) {
+			continue
+		}
 		if subdot, err := getDotGraphForStage(pipelinePath, stage, previousStage); err != nil {
 			return "", err
 		} else {

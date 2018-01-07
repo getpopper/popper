@@ -5,8 +5,6 @@ artifacts following a [DevOps](https://en.wikipedia.org/wiki/DevOps)
 approach, with the goal of making it easy for others (and yourself!) 
 to repeat an experiment or analysis pipeline.
 
-## Quickstart Guide
-
 We first need to install the CLI tool by following [these 
 instructions](https://github.com/systemslab/popper/tree/master/popper#install). 
 Show the available commands:
@@ -21,7 +19,7 @@ Show which version you installed:
 popper version
 ```
 
-> **NOTE**: this exercise was written using 0.4.1.
+> **NOTE**: this exercise was written using 0.5
 
 Create a project repository (if you are not familiar with git, look [here](https://www.learnenough.com/git-tutorial)):
 
@@ -34,7 +32,8 @@ git add .
 git commit -m 'first commit'
 ```
 
-Initialize the popper repository and add the commit file to git:
+Initialize the popper repository and add the `.popper.yml` file to 
+git:
 
 ```bash
 popper init

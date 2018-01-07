@@ -94,7 +94,7 @@ func getPipelineName() (expName string, err error) {
 
 func ensureInRootFolder() {
 	if !sh.Test("dir", "pipelines") {
-		log.Fatalln("Can't find pipelines/ folder in current directory.")
+		log.Fatalln("Can't find pipelines/ folder in current directory. 'cd' to root of project.")
 	}
 }
 
