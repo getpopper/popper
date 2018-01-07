@@ -127,34 +127,6 @@ status' is `GOLD`, the status of all validations is `PASS`. When the
 pipeline runs correctly but one or more validations fail (pipeline's 
 status is `PASS`), the status of one or more validations is `FAIL`.
 
-## Popper Badges
-
-We maintain a badging service that can be used to keep track of the 
-status of a pipeline. In order to enable this, the `--enable-badging` 
-flag has to be passed to the `popper ci` subcommand.
-
-![Badging service.](/figures/cibadges.png)
-
-Badges are commonly used to denote the status of a software project 
-with respect to certain aspect, e.g. whether the latest version can be 
-built without errors, or the percentage of code that unit tests cover 
-(code coverage). Badges available for Popper are shown in the above 
-figure. If badging is enabled, after the execution of a pipeline, the 
-status of a pipeline is recorded in the badging server, which keeps 
-track of statuses for every revision of ever pipeline.
-
-Users can include a link to the badge in the `README` page of a 
-pipeline, which can be displayed on the web interface of the version 
-control system (GitHub in this case). The CLI tool can generate links 
-for pipelines:
-
-```bash
-popper badge <exp>
-```
-
-Which prints to `stdout` the text that should be added to the `README` 
-file of the pipeline.
-
 ## Testing Locally
 
 The 
@@ -193,3 +165,47 @@ popper_logs/
 ├── validate.sh.out
 └── validate.sh.err
 ```
+
+These files are added to the 
+[`.gitignore`](https://help.github.com/articles/ignoring-files/) file 
+so they won't be committed to the git repository when doing `git add`. 
+To quickly remove them, one can clean the working tree:
+
+```bash
+# get list of files that would be deleted
+# include directories (-d)
+# include ignored files (-x)
+git clean -dx --dry-run
+
+# remove --dry-run and add --force to actually delete files
+git clean -dx --force
+```
+
+## Popper Badges
+
+We maintain a badging service that can be used to keep track of the 
+status of a pipeline. In order to enable this, the `--enable-badging` 
+flag has to be passed to the `popper ci` subcommand.
+
+![Badging service.](/figures/cibadges.png)
+
+Badges are commonly used to denote the status of a software project 
+with respect to certain aspect, e.g. whether the latest version can be 
+built without errors, or the percentage of code that unit tests cover 
+(code coverage). Badges available for Popper are shown in the above 
+figure. If badging is enabled, after the execution of a pipeline, the 
+status of a pipeline is recorded in the badging server, which keeps 
+track of statuses for every revision of ever pipeline.
+
+Users can include a link to the badge in the `README` page of a 
+pipeline, which can be displayed on the web interface of the version 
+control system (GitHub in this case). The CLI tool can generate links 
+for pipelines:
+
+```bash
+popper badge <exp>
+```
+
+Which prints to `stdout` the text that should be added to the `README` 
+file of the pipeline.
+
