@@ -90,27 +90,43 @@ func runCheck() {
 	}
 }
 
+func runCheckCmd(cmd *cobra.Command, args []string) {
+	if len(args) != 0 {
+		log.Fatalln("This command doesn't take arguments.")
+	}
+	if err := initPopperFolder(); err != nil {
+		log.Fatalln(err)
+	}
+	runCheck()
+}
+
 var checkCmd = &cobra.Command{
-	Use:   "check",
+	Hidden: true,
+	Use:    "check",
+	Short:  "Run pipeline and report on its status",
+	Long: `Executes an pipeline in its corresponding environment (host or docker). If using docker,
+environment variables and folders can be made available inside the container by using -e
+and -v flags respectively. These flags are passed down to the 'docker run' command. The
+pipeline folder is bind-mounted. If the environment is 'host', the -v and -e flags are
+ignored.`,
+	Run: runCheckCmd,
+}
+
+// alias for check
+var runCmd = &cobra.Command{
+	Use:   "run",
 	Short: "Run pipeline and report on its status",
 	Long: `Executes an pipeline in its corresponding environment (host or docker). If using docker,
 environment variables and folders can be made available inside the container by using -e
 and -v flags respectively. These flags are passed down to the 'docker run' command. The
 pipeline folder is bind-mounted. If the environment is 'host', the -v and -e flags are
 ignored.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) != 0 {
-			log.Fatalln("This command doesn't take arguments.")
-		}
-		if err := initPopperFolder(); err != nil {
-			log.Fatalln(err)
-		}
-		runCheck()
-	},
+	Run: runCheckCmd,
 }
 
 func init() {
 	RootCmd.AddCommand(checkCmd)
+	RootCmd.AddCommand(runCmd)
 
 	checkCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, `Environment variable available to the pipeline. Can be
                             given multiple times. This flag is ignored when the environment
