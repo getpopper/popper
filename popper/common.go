@@ -96,6 +96,12 @@ func ensureInRootFolder() {
 	if !sh.Test("dir", "pipelines") {
 		log.Fatalln("Can't find pipelines/ folder in current directory. 'cd' to root of project.")
 	}
+	if !sh.Test("dir", ".git") {
+		log.Fatalln("Cannot find .git folder. Is this a git repository?")
+	}
+	if !sh.Test("f", ".popper.yml") {
+		log.Fatalln("Cannot find .popper.yml file. Run 'popper init' to popperize the repository.")
+	}
 }
 
 func initPopperFolder() (err error) {
