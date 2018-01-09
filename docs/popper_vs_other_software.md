@@ -17,18 +17,22 @@ scientific workflow engines. For a comprehensive list, see
 
 A Popper pipeline can be seen as the highest-level workflow of a 
 scientific exploration, the one which users or automation services 
-interact with. A stage in a popper pipeline can itself trigger the 
-execution of a workflow on one of the aforementioned workflow engines. 
-A way to visualize this is shown in the following image:
+interact with (which can be visualized by doing `popper workflow`). A 
+stage in a popper pipeline can itself trigger the execution of a 
+workflow on one of the aforementioned workflow engines. A way to 
+visualize this is shown in the following image:
 
 ![](/figures/popper_pipeline_vs_workflow_engine.png)
 
+The above corresponds to a pipeline whose `run.sh` stage triggers the 
+execution of a workflow for a numeric weather prediction setup (the 
+code is available [here](https://github.com/popperized/nwp-popper)). 
 Ideally, the workflow specification files (e.g. in 
 [CWP](http://www.commonwl.org/) format) would be stored in the 
 repository and be passed as parameter in a bash script that is part of 
 a popper pipeline. For an example of a popper pipeline using the 
 [Toil](https://github.com/BD2KGenomics/toil) genomics workflow engine, 
-see [here](https://github.com/bjea/PopperCI_Toil/).
+see [here](https://github.com/popperized/PopperCI_Toil).
 
 ## Virtualenv, Conda, Packrat, etc.
 
@@ -71,7 +75,10 @@ to specify and automate tests using their own configuration files (or
 domain specific languages).
 
 Popper can be seen as a service-agnostic way of automating tests that 
-can run on multiple CI services with minimal configuration. 
+can run on multiple CI services with minimal effort. The `popper ci` 
+command [generates configuration 
+files](http://popper.readthedocs.io/en/latest/ci/popperci.html#ci-system-configuration) 
+that existing CI systems read in order to execute a popper pipeline. 
 Additionally, with most of existing tools and services, users don't 
 have a way of easily checking the integrity of a pipeline locally, 
 whereas Popper can be used easily to [test a pipeline 
@@ -80,17 +87,19 @@ Lastly, since the concept of a pipeline and validations associated to
 them is a first-class citizen in Popper, we can not only check that a 
 pipeline can execute correctly (SUCCESS or FAILURE) but we can also 
 [verify that the output is the one 
-expected](http://popper.readthedocs.io/en/latest/ci/popperci.html#ci-functionality). 
+expected](http://popper.readthedocs.io/en/latest/ci/popperci.html#ci-functionality) 
 by the original implementers.
 
 ## Reprozip / Sciunit
 
 [Reprozip](https://www.reprozip.org/) "allows you to pack your 
 research along with all necessary data files, libraries, environment 
-variables and options", while [Sciunit](sciunit.run) "**TODO**"". They 
-accomplish this by making use of 
-[`ptrace`](https://en.wikipedia.org/wiki/Ptrace) and **TODO** to track 
-all dependencies of an application.
+variables and options", while [Sciunit](sciunit.run) "are efficient, 
+lightweight, self-contained packages of computational experiments that 
+can be guaranteed to repeat or reproduce regardless of deployment 
+issues". They accomplish this by making use of 
+[`ptrace`](https://en.wikipedia.org/wiki/Ptrace) to track all 
+dependencies of an application.
 
 Popper can help in automating the tasks required to install 
 Reprozip/Sciunit, as well as to create and execute Reprozip packages 
