@@ -21,7 +21,7 @@ experiments.
    protocol/intro_to_popper.md
    ci/popperyml.md
    ci/popperci.md
-   cli/popper_vs_other_software.md
+   popper_vs_other_software.md
    protocol/review_workflow.md
 
 This project is supported in part by the National Science Foundation (`award 
