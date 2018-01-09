@@ -35,7 +35,7 @@ cat wf.dot | grep teardown
 
 cd pipelines/mypipeline
 
-popper check
+popper run
 test -f popper_logs/setup.sh.err
 test -f popper_logs/setup.sh.out
 test -f popper_logs/run.sh.out
@@ -51,7 +51,7 @@ test -f popper_status
 # popper check without some stages
 rm teardown.sh
 rm post-run.sh
-popper check
+popper run
 test -f popper_logs/setup.sh.err
 test -f popper_logs/setup.sh.out
 test -f popper_logs/run.sh.out
