@@ -17,8 +17,6 @@ test -f pipelines/mypipeline/post-run.sh
 test -f pipelines/mypipeline/validate.sh
 test -f pipelines/mypipeline/teardown.sh
 
-# TODO check default stages
-
 popper ci travis
 test -f .travis.yml
 
@@ -36,13 +34,43 @@ cat wf.dot | grep validate
 cat wf.dot | grep teardown
 
 cd pipelines/mypipeline
+
 popper check
-test -d popper_logs
+test -f popper_logs/setup.sh.err
+test -f popper_logs/setup.sh.out
+test -f popper_logs/run.sh.out
+test -f popper_logs/run.sh.out
+test -f popper_logs/post-run.sh.out
+test -f popper_logs/post-run.sh.out
+test -f popper_logs/validate.sh.out
+test -f popper_logs/validate.sh.out
+test -f popper_logs/teardown.sh.out
+test -f popper_logs/teardown.sh.out
 test -f popper_status
 
+# popper check without some stages
+rm teardown.sh
+rm post-run.sh
+popper check
+test -f popper_logs/setup.sh.err
+test -f popper_logs/setup.sh.out
+test -f popper_logs/run.sh.out
+test -f popper_logs/run.sh.out
+test -f popper_logs/validate.sh.out
+test -f popper_logs/validate.sh.out
+
 cd /tmp/mypaper
+
+popper metadata | grep 'No metadata entries yet'
+
+popper metadata set authors 'the ramones, sex pistols'
+popper metadata get authors | grep 'the ramones'
+popper metadata set authors 'the police' | grep 'already assigned'
+popper metadata set year '1979'
+popper metadata | grep "year: '1979'"
+popper metadata | grep "authors: 'the ramones, sex pistols'"
 
 popper init --env=ubuntu-16.04 mypipelineonubuntu
 cat .popper.yml | grep 'mypipelineonubuntu: ubuntu-16.04'
 
-# TODO: check custom stages
+# TODO: check arbitrary stages
