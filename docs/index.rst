@@ -21,14 +21,12 @@ experiments.
    protocol/intro_to_popper.md
    ci/popperyml.md
    ci/popperci.md
-   tutorial/math_science.md
-   tutorial/hpc.md
-   tutorial/data-science.md
+   cli/popper_vs_other_software.md
+   protocol/review_workflow.md
 
-
-This project is supported in part by the National Science Foundation ([award 
-#1450488](http://bigweatherweb.org)), the [Center for Research in Open Source 
-Software](http://cross.ucsc.edu) (CROSS), Sandia National Laboratories, and 
+This project is supported in part by the National Science Foundation (`award 
+#1450488 <http://bigweatherweb.org>`), the `Center for Research in Open Source 
+Software (CROSS) <http://cross.ucsc.edu>`, Sandia National Laboratories, and 
 Lawrence Livermore National Laboratory.
 
 
