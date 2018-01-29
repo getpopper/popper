@@ -24,11 +24,6 @@ experiments.
    popper_vs_other_software.md
    protocol/review_workflow.md
 
-This project is supported in part by the National Science Foundation (`award 
-#1450488 <http://bigweatherweb.org>`), the `Center for Research in Open Source 
-Software (CROSS) <http://cross.ucsc.edu>`, Sandia National Laboratories, and 
-Lawrence Livermore National Laboratory.
-
 
 Indices and tables
 ==================
