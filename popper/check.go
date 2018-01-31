@@ -135,4 +135,11 @@ func init() {
                             This flag is ignored when the environment is 'host'.`)
 	checkCmd.Flags().StringVarP(&skip, "skip", "s", "", "Comma-separated list of stages to skip.")
 	checkCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for pipeline in seconds.")
+	runCmd.Flags().StringSliceVarP(&environment, "environment", "e", []string{}, `Environment variable available to the pipeline. Can be
+                     given multiple times. This flag is ignored when the environment
+                     is 'host'.`)
+	runCmd.Flags().StringSliceVarP(&volume, "volume", "v", []string{}, `Volume available to the pipeline. Can be given multiple times
+                     This flag is ignored when the environment is 'host'.`)
+	runCmd.Flags().StringVarP(&skip, "skip", "s", "", "Comma-separated list of stages to skip.")
+	runCmd.Flags().StringVarP(&timeout, "timeout", "t", "36000", "Timeout limit for pipeline in seconds.")
 }
