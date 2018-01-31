@@ -7,9 +7,16 @@ Popper is a convention and CLI tool for generating reproducible papers. This rep
   * A [CLI tool](popper/) to help bootstrap research articles that 
     adhere to the convention.
   * [Documentation](http://popper.readthedocs.io/en/latest/) about the 
-    convention.
-  * [Experiment re-usable templates](templates/) that can be retrieved using the
-    CLI tool (or by cloning this repo).
+    convention and the CLI tool.
+  * Contents of our [landing page](http://falsifiable.us) ([`gh-pages`](https://github.com/systemslab/popper/tree/gh-pages) branch).
+
+Quick links to other resources:
+
+  * [5-minute screencast demo of the CLI](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8).
+  * [Slidedeck introducing the convention](https://www.slideshare.net/ivotron/the-popper-experimentation-protocol-and-cli-tool-86987253).
+  * [10-min video recording of intro and demo](https://air.mozilla.org/mozilla-open-leaders-round-4-final-demos-open-succulent-project/#@52m0s).
+  * [Software Carpentry formatted Lesson](https://ivotron.github.io/popper-lesson).
+  * [List of repositories that follow the convention](https://github.com/popperized).
 
 ## Installation
 
@@ -26,7 +33,7 @@ For a quickstart guide on how to use the CLI, look [here](http://popper.readthed
 
 ## Contributing
 
-Anyone is welcome to contribute to Popper! To get started, take a look at our [roadmap](https://github.com/systemslab/popper/issues/1) and [CONTRIBUTING.md](CONTRIBUTING.md), then dive in with our [list of good first issues](https://github.com/systemslab/popper/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22+label%3Ahacktoberfest).
+Anyone is welcome to contribute to Popper! To get started, take a look at our [roadmap](https://github.com/systemslab/popper/issues/1) and [CONTRIBUTING.md](CONTRIBUTING.md), then dive in with our [list of good first issues](https://github.com/systemslab/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen).
 
 ## Participation Guidelines
 
