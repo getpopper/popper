@@ -5,4 +5,4 @@ script:
 - docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper
 - pushd popper/_check && ./build_images && popd
 - docker build -t falsifiable/jenkins docs/ci/jenkins/docker
-- docker run --rm -v 'pwd'/docs/ci/badge-server-test:/badge-server-test -- entrypoint=/badge-server-test falsifiable/popper
+- docker run --rm -v 'pwd'/docs/ci/badge-server-test:/badge-server-test --entrypoint=/badge-server-test falsifiable/popper

@@ -64,6 +64,7 @@ then
 
     echo "Tests complete, shutting down."
     kill "$myId"
+    exit 0
 else
-    echo "Popper not running!"
+    exit 1
 fi
