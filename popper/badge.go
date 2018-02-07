@@ -78,7 +78,7 @@ func status(cmd *cobra.Command, args []string) {
 			return
 		}
 
-		expName, err = getExperimentName()
+		expName, err = getPipelineName()
 		if err != nil {
 			log.Fatalln("Unable to get experiment name.")
 		}
@@ -144,7 +144,7 @@ var historyCmd = &cobra.Command{
 				return
 			}
 
-			expName, err = getExperimentName()
+			expName, err = getPipelineName()
 			if err != nil {
 				log.Fatalln("Unable to get experiment name.")
 			}

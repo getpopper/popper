@@ -63,7 +63,7 @@ then
     sleep 2
 
     echo "Tests complete, shutting down."
-    pkill $myId
+    kill "$myId"
 else
     echo "Popper not running!"
 fi
