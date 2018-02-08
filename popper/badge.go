@@ -1,11 +1,14 @@
 package main
 
 import (
+	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
 
 	"github.com/boltdb/bolt"
+	sh "github.com/codeskyblue/go-sh"
 	"github.com/gorilla/mux"
 	"github.com/spf13/cobra"
 )
@@ -32,24 +35,138 @@ var serviceCmd = &cobra.Command{
 
 		// Update experiment status
 		router.
-			HandleFunc("/{orgId}/{repoId}/{expId}/{sha}/{status}", handleExperiment).
+			HandleFunc("/{orgID}/{repoID}/{expID}/{sha}/{status}", handleExperiment).
 			Methods("POST")
 
 		// Get most recent badge
 		router.
-			HandleFunc("/{orgId}/{repoId}/{expId}/status.svg", getLatestBadge).
-			Methods("Get")
+			HandleFunc("/{orgID}/{repoID}/{expID}/status.svg", getLatestBadge).
+			Methods("GET")
+
+		// Get most recent status for CLI
+		router.
+			HandleFunc("/{orgID}/{repoID}/{expID}/status", getLatestStatus).
+			Methods("GET")
+
+		// Get status history for CLI
+		router.
+			HandleFunc("/{orgID}/{repoID}/{expID}/history", getHistory).
+			Methods("GET")
 
 		// Get badge for specific SHA
 		router.
-			HandleFunc("/{orgId}/{repoId}/{expId}/{sha}/status.svg", getSpecificBadge).
+			HandleFunc("/{orgID}/{repoID}/{expID}/{sha}/status.svg", getSpecificBadge).
 			Methods("GET")
 
 		log.Fatal(http.ListenAndServe(":9090", router))
 	},
 }
 
-func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId, sha string) (expStatus string) {
+func status(cmd *cobra.Command, args []string) {
+	if len(args) > 1 {
+		log.Fatalln("This command takes one argument at most.")
+		return
+	}
+
+	var expName string
+	var err error
+	if len(args) == 1 {
+		expName = args[1]
+	} else {
+		if !sh.Test("dir", "validate.sh") {
+			log.Fatalln("Can't find validate.sh. Are you in the root folder of an experiment?")
+			return
+		}
+
+		expName, err = getPipelineName()
+		if err != nil {
+			log.Fatalln("Unable to get experiment name.")
+		}
+
+	}
+
+	orgName, repoName, err := getRepoInfo()
+	if err != nil {
+		return
+	}
+	requestString := "http://status.falsifiable.us/" + orgName + "/" + repoName + "/" + expName + "/status"
+	response, err := http.Get(requestString)
+	if err != nil {
+		return
+	}
+	defer response.Body.Close()
+	body, err := ioutil.ReadAll(response.Body)
+	fmt.Println(body)
+}
+
+var (
+	// alias for status
+	statusCmd = &cobra.Command{
+		Use:   "status",
+		Short: "Check experiment(s) status stored with badge service.",
+		Long:  ``,
+		Run:   status,
+	}
+	linkCmd = &cobra.Command{
+		Hidden: true,
+		Use:    "link",
+		Short:  "Check experiment(s) status stored with badge service.",
+		Long:   ``,
+		Run:    status,
+	}
+
+	statusLinkCmd = &cobra.Command{
+		Hidden: true,
+		Use:    "status-link",
+		Short:  "Check experiment(s) status stored with badge service.",
+		Long:   ``,
+		Run:    status,
+	}
+)
+
+var historyCmd = &cobra.Command{
+	Use:   "history",
+	Short: "List experiment status history stored with badge service.",
+	Long:  ``,
+	Run: func(cmd *cobra.Command, args []string) {
+		if len(args) > 1 {
+			log.Fatalln("This command takes one argument at most.")
+			return
+		}
+
+		var expName string
+		var err error
+		if len(args) == 1 {
+			expName = args[1]
+		} else {
+			if !sh.Test("dir", "validate.sh") {
+				log.Fatalln("Can't find validate.sh. Are you in the root folder of an experiment?")
+				return
+			}
+
+			expName, err = getPipelineName()
+			if err != nil {
+				log.Fatalln("Unable to get experiment name.")
+			}
+
+		}
+
+		orgName, repoName, err := getRepoInfo()
+		if err != nil {
+			return
+		}
+		requestString := "http://status.falsifiable.us/" + orgName + "/" + repoName + "/" + expName + "/history"
+		response, err := http.Get(requestString)
+		if err != nil {
+			return
+		}
+		defer response.Body.Close()
+		body, err := ioutil.ReadAll(response.Body)
+		fmt.Println(body)
+	},
+}
+
+func getExperimentStatus(w http.ResponseWriter, orgID, repoID, expID, sha string) (expStatus string) {
 	// Open database, creates if necessary
 	db, err := bolt.Open("status.db", 0600, nil)
 	if err != nil {
@@ -61,19 +178,19 @@ func getExperimentStatus(w http.ResponseWriter, orgId, repoId, expId, sha string
 
 	// Identify buckets based on experiment ID
 	err = db.View(func(tx *bolt.Tx) error {
-		orgBucket := tx.Bucket([]byte(orgId))
+		orgBucket := tx.Bucket([]byte(orgID))
 		if orgBucket == nil {
 			expStatus = "invalid"
 			return nil
 		}
 
-		repoBucket := orgBucket.Bucket([]byte(repoId))
+		repoBucket := orgBucket.Bucket([]byte(repoID))
 		if repoBucket == nil {
 			expStatus = "invalid"
 			return nil
 		}
 
-		expBucket := repoBucket.Bucket([]byte(expId))
+		expBucket := repoBucket.Bucket([]byte(expID))
 		if expBucket == nil {
 			expStatus = "invalid"
 			return nil
@@ -96,9 +213,9 @@ var badges = map[string][]byte{
 
 func handleExperiment(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	orgId := vars["orgId"]
-	repoId := vars["repoId"]
-	expId := vars["expId"]
+	orgID := vars["orgID"]
+	repoID := vars["repoID"]
+	expID := vars["expID"]
 	sha := vars["sha"]
 	status := vars["status"]
 
@@ -114,19 +231,19 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 	// Create status entry
 	// Creates buckets as necessary (for new entries)
 	db.Update(func(tx *bolt.Tx) error {
-		orgBucket, err := tx.CreateBucketIfNotExists([]byte(orgId))
+		orgBucket, err := tx.CreateBucketIfNotExists([]byte(orgID))
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return nil
 		}
-		repoBucket, err := orgBucket.CreateBucketIfNotExists([]byte(repoId))
+		repoBucket, err := orgBucket.CreateBucketIfNotExists([]byte(repoID))
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return nil
 		}
-		expBucket, err := repoBucket.CreateBucketIfNotExists([]byte(expId))
+		expBucket, err := repoBucket.CreateBucketIfNotExists([]byte(expID))
 		if err != nil {
 			log.Println(err.Error())
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -144,26 +261,85 @@ func handleExperiment(w http.ResponseWriter, r *http.Request) {
 // Two wrappers for getBadge to return either a specific badge or just the latest one
 func getLatestBadge(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	orgId := vars["orgId"]
-	repoId := vars["repoId"]
-	expId := vars["expId"]
+	orgID := vars["orgID"]
+	repoID := vars["repoID"]
+	expID := vars["expID"]
 	sha := "current"
 
-	getBadge(w, orgId, repoId, expId, sha)
+	getBadge(w, orgID, repoID, expID, sha)
 }
 
 func getSpecificBadge(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	orgId := vars["orgId"]
-	repoId := vars["repoId"]
-	expId := vars["expId"]
+	orgID := vars["orgID"]
+	repoID := vars["repoID"]
+	expID := vars["expID"]
 	sha := vars["sha"]
 
-	getBadge(w, orgId, repoId, expId, sha)
+	getBadge(w, orgID, repoID, expID, sha)
 }
 
-func getBadge(w http.ResponseWriter, orgId, repoId, expId, sha string) {
-	exp := getExperimentStatus(w, orgId, repoId, expId, sha)
+// Return current status for CLI status command
+func getLatestStatus(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orgID := vars["orgID"]
+	repoID := vars["repoID"]
+	expID := vars["expID"]
+	sha := "current"
+
+	status := getExperimentStatus(w, orgID, repoID, expID, sha)
+	w.Write([]byte(status))
+}
+
+// Return status history as a list
+func getHistory(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	orgID := vars["orgID"]
+	repoID := vars["repoID"]
+	expID := vars["expID"]
+
+	// Open database, creates if necessary
+	db, err := bolt.Open("status.db", 0600, nil)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Close database when function ends
+	defer db.Close()
+
+	// Identify buckets based on experiment ID
+	err = db.View(func(tx *bolt.Tx) error {
+		orgBucket := tx.Bucket([]byte(orgID))
+		if orgBucket == nil {
+			return nil
+		}
+
+		repoBucket := orgBucket.Bucket([]byte(repoID))
+		if repoBucket == nil {
+			return nil
+		}
+
+		expBucket := repoBucket.Bucket([]byte(expID))
+		if expBucket == nil {
+			return nil
+		}
+
+		cursor := expBucket.Cursor()
+
+		var history []byte
+
+		for sha, status := cursor.First(); sha != nil; sha, status = cursor.Next() {
+			line := string(sha) + " " + string(status) + "\n"
+			history = append(history, line...)
+		}
+		w.Write(history)
+		return nil
+	})
+	return
+}
+
+func getBadge(w http.ResponseWriter, orgID, repoID, expID, sha string) {
+	exp := getExperimentStatus(w, orgID, repoID, expID, sha)
 	date := time.Now().Format(http.TimeFormat)
 	log.Printf("%v\n", date)
 	log.Printf("State %v\n", exp)
@@ -190,4 +366,5 @@ func getBadge(w http.ResponseWriter, orgId, repoId, expId, sha string) {
 func init() {
 	RootCmd.AddCommand(badgeCmd)
 	badgeCmd.AddCommand(serviceCmd)
+	badgeCmd.AddCommand(statusCmd)
 }
