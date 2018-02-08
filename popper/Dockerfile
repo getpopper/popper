@@ -1,4 +1,4 @@
-FROM golang:1.9
+FROM golang:1.9.3-stretch
 
 ADD . /go/src/github.com/systemslab/popper
 
