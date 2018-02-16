@@ -30,9 +30,20 @@ On The Popper Convention:
 
 Articles following the convention:
 
-  * Sevilla et al., _Malacology: A Programmable Storage System_. 
-    Proceedings of the 12th European Conference on Computer Systems 
-    (EuroSys '17). \[[pdf][malacologypdf]\] \[[github][malacologygh]\]
+  * Sevilla et al., Programmable Caches with a Data Management 
+    Language \& Policy Engine. CCGrid '18. \[[pdf][ccgrid18pdf]\] 
+    \[[github][ccgrid18gh]\].
+
+  * Sevilla et al., Cudele: An API and Framework for Programmable 
+    Consistency and Durability in a Global Namespace. IPDPS '18. 
+    \[[pdf][cudelepdf]\] \[[github][cudelegh]\].
+
+  * Ivo Jimenez et al., _quiho_: Automated Performance Regression 
+    Testing Using Inferred Resource Utilization Profiles. ICPE '18, 
+    \[[pdf][icpe18pdf]\] \[[github][icpe18gh]\].
+
+  * Sevilla et al., _Malacology: A Programmable Storage System_.
+    EuroSys '17. \[[pdf][malacologypdf]\] \[[github][malacologygh]\]
 
   * Josh P. Hacker et al., _A containerized mesoscale model and 
     analysis toolkit to accelerate classroom learning, collaborative 
@@ -41,10 +52,8 @@ Articles following the convention:
 
   * Ivo Jimenez et al., _Characterizing and 
     Reducing Cross-Platform Performance Using OS-level 
-    Virtualization_, Parallel and Distributed Processing Symposium 
-    Workshop, 2016 \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
-
-
+    Virtualization_, IPDPSW '16 \[[pdf][varsyspdf]\] 
+    \[[github][varsysgh]\].
 
 [techreport]: https://github.com/systemslab/popper-paper/raw/techreport/paper/paper.pdf
 [varsyspdf]: https://github.com/ivotron/varsys16/raw/master/out/main.pdf
@@ -60,3 +69,9 @@ Articles following the convention:
 [cnertgh]: https://github.com/systemslab/popperci-paper
 [repparpdf]: https://github.com/systemslab/popper-paper/raw/master/paper/paper.pdf
 [reppargh]: https://github.com/systemslab/popper-paper
+[icpe18pdf]: https://github.com/ivotron/quiho-popper/raw/master/paper/paper.pdf
+[icpe18gh]: https://github.com/ivotron/quiho-popper
+[cudelepdf]: https://github.com/michaelsevilla/cudele-popper/raw/master/paper/paper.pdf
+[cudelegh]: https://github.com/michaelsevilla/cudele-popper
+[ccgrid18pdf]: https://github.com/michaelsevilla/parsplice-ml-popper/raw/master/paper/paper.pdf
+[ccgrid18gh]: https://github.com/michaelsevilla/parsplice-ml-popper
