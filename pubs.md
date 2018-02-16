@@ -17,11 +17,6 @@ On The Popper Convention:
     Arpaci-Dusseau. _Standing on the Shoulders of Giants by Managing 
     Scientific Experiments Like Software_, USENIX; login, vol. 41, no. 
     4, Nov-2016. \[[login][login]\] \[[github][poppergh-login]\].
-  * Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
-    Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
-    Arpaci-Dusseau. _Popper: Making Reproducible Systems Performance 
-    Evaluation Practical_, Technical Report, UC Santa Cruz, 
-    UCSC-SOE-16-10, 2016 \[[pdf][techreport]\] \[[github][poppergh]\].
   * Ivo Jimenez, Sina Hamedian, Andrea Arpaci-Dusseau, Remzi 
     Arpaci-Dusseau, Jay Lofstead, Carlos Maltzahn, Kathryn Mohror and 
     Robert Ricci. _PopperCI: Automated Reproducibility Validation_, 
@@ -30,17 +25,13 @@ On The Popper Convention:
 
 Articles following the convention:
 
-  * Sevilla et al., Programmable Caches with a Data Management 
-    Language \& Policy Engine. CCGrid '18. \[[pdf][ccgrid18pdf]\] 
-    \[[github][ccgrid18gh]\].
+  * Ivo Jimenez et al., _quiho_: Automated Performance Regression 
+    Testing Using Inferred Resource Utilization Profiles. ICPE '18, 
+    \[[pdf][icpe18pdf]\] \[[github][icpe18gh]\].
 
   * Sevilla et al., Cudele: An API and Framework for Programmable 
     Consistency and Durability in a Global Namespace. IPDPS '18. 
     \[[pdf][cudelepdf]\] \[[github][cudelegh]\].
-
-  * Ivo Jimenez et al., _quiho_: Automated Performance Regression 
-    Testing Using Inferred Resource Utilization Profiles. ICPE '18, 
-    \[[pdf][icpe18pdf]\] \[[github][icpe18gh]\].
 
   * Sevilla et al., _Malacology: A Programmable Storage System_.
     EuroSys '17. \[[pdf][malacologypdf]\] \[[github][malacologygh]\]
@@ -50,10 +41,13 @@ Articles following the convention:
     research, and uncertainty quantification_,” Bull. Amer. Meteor. 
     Soc., Oct. 2016. \[[pdf][bamspdf]\] \[[github][bamsgh]\].
 
-  * Ivo Jimenez et al., _Characterizing and 
-    Reducing Cross-Platform Performance Using OS-level 
-    Virtualization_, IPDPSW '16 \[[pdf][varsyspdf]\] 
-    \[[github][varsysgh]\].
+  * Ivo Jimenez et al., _Characterizing and Reducing Cross-Platform 
+    Performance Using OS-level Virtualization_, IPDPSW '16 
+    \[[pdf][varsyspdf]\] \[[github][varsysgh]\].
+
+  * Sevilla et al., Programmable Caches with a Data Management 
+    Language \& Policy Engine. CCGrid '18. \[[pdf][ccgrid18pdf]\] 
+    \[[github][ccgrid18gh]\].
 
 [techreport]: https://github.com/systemslab/popper-paper/raw/techreport/paper/paper.pdf
 [varsyspdf]: https://github.com/ivotron/varsys16/raw/master/out/main.pdf
