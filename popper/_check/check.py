@@ -15,7 +15,7 @@ stages = ['setup.sh', 'run.sh', 'post-run.sh', 'validate.sh', 'teardown.sh']
 
 def execute(stage, timeout):
     time_limit = time.time() + timeout
-
+    sleep_time = 1
     out_fname = 'popper_logs/{}.{}'.format(stage, 'out')
     err_fname = 'popper_logs/{}.{}'.format(stage, 'err')
 
@@ -33,7 +33,10 @@ def execute(stage, timeout):
                 sys.stdout.write(' time out!')
                 break
 
-            time.sleep(20)
+            if sleep_time < 300:
+                sleep_time *= 2
+
+            time.sleep(sleep_time)
 
     sys.stdout.write('\n')
 
