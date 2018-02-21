@@ -1,7 +1,7 @@
 language: bash
 services: docker
 script:
-- ./build-me.sh
+- docker build -t falsifiable/popper cli/
 - docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper
 - pushd popper/_check && ./build_images && popd
 - docker build -t falsifiable/jenkins docs/ci/jenkins/docker

@@ -1,10 +1,8 @@
+*.pyc
 *.sw?
 *.DS_Store
 wiki
-popper/vendor
-popper/app
 .ropeproject/
 .sass-cache/
-templates/experiments/linux-cgroups/vagrant/.vagrant
-templates/experiments/linux-cgroups/vagrant/debs/*deb
 docs/_build
+cli/popper.egg-info/
