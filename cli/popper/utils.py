@@ -1,5 +1,5 @@
 import click
-import os.path
+import os
 import sys
 import yaml
 
@@ -13,8 +13,8 @@ def get_path_to_config():
     if os.path.isfile('.popper.yml'):
         return os.getcwd()
 
-    if os.path.isfile('../../.popper.yml'):
-        return os.getcwd() + '../..'
+    if os.path.isfile(os.path.join('..', '..', '.popper.yml')):
+        return os.path.join(os.getcwd(), '..', '..')
 
     return ""
 
@@ -23,7 +23,7 @@ def get_project_root():
     """Tries to find the root of the project with the following heuristic:
 
       - Find the .popper.yml file in cwd or two folders up
-      - Find the .git/ folder in cwd
+      - Find the .git folder in cwd
 
     Returns:
         project_root (str): The fully qualified path to the root of project.
@@ -47,7 +47,7 @@ def read_config():
     Returns:
         config (dict): dictionary representing the YAML file contents.
     """
-    config_filename = get_project_root() + '/.popper.yml'
+    config_filename = os.path.join(get_project_root(), '.popper.yml')
 
     if not os.path.isfile(config_filename):
         fail(".popper.yml file doesn't exist. See 'popper init --help'.")
@@ -60,7 +60,7 @@ def read_config():
 
 def write_config(config):
     """Writes config to .popper.yml file."""
-    config_filename = get_project_root() + '/.popper.yml'
+    config_filename = os.path.join(get_project_root(), '.popper.yml')
 
     with open(config_filename, 'w') as f:
         yaml.safe_dump(config, f, default_flow_style=False)
@@ -73,7 +73,8 @@ def is_popperized():
     Returns:
        True if the '.popper.yml' exists, False otherwise.
     """
-    return os.path.isfile(get_path_to_config() + '/.popper.yml')
+    config_filename = os.path.join(get_project_root(), '.popper.yml')
+    return os.path.isfile(config_filename)
 
 
 def update_config(name, stages, envs, relative_path):
