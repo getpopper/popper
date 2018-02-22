@@ -1,21 +1,52 @@
 #!/bin/bash
 set -ex
-rm -rf /tmp/mypaper
 
-mkdir /tmp/mypaper
-cd /tmp/mypaper
-git init
+function init_test {
+  cd
+  rm -rf /tmp/mypaper
+  mkdir /tmp/mypaper
+  cd /tmp/mypaper
+  git init
+  popper init
+}
 
-popper init
+init_test
 test -f .popper.yml
 
-popper init mypipeline
-cat .popper.yml | grep 'mypipeline: host'
-test -f pipelines/mypipeline/setup.sh
-test -f pipelines/mypipeline/run.sh
-test -f pipelines/mypipeline/post-run.sh
-test -f pipelines/mypipeline/validate.sh
-test -f pipelines/mypipeline/teardown.sh
+# default values
+popper init pipeone
+cat .popper.yml | grep '\- host'
+cat .popper.yml | grep 'path: pipelines/pipeone'
+test -f pipelines/pipeone/setup.sh
+test -f pipelines/pipeone/run.sh
+test -f pipelines/pipeone/post-run.sh
+test -f pipelines/pipeone/validate.sh
+test -f pipelines/pipeone/teardown.sh
+
+# arbitrary stages and envs
+init_test
+popper init --stages=one,two,three --envs=host,ubuntu-xenial pipetwo
+cat .popper.yml | grep '\- host'
+cat .popper.yml | grep '\- ubuntu-xenial'
+cat .popper.yml | grep '\- one'
+cat .popper.yml | grep '\- two'
+cat .popper.yml | grep '\- three'
+test -f pipelines/pipetwo/one.sh
+test -f pipelines/pipetwo/two.sh
+test -f pipelines/pipetwo/three.sh
+
+# existing pipeline
+init_test
+mkdir ci
+echo '' > ci/one.sh
+echo '' > ci/two
+echo '' > ci/three
+popper init --existing --stages=one,two,three ci
+cat .popper.yml | grep '\- host'
+cat .popper.yml | grep '\- one'
+cat .popper.yml | grep '\- two'
+cat .popper.yml | grep '\- three'
+cat .popper.yml | grep 'path: ci'
 
 popper ci travis
 test -f .travis.yml
@@ -26,14 +57,14 @@ test -f .circleci/config.yml
 popper ci jenkins
 test -f Jenkinsfile
 
-popper workflow mypipeline > wf.dot
+popper workflow pipeone > wf.dot
 cat wf.dot | grep digraph
 cat wf.dot | grep setup
 cat wf.dot | grep post-run
 cat wf.dot | grep validate
 cat wf.dot | grep teardown
 
-cd pipelines/mypipeline
+cd pipelines/pipeone
 
 popper run
 test -f popper_logs/setup.sh.err
