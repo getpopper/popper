@@ -5,8 +5,6 @@ import popper.utils as pu
 from popper.cli import pass_context
 from os.path import isfile, isdir, basename
 
-print(str(pass_context))
-
 
 @click.command('init', short_help='Initializes a Popper repo or pipeline.')
 @click.argument('name', required=False)
@@ -34,7 +32,7 @@ def cli(ctx, name, stages, envs, existing):
     command initializes a popper repository. If an argument is given, a
     pipeline or paper folder is initialized. If the given name is 'paper',
     then a 'paper' folder is created. Otherwise, a pipeline named NAME is
-    created and initialized inside the 'pipelines/' folder.
+    created and initialized inside the 'pipelines' folder.
 
     By default, the stages of a pipeline are: setup, run, post-run, validate
     and teardown. To override these, the `--stages` flag can be provided, which
@@ -53,14 +51,16 @@ def cli(ctx, name, stages, envs, existing):
     if not pu.is_popperized():
         pu.fail("Repository has not been popperized yet. See 'init --help'")
 
-    if isdir(project_root+'/'+name) and existing:
+    if isdir(os.path.join(project_root, name)) and existing:
         # existing pipeline
+        abs_path = os.path.join(project_root, name)
         relative_path = name
-        initialize_existing_pipeline(project_root+'/'+name, stages, envs)
+        initialize_existing_pipeline(abs_path, stages, envs)
     else:
         # new pipeline
-        relative_path = 'pipelines/' + name
-        initialize_new_pipeline(project_root+'/pipelines/'+name, stages, envs)
+        abs_path = os.path.join(project_root, 'pipelines', name)
+        relative_path = os.path.join('pipelines', name)
+        initialize_new_pipeline(abs_path, stages, envs)
 
     pu.update_config(name, stages, envs, relative_path)
 
@@ -71,7 +71,7 @@ def initialize_repo(project_root):
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
 
-    with open(project_root+'/.popper.yml', 'w') as f:
+    with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
         f.write('{}\n')
 
     pu.info('Popperized repository ' + project_root)
@@ -79,7 +79,7 @@ def initialize_repo(project_root):
 
 def initialize_existing_pipeline(pipeline_path, stages, envs):
     for s in stages.split(','):
-        s_filename = pipeline_path+'/'+s
+        s_filename = os.path.join(pipeline_path, s)
         if not isfile(s_filename) and not isfile(s_filename+'.sh'):
             pu.fail(
                 ("Unable to find script for stage '" + s + "'. You might need "
@@ -99,12 +99,12 @@ def initialize_new_pipeline(pipeline_path, stages, envs):
         if not s.endswith('.sh'):
             s = s + '.sh'
 
-        with open('{}/{}'.format(pipeline_path, s), 'w') as f:
+        with open(os.path.join(pipeline_path, s), 'w') as f:
             f.write('#!/usr/bin/env bash\n')
             f.write('# [wf] execute {} stage\n'.format(s))
             f.write('\n')
-        os.chmod('{}/{}'.format(pipeline_path, s), 0o755)
+        os.chmod(os.path.join(pipeline_path, s), 0o755)
 
     # write README
-    with open('{}/README'.format(pipeline_path), 'w') as f:
+    with open(os.path.join(pipeline_path, 'README'), 'w') as f:
         f.write('# ' + basename(pipeline_path) + '\n')
