@@ -5,6 +5,8 @@ import popper.utils as pu
 from popper.cli import pass_context
 from os.path import isfile, isdir, basename
 
+print(str(pass_context))
+
 
 @click.command('init', short_help='Initializes a Popper repo or pipeline.')
 @click.argument('name', required=False)

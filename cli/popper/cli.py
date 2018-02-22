@@ -42,8 +42,8 @@ class PopperCLI(click.MultiCommand):
                 name = name.encode('ascii', 'replace')
             mod = __import__('popper.commands.cmd_' + name,
                              None, None, ['cli'])
-        except ImportError:
-            return
+        except ImportError as e:
+            raise(e)
         return mod.cli
 
 
