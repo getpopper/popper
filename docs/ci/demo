@@ -48,38 +48,29 @@ cat .popper.yml | grep '\- two'
 cat .popper.yml | grep '\- three'
 cat .popper.yml | grep 'path: ci'
 
-popper ci travis
+popper ci --service travis
 test -f .travis.yml
 
-popper ci circleci
-test -f .circleci/config.yml
+# run
+init_test
+popper init mypipeone
+popper run mypipeone
+test -f pipelines/mypipeone/popper_logs/setup.sh.err
+test -f pipelines/mypipeone/popper_logs/setup.sh.out
+test -f pipelines/mypipeone/popper_logs/run.sh.out
+test -f pipelines/mypipeone/popper_logs/run.sh.out
+test -f pipelines/mypipeone/popper_logs/post-run.sh.out
+test -f pipelines/mypipeone/popper_logs/post-run.sh.out
+test -f pipelines/mypipeone/popper_logs/validate.sh.out
+test -f pipelines/mypipeone/popper_logs/validate.sh.out
+test -f pipelines/mypipeone/popper_logs/teardown.sh.out
+test -f pipelines/mypipeone/popper_logs/teardown.sh.out
+test -f pipelines/mypipeone/popper_status
 
-popper ci jenkins
-test -f Jenkinsfile
-
-popper workflow pipeone > wf.dot
-cat wf.dot | grep digraph
-cat wf.dot | grep setup
-cat wf.dot | grep post-run
-cat wf.dot | grep validate
-cat wf.dot | grep teardown
-
-cd pipelines/pipeone
-
-popper run
-test -f popper_logs/setup.sh.err
-test -f popper_logs/setup.sh.out
-test -f popper_logs/run.sh.out
-test -f popper_logs/run.sh.out
-test -f popper_logs/post-run.sh.out
-test -f popper_logs/post-run.sh.out
-test -f popper_logs/validate.sh.out
-test -f popper_logs/validate.sh.out
-test -f popper_logs/teardown.sh.out
-test -f popper_logs/teardown.sh.out
-test -f popper_status
-
-# popper check without some stages
+# within the pipeline folder, without some stages
+init_test
+popper init mypipeone
+cd pipelines/mypipeone
 rm teardown.sh
 rm post-run.sh
 popper run
@@ -89,19 +80,63 @@ test -f popper_logs/run.sh.out
 test -f popper_logs/run.sh.out
 test -f popper_logs/validate.sh.out
 test -f popper_logs/validate.sh.out
+rm -r popper_logs
 
+# run all pipelines
 cd /tmp/mypaper
+popper init mypipetwo --stages=one,two
+popper run
+test -f pipelines/mypipeone/popper_logs/setup.sh.err
+test -f pipelines/mypipeone/popper_logs/setup.sh.out
+test -f pipelines/mypipeone/popper_logs/run.sh.out
+test -f pipelines/mypipeone/popper_logs/run.sh.out
+test -f pipelines/mypipeone/popper_logs/validate.sh.out
+test -f pipelines/mypipeone/popper_logs/validate.sh.out
+test -f pipelines/mypipetwo/popper_logs/one.sh.err
+test -f pipelines/mypipetwo/popper_logs/one.sh.out
+test -f pipelines/mypipetwo/popper_logs/two.sh.out
+test -f pipelines/mypipetwo/popper_logs/two.sh.out
+test -f pipelines/mypipetwo/popper_status
 
-popper metadata | grep 'No metadata entries yet'
+# metadata
+popper metadata | grep '{}'
+popper metadata --add authors='the ramones, sex pistols'
+popper metadata | grep 'the ramones, sex pistols'
+popper metadata --add authors='the police'
+popper metadata | grep 'the police'
+popper metadata --add year=1979
+popper metadata | grep "'year': '1979'"
+popper metadata | grep "'the police'"
 
-popper metadata set authors 'the ramones, sex pistols'
-popper metadata get authors | grep 'the ramones'
-popper metadata set authors 'the police' | grep 'already assigned'
-popper metadata set year '1979'
-popper metadata | grep "year: '1979'"
-popper metadata | grep "authors: 'the ramones, sex pistols'"
+# env
+init_test
+popper init mypipeone
+popper env mypipeone | grep 'host'
+popper env mypipeone --add foo
+popper env mypipeone | grep 'host'
+popper env mypipeone | grep 'foo'
+popper env mypipeone --add bar,baz
+popper env mypipeone | grep 'host'
+popper env mypipeone | grep 'foo'
+popper env mypipeone | grep 'bar'
+popper env mypipeone | grep 'baz'
+popper env mypipeone --rm foo,bar,baz
+popper env mypipeone | grep 'host'
 
-popper init --env=ubuntu-16.04 mypipelineonubuntu
-cat .popper.yml | grep 'mypipelineonubuntu: ubuntu-16.04'
+# TODO
 
-# TODO: check arbitrary stages
+#popper ci circleci
+#test -f .circleci/config.yml
+#
+#popper ci jenkins
+#test -f Jenkinsfile
+
+#popper workflow pipeone > wf.dot
+#cat wf.dot | grep digraph
+#cat wf.dot | grep setup
+#cat wf.dot | grep post-run
+#cat wf.dot | grep validate
+#cat wf.dot | grep teardown
+#
+#cd pipelines/pipeone
+
