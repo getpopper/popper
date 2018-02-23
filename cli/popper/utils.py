@@ -80,7 +80,7 @@ def is_popperized():
 def update_config(name, stages, envs, relative_path):
     """Updates the configuration for a pipeline"""
     config = read_config()
-    config[name] = {
+    config['pipelines'][name] = {
         'stages': stages.split(','),
         'envs': envs.split(','),
         'path': relative_path
@@ -95,4 +95,3 @@ def fail(msg):
 
 def info(msg):
     click.echo(msg)
-    sys.exit(0)

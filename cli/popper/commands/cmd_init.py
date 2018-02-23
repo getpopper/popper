@@ -6,7 +6,7 @@ from popper.cli import pass_context
 from os.path import isfile, isdir, basename
 
 
-@click.command('init', short_help='Initializes a Popper repo or pipeline.')
+@click.command('init', short_help='Initialize a Popper repo or pipeline.')
 @click.argument('name', required=False)
 @click.option(
     '--stages',
@@ -72,7 +72,7 @@ def initialize_repo(project_root):
         pu.fail('Repository has already been popperized')
 
     with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
-        f.write('{}\n')
+        f.write('{ metadata: { }, pipelines: { } }\n')
 
     pu.info('Popperized repository ' + project_root)
 
