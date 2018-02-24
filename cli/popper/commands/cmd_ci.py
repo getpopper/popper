@@ -12,8 +12,8 @@ language: python
 python: 2.7
 services: docker
 install:
-- git clone https://github.com/systemslab/popper /tmp/popper
-- pip install /tmp/popper
+- git clone --recursive https://github.com/systemslab/popper /tmp/popper
+- export PATH=$PATH:/tmp/popper/cli/bin
 script: popper run
 """
     }

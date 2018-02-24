@@ -20,12 +20,12 @@ Quick links to other resources:
 
 ## Installation
 
-See [here](../README.md) for instructions on how to install the CLI 
-tool. Once installed, to get an overview and list of commands check 
-out the command line help:
+See [here](cli/) for instructions on how to install the CLI tool. Once 
+installed, to get an overview and list of commands check out the 
+command line help:
 
 ```bash
-popper help
+popper --help
 ```
 
 For a quickstart guide on how to use the CLI, look [here](http://popper.readthedocs.io/en/latest/protocol/getting_started.html#quickstart-guide).
