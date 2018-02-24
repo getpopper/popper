@@ -5,13 +5,24 @@ A CLI tool to help bootstrap projects that follow the
 
 ## Install
 
-`pip` package coming soon. In the meantime:
+### `pip`
+
+We have a [`pip`](https://pypi.python.org/pypi) package available. To 
+install:
 
 ```bash
-git clone git@github.com:systemslab/popper
-cd popper/cli
-pip install .
+pip install popper
 ```
+
+### Manual
+
+```bash
+git clone --recursive git@github.com:systemslab/popper
+export PATH=$PATH:$PWD/popper/cli/bin
+```
+
+> **NOTE**: the `--recursive` flag is needed in order to checkout all 
+the dependencies.
 
 ## Usage
 
