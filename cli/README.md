@@ -1,7 +1,9 @@
 # Popper-CLI
 
 A CLI tool to help bootstrap projects that follow the 
-[Popper](https://github.com/systemslab/popper) convention.
+[Popper](https://github.com/systemslab/popper) convention. For a 
+quickstart guide on how to use the CLI, look 
+[here](http://popper.readthedocs.io/en/latest/protocol/getting_started.html#quickstart-guide).
 
 ## Install
 
