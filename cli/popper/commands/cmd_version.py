@@ -1,6 +1,6 @@
 import click
 import popper.utils as pu
-
+import popper
 from popper.cli import pass_context
 
 
@@ -8,4 +8,4 @@ from popper.cli import pass_context
 @pass_context
 def cli(ctx):
     """Displays version of Popper and exit."""
-    pu.info('Popper 0.6-dev.')
+    pu.info(popper.__version__)

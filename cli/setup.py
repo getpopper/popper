@@ -1,8 +1,9 @@
 from setuptools import setup
+import popper
 
 setup(
     name='popper',
-    version='0.6-dev0',
+    version='popper.__version__',
     author='The Popper Development Team',
     author_email='ivo@cs.ucsc.edu',
     url='http://falsifiable.us',
