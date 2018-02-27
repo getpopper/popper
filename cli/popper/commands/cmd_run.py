@@ -30,13 +30,16 @@ from subprocess import check_output
 def cli(ctx, pipeline, timeout, skip):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
-    all pipelines are executed in lexicographical order.
+    all pipelines are executed in lexicographical order. Reports an error if
+    no pipelines have been configured.
     """
     cwd = os.getcwd()
     pipes = pu.read_config()['pipelines']
     project_root = pu.get_project_root()
 
-    if pipeline:
+    if len(pipes) == 0:
+        pu.fail("No pipelines defined.")
+    elif pipeline:
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         status = run_pipeline(project_root, pipes[pipeline], timeout, skip)
@@ -51,12 +54,10 @@ def cli(ctx, pipeline, timeout, skip):
                 status = run_pipeline(project_root, pipes[pipe], timeout, skip)
 
                 if status == 'FAIL':
+                    pu.fail("Failed to execute pipeline")
                     break
 
     os.chdir(cwd)
-
-    if status == 'FAIL':
-        pu.fail("Failed to execute pipeline")
 
 
 def run_pipeline(project_root, pipeline, timeout, skip):
