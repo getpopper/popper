@@ -1,7 +1,7 @@
 import os
 import sys
 import click
-import popper
+from . import __version__ as popper_version
 
 class Context(object):
 
@@ -24,7 +24,7 @@ class Context(object):
 pass_context = click.make_pass_decorator(Context, ensure=True)
 cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
                                           'commands'))
-popper_version = popper.__version__
+popper_version = popper_version
 
 
 class PopperCLI(click.MultiCommand):

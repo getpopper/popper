@@ -1,9 +1,15 @@
 from setuptools import setup
 import popper
 
+version={}
+with open('popper/__init__.py') as f:
+    exec(f.read(),version)
+
+
+
 setup(
     name='popper',
-    version='popper.__version__',
+    version=version['__version__'],
     author='The Popper Development Team',
     author_email='ivo@cs.ucsc.edu',
     url='http://falsifiable.us',
