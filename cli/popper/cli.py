@@ -44,7 +44,10 @@ class PopperCLI(click.MultiCommand):
             mod = __import__('popper.commands.cmd_' + name,
                              None, None, ['cli'])
         except ImportError as e:
-            raise(e)
+             raise click.UsageError(
+                   "Command '"+name+"' doesn't exist. " + 
+                   "Type 'popper --help' for more."
+            )
         return mod.cli
 
 
