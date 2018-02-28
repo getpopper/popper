@@ -38,7 +38,7 @@ def cli(ctx, pipeline, timeout, skip):
     project_root = pu.get_project_root()
 
     if len(pipes) == 0:
-        pu.info("No pipelines defined in .popper.yml. Run popper --help for more info.")
+        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.")
     elif pipeline:
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
