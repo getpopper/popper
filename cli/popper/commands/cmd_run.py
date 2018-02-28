@@ -39,7 +39,9 @@ def cli(ctx, pipeline, timeout, skip):
 
     if len(pipes) == 0:
         pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.")
-    elif pipeline:
+        sys.exit(0)
+
+    if pipeline:
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         status = run_pipeline(project_root, pipes[pipeline], timeout, skip)
@@ -54,10 +56,12 @@ def cli(ctx, pipeline, timeout, skip):
                 status = run_pipeline(project_root, pipes[pipe], timeout, skip)
 
                 if status == 'FAIL':
-                    pu.fail("Failed to execute pipeline")
                     break
 
     os.chdir(cwd)
+
+    if status == 'FAIL':
+        pu.fail("Failed to execute pipeline")
 
 
 def run_pipeline(project_root, pipeline, timeout, skip):
