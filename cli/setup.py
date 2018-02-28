@@ -3,7 +3,7 @@ import popper
 
 version={}
 with open('popper/__init__.py') as f:
-    exec(f.read(),version)
+    exec(f.read(), version)
 
 setup(
     name='popper',
