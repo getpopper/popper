@@ -30,11 +30,16 @@ from subprocess import check_output
 def cli(ctx, pipeline, timeout, skip):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
-    all pipelines are executed in lexicographical order.
+    all pipelines are executed in lexicographical order. Reports an error if
+    no pipelines have been configured.
     """
     cwd = os.getcwd()
     pipes = pu.read_config()['pipelines']
     project_root = pu.get_project_root()
+
+    if len(pipes) == 0:
+        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.")
+        sys.exit(0)
 
     if pipeline:
         if pipeline not in pipes:
