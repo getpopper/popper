@@ -54,6 +54,14 @@ def read_config():
 
     with open(config_filename, 'r') as f:
         config = yaml.load(f.read())
+        if not config:
+            fail(".popper.yml is empty. Consider deleting it and "
+                 "reinitializing the repo. See popper init --help for more.")
+        for key in ["metadata", "pipelines"]:
+            if key not in config:
+                fail(".popper.yml doesn't contain expected entries. "
+                     "Consider deleting it and reinitializing the repo. "
+                     "See popper init --help for more.")
 
     return config
 
