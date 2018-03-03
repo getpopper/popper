@@ -2,7 +2,7 @@ import click
 import os
 import sys
 import yaml
-
+from pprint import PrettyPrinter
 
 def get_path_to_config():
     """Obtains the path to the config file.
@@ -89,9 +89,15 @@ def update_config(name, stages, envs, relative_path):
 
 
 def fail(msg):
-    click.echo('ERROR: ' + msg)
+    """Prints the error message on the terminal."""
+    click.secho('ERROR: ' + msg, fg='red', blink=True, bold=True)
     sys.exit(1)
 
 
-def info(msg):
-    click.echo(msg)
+def info(msg, **styles):
+    """Prints the message on the terminal."""
+    click.secho(msg, **styles)
+
+def pprint(msg, **styles):
+    pp = PrettyPrinter(indent=4)
+    click.secho(pp.pformat(msg), **styles)

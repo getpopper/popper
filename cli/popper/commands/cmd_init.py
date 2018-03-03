@@ -64,7 +64,7 @@ def cli(ctx, name, stages, envs, existing):
 
     pu.update_config(name, stages, envs, relative_path)
 
-    pu.info('Initialized pipeline ' + name)
+    pu.info('Initialized pipeline ' + name, fg='blue', bold=True)
 
 
 def initialize_repo(project_root):
@@ -74,7 +74,7 @@ def initialize_repo(project_root):
     with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
         f.write('{ metadata: { }, pipelines: { } }\n')
 
-    pu.info('Popperized repository ' + project_root)
+    pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
 
 def initialize_existing_pipeline(pipeline_path, stages, envs):
