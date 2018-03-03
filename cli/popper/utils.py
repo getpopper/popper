@@ -99,5 +99,5 @@ def info(msg, **styles):
     click.secho(msg, **styles)
 
 def pprint(msg, **styles):
-    pp = PrettyPrinter(indent=4)
+    pp = PrettyPrinter()
     click.secho(pp.pformat(msg), **styles)
