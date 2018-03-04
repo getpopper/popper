@@ -99,6 +99,17 @@ def update_config(name, stages, envs, relative_path):
     write_config(config)
 
 
+def get_filename(abs_path, stage):
+    """Returns filename for a stage"""
+    os.chdir(abs_path)
+    if os.path.isfile(stage):
+        return stage
+    elif os.path.isfile(stage + '.sh'):
+        return stage + '.sh'
+    else:
+        return None
+
+
 def fail(msg):
     """Prints the error message on the terminal."""
     click.secho('ERROR: ' + msg, fg='red', blink=True, bold=True)

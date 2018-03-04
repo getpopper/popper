@@ -98,16 +98,17 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                            label="Current stage: ", item_show_func=str,
                            bar_template='[%(bar)s] %(label)s %(info)s',
                            show_percent=False) as stages:
+
         for stage in stages:
 
-            if os.path.isfile(stage):
-                stage_file = stage
-            elif os.path.isfile(stage + '.sh'):
-                stage_file = stage + '.sh'
-            else:
-                continue
+            stage_file = pu.get_filename(abs_path, stage)
 
-            if skip and stage in skip.split(','):
+            if skip:
+                skipped = skip.split(',')
+            else:
+                skipped = []
+
+            if not stage_file or stage in skipped:
                 continue
 
             ecode = execute(stage_file, timeout, stages)
@@ -116,11 +117,20 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                 pu.info("Stage {} failed.".format(stage), fg='red',
                         bold=True, blink=True)
                 STATUS = "FAIL"
-                pu.info(".err and .out output for {}:".format(stage), fg='red')
+                pu.info("Logs for {}:.".format(stage), fg='red')
                 for t in ['.err', '.out']:
                     logfile = 'popper_logs/{}{}'.format(stage_file, t)
                     with open(logfile, 'r') as f:
                         pu.info(f.read())
+
+                # Execute teardown when some stage fails and then break
+                teardown_file = pu.get_filename(abs_path, 'teardown')
+                if (teardown_file and
+                    stage != 'teardown' and
+                    'teardown' in pipeline['stages'] and
+                    'teardown' not in skipped):
+                    execute(pu.get_filename(abs_path, 'teardown'), timeout)
+
                 break
 
             if 'valid' in stage:
