@@ -16,18 +16,28 @@ from subprocess import check_output
 @click.argument('pipeline', required=False)
 @click.option(
     '--timeout',
-    help='Timeout limit for pipeline in seconds.',
+    help='Timeout limit for pipeline. Use s for seconds, m for minutes and h '
+         'for hours. A single integer can also be used to specify timeout '
+         'in seconds. Use double quotes if you wish to use more than one unit. '
+         'For example: --timeout "2m 20s" will mean 140 seconds.',
     required=False,
     show_default=True,
-    default=10800
+    default="10800s"
 )
 @click.option(
     '--skip',
     help='Comma-separated list of stages to skip.',
     required=False,
 )
+@click.option(
+    '--ignore-errors',
+    is_flag=True,
+    help='Execute all pipelines even if there is a failure, '
+         'only when no pipeline argument is provided ',
+    required=False,
+)
 @pass_context
-def cli(ctx, pipeline, timeout, skip):
+def cli(ctx, pipeline, timeout, skip, ignore_errors):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
     all pipelines are executed in lexicographical order. Reports an error if
@@ -36,26 +46,29 @@ def cli(ctx, pipeline, timeout, skip):
     cwd = os.getcwd()
     pipes = pu.read_config()['pipelines']
     project_root = pu.get_project_root()
+    time_out = pu.parse_timeout(timeout)
 
     if len(pipes) == 0:
-        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.")
+        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
     if pipeline:
+        if ignore_errors:
+            pu.warn("ignore-errors flag is ignored when pipeline argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
-        status = run_pipeline(project_root, pipes[pipeline], timeout, skip)
+        status = run_pipeline(project_root, pipes[pipeline], time_out, skip)
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
             status = run_pipeline(project_root, pipes[os.path.basename(cwd)],
-                                  timeout, skip)
+                                  time_out, skip)
         else:
             # run all
             for pipe in pipes:
-                status = run_pipeline(project_root, pipes[pipe], timeout, skip)
+                status = run_pipeline(project_root, pipes[pipe], time_out, skip)
 
-                if status == 'FAIL':
+                if status == 'FAIL' and not ignore_errors:
                     break
 
     os.chdir(cwd)
@@ -67,7 +80,7 @@ def cli(ctx, pipeline, timeout, skip):
 def run_pipeline(project_root, pipeline, timeout, skip):
     abs_path = os.path.join(project_root, pipeline['path'])
 
-    pu.info("Executing " + os.path.basename(abs_path))
+    pu.info("Executing " + os.path.basename(abs_path), fg='blue', bold=True, blink=True)
 
     os.chdir(abs_path)
 
@@ -91,9 +104,9 @@ def run_pipeline(project_root, pipeline, timeout, skip):
         ecode = execute(stage_file, timeout)
 
         if ecode != 0:
-            pu.info("Stage {} failed.".format(stage))
+            pu.info("Stage {} failed.".format(stage), fg='red', bold=True, blink=True)
             STATUS = "FAIL"
-            pu.info("Logs for {}:.".format(stage))
+            pu.info("Logs for {}:.".format(stage), fg='red')
             for t in ['.err', '.out']:
                 with open('popper_logs/{}{}'.format(stage_file, t), 'r') as f:
                     pu.info(f.read())
@@ -112,7 +125,8 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
 
-    pu.info('status: ' + STATUS)
+    pu.info('status : ' + STATUS, fg='green', bold=True)
+    sys.stdout.write('\n')
 
     return STATUS
 

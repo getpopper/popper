@@ -3,7 +3,6 @@ import os
 import sys
 import yaml
 
-
 def get_path_to_config():
     """Obtains the path to the config file.
 
@@ -87,6 +86,10 @@ def is_popperized():
 
 def update_config(name, stages, envs, relative_path):
     """Updates the configuration for a pipeline"""
+
+    if name == 'paper':
+        stages='build'
+
     config = read_config()
     config['pipelines'][name] = {
         'stages': stages.split(','),
@@ -97,9 +100,49 @@ def update_config(name, stages, envs, relative_path):
 
 
 def fail(msg):
-    click.echo('ERROR: ' + msg)
+    """Prints the error message on the terminal."""
+    click.secho('ERROR: ' + msg, fg='red', blink=True, bold=True)
     sys.exit(1)
 
 
-def info(msg):
-    click.echo(msg)
+def warn(msg):
+    click.secho('WARNING: ' + msg, fg='orange', bold=True)
+
+
+def info(msg, **styles):
+    """Prints the message on the terminal."""
+    click.secho(msg, **styles)
+
+
+def print_yaml(msg, **styles):
+    """Prints the messages in YAML's block format. """
+    click.secho(yaml.dump(msg, default_flow_style = False), **styles)
+
+
+def parse_timeout(timeout):
+    """Takes timeout as string and parses it to obtain the number of seconds.
+    Generates valid error if proper format is not used.
+
+    Returns:
+        Value of timeout in seconds (float).
+    """
+    time_out = 0
+    to_seconds = {"s": 1, "m": 60, "h": 3600}
+    try:
+        time_out = float(timeout)
+    except ValueError:
+        literals = timeout.split()
+        for literal in literals:
+            unit = literal[-1].lower()
+            try:
+                value = float(literal[:-1])
+            except ValueError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
+            try:
+                time_out += value * to_seconds[unit];
+            except KeyError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
+
+    return time_out

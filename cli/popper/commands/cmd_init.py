@@ -56,6 +56,11 @@ def cli(ctx, name, stages, envs, existing):
         abs_path = os.path.join(project_root, name)
         relative_path = name
         initialize_existing_pipeline(abs_path, stages, envs)
+    elif name == 'paper':
+        # create a paper pipeline
+        abs_path = os.path.join(project_root, 'paper')
+        relative_path = os.path.join('paper')
+        initialize_paper(abs_path, envs)
     else:
         # new pipeline
         abs_path = os.path.join(project_root, 'pipelines', name)
@@ -64,7 +69,7 @@ def cli(ctx, name, stages, envs, existing):
 
     pu.update_config(name, stages, envs, relative_path)
 
-    pu.info('Initialized pipeline ' + name)
+    pu.info('Initialized pipeline ' + name, fg='blue', bold=True)
 
 
 def initialize_repo(project_root):
@@ -74,7 +79,7 @@ def initialize_repo(project_root):
     with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
         f.write('{ metadata: { }, pipelines: { } }\n')
 
-    pu.info('Popperized repository ' + project_root)
+    pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
 
 def initialize_existing_pipeline(pipeline_path, stages, envs):
@@ -86,6 +91,24 @@ def initialize_existing_pipeline(pipeline_path, stages, envs):
                  "to provide values for the --stages flag. See 'init --help'.")
             )
 
+
+def initialize_paper(paper_path, envs):
+
+    # create the paper folder
+    if isdir(paper_path):
+        pu.fail('The paper pipeline already exists')
+    os.makedirs(paper_path)
+
+    #write the build.sh bash script
+    with open(os.path.join(paper_path, 'build.sh'), 'w') as f:
+        f.write('#!/usr/bin/env bash\n')
+        f.write('# [wf] execute build stage.')
+        f.write('\n')
+    os.chmod(os.path.join(paper_path, 'build.sh'),0o755)
+
+    # write README
+    with open(os.path.join(paper_path, 'README',), 'w') as f:
+        f.write('# ' + basename(paper_path)+ '\n')
 
 def initialize_new_pipeline(pipeline_path, stages, envs):
 

@@ -8,4 +8,4 @@ from ..cli import pass_context
 @pass_context
 def cli(ctx):
     """Displays version of Popper and exit."""
-    pu.info('popper version ' + popper_version)
+    pu.info('popper version ' + popper_version, fg='blue', bold=True)
