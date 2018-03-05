@@ -108,8 +108,8 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             STATUS = "FAIL"
             pu.info("Logs for {}:.".format(stage), fg='red')
             for t in ['.err', '.out']:
-                with open('popper_logs/{}{}'.format(stage, t), 'r') as f:
-                    pu.info(f.read(), fg='red')
+                with open('popper_logs/{}{}'.format(stage_file, t), 'r') as f:
+                    pu.info(f.read())
             break
 
         if 'valid' in stage:
