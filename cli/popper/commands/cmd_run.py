@@ -54,7 +54,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
     if pipeline:
         if ignore_errors:
-            pu.info("W: ignore-errors flag is ignored when pipeline argument is provided")
+            pu.warn("ignore-errors flag is ignored when pipeline argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         status = run_pipeline(project_root, pipes[pipeline], time_out, skip)
