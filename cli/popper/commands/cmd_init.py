@@ -57,6 +57,7 @@ def cli(ctx, name, stages, envs, existing):
         relative_path = name
         initialize_existing_pipeline(abs_path, stages, envs)
     elif name == 'paper':
+        # create a paper pipeline
         abs_path = os.path.join(project_root, 'paper')
         relative_path = os.path.join('paper')
         initialize_paper(abs_path, envs)
@@ -95,7 +96,7 @@ def initialize_paper(paper_path, envs):
 
     # create the paper folder
     if isdir(paper_path):
-        pu.fail('A paper already exists')
+        pu.fail('The paper pipeline already exists')
     os.makedirs(paper_path)
 
     #write the build.sh bash script
