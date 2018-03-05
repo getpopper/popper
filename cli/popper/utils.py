@@ -105,13 +105,19 @@ def fail(msg):
     sys.exit(1)
 
 
+def warn(msg):
+    click.secho('WARNING: ' + msg, fg='orange', bold=True)
+
+
 def info(msg, **styles):
     """Prints the message on the terminal."""
     click.secho(msg, **styles)
 
+
 def print_yaml(msg, **styles):
     """Prints the messages in YAML's block format. """
     click.secho(yaml.dump(msg, default_flow_style = False), **styles)
+
 
 def parse_timeout(timeout):
     """Takes timeout as string and parses it to obtain the number of seconds.
