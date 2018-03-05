@@ -103,3 +103,32 @@ def fail(msg):
 
 def info(msg):
     click.echo(msg)
+
+
+def parse_timeout(timeout):
+    """Takes timeout as string and parses it to obtain the number of seconds.
+    Generates valid error if proper format is not used.
+
+    Returns:
+        Value of timeout in seconds (float).
+    """
+    time_out = 0
+    to_seconds = {"s": 1, "m": 60, "h": 3600}
+    try:
+        time_out = float(timeout)
+    except ValueError:
+        literals = timeout.split()
+        for literal in literals:
+            unit = literal[-1].lower()
+            try:
+                value = float(literal[:-1])
+            except ValueError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
+            try:
+                time_out += value * to_seconds[unit];
+            except KeyError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
+
+    return time_out

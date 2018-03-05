@@ -23,6 +23,13 @@ test -f pipelines/pipeone/post-run.sh
 test -f pipelines/pipeone/validate.sh
 test -f pipelines/pipeone/teardown.sh
 
+# user-friendly timeout values
+popper run --timeout 2.5
+popper run --timeout 10s
+popper run --timeout 0.5m
+popper run --timeout .01h
+popper run --timeout "1m 10s"
+
 # arbitrary stages and envs
 init_test
 popper init --stages=one,two,three --envs=host,ubuntu-xenial pipetwo
@@ -139,4 +146,3 @@ popper env mypipeone | grep 'host'
 #cat wf.dot | grep teardown
 #
 #cd pipelines/pipeone
-

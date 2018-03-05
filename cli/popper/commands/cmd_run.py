@@ -16,10 +16,13 @@ from subprocess import check_output
 @click.argument('pipeline', required=False)
 @click.option(
     '--timeout',
-    help='Timeout limit for pipeline in seconds.',
+    help='Timeout limit for pipeline. Use s for seconds, m for minutes and h '
+         'for hours. A single integer can also be used to specify timeout '
+         'in seconds. Use double quotes if you wish to use more than one unit. '
+         'For example: --timeout "2m 20s" will mean 140 seconds.',
     required=False,
     show_default=True,
-    default=10800
+    default="10800s"
 )
 @click.option(
     '--skip',
@@ -36,6 +39,7 @@ def cli(ctx, pipeline, timeout, skip):
     cwd = os.getcwd()
     pipes = pu.read_config()['pipelines']
     project_root = pu.get_project_root()
+    time_out = pu.parse_timeout(timeout)
 
     if len(pipes) == 0:
         pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.")
@@ -44,16 +48,16 @@ def cli(ctx, pipeline, timeout, skip):
     if pipeline:
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
-        status = run_pipeline(project_root, pipes[pipeline], timeout, skip)
+        status = run_pipeline(project_root, pipes[pipeline], time_out, skip)
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
             status = run_pipeline(project_root, pipes[os.path.basename(cwd)],
-                                  timeout, skip)
+                                  time_out, skip)
         else:
             # run all
             for pipe in pipes:
-                status = run_pipeline(project_root, pipes[pipe], timeout, skip)
+                status = run_pipeline(project_root, pipes[pipe], time_out, skip)
 
                 if status == 'FAIL':
                     break
