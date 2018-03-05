@@ -110,17 +110,21 @@ def parse_timeout(timeout):
     Generates valid error if proper format is not used.
 
     Returns:
-        Value of timeout in seconds.
+        Value of timeout in seconds (float).
     """
     time_out = 0
     to_seconds = {"s": 1, "m": 60, "h": 3600}
     try:
-        time_out = int(timeout)
+        time_out = float(timeout)
     except ValueError:
         literals = timeout.split()
         for literal in literals:
             unit = literal[-1].lower()
-            value = int(literal[:-1])
+            try:
+                value = float(literal[:-1])
+            except ValueError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
             try:
                 time_out += value * to_seconds[unit];
             except KeyError:
