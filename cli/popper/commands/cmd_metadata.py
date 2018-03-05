@@ -1,6 +1,5 @@
 import click
 import popper.utils as pu
-
 from popper.cli import pass_context
 
 
@@ -32,9 +31,8 @@ def cli(ctx, add, rm):
       popper metadata --rm author
     """
     config = pu.read_config()
-
     if not add and not rm:
-        pu.info(str(config['metadata']))
+        pu.print_yaml(config['metadata'], fg='yellow')
 
     if add:
         for kv_str in add:
