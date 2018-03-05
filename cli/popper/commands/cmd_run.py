@@ -29,8 +29,15 @@ from subprocess import check_output
     help='Comma-separated list of stages to skip.',
     required=False,
 )
+@click.option(
+    '--ignore-errors',
+    is_flag=True,
+    help='Execute all pipelines even if there is a failure, '
+         'only when no pipeline argument is provided ',
+    required=False,
+)
 @pass_context
-def cli(ctx, pipeline, timeout, skip):
+def cli(ctx, pipeline, timeout, skip, ignore_errors):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
     all pipelines are executed in lexicographical order. Reports an error if
@@ -46,6 +53,8 @@ def cli(ctx, pipeline, timeout, skip):
         sys.exit(0)
 
     if pipeline:
+        if ignore_errors:
+            pu.warn("ignore-errors flag is ignored when pipeline argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         status = run_pipeline(project_root, pipes[pipeline], time_out, skip)
@@ -59,7 +68,7 @@ def cli(ctx, pipeline, timeout, skip):
             for pipe in pipes:
                 status = run_pipeline(project_root, pipes[pipe], time_out, skip)
 
-                if status == 'FAIL':
+                if status == 'FAIL' and not ignore_errors:
                     break
 
     os.chdir(cwd)
@@ -117,7 +126,8 @@ def run_pipeline(project_root, pipeline, timeout, skip):
         f.write(STATUS + '\n')
 
     pu.info('status : ' + STATUS, fg='green', bold=True)
-    
+    sys.stdout.write('\n')
+
     return STATUS
 
 
