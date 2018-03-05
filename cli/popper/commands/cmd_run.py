@@ -42,7 +42,7 @@ def cli(ctx, pipeline, timeout, skip):
     time_out = pu.parse_timeout(timeout)
 
     if len(pipes) == 0:
-        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.")
+        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
     if pipeline:
@@ -71,7 +71,7 @@ def cli(ctx, pipeline, timeout, skip):
 def run_pipeline(project_root, pipeline, timeout, skip):
     abs_path = os.path.join(project_root, pipeline['path'])
 
-    pu.info("Executing " + os.path.basename(abs_path))
+    pu.info("Executing " + os.path.basename(abs_path), fg='blue', bold=True, blink=True)
 
     os.chdir(abs_path)
 
@@ -95,12 +95,12 @@ def run_pipeline(project_root, pipeline, timeout, skip):
         ecode = execute(stage_file, timeout)
 
         if ecode != 0:
-            pu.info("Stage {} failed.".format(stage))
+            pu.info("Stage {} failed.".format(stage), fg='red', bold=True, blink=True)
             STATUS = "FAIL"
-            pu.info("Logs for {}:.".format(stage))
+            pu.info("Logs for {}:.".format(stage), fg='red')
             for t in ['.err', '.out']:
                 with open('popper_logs/{}{}'.format(stage, t), 'r') as f:
-                    pu.info(f.read())
+                    pu.info(f.read(), fg='red')
             break
 
         if 'valid' in stage:
@@ -116,8 +116,8 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
 
-    pu.info('status: ' + STATUS)
-
+    pu.info('status : ' + STATUS, fg='green', bold=True)
+    
     return STATUS
 
 

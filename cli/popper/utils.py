@@ -3,7 +3,6 @@ import os
 import sys
 import yaml
 
-
 def get_path_to_config():
     """Obtains the path to the config file.
 
@@ -101,13 +100,18 @@ def update_config(name, stages, envs, relative_path):
 
 
 def fail(msg):
-    click.echo('ERROR: ' + msg)
+    """Prints the error message on the terminal."""
+    click.secho('ERROR: ' + msg, fg='red', blink=True, bold=True)
     sys.exit(1)
 
 
-def info(msg):
-    click.echo(msg)
+def info(msg, **styles):
+    """Prints the message on the terminal."""
+    click.secho(msg, **styles)
 
+def print_yaml(msg, **styles):
+    """Prints the messages in YAML's block format. """
+    click.secho(yaml.dump(msg, default_flow_style = False), **styles)
 
 def parse_timeout(timeout):
     """Takes timeout as string and parses it to obtain the number of seconds.
