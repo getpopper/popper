@@ -37,7 +37,7 @@ def cli(ctx, pipeline, add, rm):
     config = pu.read_config()
 
     if not add and not rm:
-        pu.pprint(config['pipelines'][pipeline]['envs'], fg='blue')
+        pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
 
     if add:
         config['pipelines'][pipeline]['envs'] += add.split(',')

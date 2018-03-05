@@ -105,8 +105,8 @@ popper metadata | grep 'the ramones, sex pistols'
 popper metadata --add authors='the police'
 popper metadata | grep 'the police'
 popper metadata --add year=1979
-popper metadata | grep "'year': '1979'"
-popper metadata | grep "'the police'"
+popper metadata | grep "year"
+popper metadata | grep "the police"
 
 # env
 init_test

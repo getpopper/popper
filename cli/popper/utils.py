@@ -2,7 +2,6 @@ import click
 import os
 import sys
 import yaml
-from pprint import PrettyPrinter
 
 def get_path_to_config():
     """Obtains the path to the config file.
@@ -98,6 +97,6 @@ def info(msg, **styles):
     """Prints the message on the terminal."""
     click.secho(msg, **styles)
 
-def pprint(msg, **styles):
-    pp = PrettyPrinter()
-    click.secho(pp.pformat(msg), **styles)
+def print_yaml(msg, **styles):
+    """Prints the messages in YAML's block format. """
+    click.secho(yaml.dump(msg, default_flow_style = False), **styles)

@@ -32,7 +32,7 @@ def cli(ctx, add, rm):
     """
     config = pu.read_config()
     if not add and not rm:
-        pu.pprint(config['metadata'], fg='blue')
+        pu.print_yaml(config['metadata'], fg='yellow')
 
     if add:
         for kv_str in add:
