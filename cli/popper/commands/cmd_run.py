@@ -92,6 +92,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     with click.progressbar(pipeline['stages'], show_eta=False, label="Current stage: ", item_show_func=str, bar_template='[%(bar)s] %(label)s %(info)s', show_percent=False) as stages:
         for stage in stages:
 
+
             if os.path.isfile(stage):
                 stage_file = stage
             elif os.path.isfile(stage + '.sh'):
