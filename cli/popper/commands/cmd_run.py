@@ -89,7 +89,10 @@ def run_pipeline(project_root, pipeline, timeout, skip):
 
     STATUS = "SUCCESS"
 
-    with click.progressbar(pipeline['stages'], show_eta=False, label="Current stage: ", item_show_func=str, bar_template='[%(bar)s] %(label)s %(info)s', show_percent=False) as stages:
+    with click.progressbar(pipeline['stages'], show_eta=False, 
+                           label="Current stage: ", item_show_func=str, 
+                           bar_template='[%(bar)s] %(label)s %(info)s', 
+                           show_percent=False) as stages:
         for stage in stages:
 
 
