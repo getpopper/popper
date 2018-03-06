@@ -76,7 +76,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
 
     STATUS = "SUCCESS"
 
-    with click.progressbar(pipeline['stages'], show_eta=False, label="Current stage: ", item_show_func=str, bar_template='[%(bar)s] %(label)s%(info)s', show_percent=False) as stages:
+    with click.progressbar(pipeline['stages'], show_eta=False, label="Current stage: ", item_show_func=str, bar_template='[%(bar)s] %(label)s %(info)s', show_percent=False) as stages:
         for stage in stages:
 
             if os.path.isfile(stage):
@@ -89,7 +89,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             if skip and stage in skip.split(','):
                 continue
 
-            ecode = execute(stage_file, timeout)
+            ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
                 pu.info("Stage {} failed.".format(stage))
@@ -98,8 +98,6 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                 for t in ['.err', '.out']:
                     with open('popper_logs/{}{}'.format(stage, t), 'r') as f:
                         pu.info(f.read())
-                if 'teardown' in pipeline['stages']:
-                    execute('teardown.sh',timeout)
                 break
 
             if 'valid' in stage:
@@ -113,7 +111,6 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                             STATUS = "SUCCESS"
             
 
-
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
 
@@ -122,7 +119,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     return STATUS
 
 
-def execute(stage, timeout):
+def execute(stage, timeout, bar):
     time_limit = time.time() + timeout
     sleep_time = 1
     out_fname = 'popper_logs/{}.{}'.format(stage, 'out')
@@ -132,8 +129,8 @@ def execute(stage, timeout):
         p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
                              stderr=errf, preexec_fn=os.setsid)
 
-        while p.poll() is None:
-
+        while p.poll() is None:            
+                        
             if time.time() > time_limit:
                 os.killpg(os.getpgid(p.pid), signal.SIGTERM)
                 sys.stdout.write(' time out!')
@@ -141,8 +138,15 @@ def execute(stage, timeout):
 
             if sleep_time < 300:
                 sleep_time *= 2
+            
+            for i in range(sleep_time):
+                bar.label = bar.label + '\b_'
+                bar.render_progress()
+                time.sleep(0.5)
+                bar.label = bar.label + '\b '
+                bar.render_progress()
+                time.sleep(0.5)
 
-            time.sleep(sleep_time)
 
     return p.poll()
 
