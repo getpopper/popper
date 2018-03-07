@@ -42,6 +42,7 @@ def cli(ctx, name, stages, envs, existing):
     a folder, which is assumed to contain bash scripts. --stages must be given.
     """
     project_root = pu.get_project_root()
+    stages_list = pu.get_stages(stages)
 
     # init repo
     if name is None:
@@ -55,7 +56,7 @@ def cli(ctx, name, stages, envs, existing):
         # existing pipeline
         abs_path = os.path.join(project_root, name)
         relative_path = name
-        initialize_existing_pipeline(abs_path, stages, envs)
+        initialize_existing_pipeline(abs_path, stages_list, envs)
     elif name == 'paper':
         # create a paper pipeline
         abs_path = os.path.join(project_root, 'paper')
@@ -65,7 +66,7 @@ def cli(ctx, name, stages, envs, existing):
         # new pipeline
         abs_path = os.path.join(project_root, 'pipelines', name)
         relative_path = os.path.join('pipelines', name)
-        initialize_new_pipeline(abs_path, stages, envs)
+        initialize_new_pipeline(abs_path, stages_list, envs)
 
     pu.update_config(name, stages, envs, relative_path)
 
@@ -82,8 +83,8 @@ def initialize_repo(project_root):
     pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
 
-def initialize_existing_pipeline(pipeline_path, stages, envs):
-    for s in stages.split(','):
+def initialize_existing_pipeline(pipeline_path, stages_list, envs):
+    for s in stages_list:
         s_filename = os.path.join(pipeline_path, s)
         if not isfile(s_filename) and not isfile(s_filename+'.sh'):
             pu.fail(
@@ -110,7 +111,7 @@ def initialize_paper(paper_path, envs):
     with open(os.path.join(paper_path, 'README',), 'w') as f:
         f.write('# ' + basename(paper_path)+ '\n')
 
-def initialize_new_pipeline(pipeline_path, stages, envs):
+def initialize_new_pipeline(pipeline_path, stages_list, envs):
 
     # create folders
     if isdir(pipeline_path) or isfile(pipeline_path):
@@ -118,7 +119,7 @@ def initialize_new_pipeline(pipeline_path, stages, envs):
     os.makedirs(pipeline_path)
 
     # write stage bash scripts
-    for s in stages.split(','):
+    for s in stages_list:
         if not s.endswith('.sh'):
             s = s + '.sh'
 

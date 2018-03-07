@@ -1,5 +1,6 @@
 import click
 import os
+import sys
 import popper.utils as pu
 
 from popper.cli import pass_context
@@ -30,18 +31,20 @@ def cli(ctx, pipeline, set):
 
     if not set:
         pu.print_yaml(str(config['pipelines'][pipeline]['stages']))
+        sys.exit(1)
 
     if set:
-        for s in stages.split(','):
+        stages_list = pu.get_stages(stages)
+        for s in stages_list:
             s_filename = os.path.join(pipeline_path, s)
             if not os.path.isfile(s_filename) and not os.path.isfile(s_filename+'.sh'):
                 pu.fail("Unable to find script for stage " + s +
                 ". You might need to provide values for the --set flag.")
 
-        if 'teardown' in stages and stages.split(',')[-1] != 'teardown' :
+        if 'teardown' in stages and stages_list[-1] != 'teardown' :
             raise BadArgumentUsage('--stages = Teardown should be the last stage.'
         + ' Consider renaming it or putting it at the end.')
 
-        config['pipelines'][pipeline]['stages'] = stages.split(',')
+        config['pipelines'][pipeline]['stages'] = stages_list
 
     pu.write_config(config)
