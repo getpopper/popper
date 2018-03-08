@@ -20,7 +20,7 @@ workflow. A concrete list of steps that we follow:
 
 In the following we explore each steps in more detail. For examples of 
 already "Popperized" explorations, take a look at 
-[here](Getting-Started#guides-and-examples).
+[here](../protocols/getting_started.html#guides-and-examples).
 
 ![DevOps approach to Experiments.](/figures/workflow_devops.png)
 
@@ -75,7 +75,7 @@ If a package for the codebase in question is not available, there are
 quick ways to generate a packaged version of the code. One such way is 
 to use 
 [Docker](https://docs.docker.com/engine/tutorials/dockerimages/) to 
-package it. For example, in [this](Popper-Math-Science) experiment we 
+package it. For example, in [this](math-science.html) experiment we 
 make use of [a library](https://github.com/flame/blis) by creating a 
 [Docker image](https://github.com/ivotron/docker-blis) that we 
 reference in the [experiment 
@@ -125,7 +125,7 @@ efficiently managed by Git, other tools can be used. Examples are
 [GitLFS](https://git-lfs.github.com/) or 
 [Datapackages](http://frictionlessdata.io/data-packages/). For an 
 example of an experiment using Datapackages, take a look 
-[here](Popper-Data-Science#adding-more-datasets).
+[here](data-science.html#adding-more-datasets).
 
 As mentioned before, when committing changes to the Popper (Git) 
 repository, it is a good practice to separate commits that affect the 
@@ -183,4 +183,5 @@ the dependencies that are needed to generate the publishable format of
 the manuscript (e.g. PDF). An alternative is to provide a VM or Docker 
 image with all the dependencies in such a way that readers don't need 
 to manage the installation and configuration of the markup language 
-processor. For examples, see [here](Popper-Examples).
+processor. For examples, see
+[here](https://github.com/popperized/popper-readthedocs-examples/).
