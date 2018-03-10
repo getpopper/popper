@@ -39,8 +39,6 @@ def get_project_root():
         "Unable to find the root of your project. Initialize repository first."
     )
 
-def get_stages(stages):
-    return(stages.split(','))
 
 def read_config():
     """Reads config from .popper.yml file.
