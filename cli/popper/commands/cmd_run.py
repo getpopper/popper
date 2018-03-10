@@ -18,7 +18,7 @@ from subprocess import check_output
     '--timeout',
     help='Timeout limit for pipeline. Use s for seconds, m for minutes and h '
          'for hours. A single integer can also be used to specify timeout '
-         'in seconds. Use double quotes if you wish to use more than one unit. '
+         'in seconds. Use double quotes if you wish to use more than one unit.'
          'For example: --timeout "2m 20s" will mean 140 seconds.',
     required=False,
     show_default=True,
@@ -49,12 +49,14 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
     time_out = pu.parse_timeout(timeout)
 
     if len(pipes) == 0:
-        pu.info("No pipelines defined in .popper.yml. Run popper init --help for more info.", fg='yellow')
+        pu.info("No pipelines defined in .popper.yml. "
+                "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
     if pipeline:
         if ignore_errors:
-            pu.warn("ignore-errors flag is ignored when pipeline argument is provided")
+            pu.warn("ignore-errors flag is ignored when pipeline "
+                    "argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         status = run_pipeline(project_root, pipes[pipeline], time_out, skip)
@@ -66,7 +68,9 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         else:
             # run all
             for pipe in pipes:
-                status = run_pipeline(project_root, pipes[pipe], time_out, skip)
+                status = run_pipeline(
+                    project_root, pipes[pipe], time_out, skip
+                )
 
                 if status == 'FAIL' and not ignore_errors:
                     break
@@ -80,7 +84,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 def run_pipeline(project_root, pipeline, timeout, skip):
     abs_path = os.path.join(project_root, pipeline['path'])
 
-    pu.info("Executing " + os.path.basename(abs_path), fg='blue', bold=True, blink=True)
+    pu.info("Executing " + os.path.basename(abs_path), fg='blue',
+            bold=True, blink=True)
 
     os.chdir(abs_path)
 
@@ -89,12 +94,11 @@ def run_pipeline(project_root, pipeline, timeout, skip):
 
     STATUS = "SUCCESS"
 
-    with click.progressbar(pipeline['stages'], show_eta=False, 
-                           label="Current stage: ", item_show_func=str, 
-                           bar_template='[%(bar)s] %(label)s %(info)s', 
+    with click.progressbar(pipeline['stages'], show_eta=False,
+                           label="Current stage: ", item_show_func=str,
+                           bar_template='[%(bar)s] %(label)s %(info)s',
                            show_percent=False) as stages:
         for stage in stages:
-
 
             if os.path.isfile(stage):
                 stage_file = stage
@@ -109,11 +113,13 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
-                pu.info("Stage {} failed.".format(stage))
+                pu.info("Stage {} failed.".format(stage), fg='red',
+                        bold=True, blink=True)
                 STATUS = "FAIL"
-                pu.info("Logs for {}:.".format(stage))
+                pu.info(".err and .out output for {}:".format(stage), fg='red')
                 for t in ['.err', '.out']:
-                    with open('popper_logs/{}{}'.format(stage, t), 'r') as f:
+                    logfile = 'popper_logs/{}{}'.format(stage_file, t)
+                    with open(logfile, 'r') as f:
                         pu.info(f.read())
                 break
 
@@ -126,7 +132,6 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                     for line in validate_output:
                         if '[true]' not in line:
                             STATUS = "SUCCESS"
-            
 
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
@@ -147,8 +152,8 @@ def execute(stage, timeout, bar):
         p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
                              stderr=errf, preexec_fn=os.setsid)
 
-        while p.poll() is None:            
-                        
+        while p.poll() is None:
+
             if time.time() > time_limit:
                 os.killpg(os.getpgid(p.pid), signal.SIGTERM)
                 sys.stdout.write(' time out!')
@@ -156,7 +161,7 @@ def execute(stage, timeout, bar):
 
             if sleep_time < 300:
                 sleep_time *= 2
-            
+
             for i in range(sleep_time):
                 bar.label = bar.label + '\b_'
                 bar.render_progress()
@@ -164,7 +169,6 @@ def execute(stage, timeout, bar):
                 bar.label = bar.label + '\b '
                 bar.render_progress()
                 time.sleep(0.5)
-
 
     return p.poll()
 

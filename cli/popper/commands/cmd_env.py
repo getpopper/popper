@@ -1,5 +1,6 @@
 import click
 import popper.utils as pu
+import sys
 
 from popper.cli import pass_context
 
@@ -38,6 +39,7 @@ def cli(ctx, pipeline, add, rm):
 
     if not add and not rm:
         pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
+        sys.exit(0)
 
     if add:
         config['pipelines'][pipeline]['envs'] += add.split(',')
