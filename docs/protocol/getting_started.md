@@ -116,16 +116,16 @@ Go to TravisCI website to see your experiments being executed.
 ## Learn More
 
 A more detailed description of Popper is explained in [the next 
-section](intro_to_popper.html).
+section](intro_to_popper.md).
 
-A [step-by-step guide](../tutorial/from_scratch.html) describes how to 
+A [step-by-step guide](../tutorial/from_scratch.md) describes how to 
 "Popperize" a repository. Additionally, the following is a list of 
 examples on how to bootstrap a Popper project (repository) in specific 
 domains:
 
-  * [Data Science](../tutorial/data-science.html)
-  * [High Performance Computing (HPC)](../tutorial/hpc.html)
-  * [Mathematical Sciences](../tutorial/math_science.html)
+  * [Data Science](../tutorial/data-science.md)
+  * [High Performance Computing (HPC)](../tutorial/hpc.md)
+  * [Mathematical Sciences](../tutorial/math_science.md)
 
 A list of articles describing the Popper protocol, as well as other 
 Popperized papers that have been submitted for publication can be 
