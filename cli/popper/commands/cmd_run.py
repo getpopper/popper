@@ -129,7 +129,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                     stage != 'teardown' and
                     'teardown' in pipeline['stages'] and
                     'teardown' not in skipped):
-                    execute(pu.get_filename(abs_path, 'teardown'), timeout)
+                        execute(pu.get_filename(abs_path, 'teardown'), timeout)
 
                 break
 

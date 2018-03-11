@@ -3,6 +3,7 @@ import os
 import sys
 import yaml
 
+
 def get_path_to_config():
     """Obtains the path to the config file.
 
@@ -88,7 +89,7 @@ def update_config(name, stages, envs, relative_path):
     """Updates the configuration for a pipeline"""
 
     if name == 'paper':
-        stages='build'
+        stages = 'build'
 
     config = read_config()
     config['pipelines'][name] = {
@@ -127,7 +128,7 @@ def info(msg, **styles):
 
 def print_yaml(msg, **styles):
     """Prints the messages in YAML's block format. """
-    click.secho(yaml.dump(msg, default_flow_style = False), **styles)
+    click.secho(yaml.dump(msg, default_flow_style=False), **styles)
 
 
 def parse_timeout(timeout):
@@ -151,7 +152,7 @@ def parse_timeout(timeout):
                 fail("invalid timeout format used. "
                      "See popper run --help for more.")
             try:
-                time_out += value * to_seconds[unit];
+                time_out += value * to_seconds[unit]
             except KeyError:
                 fail("invalid timeout format used. "
                      "See popper run --help for more.")
