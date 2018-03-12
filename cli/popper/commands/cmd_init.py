@@ -1,7 +1,7 @@
 import click
 import os
 import popper.utils as pu
-
+from popper.exceptions import BadArgumentUsage
 from popper.cli import pass_context
 from os.path import isfile, isdir, basename
 
@@ -38,9 +38,19 @@ def cli(ctx, name, stages, envs, existing):
     and teardown. To override these, the `--stages` flag can be provided, which
     expects a comma-separated list of stage names.
 
+    The teardown stage is to be provided at the end if the --stages flag is
+    being used.
+
     If the --existing flag is given, the NAME argument is treated as a path to
     a folder, which is assumed to contain bash scripts. --stages must be given.
     """
+
+    # check if the the teardown stage is the last stage of the pipeline
+    if stages and 'teardown' in stages and stages.split(',')[-1] != 'teardown':
+        raise BadArgumentUsage(
+            '--stages = Teardown should be the last stage.' +
+            ' Consider renaming it or putting it at the end.')
+
     project_root = pu.get_project_root()
 
     # init repo
@@ -85,7 +95,7 @@ def initialize_repo(project_root):
 def initialize_existing_pipeline(pipeline_path, stages, envs):
     for s in stages.split(','):
         s_filename = os.path.join(pipeline_path, s)
-        if not isfile(s_filename) and not isfile(s_filename+'.sh'):
+        if not isfile(s_filename) and not isfile(s_filename + '.sh'):
             pu.fail(
                 ("Unable to find script for stage '" + s + "'. You might need "
                  "to provide values for the --stages flag. See 'init --help'.")
@@ -99,16 +109,17 @@ def initialize_paper(paper_path, envs):
         pu.fail('The paper pipeline already exists')
     os.makedirs(paper_path)
 
-    #write the build.sh bash script
+    # write the build.sh bash script
     with open(os.path.join(paper_path, 'build.sh'), 'w') as f:
         f.write('#!/usr/bin/env bash\n')
         f.write('# [wf] execute build stage.')
         f.write('\n')
-    os.chmod(os.path.join(paper_path, 'build.sh'),0o755)
+    os.chmod(os.path.join(paper_path, 'build.sh'), 0o755)
 
     # write README
     with open(os.path.join(paper_path, 'README',), 'w') as f:
-        f.write('# ' + basename(paper_path)+ '\n')
+        f.write('# ' + basename(paper_path) + '\n')
+
 
 def initialize_new_pipeline(pipeline_path, stages, envs):
 
