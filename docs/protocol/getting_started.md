@@ -62,21 +62,25 @@ git add pipelines/myexp
 git commit -m 'adding myexp scaffold'
 ```
 
-### Popper check
+### Popper Run
 
-Run popper check:
+Run popper run:
 
 ```bash
-popper check
+popper run
+```
+To run a pipeline named exp1 :-
+```bash
+popper run exp1
 ```
 
-> **NOTE:** By default, `popper check` runs all commands directly on 
+> **NOTE:** By default, `popper run` runs all commands directly on 
 the host. We recommend running an isolated environment. In order to do 
 this, one can create a pipeline using the `--env` flag of the `popper 
 init` command. For example, `popper init <pipeline> --env=alpine-3.4` 
 runs a command inside an `alpine-3.4` container.
 
-Once a pipeline is checked, one can show the logs:
+Once a pipeline is executed, one can show the logs:
 
 ```bash
 ls -l pipelines/myexp/popper_logs
