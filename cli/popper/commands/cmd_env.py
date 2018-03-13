@@ -1,4 +1,6 @@
 import click
+import json
+import urllib2
 import popper.utils as pu
 
 from popper.cli import pass_context
@@ -16,8 +18,13 @@ from popper.cli import pass_context
     help="Comma-separated list of environments to remove",
     required=False
 )
+@click.option(
+    '--list',
+    help="Comma-separated list of available environments",
+    required=False
+)
 @pass_context
-def cli(ctx, pipeline, add, rm):
+def cli(ctx, pipeline, add, rm, list):
     """Manipulates the environments that are associated to a pipeline. An
     environment is a docker image where a pipeline runs when 'popper run' is
     executed. The 'host' environment is a special case that corresponds to
@@ -36,7 +43,7 @@ def cli(ctx, pipeline, add, rm):
     """
     config = pu.read_config()
 
-    if not add and not rm:
+    if not add and not rm and not list:
         pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
 
     if add:
@@ -45,5 +52,14 @@ def cli(ctx, pipeline, add, rm):
     if rm:
         for e in rm.split(','):
             config['pipelines'][pipeline]['envs'].remove(e)
+
+    if list:
+        web_results = urllib2.urlopen("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags").read()
+        results = json.loads(web_results)['results']
+        environments = []
+        for result in results:
+            environments.append(result['name'])
+        list_of_environments = ", ".join(environments)
+        print list_of_environments
 
     pu.write_config(config)
