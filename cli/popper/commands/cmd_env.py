@@ -2,6 +2,7 @@ import click
 import json
 import urllib2
 import popper.utils as pu
+import sys
 
 from popper.cli import pass_context
 
@@ -45,6 +46,7 @@ def cli(ctx, pipeline, add, rm, list):
 
     if not add and not rm and not list:
         pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
+        sys.exit(0)
 
     if add:
         config['pipelines'][pipeline]['envs'] += add.split(',')
