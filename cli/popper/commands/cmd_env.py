@@ -8,7 +8,7 @@ from popper.cli import pass_context
 
 
 @click.command('env', short_help='Modify environments for a pipeline.')
-@click.argument('pipeline', requred=False)
+@click.argument('pipeline', required=False)
 @click.option(
     '--add',
     help="Comma-separated list of environments to add.",
