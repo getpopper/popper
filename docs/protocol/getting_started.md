@@ -6,7 +6,7 @@ approach, with the goal of making it easy for others (and yourself!)
 to repeat an experiment or analysis pipeline.
 
 We first need to install the CLI tool by following [these 
-instructions](https://github.com/systemslab/popper/tree/master/popper#install). 
+instructions](https://github.com/systemslab/popper/tree/master/cli#install). 
 Show the available commands:
 
 ```bash
