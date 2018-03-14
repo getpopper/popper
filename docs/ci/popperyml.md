@@ -30,6 +30,32 @@ envs:
   arbitrary_stages: centos-7.2
   paper: host
 
+metadata: 
+  authors: Dennis Ritchie
+  book: The C Programming Language
+
+pipelines:
+  paper:
+    envs:
+    - host
+    path: paper
+    stages:
+    - build
+  sample_pipeline:
+    envs:
+    - host
+    path: pipelines/sample_pipeline
+    stages:
+    - setup
+    - run
+    - post-run
+    - validate
+    - teardown
+
+popperized:
+  - github/popperized
+  - github/ivotron/quiho-popper
+
 stages:
   myexp: [setup.sh, run.sh, post-run.sh, validate.sh, teardown.sh]
   myanalysis: [setup.sh, run.sh, validate.sh]
@@ -46,7 +72,7 @@ pipeline corresponds to the one generating an (optional) manuscript.
 
 The `envs` entry in `.popper.yml` specifies the environment that a 
 pipeline is used when the pipeline is executed as part of the `popper 
-check` command. The available environments are:
+run` command. The available environments are:
 
   * `host`. The experiment is executed directly on the host.
   * `alpine-3.4`, `ubuntu-16.04` and `centos-7.2`. For each of these, 
@@ -67,15 +93,44 @@ popper init mypipe --env=alpine-3.4
 The above specifies that the pipeline named `mypipe` will be executed 
 inside a docker container using the `alpine-3.4` popper check image.
 
+## Metadata
+
+The `metadata` YAML entry specifies the set of data that gives information
+about the user's project. It can be added using the `popper metadata --add command`
+For example :
+```bash
+popper metadata --add authors='Dennis Ritchie'
+```
+
+This adds a metadata entry 'authors' to the the project
+metadata.
+
+## Pipelines
+
+The `pipelines` YAML entry specifies the details for all the available
+pipelines. It gives us the information about -
+    *  the environment(s) in which a pipeline can be executed
+    *  the path to that pipeline
+    *  the various stages that are present in it 
+
+It gets updated automatically when a pipeline is initialized.
+
+## Popperized
+
+The `popperized` YAML entry specifies the list of available popperized 
+pipelines in a GitHub organization. By default, it points to the 
+`github/popperized` organization. The list forms the `search` dataset 
+for the `popper search` command.
+
 ## Stages
 
 The `stages` YAML entry specifies the sequence of stages that are 
-executed by the `popper check` command. By default, the `popper init` 
+executed by the `popper run` command. By default, the `popper init` 
 command generates scaffold scripts for `setup.sh`, `run.sh`, 
-`post-run.sh`, `validate.sh`, `teardown.sh`. If any of those are not 
-present when the pipeline is executed using `popper check`, they are 
-just skipped (without throwing an error). At least one stage needs to 
-be executed, otherwise `popper check` throws an error.
+`post-run.sh`, `validate.sh`, `teardown.sh`. If any of those are not
+present when the pipeline is executed using `popper run`, they are 
+just skipped (without throwing an error). At least one stage needs to
+be executed, otherwise `popper run` throws an error.
 
 If arbitrary names are desired for a pipeline, the `--stages` flag of 
 the `popper init` command can be used. For example:
