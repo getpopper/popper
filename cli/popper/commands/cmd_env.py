@@ -8,7 +8,7 @@ from popper.cli import pass_context
 
 
 @click.command('env', short_help='Modify environments for a pipeline.')
-@click.argument('pipeline', required=True)
+@click.argument('pipeline')
 @click.option(
     '--add',
     help="Comma-separated list of environments to add.",
@@ -20,12 +20,12 @@ from popper.cli import pass_context
     required=False
 )
 @click.option(
-    '--list',
+    '--ls',
     help="Comma-separated list of available environments",
-    required=False
+    is_flag=True
 )
 @pass_context
-def cli(ctx, pipeline, add, rm, list):
+def cli(ctx, pipeline, add, rm, ls):
     """Manipulates the environments that are associated to a pipeline. An
     environment is a docker image where a pipeline runs when 'popper run' is
     executed. The 'host' environment is a special case that corresponds to
@@ -44,7 +44,7 @@ def cli(ctx, pipeline, add, rm, list):
     """
     config = pu.read_config()
 
-    if not add and not rm and not list:
+    if not add and not rm and not ls:
         pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
         sys.exit(0)
 
@@ -55,7 +55,7 @@ def cli(ctx, pipeline, add, rm, list):
         for e in rm.split(','):
             config['pipelines'][pipeline]['envs'].remove(e)
 
-    if list:
+    if ls:
         web_results = urllib2.urlopen("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags").read()
         results = json.loads(web_results)['results']
         environments = []
