@@ -118,7 +118,7 @@ def fail(msg):
 
 
 def warn(msg):
-    click.secho('WARNING: ' + msg, fg='orange', bold=True)
+    click.secho('WARNING: ' + msg, fg='magenta', bold=True)
 
 
 def info(msg, **styles):
