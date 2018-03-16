@@ -1,3 +1,4 @@
+
 # The `popper.yml` configuration file
 
 The `popper` command reads the `.popper.yml` file in the root of a 
@@ -109,9 +110,9 @@ metadata.
 
 The `pipelines` YAML entry specifies the details for all the available
 pipelines. It gives us the information about -
-    *  the environment(s) in which a pipeline can be executed
-    *  the path to that pipeline
-    *  the various stages that are present in it 
+   *  the environment(s) in which a pipeline can be executed
+   *  the path to that pipeline
+   *  the various stages that are present in it 
 
 It gets updated automatically when a pipeline is initialized.
 
