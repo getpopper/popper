@@ -1,6 +1,5 @@
 import click
-import json
-import urllib2
+import requests
 import popper.utils as pu
 import sys
 
@@ -57,13 +56,13 @@ def cli(ctx, pipeline, add, rm, ls):
 
     if ls:
         try:
-            url = urllib2.urlopen("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags").read()
-            results = json.loads(url)['results']
+            response = requests.get("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags")
             environments = []
-            for result in results:
+            for result in response.json()['results']:
                 environments.append(result['name'])
             pu.print_yaml(environments)
-        except urllib2.URLError:
+
+        except requests.exceptions.RequestException:
             click.echo(click.style("Connection error: Failed to query for list of environments", fg='red'), err=True)
 
     pu.write_config(config)
