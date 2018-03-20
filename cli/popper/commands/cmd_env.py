@@ -20,7 +20,7 @@ from popper.cli import pass_context
 )
 @click.option(
     '--ls',
-    help="Comma-separated list of available environments",
+    help="Show a list of available execution environments",
     is_flag=True
 )
 @pass_context
