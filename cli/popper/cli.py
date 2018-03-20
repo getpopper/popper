@@ -4,6 +4,7 @@ import click
 from . import __version__ as popper_version
 from .exceptions import UsageError
 
+
 class Context(object):
 
     def __init__(self):
@@ -45,9 +46,9 @@ class PopperCLI(click.MultiCommand):
             mod = __import__('popper.commands.cmd_' + name,
                              None, None, ['cli'])
         except ImportError as e:
-             raise UsageError(
-                   "Command '"+name+"' doesn't exist. " + 
-                   "Type 'popper --help' for more."
+            raise UsageError(
+                "Command '" + name + "' doesn't exist. " +
+                "Type 'popper --help' for more."
             )
         return mod.cli
 
