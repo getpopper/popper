@@ -56,12 +56,15 @@ def cli(ctx, pipeline, add, rm, ls):
             config['pipelines'][pipeline]['envs'].remove(e)
 
     if ls:
-        web_results = urllib2.urlopen("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags").read()
-        results = json.loads(web_results)['results']
-        environments = []
-        for result in results:
-            environments.append(result['name'])
-        list_of_environments = ", ".join(environments)
-        print list_of_environments
+        try:
+            url = urllib2.urlopen("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags").read()
+            results = json.loads(url)['results']
+            environments = []
+            for result in results:
+                environments.append(result['name'])
+            list_of_environments = ", ".join(environments)
+            print list_of_environments
+        except urllib2.URLError:
+            click.echo(click.style("Connection error: Failed to query for list of environments", fg='red'), err=True)
 
     pu.write_config(config)
