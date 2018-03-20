@@ -62,8 +62,7 @@ def cli(ctx, pipeline, add, rm, ls):
             environments = []
             for result in results:
                 environments.append(result['name'])
-            list_of_environments = ", ".join(environments)
-            print list_of_environments
+            pu.print_yaml(environments)
         except urllib2.URLError:
             click.echo(click.style("Connection error: Failed to query for list of environments", fg='red'), err=True)
 
