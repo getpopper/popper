@@ -62,7 +62,7 @@ def cli(ctx, pipeline, add, rm, ls):
                 environments.append(result['name'])
             pu.print_yaml(environments)
 
-        except requests.exceptions.RequestException:
-            click.echo(click.style("Connection error: Failed to query for list of environments", fg='red'), err=True)
+        except requests.exceptions.RequestException as e:
+            click.echo(click.style("Error: " + str(e), fg='red'), err=True)
 
     pu.write_config(config)

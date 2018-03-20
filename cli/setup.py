@@ -1,7 +1,7 @@
 from setuptools import setup
 import popper
 
-version={}
+version = {}
 with open('popper/__init__.py') as f:
     exec(f.read(), version)
 
