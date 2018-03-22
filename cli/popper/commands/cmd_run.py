@@ -114,7 +114,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
-                pu.info("Stage {} failed.".format(stage), fg='red',
+                pu.info("\nStage {} failed.".format(stage), fg='red',
                         bold=True, blink=True)
                 STATUS = "FAIL"
                 pu.info("Logs for {}:.".format(stage), fg='red')
@@ -129,7 +129,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                     stage != 'teardown' and
                     'teardown' in pipeline['stages'] and
                     'teardown' not in skipped):
-                        execute(pu.get_filename(abs_path, 'teardown'), timeout)
+                        execute(teardown_file, timeout)
 
                 break
 
@@ -146,13 +146,14 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
 
-    pu.info('status : ' + STATUS, fg='green', bold=True)
+    fg = 'green' if STATUS == "SUCCESS" else 'red'
+    pu.info('status : ' + STATUS, fg=fg, bold=True)
     sys.stdout.write('\n')
 
     return STATUS
 
 
-def execute(stage, timeout, bar):
+def execute(stage, timeout, bar=None):
     time_limit = time.time() + timeout
     sleep_time = 1
     out_fname = 'popper_logs/{}.{}'.format(stage, 'out')
@@ -161,6 +162,9 @@ def execute(stage, timeout, bar):
     with open(out_fname, "wb") as outf, open(err_fname, "wb") as errf:
         p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
                              stderr=errf, preexec_fn=os.setsid)
+
+        if not bar:
+            pu.info("Running: {}".format(stage))
 
         while p.poll() is None:
 
@@ -172,13 +176,14 @@ def execute(stage, timeout, bar):
             if sleep_time < 300:
                 sleep_time *= 2
 
-            for i in range(sleep_time):
-                bar.label = bar.label + '\b_'
-                bar.render_progress()
-                time.sleep(0.5)
-                bar.label = bar.label + '\b '
-                bar.render_progress()
-                time.sleep(0.5)
+            if bar:
+                for i in range(sleep_time):
+                    bar.label = bar.label + '\b_'
+                    bar.render_progress()
+                    time.sleep(0.5)
+                    bar.label = bar.label + '\b '
+                    bar.render_progress()
+                    time.sleep(0.5)
 
     return p.poll()
 
