@@ -1,7 +1,7 @@
 import click
 import os
 import sys
-import yaml
+from ruamel import yaml
 
 
 def get_path_to_config():
@@ -53,7 +53,7 @@ def read_config():
         fail(".popper.yml file doesn't exist. See 'popper init --help'.")
 
     with open(config_filename, 'r') as f:
-        config = yaml.load(f.read())
+        config = yaml.safe_load(f.read())
         if not config:
             fail(".popper.yml is empty. Consider deleting it and "
                  "reinitializing the repo. See popper init --help for more.")
