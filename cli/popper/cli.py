@@ -1,6 +1,7 @@
 import os
 import sys
 import click
+import difflib
 from . import __version__ as popper_version
 from .exceptions import UsageError
 
@@ -46,9 +47,19 @@ class PopperCLI(click.MultiCommand):
             mod = __import__('popper.commands.cmd_' + name,
                              None, None, ['cli'])
         except ImportError as e:
+            commands = self.list_commands(ctx)
+            most_similar_commands = ", ".join(
+                difflib.get_close_matches(
+                    name, commands, 3, 0.3))
+            message = ""
+            if len(most_similar_commands) != 0:
+                message = "\n\nThe most similar commands are :- " \
+                        + most_similar_commands
+
             raise UsageError(
                 "Command '" + name + "' doesn't exist. " +
-                "Type 'popper --help' for more."
+                "\nType 'popper --help' for more."
+                + message
             )
         return mod.cli
 
