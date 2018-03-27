@@ -69,9 +69,9 @@ Run popper run:
 ```bash
 popper run
 ```
-To run a pipeline named exp1 :-
+To run a pipeline named myexp :-
 ```bash
-popper run exp1
+popper run myexp
 ```
 
 > **NOTE:** By default, `popper run` runs all commands directly on 
@@ -115,7 +115,6 @@ git push
 ```
 
 Go to TravisCI website to see your experiments being executed.
-
 
 ## Learn More
 
