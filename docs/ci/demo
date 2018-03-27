@@ -142,6 +142,44 @@ popper env mypipeone | grep 'baz'
 popper env mypipeone --rm foo,bar,baz
 popper env mypipeone | grep 'host'
 
+# popper add
+popper add popperized/quiho-popper/single-node
+test -d pipelines/single-node
+test -f pipelines/single-node/datapackage/quiho/datapackage.json
+test -f pipelines/single-node/datapackage/quiho/machines.csv
+test -f pipelines/single-node/datapackage/quiho/results.csv
+test -f pipelines/single-node/geni/release.py
+test -f pipelines/single-node/geni/request.py
+test -f pipelines/single-node/setup/cloudlab.sh
+test -f pipelines/single-node/setup/travis.sh
+test -f pipelines/single-node/results/postprocess.sh
+test -f pipelines/single-node/results/visualize.ipynb
+test -f pipelines/single-node/results/visualize.sh
+test -f pipelines/single-node/results/figures/apps_variability.pdf
+test -f pipelines/single-node/results/figures/mariadb-innodb-vs-memory.pdf
+test -f pipelines/single-node/results/figures/corrmatrix.pdf
+test -f pipelines/single-node/results/figures/pca-var-reduction.pdf
+test -f pipelines/single-node/results/figures/corrmatrix_underfit.pdf
+test -f pipelines/single-node/results/figures/redis-set_underfit.pdf
+test -f pipelines/single-node/results/figures/four.pdf
+test -f pipelines/single-node/results/figures/stream-nadds-behavior.pdf
+test -f pipelines/single-node/results/figures/hpccg.pdf
+test -f pipelines/single-node/results/figures/stream-nadds.pdf
+test -f pipelines/single-node/results/figures/mariadb-innodb-regression.pdf
+test -f pipelines/single-node/results/figures/stressng_variability.pdf
+test -f pipelines/single-node/results/previous/2017-06-07T0501.tgz
+test -f pipelines/single-node/results/previous/20170821-120356-88f97bd.tgz
+test -f pipelines/single-node/results/previous/2017-06-07T0502.tgz
+test -f pipelines/single-node/results/previous/2017-10-20-mysql-regression.tgz
+test -f pipelines/single-node/results/previous/2017-06-07T0503.tgz
+test -f pipelines/single-node/run.sh
+test -f pipelines/single-node/teardown.sh
+test -f pipelines/single-node/wf.png
+test -f pipelines/single-node/post-run.sh
+test -f pipelines/single-node/validate.sh
+test -f pipelines/single-node/setup.sh
+test -f pipelines/single-node/vars.yml
+
 # TODO
 
 #popper ci circleci
