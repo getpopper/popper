@@ -1,7 +1,7 @@
 from setuptools import setup
 import popper
 
-version={}
+version = {}
 with open('popper/__init__.py') as f:
     exec(f.read(), version)
 
@@ -19,8 +19,8 @@ setup(
     include_package_data=True,
     install_requires=[
         'click',
-        'pyyaml',
-        'requests'
+        'requests',
+        'ruamel.yaml<0.15'
     ],
     entry_points='''
         [console_scripts]

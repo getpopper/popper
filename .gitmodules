@@ -1,9 +1,9 @@
-[submodule "cli/bin/vendor/pyyaml"]
-	path = cli/bin/vendor/pyyaml
-	url = https://github.com/yaml/pyyaml
 [submodule "cli/bin/vendor/click"]
 	path = cli/bin/vendor/click
 	url = https://github.com/pallets/click/
 [submodule "cli/bin/vendor/requests"]
 	path = cli/bin/vendor/requests
 	url = https://github.com/requests/requests/
+[submodule "cli/bin/vendor/ruamel-yaml"]
+	path = cli/bin/vendor/ruamel-yaml
+	url = https://github.com/UjjwalAyyangar/ruamel-yaml
