@@ -69,7 +69,7 @@ Run popper run:
 ```bash
 popper run
 ```
-To run a pipeline named myexp :-
+To run a pipeline named myexp:
 ```bash
 popper run myexp
 ```

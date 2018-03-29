@@ -1,5 +1,6 @@
 import click
 import os
+import glob
 import popper.utils as pu
 from popper.exceptions import BadArgumentUsage
 from popper.cli import pass_context
@@ -26,8 +27,15 @@ from os.path import isfile, isdir, basename
           'creating an entry in .popper.yml for this existing folder.'),
     is_flag=True
 )
+@click.option(
+    '--infer-stages',
+    help=('Infers the name of the stages from the existing bash scripts'
+          'on the folder while creating a new pipeline from the existing'
+          'folder.'),
+    is_flag=True
+)
 @pass_context
-def cli(ctx, name, stages, envs, existing):
+def cli(ctx, name, stages, envs, existing, infer_stages):
     """Initializes a repository or a pipeline. Without an argument, this
     command initializes a popper repository. If an argument is given, a
     pipeline or paper folder is initialized. If the given name is 'paper',
@@ -65,7 +73,11 @@ def cli(ctx, name, stages, envs, existing):
         # existing pipeline
         abs_path = os.path.join(project_root, name)
         relative_path = name
-        initialize_existing_pipeline(abs_path, stages, envs)
+        if infer_stages:
+            stages = ",".join(map(lambda x: x[:-3],
+                                  sorted(glob.glob1(abs_path, '*.sh'))))
+        else:
+            initialize_existing_pipeline(abs_path, stages, envs)
     elif name == 'paper':
         # create a paper pipeline
         abs_path = os.path.join(project_root, 'paper')
