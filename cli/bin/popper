@@ -6,8 +6,8 @@ import sys
 cwd = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(cwd)
 vendordir = os.path.join(cwd, 'vendor')
-sys.path.insert(0, yaml_lib)
 sys.path.insert(0, os.path.join(vendordir, 'click'))
+sys.path.insert(0, os.path.join(vendordir, 'requests'))
 sys.path.insert(0, os.path.join(vendordir, 'ruamel-yaml'))
 sys.path.insert(0, os.path.join(parentdir))
 
