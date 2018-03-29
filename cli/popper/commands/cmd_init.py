@@ -95,6 +95,8 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
 
 
 def initialize_repo(project_root):
+    """This function is used for initializing a popper repository."""
+
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
 
@@ -105,6 +107,8 @@ def initialize_repo(project_root):
 
 
 def initialize_existing_pipeline(pipeline_path, stages, envs):
+    """This function is used for initalizing an existing pipeline."""
+
     for s in stages.split(','):
         s_filename = os.path.join(pipeline_path, s)
         if not isfile(s_filename) and not isfile(s_filename + '.sh'):
@@ -115,7 +119,8 @@ def initialize_existing_pipeline(pipeline_path, stages, envs):
 
 
 def initialize_paper(paper_path, envs):
-
+    """This function is used for initializing the special paper pipeline."""
+    
     # create the paper folder
     if isdir(paper_path):
         pu.fail('The paper pipeline already exists')
@@ -134,6 +139,7 @@ def initialize_paper(paper_path, envs):
 
 
 def initialize_new_pipeline(pipeline_path, stages, envs):
+    """This function is used for initalizing a new pipeline."""
 
     # create folders
     if isdir(pipeline_path) or isfile(pipeline_path):

@@ -3,6 +3,8 @@ import os
 import sys
 from ruamel import yaml
 
+noalias_dumper = yaml.dumper.SafeDumper
+noalias_dumper.ignore_aliases = lambda self, data: True
 
 def get_path_to_config():
     """Obtains the path to the config file.
@@ -71,7 +73,7 @@ def write_config(config):
     config_filename = os.path.join(get_project_root(), '.popper.yml')
 
     with open(config_filename, 'w') as f:
-        yaml.safe_dump(config, f, default_flow_style=False)
+        yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
 
 
 def is_popperized():
