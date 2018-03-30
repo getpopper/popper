@@ -4,6 +4,6 @@
 [submodule "cli/bin/vendor/requests"]
 	path = cli/bin/vendor/requests
 	url = https://github.com/requests/requests/
-[submodule "cli/bin/vendor/ruamel-yaml"]
-	path = cli/bin/vendor/ruamel-yaml
+[submodule "cli/bin/vendor/ruamel"]
+	path = cli/bin/vendor/ruamel
 	url = https://github.com/UjjwalAyyangar/ruamel-yaml

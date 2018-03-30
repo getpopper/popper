@@ -12,9 +12,9 @@ setup(
     author_email='ivo@cs.ucsc.edu',
     url='http://falsifiable.us',
     description='Popper CLI tool to generate reproducible papers.',
-    #data_files=[
-    #    ('/etc/bash_completion.d', ['./extras/bash-completion.sh']),
-    #    ],
+    data_files=[
+        ('/usr/local/etc/bash_completion.d', ['./extras/bash-completion.sh']),
+        ],
     packages=['popper', 'popper.commands'],
     include_package_data=True,
     install_requires=[

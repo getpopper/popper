@@ -1,5 +1,7 @@
 language: bash
 services: docker
+env:
+    PATH=$PATH:$PWD/cli/bin && docs/ci/demo
 script:
 - docker build -t falsifiable/popper cli/
 - docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper

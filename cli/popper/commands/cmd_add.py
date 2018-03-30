@@ -44,9 +44,8 @@ def cli(ctx, pipeline):
     save_directory(path, dirname, url)
     path = os.path.join(path, pipeline_name)
     update_config(owner, repo, pipeline_name, path, repo_config)
-    pu.info("Pipeline {} successfully added." \
-            + "Can be viewed in the pipelines directory."
-            .format(pipeline_name),
+    pu.info("Pipeline {} successfully added.".format(pipeline_name) \
+            + " It can be viewed in the pipelines directory.",
             fg="green")
 
 
