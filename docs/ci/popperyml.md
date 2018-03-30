@@ -94,17 +94,41 @@ popper init mypipe --env=alpine-3.4
 The above specifies that the pipeline named `mypipe` will be executed 
 inside a docker container using the `alpine-3.4` popper check image.
 
+To add more environment(s):  
+
+```bash
+popper env myexp --add ubuntu-xenial,centos-7.2
+```
+
+To remove enviroment(s):  
+
+```bash
+popper env myexp --rm centos-7.2
+```
+
 ## Metadata
 
 The `metadata` YAML entry specifies the set of data that gives information
 about the user's project. It can be added using the `popper metadata --add command`
 For example :
+
 ```bash
 popper metadata --add authors='Dennis Ritchie'
 ```
 
 This adds a metadata entry 'authors' to the the project
 metadata.
+
+To view the `metadata` of a repository type: 
+
+```bash
+popper metadata
+```
+To remove the entry 'authors' from the `metadata`:
+
+```bash
+popper metadata --rm authors
+```
 
 ## Pipelines
 
