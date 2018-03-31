@@ -4,7 +4,7 @@ import click
 import os
 import requests
 import popper.utils as pu
-from ruamel import yaml
+import yaml
 from io import BytesIO
 from popper.cli import pass_context
 
@@ -44,24 +44,24 @@ def cli(ctx, pipeline):
     save_directory(path, dirname, url)
     path = os.path.join(path, pipeline_name)
     update_config(owner, repo, pipeline_name, path, repo_config)
-    pu.info("Pipeline {} successfully added.".format(pipeline_name) \
+    pu.info("Pipeline {} successfully added.".format(pipeline_name)
             + " It can be viewed in the pipelines directory.",
             fg="green")
 
 
 def get_config(owner, repo):
     """It returns the content of the .popper.yml file of the repository
-    whose pipeline we are copying. 
+    whose pipeline we are copying.
     """
 
     yaml_url = 'https://raw.githubusercontent.com' \
-                    + '/{}/{}/master/.popper.yml'.format(owner, repo)
+        + '/{}/{}/master/.popper.yml'.format(owner, repo)
 
     r = requests.get(yaml_url)
-    config = yaml.safe_load(r.content)
+    config = yaml.load(r.content)
 
     return config
-    
+
 
 def save_file(path, filename, download_url):
     """Helper method to save a file.
@@ -75,7 +75,7 @@ def save_file(path, filename, download_url):
         f.writelines(BytesIO(r.content))
 
 
-def save_directory(path, dirname, url, topmost = 1):
+def save_directory(path, dirname, url, topmost=1):
     """Recursive method to handle directory download. Creates the empty
     directory, saves the files that belong to that directory and then calls
     itself for other directories in that directory.
@@ -93,21 +93,22 @@ def save_directory(path, dirname, url, topmost = 1):
     path = os.path.join(path, dirname)
 
     response = r.json()
-    if topmost==1:
-        # Progressbar to show the number of files installed. 
+    if topmost == 1:
+        # Progressbar to show the number of files installed.
         with click.progressbar(response,
-                show_eta = False,
-                label = 'Downloading pipeline files:',
-                item_show_func = lambda i: '| Current File/Directory > ' + i['name'] if i else None,
-                bar_template = '[%(bar)s] %(label)s | %(info)s',
-                show_percent = True) as bar:
+                               show_eta=False,
+                               label='Downloading pipeline files:',
+                               item_show_func=lambda i: ''
+                               + '| Current File/Directory > '
+                               + i['name'] if i else None,
+                               bar_template='[%(bar)s] %(label)s | %(info)s',
+                               show_percent=True) as bar:
 
             for item in bar:
                 save_directory_util(path, dirname, url, item)
     else:
         for item in response:
             save_directory_util(path, dirname, url, item)
-
 
 
 def save_directory_util(path, dirname, url, item):
@@ -131,33 +132,36 @@ def update_config(owner, repo, pipeline_name, path, repo_config):
     """
     pipeline_path = 'pipelines/{}'.format(pipeline_name)
 
-
     if 'stages' in repo_config:
         pipeline_stages = repo_config['stages'][pipeline_name]
     else:
-        pipeline_stages = ['setup.sh', 'run.sh', 'post-run.sh', 'validate.sh', 'teardown.sh']
+        pipeline_stages = [
+            'setup.sh',
+            'run.sh',
+            'post-run.sh',
+            'validate.sh',
+            'teardown.sh']
 
     pipeline_envs = repo_config['envs'][pipeline_name]
     config = pu.read_config()
     config['pipelines'][pipeline_name] = {
-        'envs': pipeline_envs ,
+        'envs': pipeline_envs,
         'path': pipeline_path,
         'stages': pipeline_stages,
     }
 
     if 'stages' not in config:
         config['stages'] = {}
-    
+
     config['stages'][pipeline_name] = pipeline_stages
 
     if 'envs' not in config:
         config['envs'] = {}
-    
+
     config['envs'][pipeline_name] = pipeline_envs
-    
+
     if 'popperized' not in config:
         config['popperized'] = []
     config['popperized'].append('github/{}/{}'.format(owner, repo))
-
 
     pu.write_config(config)

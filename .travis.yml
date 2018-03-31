@@ -1,7 +1,9 @@
 language: bash
 services: docker
-env:
-    PATH=$PATH:$PWD/cli/bin && docs/ci/demo
+install:
+- pip install --user -U pip
+- pip install --user --ignore-installed urllib3
 script:
+- PATH=$PATH:$PWD/cli/bin && docs/ci/demo    
 - docker build -t falsifiable/popper cli/
 - docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper

@@ -120,7 +120,7 @@ def initialize_existing_pipeline(pipeline_path, stages, envs):
 
 def initialize_paper(paper_path, envs):
     """This function is used for initializing the special paper pipeline."""
-    
+
     # create the paper folder
     if isdir(paper_path):
         pu.fail('The paper pipeline already exists')
