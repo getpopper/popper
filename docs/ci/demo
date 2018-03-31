@@ -104,6 +104,24 @@ test -f pipelines/mypipeone/popper_logs/teardown.sh.out
 test -f pipelines/mypipeone/popper_logs/teardown.sh.out
 test -f pipelines/mypipeone/popper_status
 
+# stages
+popper stages mypipeone | grep -q setup
+popper stages mypipeone | grep -q run
+popper stages mypipeone | grep -q post-run
+popper stages mypipeone | grep -q validate
+popper stages mypipeone | grep -q teardown
+popper stages mypipeone --set setup,run,teardown --replace
+popper stages mypipeone | grep -q setup
+popper stages mypipeone | grep -q run
+popper stages mypipeone | grep -q teardown
+! popper stages mypipeone | grep -q validate # make sure validate does not show up
+popper stages mypipeone --set setup,validate
+popper stages mypipeone | grep -q setup
+popper stages mypipeone | grep -q run
+! popper stages mypipeone | grep -q post-run # make sure post-run does not show up
+popper stages mypipeone | grep -q validate
+popper stages mypipeone | grep -q teardown
+
 # within the pipeline folder, without some stages
 init_test
 popper init mypipeone
