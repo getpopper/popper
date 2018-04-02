@@ -13,3 +13,6 @@
 [submodule "cli/bin/vendor/idna"]
 	path = cli/bin/vendor/idna
 	url = https://github.com/kjd/idna
+[submodule "cli/bin/vendor/certifi"]
+	path = cli/bin/vendor/certifi
+	url = https://github.com/certifi/python-certifi
