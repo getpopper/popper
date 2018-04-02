@@ -15,13 +15,11 @@ my-paper/
 ├── .popper.yml
 ├── paper
 └── pipelines
-    ├── arbitrary_stages
-    ├── myanalysis
-    └── myexp
+    ├── analysis
+    └── data-generation
 ```
 
-That is, it contains three pipelines named `arbitrary_stages`, 
-`myanalysis` and `myexp`. The `.popper.yml` for this project looks 
+That is, it contains three pipelines named `data-generation` and `analysis`. The `.popper.yml` for this project looks 
 like:
 
 ```yaml
@@ -33,17 +31,17 @@ pipelines:
     path: paper
     stages:
     - build
-  arbitrary_stages:
+  data-generation:
     envs:
     - host
     path: pipelines/arbitrary_stages
     stages:
-    - setup
-    - run
+    - first
+    - second
     - post-run
     - validate
     - teardown
-  myanalysis:
+  analysis:
     envs:
     - host
     path: pipelines/myanalysis
