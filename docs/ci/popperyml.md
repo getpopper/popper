@@ -34,7 +34,7 @@ pipelines:
   data-generation:
     envs:
     - host
-    path: pipelines/arbitrary_stages
+    path: pipelines/data-generation
     stages:
     - first
     - second
@@ -44,7 +44,7 @@ pipelines:
   analysis:
     envs:
     - host
-    path: pipelines/myanalysis
+    path: pipelines/analysis
     stages:
     - run
     - post-run
