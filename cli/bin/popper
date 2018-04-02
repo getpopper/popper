@@ -14,6 +14,10 @@ else:
 
 sys.path.insert(0, yaml_lib)
 sys.path.insert(0, os.path.join(vendordir, 'click'))
+sys.path.insert(0, os.path.join(vendordir, 'certifi'))
+sys.path.insert(0, os.path.join(vendordir, 'idna'))
+sys.path.insert(0, os.path.join(vendordir, 'chardet'))
+sys.path.insert(0, os.path.join(vendordir, 'urllib3'))
 sys.path.insert(0, os.path.join(vendordir, 'requests'))
 sys.path.insert(0, os.path.join(parentdir))
 
