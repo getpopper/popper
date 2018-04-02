@@ -7,3 +7,6 @@
 [submodule "cli/bin/vendor/pyyaml"]
 	path = cli/bin/vendor/pyyaml
 	url = https://github.com/yaml/pyyaml
+[submodule "cli/bin/vendor/chardet"]
+	path = cli/bin/vendor/chardet
+	url = https://github.com/chardet/chardet
