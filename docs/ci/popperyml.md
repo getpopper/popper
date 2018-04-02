@@ -51,15 +51,13 @@ pipelines:
     - validate
     - teardown
 
+metadata:
+  author: My Name
+  name: The name of my study
+
 popperized:
   - github/popperized
   - github/ivotron/quiho-popper
-
-stages:
-  myexp: [setup.sh, run.sh, post-run.sh, validate.sh, teardown.sh]
-  myanalysis: [setup.sh, run.sh, validate.sh]
-  arbitrary_stages: [preparation, execution, validation]
-  paper: [build.sh]
 ```
 
 At the top-level of the YAML file there are entries named `pipelines`, `metadata` and 
