@@ -143,11 +143,13 @@ def update_config(owner, repo, pipeline_name, path, repo_config):
             'teardown.sh']
 
     pipeline_envs = repo_config['envs'][pipeline_name]
+    source_url = 'github.com/{}/{}'.format(owner, repo)
     config = pu.read_config()
     config['pipelines'][pipeline_name] = {
         'envs': pipeline_envs,
         'path': pipeline_path,
         'stages': pipeline_stages,
+        'source': source_url
     }
 
     if 'stages' not in config:

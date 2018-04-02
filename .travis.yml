@@ -2,7 +2,6 @@ language: bash
 services: docker
 install:
 - pip install --user -U pip
-- pip install --user --ignore-installed urllib3
 script:
 - PATH=$PATH:$PWD/cli/bin && docs/ci/demo    
 - docker build -t falsifiable/popper cli/
