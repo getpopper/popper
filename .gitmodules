@@ -10,3 +10,6 @@
 [submodule "cli/bin/vendor/chardet"]
 	path = cli/bin/vendor/chardet
 	url = https://github.com/chardet/chardet
+[submodule "cli/bin/vendor/idna"]
+	path = cli/bin/vendor/idna
+	url = https://github.com/kjd/idna
