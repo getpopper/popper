@@ -16,3 +16,6 @@
 [submodule "cli/bin/vendor/certifi"]
 	path = cli/bin/vendor/certifi
 	url = https://github.com/certifi/python-certifi
+[submodule "cli/bin/vendor/urllib3"]
+	path = cli/bin/vendor/urllib3
+	url = https://github.com/urllib3/urllib3
