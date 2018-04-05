@@ -7,6 +7,12 @@ noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
 
 
+def get_items(dict_object):
+    """Python 2/3 compatible way of iterating over a dictionary"""
+    for key in dict_object:
+        yield key, dict_object[key]
+
+
 def get_path_to_config():
     """Obtains the path to the config file.
 

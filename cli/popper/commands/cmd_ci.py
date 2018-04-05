@@ -36,7 +36,7 @@ def cli(ctx, service):
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)
 
-    for ci_file, ci_file_content in ci_files[service].iteritems():
+    for ci_file, ci_file_content in pu.get_items(ci_files[service]):
         ci_file = os.path.join(project_root, ci_file)
         # create parent folder
         if not os.path.isdir(os.path.dirname(ci_file)):
