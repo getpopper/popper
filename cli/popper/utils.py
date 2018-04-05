@@ -1,7 +1,10 @@
 import click
 import os
 import sys
-from ruamel import yaml
+import yaml
+
+noalias_dumper = yaml.dumper.SafeDumper
+noalias_dumper.ignore_aliases = lambda self, data: True
 
 
 def get_path_to_config():
@@ -53,7 +56,7 @@ def read_config():
         fail(".popper.yml file doesn't exist. See 'popper init --help'.")
 
     with open(config_filename, 'r') as f:
-        config = yaml.safe_load(f.read())
+        config = yaml.load(f.read())
         if not config:
             fail(".popper.yml is empty. Consider deleting it and "
                  "reinitializing the repo. See popper init --help for more.")
@@ -71,7 +74,7 @@ def write_config(config):
     config_filename = os.path.join(get_project_root(), '.popper.yml')
 
     with open(config_filename, 'w') as f:
-        yaml.safe_dump(config, f, default_flow_style=False)
+        yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
 
 
 def is_popperized():
