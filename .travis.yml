@@ -1,9 +1,7 @@
 language: python
 python: 3.6
 services: docker
-install:
-- pip install --user -U pip
 script:
-- PATH=$PATH:$PWD/cli/bin && docs/ci/demo    
+- PATH=$PATH:$PWD/cli/bin docs/ci/demo
 - docker build -t falsifiable/popper cli/
 - docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper
