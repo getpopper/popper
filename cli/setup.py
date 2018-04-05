@@ -20,7 +20,7 @@ setup(
     install_requires=[
         'click',
         'requests',
-        'ruamel.yaml<0.15'
+        'pyyaml'
     ],
     entry_points='''
         [console_scripts]
