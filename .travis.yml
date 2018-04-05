@@ -1,4 +1,5 @@
-language: bash
+language: python
+python: 3.6
 services: docker
 script:
 - PATH=$PATH:$PWD/cli/bin && docs/ci/demo
