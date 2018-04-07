@@ -211,14 +211,20 @@ test -f pipelines/single-node/validate.sh
 test -f pipelines/single-node/setup.sh
 test -f pipelines/single-node/vars.yml
 
-
-rm -rf pipelines/single-node
-popper stages mypipeone | grep teardown
-popper stages mypipeone | grep post-run
+# cleanup command
+init_test
+popper init mypipetwo
+popper init mypipethree
+rm pipelines/mypipetwo/teardown.sh
+rm pipelines/mypipetwo/post-run.sh
+rm -rf pipelines/mypipethree
+cat .popper.yml | grep mypipethree
+popper stages mypipetwo | grep teardown
+popper stages mypipetwo | grep post-run
 popper cleanup
-! cat .popper.yml | grep 'single-node'
-! popper stages mypipeone | grep teardown
-! popper stages mypipeone | grep post-run
+! cat .popper.yml | grep mypipethree
+! popper stages mypipetwo | grep teardown
+! popper stages mypipetwo | grep post-run
 
 # TODO
 

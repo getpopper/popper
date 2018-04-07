@@ -20,9 +20,9 @@ def cli(ctx):
     pipelines = {}
 
     for pipeline in os.listdir(pipeline_dir):
-        envs =  popper_config['pipelines'][pipeline]['envs']
-        relative_path =  popper_config['pipelines'][pipeline]['path']
-        defined_stages =  popper_config['pipelines'][pipeline]['stages']
+        envs = popper_config['pipelines'][pipeline]['envs']
+        relative_path = popper_config['pipelines'][pipeline]['path']
+        defined_stages = popper_config['pipelines'][pipeline]['stages']
         existing_stages = []
         for stage in defined_stages:
             os.chdir(os.path.join(pipeline_dir, pipeline))
@@ -38,4 +38,4 @@ def cli(ctx):
     pu.write_config(popper_config)
 
     pu.info("\nYour popper.yml file has been updated! Run git diff to see "
-            "the differences", fg="white")
+            "the differences.", fg="white")
