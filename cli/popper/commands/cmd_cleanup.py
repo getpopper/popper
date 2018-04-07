@@ -12,8 +12,8 @@ from popper.cli import pass_context
 )
 @pass_context
 def cli(ctx):
-    """Synchronize your pipelines and popper.yml file if you have
-    deleted anypipeline or stage.
+    """Synchronize your pipelines and popper.yml file if any pipeline or stage
+    has been deleted.
     """
     pipeline_dir = os.path.join(pu.get_project_root(), 'pipelines')
     popper_config = pu.read_config()
@@ -37,4 +37,5 @@ def cli(ctx):
     popper_config['pipelines'] = pipelines
     pu.write_config(popper_config)
 
-    pu.info("\nYour popper.yml file has been updated!", fg="white")
+    pu.info("\nYour popper.yml file has been updated! Run git diff to see "
+            "the differences", fg="white")

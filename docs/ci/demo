@@ -211,6 +211,15 @@ test -f pipelines/single-node/validate.sh
 test -f pipelines/single-node/setup.sh
 test -f pipelines/single-node/vars.yml
 
+
+rm -rf pipelines/single-node
+popper stages mypipeone | grep teardown
+popper stages mypipeone | grep post-run
+popper cleanup
+! cat .popper.yml | grep 'single-node'
+! popper stages mypipeone | grep teardown
+! popper stages mypipeone | grep post-run
+
 # TODO
 
 #popper ci circleci
