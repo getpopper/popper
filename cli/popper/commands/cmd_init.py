@@ -134,7 +134,7 @@ def initialize_paper(paper_path, envs):
     os.chmod(os.path.join(paper_path, 'build.sh'), 0o755)
 
     # write README
-    with open(os.path.join(paper_path, 'README',), 'w') as f:
+    with open(os.path.join(paper_path, 'README.md',), 'w') as f:
         f.write('# ' + basename(paper_path) + '\n')
 
 
