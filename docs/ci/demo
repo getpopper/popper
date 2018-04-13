@@ -226,6 +226,13 @@ popper cleanup
 ! popper stages mypipetwo | grep teardown
 ! popper stages mypipetwo | grep post-run
 
+
+# test popper rm command
+init_test
+popper init mypipetwo
+popper rm mypipetwo
+
+
 # TODO
 
 #popper ci circleci
