@@ -81,8 +81,8 @@ def create_snapshot(service, access_token, filename):
         if r.status_code == 201:
             file_id = r.json()['id']
             response['message'] = (
-                "Your snapshot has been successfully uploaded. Your deposition "
-                "id is {} and the file id is {}.".format(deposition_id, file_id)
+                "Snapshot has been successfully uploaded. Your deposition id"
+                " is {} and the file id is {}.".format(deposition_id, file_id)
             )
         else:
             response['message'] = (
@@ -93,9 +93,9 @@ def create_snapshot(service, access_token, filename):
 
 
 def get_access_token(service, cwd):
-    """Tries to read the access token from a key file. If not present, prompts
-    the user for a key and also stores the key in a key file if the user wishes.
-    """
+    """Tries to read the access token from a key file. If not present,
+    prompts the user for a key and also stores the key in a key file
+    if the user wishes."""
     os.chdir(cwd)
     try:
         with open('.{}.key'.format(service), 'r') as keyfile:
