@@ -99,9 +99,11 @@ def initialize_repo(project_root):
 
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
+        return
 
     with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
-        f.write('{ metadata: { }, pipelines: { } }\n')
+        f.write('{ metadata: { }, pipelines: { },' +
+                'popperized: ["github/popperized"] }\n')
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
         f.write('popper_logs\n')

@@ -232,6 +232,25 @@ init_test
 popper init mypipetwo
 popper rm mypipetwo
 
+# test popper search command
+set +e
+init_test
+popper search quiho
+test $? -eq 0
+set -e
+
+set +e
+init_test
+popper search quiho --skip-update
+test $? -eq 1
+set -e
+
+set +e
+init_test
+popper search quiho
+popper search linux --skip-update
+test $? - eq 0
+set -e
 
 # TODO
 
