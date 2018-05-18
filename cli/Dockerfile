@@ -4,7 +4,6 @@ RUN apk add --no-cache bash curl git sed grep bc coreutils
 
 ADD . /cli
 
-RUN cd cli && pip install . 
+RUN cd cli && pip install --upgrade setuptools && pip install . 
 
 ENTRYPOINT ["popper"]
-
