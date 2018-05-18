@@ -259,11 +259,9 @@ test $? -eq 0
 #popper ci jenkins
 #test -f Jenkinsfile
 
-#popper workflow pipeone > wf.dot
-#cat wf.dot | grep digraph
-#cat wf.dot | grep setup
-#cat wf.dot | grep post-run
-#cat wf.dot | grep validate
-#cat wf.dot | grep teardown
-#
-#cd pipelines/pipeone
+popper workflow pipeone > wf.dot
+cat wf.dot | grep digraph
+cat wf.dot | grep ssetup
+cat wf.dot | grep spost-run
+cat wf.dot | grep svalidate
+cat wf.dot | grep steardown
