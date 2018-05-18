@@ -8,7 +8,7 @@ import base64
 import popper.utils as pu
 
 from popper.cli import pass_context
-from cryptography.fernet import Fernet
+from cryptography.fernet import Fernet, InvalidToken
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.backends import default_backend
 
@@ -109,7 +109,13 @@ def get_access_token(service, cwd):
                 hide_input=True
             ).encode()
             f = Fernet(generate_key(passphrase))
-            access_token = f.decrypt(encrypted_access_token).decode("utf8")
+            try:
+                access_token = f.decrypt(encrypted_access_token).decode("utf8")
+            except InvalidToken:
+                pu.fail(
+                    "Invalid passphrase. Please use the same passphrase "
+                    "used at the time of encrypting the access_token."
+                )
     except FileNotFoundError:
         pu.info('No access token found for {}'.format(service))
         access_token = click.prompt('Please enter your access token for {}'
