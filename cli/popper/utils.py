@@ -122,7 +122,7 @@ def get_filename(abs_path, stage):
 
 def fail(msg):
     """Prints the error message on the terminal."""
-    click.secho('ERROR: ' + msg, fg='red', blink=True, bold=True)
+    click.secho('ERROR: ' + msg, fg='red', bold=True)
     sys.exit(1)
 
 

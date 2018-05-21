@@ -4,9 +4,13 @@ import click
 import os
 import requests
 import subprocess
+import base64
 import popper.utils as pu
 
 from popper.cli import pass_context
+from cryptography.fernet import Fernet, InvalidToken
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.backends import default_backend
 
 
 @click.command('archive', short_help='Create a snapshot of the repository.')
@@ -99,16 +103,40 @@ def get_access_token(service, cwd):
     os.chdir(cwd)
     try:
         with open('.{}.key'.format(service), 'r') as keyfile:
-            access_token = keyfile.read().strip()
+            encrypted_access_token = keyfile.read().strip().encode()
+            passphrase = click.prompt(
+                'Please enter your passphrase for {}'.format(service),
+                hide_input=True
+            ).encode()
+            f = Fernet(generate_key(passphrase))
+            try:
+                access_token = f.decrypt(encrypted_access_token).decode("utf8")
+            except InvalidToken:
+                pu.fail(
+                    "Invalid passphrase. Please use the same passphrase "
+                    "used at the time of encrypting the access_token."
+                )
     except FileNotFoundError:
         pu.info('No access token found for {}'.format(service))
         access_token = click.prompt('Please enter your access token for {}'
                                     .format(service))
         if click.confirm('Would you like to store this key?'):
-            pu.warn('This key is stored in plain text. '
-                    'Don\'t confirm on a public machine.')
+            passphrase = click.prompt(
+                'Enter a strong passphrase',
+                hide_input=True
+            ).encode()
+            f = Fernet(generate_key(passphrase))
+            encrypted_access_token = f.encrypt(access_token.encode())
             with open('.{}.key'.format(service), 'w') as keyfile:
-                keyfile.writelines(access_token)
+                keyfile.writelines(encrypted_access_token.decode("utf8"))
                 pu.info('Your key is stored in .{}.key'.format(service))
 
     return access_token
+
+
+def generate_key(passphrase):
+    """Helper function that takes the passphrase as a bytes object
+    and returns a key suitable for encryption with Fernet."""
+    digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+    digest.update(passphrase)
+    return base64.urlsafe_b64encode(digest.finalize())
