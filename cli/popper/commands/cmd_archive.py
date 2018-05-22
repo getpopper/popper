@@ -43,7 +43,10 @@ def cli(ctx, service, key, no_publish):
     project_name = os.path.basename(project_root)
 
     if not key:
-        key = get_access_token(service, project_root)
+        try:
+            key = os.environ['POPPER_ZENODO_API_TOKEN']
+        except KeyError:
+            key = get_access_token(service, project_root)
 
     if service == 'zenodo':
         service_url = 'https://zenodo.org/api/deposit/depositions'
@@ -59,9 +62,15 @@ def cli(ctx, service, key, no_publish):
         uploads = requests.get(service_url, params=params)
 
         if uploads.status_code == 200:
-            if not uploads.json()[0]['submitted']:
-                deposition_id = uploads.json()[0]['id']
-            else:
+            try:
+                if not uploads.json()[0]['submitted']:
+                    deposition_id = uploads.json()[0]['id']
+                else:
+                    raise IndexError(
+                        'No previous uploads exist or '
+                        'previous upload is submitted.'
+                    )
+            except IndexError:
                 archive_file = create_archive(project_root, project_name)
                 deposition_id = upload_snapshot(
                     service_url, params, archive_file
@@ -90,6 +99,7 @@ def upload_snapshot(service_url, params, filename):
     """Receives the service_url and the required paramters and the filename to
     be uploaded and uploads the deposit, but the deposit is not published
     at this step. Returns the deposition id."""
+
     # Create the deposit
     pu.info("Uploading the snapshot...")
     headers = {'Content-Type': "application/json"}
@@ -116,8 +126,8 @@ def upload_snapshot(service_url, params, filename):
         )
     else:
         pu.fail(
-            "Status {}: Failed to upload your snapshot. Please "
-            "try again.".format(r.status_code)
+            "Status {}: Failed to upload your snapshot. "
+            "Please try again.".format(published.status_code)
         )
 
     return deposition_id
@@ -126,16 +136,42 @@ def upload_snapshot(service_url, params, filename):
 def add_metadata(metadata_url, params):
     """Receives the metadata_url and other parameters, reads the metadata and
     adds that to the deposit. Returns the publish_url."""
-    data = {
-        'metadata': {
-            'title': "This is the title",
-            'upload_type': 'software',
-            'description': "A suitable description",
-            'creators': [
-                {'name': 'Doe, John', 'affiliation': 'popper'},
-            ]
-        }
-    }
+
+    # Get the metadata from the .popper.yml file
+    data = pu.read_config()['metadata']
+
+    if 'title' not in data or 'upload_type' not in data:
+        pu.fail(
+            "Metadata is not defined properly in .popper.yml. "
+            "See the documentation for proper metadata format."
+        )
+
+    # Change abstract to description, if present
+    if 'abstract' in data:
+        data['description'] = '<p>' + data['abstract'] + '</p>'
+        del data['abstract']
+
+    # Collect the authors in a sorted manner
+    creators = []
+    for key in sorted(list(data.keys())):
+        if 'author' in key:
+            name, email, affiliation = map(
+                lambda x: x.strip(), data[key].split(',')
+            )
+            if len(name.split()) == 2:
+                name = ', '.join(name.split()[::-1])
+            creators.append({'name': name, 'affiliation': affiliation})
+            del data[key]
+    data['creators'] = creators
+
+    # Change the keywords to a list from string of comma separated values
+    if 'keywords' in data:
+        data['keywords'] = list(
+            map(lambda x: x.strip(), data['keywords'].split(','))
+        )
+
+    data = {'metadata': data}
+
     metadata_added = requests.put(
         metadata_url,
         params=params,

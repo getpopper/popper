@@ -148,7 +148,6 @@ test -f pipelines/mypipetwo/popper_logs/two.sh.out
 test -f pipelines/mypipetwo/popper_status
 
 # metadata
-popper metadata | grep '{}'
 popper metadata --add authors='the ramones, sex pistols'
 popper metadata | grep 'the ramones, sex pistols'
 popper metadata --add authors='the police'
