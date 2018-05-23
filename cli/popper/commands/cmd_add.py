@@ -40,13 +40,11 @@ def cli(ctx, pipeline):
     os.chdir(pipelines_dir)
     os.mkdir(pipeline_name)
     os.chdir(pipeline_path)
-    
+
     pipeline_url = 'https://github.com/{}/{}/tree/master/pipelines/{}' \
-            .format(owner, repo, pipeline_name)
-    download_url = 'https://github-download-only-a-folder.glitch.me/dl?url={}' \
-            .format(pipeline_url)
-    
-    
+        .format(owner, repo, pipeline_name)
+    download_url = 'https://github-download-only-a-folder.glitch.me/dl?url={}'\
+        .format(pipeline_url)
 
     pu.info("Downloading pipeline {} ... ".format(pipeline_name))
     r = requests.get(download_url)
@@ -55,7 +53,7 @@ def cli(ctx, pipeline):
     pu.info("Updating the configuration ... ")
     repo_config = get_config(owner, repo)
     update_config(owner, repo, pipeline_name, pipeline_path, repo_config)
-    
+
     pu.info("Pipeline {} has been added successfully.".format(pipeline_name)
             + " It can be viewed in the pipelines directory.",
             fg="green")
@@ -91,10 +89,10 @@ def update_config(owner, repo, pipeline_name, path, repo_config):
             'validate.sh',
             'teardown.sh']
 
-    pipeline_envs = []    
+    pipeline_envs = []
     if 'envs' in repo_config:
         pipeline_envs = repo_config['envs'][pipeline_name]
-    
+
     source_url = 'github.com/{}/{}'.format(owner, repo)
     config = pu.read_config()
     config['pipelines'][pipeline_name] = {
