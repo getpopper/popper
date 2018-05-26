@@ -140,16 +140,23 @@ def add_metadata(metadata_url, params):
     # Get the metadata from the .popper.yml file
     data = pu.read_config()['metadata']
 
-    if 'title' not in data or 'upload_type' not in data:
+    required_data = ['title', 'upload_type', 'abstract', 'author1']
+    metadata_is_valid = True
+
+    for req in required_data:
+        if req not in data:
+            metadata_is_valid = False
+            break
+
+    if not metadata_is_valid:
         pu.fail(
             "Metadata is not defined properly in .popper.yml. "
             "See the documentation for proper metadata format."
         )
 
     # Change abstract to description, if present
-    if 'abstract' in data:
-        data['description'] = '<p>' + data['abstract'] + '</p>'
-        del data['abstract']
+    data['description'] = '<p>' + data['abstract'] + '</p>'
+    del data['abstract']
 
     # Collect the authors in a sorted manner
     creators = []
