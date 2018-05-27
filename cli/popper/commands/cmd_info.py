@@ -1,7 +1,7 @@
 import click
 import popper.utils as pu
 import requests
-
+import os
 from popper.cli import pass_context
 
 
@@ -27,25 +27,29 @@ def get_info(query):
 
     popperized_repos = config['popperized']
 
-    if 'github/' + "/".join(query[1:-1]) not in popperized_repos:
+    if 'github/' + "/".join(query[:-1]) not in popperized_repos:
         pu.fail("Repository not found.")
 
     info = {}
-    repo_name = query[1:-1]
+    repo_name = "/".join(query[:-1])
     pipeline_name = query[-1]
-    org_path = os.path.join(pu.get_project_root, 'org')
-    pipeline_path = os.path.join(org_path, query[1:])
+    org_path = os.path.join(pu.get_project_root(), 'org')
+    pipeline_path = os.path.join(org_path, "/".join(query[1:]))
 
-    commits = requests.get('https://api.github.com/repos/' +
-                           repo_name + '/commits').json()
+    commit_url = 'https://api.github.com/repos/'+ repo_name + '/commits'
+    commits = requests.get(commit_url).json()
 
-    info['Github Url'] = 'https://github.com/' + query[1:]
+    info['Github Url'] = 'https://github.com/' + "/".join(query[1:])
     info['Pipeline name'] = pipeline_name
     info['Version'] = commits[0]['sha']
 
-    content = ''
-    with open(os.path.join(pipeline_path, 'README'), 'r') as f:
-        content = f.read()
+    try:
+        content = ''
+        with open(os.path.join(pipeline_path, 'README'), 'r') as f:
+            content = f.read()
 
-    info['README'] = content
+        info['README'] = content
+    except FileNotFoundError :
+        pass
+
     pu.print_yaml(info, fg='yellow')
