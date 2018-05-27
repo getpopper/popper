@@ -51,11 +51,11 @@ pipelines (also referred to
 ![DevOps approach to Implementing Scientific Explorations, also 
 referred to as SciOps.](/figures/workflow_devops.png)
 
-Popper is a convention (or protocol) that maps the implementation of 
-of a pipeline to software engineering (and DevOps/SciOps) 
-best-practices followed in open-source software projects. If a 
-pipeline is implemented by following the Popper convention, we call it 
-a popper-compliant pipeline or popper pipeline for short. A popper 
+Popper is a convention (or protocol) that maps the implementation of a 
+pipeline to software engineering (and DevOps/SciOps) best-practices 
+followed in open-source software projects. If a pipeline is 
+implemented by following the Popper convention, we call it a 
+popper-compliant pipeline or popper pipeline for short. A popper 
 pipeline is implemented using DevOps tools (e.g., version-control 
 systems, lightweight OS-level virtualization, automated multi-node 
 orchestration, continuous integration and web-based data 
@@ -80,7 +80,7 @@ folders on the root of the project with one subfolder per pipeline
 
 ```bash
 $> tree mypaper/
-├── experiments
+├── pipelines
 │   ├── exp1
 │   │   ├── README.md
 │   │   ├── output

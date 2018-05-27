@@ -103,6 +103,10 @@ def initialize_repo(project_root):
     with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
         f.write('{ metadata: { }, pipelines: { } }\n')
 
+    with open(os.path.join(project_root, '.gitignore'), 'a') as f:
+        f.write('popper_logs\n')
+        f.write('popper_status\n')
+
     pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
 
@@ -134,7 +138,7 @@ def initialize_paper(paper_path, envs):
     os.chmod(os.path.join(paper_path, 'build.sh'), 0o755)
 
     # write README
-    with open(os.path.join(paper_path, 'README',), 'w') as f:
+    with open(os.path.join(paper_path, 'README.md',), 'w') as f:
         f.write('# ' + basename(paper_path) + '\n')
 
 

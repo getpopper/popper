@@ -20,7 +20,8 @@ setup(
     install_requires=[
         'click',
         'requests',
-        'pyyaml'
+        'pyyaml',
+        'cryptography'
     ],
     entry_points='''
         [console_scripts]
