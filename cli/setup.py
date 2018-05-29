@@ -1,5 +1,4 @@
 from setuptools import setup
-import popper
 
 version = {}
 with open('popper/__init__.py') as f:
@@ -14,14 +13,15 @@ setup(
     description='Popper CLI tool to generate reproducible papers.',
     data_files=[
         ('/usr/local/etc/bash_completion.d', ['./extras/bash-completion.sh']),
-        ],
+    ],
     packages=['popper', 'popper.commands'],
     include_package_data=True,
     install_requires=[
         'click',
         'requests',
         'lark-parser',
-        'pyyaml'
+        'pyyaml',
+        'pyaes'
     ],
     entry_points='''
         [console_scripts]

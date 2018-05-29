@@ -4,14 +4,12 @@ import click
 import os
 import requests
 import subprocess
-import base64
+import pyaes
+import hashlib
 import json
 import popper.utils as pu
 
 from popper.cli import pass_context
-from cryptography.fernet import Fernet, InvalidToken
-from cryptography.hazmat.primitives import hashes
-from cryptography.hazmat.backends import default_backend
 
 
 @click.command('archive', short_help='Create a snapshot of the repository.')
@@ -227,15 +225,15 @@ def get_access_token(service, cwd):
     os.chdir(cwd)
     try:
         with open('.{}.key'.format(service), 'r') as keyfile:
-            encrypted_access_token = keyfile.read().strip().encode()
+            encrypted_access_token = keyfile.read().strip()
             passphrase = click.prompt(
                 'Please enter your passphrase for {}'.format(service),
                 hide_input=True
             ).encode()
-            f = Fernet(generate_key(passphrase))
+            aes = pyaes.AESModeOfOperationCTR(generate_key(passphrase))
             try:
-                access_token = f.decrypt(encrypted_access_token).decode("utf8")
-            except InvalidToken:
+                access_token = aes.decrypt(encrypted_access_token).decode()
+            except UnicodeDecodeError:
                 pu.fail(
                     "Invalid passphrase. Please use the same passphrase "
                     "used at the time of encrypting the access_token."
@@ -246,21 +244,21 @@ def get_access_token(service, cwd):
                                     .format(service))
         if click.confirm('Would you like to store this key?'):
             passphrase = click.prompt(
-                'Enter a strong passphrase',
-                hide_input=True
+                'Enter a strong passphrase', hide_input=True
             ).encode()
-            f = Fernet(generate_key(passphrase))
-            encrypted_access_token = f.encrypt(access_token.encode())
+            aes = pyaes.AESModeOfOperationCTR(generate_key(passphrase))
+            encrypted_access_token = aes.encrypt(access_token)
             with open('.{}.key'.format(service), 'w') as keyfile:
-                keyfile.writelines(encrypted_access_token.decode("utf8"))
+                keyfile.writelines('{}'.format(
+                    ''.join(chr(b) for b in encrypted_access_token)
+                ))
                 pu.info('Your key is stored in .{}.key'.format(service))
 
     return access_token
 
 
 def generate_key(passphrase):
-    """Helper function that takes the passphrase as a bytes object
-    and returns a key suitable for encryption with Fernet."""
-    digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-    digest.update(passphrase)
-    return base64.urlsafe_b64encode(digest.finalize())
+    """Helper function that takes the passphrase as a bytes object and returns
+    a 8-bit key that can be used for encryption with DES algorithm."""
+    digest = hashlib.sha256(passphrase).digest()
+    return digest[:16]
