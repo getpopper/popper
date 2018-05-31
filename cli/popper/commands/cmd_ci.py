@@ -16,6 +16,22 @@ install:
 - export PATH=$PATH:/tmp/popper/cli/bin
 script: popper run
 """
+    },
+    'circle': {
+        './.circleci/config.yml': """
+---
+version: 2
+jobs:
+  build:
+    machine: true
+    steps:
+    - checkout
+    - run:
+        command: |
+        git clone --recursive https://github.com/systemslab/popper /tmp/popper
+        export PATH=$PATH:/tmp/popper/cli/bin
+        popper run
+"""
     }
 }
 
