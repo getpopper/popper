@@ -236,24 +236,19 @@ popper init mypipetwo
 popper rm mypipetwo
 
 # test popper search command
-set +e
-init_test
-popper search quiho
-test $? -eq 0
-set -e
-
-set +e
-init_test
-popper search quiho --skip-update
-test $? -eq 1
-set -e
-
 init_test
 popper search quiho
 test -d ./.cache
 popper search quiho --skip-update
-test $? -eq 0
+popper search linux --skip-update
 
+init_test
+set +e
+popper search quiho --skip-update
+test $? -eq 1
+set -e
+
+# workflow
 init_test
 popper init pipeone
 popper workflow pipeone > wf.dot
