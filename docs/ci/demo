@@ -88,6 +88,9 @@ cat .popper.yml | grep 'path: ci'
 popper ci --service travis
 test -f .travis.yml
 
+popper ci --service circle
+test -f .circleci/config.yml
+
 # run
 init_test
 popper init mypipeone
@@ -231,7 +234,6 @@ popper cleanup
 init_test
 popper init mypipetwo
 popper rm mypipetwo
-
 
 # TODO
 
