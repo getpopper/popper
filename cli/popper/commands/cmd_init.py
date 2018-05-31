@@ -109,7 +109,10 @@ def initialize_repo(project_root):
             'upload_type': "publication",
             'publication_type': "article"
         },
-        'pipelines': {}
+        'pipelines': {},
+        'popperized': [
+            "github/popperized"
+        ]
     }
 
     pu.write_config(config)

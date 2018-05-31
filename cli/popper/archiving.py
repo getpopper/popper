@@ -157,7 +157,7 @@ class Zenodo(BaseService):
                     "Try again later.".format(r.status_code)
                 )
 
-    def _is_last_deposition_published(self):
+    def is_last_deposition_published(self):
         if self.deposition is None:
             return False
         else:
@@ -292,18 +292,22 @@ class Zenodo(BaseService):
         url = '{}/{}/files'.format(self.baseurl, self.deposition['id'])
         r = requests.get(url, params=self.params)
         if r.status_code == 200:
-            old_file_id = r.json()[0]['id']
+            try:
+                old_file_id = r.json()[0]['id']
+                url = '{}/{}/files/{}'.format(
+                    self.baseurl, deposition_id, old_file_id
+                )
+                r = requests.delete(url, params=self.params)
+                if r.status_code != 201:
+                    pu.fail(
+                        "Status {}: Failed to delete files of the "
+                        "previous version.".format(r.status_code)
+                    )
+            except IndexError:
+                pass
         else:
             pu.fail(
                 "Status {}: Failed to get the files of the previous version."
-                .format(r.status_code)
-            )
-
-        url = '{}/{}/files/{}'.format(self.baseurl, deposition_id, old_file_id)
-        r = requests.delete(url, params=self.params)
-        if r.status_code != 201:
-            pu.fail(
-                "Status {}: Failed to delete files of the previous version."
                 .format(r.status_code)
             )
 
