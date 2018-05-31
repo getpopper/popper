@@ -92,7 +92,7 @@ class ObtainDotGraph(InlineTransformer):
         if 'wf' not in comment:
             return
 
-        self.comment_stack.append(comment.strip('wf '))
+        self.comment_stack.append(comment.replace('wf ', ''))
 
         if self.current_stage not in self.seen_stages:
             self.seen_stages[self.current_stage] = 1

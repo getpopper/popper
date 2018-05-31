@@ -160,7 +160,7 @@ def initialize_new_pipeline(pipeline_path, stages, envs):
 
         with open(os.path.join(pipeline_path, s), 'w') as f:
             f.write('#!/usr/bin/env bash\n')
-            f.write('# [wf] execute {} stage\n'.format(s))
+            f.write('# [wf] execute {} stage\n'.format(s.replace('.sh', '')))
             f.write('\n')
         os.chmod(os.path.join(pipeline_path, s), 0o755)
 

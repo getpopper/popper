@@ -254,11 +254,8 @@ test -d ./.cache
 popper search quiho --skip-update
 test $? -eq 0
 
-# TODO
-
-#popper ci jenkins
-#test -f Jenkinsfile
-
+init_test
+popper init pipeone
 popper workflow pipeone > wf.dot
 cat wf.dot | grep digraph
 cat wf.dot | grep ssetup
