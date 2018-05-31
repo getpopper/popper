@@ -50,6 +50,7 @@ def cli(ctx, pipeline):
     r = requests.get(download_url)
     z = zipfile.ZipFile(BytesIO(r.content))
     z.extractall()
+    z.close()
     pu.info("Updating the configuration ... ")
     repo_config = get_config(owner, repo)
     update_config(owner, repo, pipeline_name, pipeline_path, repo_config)

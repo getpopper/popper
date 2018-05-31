@@ -116,6 +116,19 @@ git push
 
 Go to TravisCI website to see your experiments being executed.
 
+## Integrating with GitHub
+
+Some of the popper sub-commands (e.g. :- popper search) make use of the GitHub
+API. Since GitHub only allows up to 60 unauthenticated requests per hour on 
+its API, some of these sub-commands will fail to give appropriate results on heavy
+usage. 
+
+To resolve this, we need to :
+  *  Create a GitHub personal access token, as shown [here](https://bit.ly/2rvbeT1).
+  *  Copy the token and set it as an environment variable with the name `POPPER_GITHUB_API_TOKEN` in our computer. 
+ 
+This will allow the popper command to use our access token to make authenticated requests.
+
 ## Learn More
 
 A more detailed description of Popper is explained in [the next 
