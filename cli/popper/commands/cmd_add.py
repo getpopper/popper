@@ -58,7 +58,6 @@ def cli(ctx, pipeline):
     else:
         pu.fail("Unable to fetch the pipeline. Please check if the name" +
                 " of the pipeline is correct and the internet is connected")
-
     pu.info("Updating the configuration ... ")
     repo_config = get_config(owner, repo)
     update_config(owner, repo, pipeline_name, pipeline_path, repo_config)
