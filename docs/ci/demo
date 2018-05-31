@@ -61,29 +61,26 @@ echo '' > ci/one.sh
 echo '' > ci/two
 echo '' > ci/three
 popper init --existing --stages=one,two,three ci
-
-mkdir ci2
-echo '' > ci/script1.sh
-echo '' > ci/script2.txt
-echo '' > ci/script3.sh
-
-set +e
-popper init --existing --infer-stages ci2
-cat .popper.yml| grep ' - script1'
-test $? -eq 0
-cat .popper.yml| grep ' - script2'
-test $? -eq 1
-cat .popper.yml| grep ' - script3'
-test $? -eq 0
-set -e
-
-
-
 cat .popper.yml | grep '\- host'
 cat .popper.yml | grep '\- one'
 cat .popper.yml | grep '\- two'
 cat .popper.yml | grep '\- three'
 cat .popper.yml | grep 'path: ci'
+
+mkdir -p my/custom/path/to/pipeline/ci2
+echo '' > my/custom/path/to/pipeline/ci2/script1.sh
+echo '' > my/custom/path/to/pipeline/ci2/script2.txt
+echo '' > my/custom/path/to/pipeline/ci2/script3.sh
+
+popper init --existing --infer-stages my/custom/path/to/pipeline/ci2
+cat .popper.yml| grep 'ci2:'
+cat .popper.yml| grep ' - script1'
+set +e
+cat .popper.yml| grep ' - script2'
+test $? -eq 1
+set -e
+cat .popper.yml| grep ' - script3'
+
 
 popper ci --service travis
 test -f .travis.yml
