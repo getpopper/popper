@@ -78,6 +78,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
                                   sorted(glob.glob1(abs_path, '*.sh'))))
         else:
             initialize_existing_pipeline(abs_path, stages, envs)
+        name = os.path.basename(name)
     elif name == 'paper':
         # create a paper pipeline
         abs_path = os.path.join(project_root, 'paper')
