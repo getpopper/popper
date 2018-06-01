@@ -6,3 +6,4 @@ wiki
 .sass-cache/
 docs/_build
 cli/popper.egg-info/
+.idea/
