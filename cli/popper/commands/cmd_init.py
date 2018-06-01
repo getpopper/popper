@@ -78,6 +78,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
                                   sorted(glob.glob1(abs_path, '*.sh'))))
         else:
             initialize_existing_pipeline(abs_path, stages, envs)
+        name = os.path.basename(name)
     elif name == 'paper':
         # create a paper pipeline
         abs_path = os.path.join(project_root, 'paper')
@@ -99,9 +100,11 @@ def initialize_repo(project_root):
 
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
+        return
 
     with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
-        f.write('{ metadata: { }, pipelines: { } }\n')
+        f.write('{ metadata: { }, pipelines: { },' +
+                'popperized: ["github/popperized"] }\n')
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
         f.write('popper_logs\n')
