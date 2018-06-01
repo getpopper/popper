@@ -4,6 +4,16 @@ import requests
 import os
 from popper.cli import pass_context
 
+"""
+Making the code compatible with both python 2.x and 3.x environments.
+2.x does not have a FileNotFoundError and makes use of IOError to handle
+such exceptions.
+"""
+try:
+    FileNotFoundError
+except NameError:
+    FileNotFoundError = IOError
+
 
 @click.command('info', short_help='Shows the information about a pipeline')
 @click.argument('query', required=True)
@@ -36,12 +46,13 @@ def get_info(query):
     org_path = os.path.join(pu.get_project_root(), 'org')
     pipeline_path = os.path.join(org_path, "/".join(query[1:]))
 
-    commit_url = 'https://api.github.com/repos/'+ repo_name + '/commits'
+    commit_url = 'https://api.github.com/repos/' + repo_name + '/commits'
     commits = requests.get(commit_url).json()
 
     info['Github Url'] = 'https://github.com/' + "/".join(query[1:])
     info['Pipeline name'] = pipeline_name
-    info['Version'] = commits[0]['sha']
+    if len(commits) > 0 and isinstance(commits[0], type({})):
+        info['Version'] = commits[0].get('sha')
 
     try:
         content = ''
@@ -49,7 +60,7 @@ def get_info(query):
             content = f.read()
 
         info['README'] = content
-    except FileNotFoundError :
+    except FileNotFoundError:
         pass
 
     pu.print_yaml(info, fg='yellow')

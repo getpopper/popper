@@ -212,7 +212,7 @@ test -f pipelines/single-node/setup.sh
 test -f pipelines/single-node/vars.yml
 
 # info command
-popper info popperized/quiho-popper/single-node
+popper info popperized/quiho-popper/single-node | grep 'Github Url'
 
 # cleanup command
 init_test
@@ -252,7 +252,7 @@ set +e
 init_test
 popper search quiho
 popper search linux --skip-update
-test $? - eq 0
+test $? -eq 0
 set -e
 
 
