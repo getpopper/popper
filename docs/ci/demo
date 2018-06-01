@@ -211,6 +211,9 @@ test -f pipelines/single-node/validate.sh
 test -f pipelines/single-node/setup.sh
 test -f pipelines/single-node/vars.yml
 
+# info command
+popper info popperized/quiho-popper/single-node
+
 # cleanup command
 init_test
 popper init mypipetwo
@@ -251,6 +254,7 @@ popper search quiho
 popper search linux --skip-update
 test $? - eq 0
 set -e
+
 
 # TODO
 
