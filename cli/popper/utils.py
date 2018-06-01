@@ -137,10 +137,7 @@ def info(msg, **styles):
 
 def print_yaml(msg, **styles):
     """Prints the messages in YAML's block format. """
-    click.secho(yaml.safe_dump(msg,
-                               default_flow_style=False,
-                               encoding='utf-8',
-                               allow_unicode=True), **styles)
+    click.secho(yaml.dump(msg, default_flow_style=False), **styles)
 
 
 def parse_timeout(timeout):
