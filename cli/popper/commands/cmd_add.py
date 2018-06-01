@@ -6,6 +6,7 @@ import requests
 import popper.utils as pu
 import yaml
 import zipfile
+from zipfile import BadZipfile
 from io import BytesIO
 from popper.cli import pass_context
 
@@ -52,7 +53,7 @@ def cli(ctx, pipeline):
         try:
             z = zipfile.ZipFile(BytesIO(r.content))
             z.extractall()
-        except BadZipFile as e:
+        except BadZipfile:
             z.close()
     else:
         pu.fail("Unable to fetch the pipeline. Please check if the name" +

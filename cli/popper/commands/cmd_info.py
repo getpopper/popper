@@ -31,12 +31,14 @@ def cli(ctx, query):
 
 
 def get_info(query):
+    # Checking if the popperized repositories are present or not
     config = pu.read_config()
     if 'popperized' not in config:
         pu.fail('No popperized repositories present.')
 
     popperized_repos = config['popperized']
 
+    # Checking if the specified pipeline exists
     if 'github/' + "/".join(query[:-1]) not in popperized_repos:
         pu.fail("Repository not found.")
 
@@ -47,20 +49,24 @@ def get_info(query):
     pipeline_path = os.path.join(org_path, "/".join(query[1:]))
 
     commit_url = 'https://api.github.com/repos/' + repo_name + '/commits'
-    commits = requests.get(commit_url).json()
+    r = requests.get(commit_url)
 
-    info['Github Url'] = 'https://github.com/' + "/".join(query[1:])
-    info['Pipeline name'] = pipeline_name
-    if len(commits) > 0 and isinstance(commits[0], type({})):
-        info['Version'] = commits[0].get('sha')
+    if r.status_code == 200:
+        commits = r.json()
+        info['Github Url'] = 'https://github.com/' + "/".join(query[1:])
+        info['Pipeline name'] = pipeline_name
+        if len(commits) > 0 and isinstance(commits[0], type({})):
+            info['Version'] = commits[0].get('sha')
+        try:
+            content = ''
+            with open(os.path.join(pipeline_path, 'README'), 'r') as f:
+                content = f.read()
 
-    try:
-        content = ''
-        with open(os.path.join(pipeline_path, 'README'), 'r') as f:
-            content = f.read()
+            info['README'] = content
+        except FileNotFoundError:
+            pass
 
-        info['README'] = content
-    except FileNotFoundError:
-        pass
-
-    pu.print_yaml(info, fg='yellow')
+        pu.print_yaml(info, fg='yellow')
+    else:
+        pu.fail("Please check if the specified pipeline exists " +
+                " and the internet is connected")

@@ -248,13 +248,11 @@ popper search quiho --skip-update
 test $? -eq 1
 set -e
 
-set +e
 init_test
 popper search quiho
-popper search linux --skip-update
+test -d ./.cache
+popper search quiho --skip-update
 test $? -eq 0
-set -e
-
 
 # TODO
 
