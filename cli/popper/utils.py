@@ -2,6 +2,16 @@ import click
 import os
 import sys
 import yaml
+from subprocess import check_output, CalledProcessError
+
+noalias_dumper = yaml.dumper.SafeDumper
+noalias_dumper.ignore_aliases = lambda self, data: True
+
+
+def get_items(dict_object):
+    """Python 2/3 compatible way of iterating over a dictionary"""
+    for key in dict_object:
+        yield key, dict_object[key]
 
 
 def get_path_to_config():
@@ -10,11 +20,12 @@ def get_path_to_config():
     Returns:
         path (str): string containing path to where config file is stored.
     """
-    if os.path.isfile('.popper.yml'):
-        return os.getcwd()
 
-    if os.path.isfile(os.path.join('..', '..', '.popper.yml')):
-        return os.path.join(os.getcwd(), '..', '..')
+    project_root = get_project_root()
+    config_path = os.path.join(project_root, '.popper.yml')
+
+    if os.path.isfile(config_path):
+        return os.getcwd()
 
     return ""
 
@@ -22,23 +33,21 @@ def get_path_to_config():
 def get_project_root():
     """Tries to find the root of the project with the following heuristic:
 
-      - Find the .popper.yml file in cwd or two folders up
       - Find the .git folder in cwd
 
     Returns:
         project_root (str): The fully qualified path to the root of project.
     """
-    path_to_config = get_path_to_config()
 
-    if path_to_config:
-        return path_to_config
+    try:
+        base = check_output('git rev-parse --show-toplevel', shell=True)
+    except CalledProcessError:
+        fail(
+            "Unable to find the root of your project."
+            + "Initialize repository first."
+        )
 
-    if os.path.isdir('.git'):
-        return os.getcwd()
-
-    fail(
-        "Unable to find the root of your project. Initialize repository first."
-    )
+    return base.decode('utf-8').strip()
 
 
 def read_config():
@@ -71,7 +80,7 @@ def write_config(config):
     config_filename = os.path.join(get_project_root(), '.popper.yml')
 
     with open(config_filename, 'w') as f:
-        yaml.safe_dump(config, f, default_flow_style=False)
+        yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
 
 
 def is_popperized():
@@ -113,7 +122,7 @@ def get_filename(abs_path, stage):
 
 def fail(msg):
     """Prints the error message on the terminal."""
-    click.secho('ERROR: ' + msg, fg='red', blink=True, bold=True)
+    click.secho('ERROR: ' + msg, fg='red', bold=True)
     sys.exit(1)
 
 

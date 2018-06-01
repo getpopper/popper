@@ -1,6 +1,24 @@
-[submodule "cli/bin/vendor/pyyaml"]
-	path = cli/bin/vendor/pyyaml
-	url = https://github.com/yaml/pyyaml
 [submodule "cli/bin/vendor/click"]
 	path = cli/bin/vendor/click
 	url = https://github.com/pallets/click/
+[submodule "cli/bin/vendor/requests"]
+	path = cli/bin/vendor/requests
+	url = https://github.com/requests/requests/
+[submodule "cli/bin/vendor/pyyaml"]
+	path = cli/bin/vendor/pyyaml
+	url = https://github.com/yaml/pyyaml
+[submodule "cli/bin/vendor/chardet"]
+	path = cli/bin/vendor/chardet
+	url = https://github.com/chardet/chardet
+[submodule "cli/bin/vendor/idna"]
+	path = cli/bin/vendor/idna
+	url = https://github.com/kjd/idna
+[submodule "cli/bin/vendor/certifi"]
+	path = cli/bin/vendor/certifi
+	url = https://github.com/certifi/python-certifi
+[submodule "cli/bin/vendor/urllib3"]
+	path = cli/bin/vendor/urllib3
+	url = https://github.com/urllib3/urllib3
+[submodule "cli/bin/vendor/cryptography"]
+	path = cli/bin/vendor/cryptography
+	url = https://github.com/pyca/cryptography
