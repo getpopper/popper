@@ -1,5 +1,4 @@
 import click
-import requests
 import popper.utils as pu
 import sys
 
@@ -7,7 +6,7 @@ from popper.cli import pass_context
 
 
 @click.command('env', short_help='Modify environments for a pipeline.')
-@click.argument('pipeline', required=False)
+@click.argument('pipeline', required=True)
 @click.option(
     '--add',
     help="Comma-separated list of environments to add.",
@@ -18,13 +17,8 @@ from popper.cli import pass_context
     help="Comma-separated list of environments to remove",
     required=False
 )
-@click.option(
-    '--ls',
-    help="Show a list of available execution environments",
-    is_flag=True
-)
 @pass_context
-def cli(ctx, pipeline, add, rm, ls):
+def cli(ctx, pipeline, add, rm):
     """Manipulates the environments that are associated to a pipeline. An
     environment is a docker image where a pipeline runs when 'popper run' is
     executed. The 'host' environment is a special case that corresponds to
@@ -43,7 +37,7 @@ def cli(ctx, pipeline, add, rm, ls):
     """
     config = pu.read_config()
 
-    if not add and not rm and not ls:
+    if not add and not rm:
         pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
         sys.exit(0)
 
@@ -53,16 +47,5 @@ def cli(ctx, pipeline, add, rm, ls):
     if rm:
         for e in rm.split(','):
             config['pipelines'][pipeline]['envs'].remove(e)
-
-    if ls:
-        try:
-            response = requests.get("https://hub.docker.com/v2/repositories/falsifiable/poppercheck/tags")
-            environments = []
-            for result in response.json()['results']:
-                environments.append(result['name'])
-            pu.print_yaml(environments)
-
-        except requests.exceptions.RequestException as e:
-            click.echo(click.style("Error: " + str(e), fg='red'), err=True)
 
     pu.write_config(config)
