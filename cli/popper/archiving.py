@@ -93,18 +93,11 @@ class BaseService():
             "This method is required to be implemented in the base class."
         )
 
-    def create_new_draft(self):
-        """This method creates a new draft record if the previously modified/
-        uploaded record is published, or updates it, if it is unpublished.
-        The updation includes files and metadata.
-        """
-        raise NotImplementedError(
-            "This method is required to be implemented in the base class."
-        )
-
-    def publish_last_unsubmitted(self):
-        """This method publishes the last unpublished record and stores the doi
-        in the .popper.yml file.
+    def publish_snapshot(self):
+        """This method creates a new record if there no previously uploaded
+        record exists, or creates a new version if it does. The files and
+        metadata are updated and it is published. The doi is stored in the
+        .popper.yml file.
         """
         raise NotImplementedError(
             "This method is required to be implemented in the base class."
@@ -298,7 +291,7 @@ class Zenodo(BaseService):
                     self.baseurl, deposition_id, old_file_id
                 )
                 r = requests.delete(url, params=self.params)
-                if r.status_code != 201:
+                if r.status_code != 204:
                     pu.fail(
                         "Status {}: Failed to delete files of the "
                         "previous version.".format(r.status_code)
@@ -324,7 +317,7 @@ class Zenodo(BaseService):
                 .format(r.status_code)
             )
 
-    def create_new_draft(self):
+    def publish_snapshot(self):
         if self.deposition is None:
             deposition_id = self.create_new_deposition()
             self.update_metadata_from_yaml(deposition_id)
@@ -338,7 +331,6 @@ class Zenodo(BaseService):
 
         self.upload_new_file(deposition_id)
 
-    def publish_last_unsubmitted(self):
         r = requests.get(self.baseurl, params=self.params)
         config = pu.read_config()
         try:

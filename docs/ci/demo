@@ -207,8 +207,6 @@ popper metadata --add abstract='A short description of the article'
 popper metadata --add keywords='comma, separated, keywords'
 export POPPER_ZENODO_API_TOKEN=I5W8pRh9uLTuGDatasAXpnRfxHEZcq4OZdINX9PXnAAh2DLVtRkJX8mi5TK5
 popper archive zenodo
-popper archive zenodo --no-publish
-popper archive zenodo
 
 # test popper rm command
 init_test

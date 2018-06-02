@@ -2,7 +2,6 @@
 
 import os
 import sys
-import popper.cli
 
 cwd = os.path.dirname(os.path.realpath(__file__))
 parentdir = os.path.dirname(cwd)
@@ -24,5 +23,7 @@ sys.path.insert(0, os.path.join(vendordir, 'requests'))
 sys.path.insert(0, os.path.join(vendordir, 'lark-parser'))
 sys.path.insert(0, os.path.join(vendordir, 'pyaes'))
 sys.path.insert(0, os.path.join(parentdir))
+
+import popper.cli
 
 popper.cli.cli()

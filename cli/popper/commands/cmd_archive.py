@@ -17,14 +17,8 @@ from popper.cli import pass_context
     help='Access token for your service.',
     required=False,
 )
-@click.option(
-    '--no-publish',
-    is_flag=True,
-    help='Just upload the record without publishing.',
-    required=False,
-)
 @pass_context
-def cli(ctx, service, key, no_publish):
+def cli(ctx, service, key):
     """Creates a archive of the repository on the provided service using an
     access token. Reports an error if archive creation is not successful.
     Currently supported services are Zenodo.
@@ -44,9 +38,7 @@ def cli(ctx, service, key, no_publish):
     if service == 'zenodo':
         archive = Zenodo(key)
 
-    archive.create_new_draft()
-    if not no_publish:
-        archive.publish_last_unsubmitted()
+    archive.publish_snapshot()
 
     pu.info("Done..!")
 
