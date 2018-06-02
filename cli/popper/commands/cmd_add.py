@@ -42,13 +42,9 @@ def cli(ctx, pipeline, folder):
 
     project_root = pu.get_project_root()
     pipelines_dir = os.path.join(project_root, folder)
-    pipeline_path = os.path.join(pipelines_dir, pipe_name)
 
     if not os.path.exists(pipelines_dir):
         os.mkdir(pipelines_dir)
-
-    os.mkdir(pipeline_path)
-    os.chdir(pipeline_path)
 
     gh_url = 'https://github.com/{}/{}/archive/master.zip'.format(owner, repo)
 
@@ -61,14 +57,13 @@ def cli(ctx, pipeline, folder):
     z = zipfile.ZipFile(BytesIO(r.content))
     z.extractall()
 
-    os.rename('{}-master/pipelines/{}'.format(repo, pipe_name), pipe_name)
+    os.rename('{}-master/pipelines/{}'.format(repo, pipe_name),
+              os.path.join(folder, pipe_name))
     shutil.rmtree('{}-master'.format(repo))
 
     pu.info("Updating popper configuration... ")
 
     repo_config = get_config(owner, repo)
-
-    print(str(repo_config))
 
     config['pipelines'][pipe_name] = repo_config['pipelines'][pipe_name]
     config['pipelines'][pipe_name]['path'] = os.path.join(folder, pipe_name)
