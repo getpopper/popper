@@ -4,6 +4,7 @@ import click
 import os
 import requests
 import popper.utils as pu
+import shutil
 import yaml
 import zipfile
 from io import BytesIO
@@ -15,54 +16,66 @@ from popper.cli import pass_context
     short_help='Add a pipeline from popperized repositories on github.'
 )
 @click.argument('pipeline', required=True)
+@click.option(
+    '--folder',
+    help='Folder where to store the new pipeline, relative to project root.',
+    show_default=True,
+    default='pipelines'
+)
 @pass_context
-def cli(ctx, pipeline):
+def cli(ctx, pipeline, folder):
     """Add a pipeline to your repository from the existing popperized
     repositories on github. The pipeline argument is provided as owner/repo/
-    pipeline. For example, popper add popperized/quiho-popper/single-node
-    adds the single-node pipeline from the quiho-popper repository.
+    pipeline. For example, 'popper add popperized/quiho-popper/single-node'
+    adds the 'single-node' pipeline from the 'quiho-popper' repository from the
+    'popperized' organization.
     """
-    try:
-        owner, repo, pipeline_name = pipeline.split('/')
-    except ValueError:
-        pu.fail("See popper add --help for more info.")
+    if len(pipeline.split('/')) != 3:
+        pu.fail("Bad pipeline name. See 'popper add --help' for more info.")
+
+    owner, repo, pipe_name = pipeline.split('/')
+
+    config = pu.read_config()
+
+    if pipe_name in config['pipelines']:
+        pu.fail("Pipeline {} already in repo.".format(pipe_name))
 
     project_root = pu.get_project_root()
+    pipelines_dir = os.path.join(project_root, folder)
+    pipeline_path = os.path.join(pipelines_dir, pipe_name)
 
-    pipelines_dir = os.path.join(project_root, 'pipelines')
-    if os.path.exists(pipelines_dir):
-        pass
-    else:
-        os.chdir(project_root)
-        os.mkdir('pipelines')
+    if not os.path.exists(pipelines_dir):
+        os.mkdir(pipelines_dir)
 
-    pipeline_path = os.path.join(pipelines_dir, pipeline_name)
-    os.chdir(pipelines_dir)
-    os.mkdir(pipeline_name)
+    os.mkdir(pipeline_path)
     os.chdir(pipeline_path)
 
-    pipeline_url = 'https://github.com/{}/{}/tree/master/pipelines/{}' \
-        .format(owner, repo, pipeline_name)
-    download_url = 'https://github-download-only-a-folder.glitch.me/dl?url={}'\
-        .format(pipeline_url)
+    gh_url = 'https://github.com/{}/{}/archive/master.zip'.format(owner, repo)
 
-    pu.info("Downloading pipeline {} ... ".format(pipeline_name))
+    pu.info("Downloading pipeline {}... ".format(pipe_name))
 
-    r = requests.get(download_url)
-    print(str(r.status_code))
+    r = requests.get(gh_url)
     if r.status_code != 200:
         pu.fail("Unable to fetch the pipeline. Please check if the name" +
                 " of the pipeline is correct and the internet is connected")
-
     z = zipfile.ZipFile(BytesIO(r.content))
     z.extractall()
 
-    pu.info("Updating the configuration ... ")
-    repo_config = get_config(owner, repo)
-    update_config(owner, repo, pipeline_name, pipeline_path, repo_config)
+    os.rename('{}-master/pipelines/{}'.format(repo, pipe_name), pipe_name)
+    shutil.rmtree('{}-master'.format(repo))
 
-    pu.info("Pipeline {} has been added successfully.".format(pipeline_name)
-            + " It can be viewed in the pipelines directory.",
+    pu.info("Updating popper configuration... ")
+
+    repo_config = get_config(owner, repo)
+
+    print(str(repo_config))
+
+    config['pipelines'][pipe_name] = repo_config['pipelines'][pipe_name]
+    config['pipelines'][pipe_name]['path'] = os.path.join(folder, pipe_name)
+
+    pu.write_config(config)
+
+    pu.info("Pipeline {} has been added successfully.".format(pipe_name),
             fg="green")
 
 
@@ -71,56 +84,10 @@ def get_config(owner, repo):
     whose pipeline we are copying.
     """
 
-    yaml_url = 'https://raw.githubusercontent.com' \
-        + '/{}/{}/master/.popper.yml'.format(owner, repo)
+    yaml_url = 'https://raw.githubusercontent.com/{}/{}/{}/.popper.yml'.format(
+        owner, repo, 'master')
 
     r = requests.get(yaml_url)
     config = yaml.load(r.content)
 
     return config
-
-
-def update_config(owner, repo, pipeline_name, path, repo_config):
-    """Adds the information about the added pipeline in the
-    popperized entry of the .popper.yml file.
-    """
-    pipeline_path = 'pipelines/{}'.format(pipeline_name)
-
-    if 'stages' in repo_config:
-        pipeline_stages = repo_config['stages'][pipeline_name]
-    else:
-        pipeline_stages = [
-            'setup.sh',
-            'run.sh',
-            'post-run.sh',
-            'validate.sh',
-            'teardown.sh']
-
-    pipeline_envs = []
-    if 'envs' in repo_config:
-        pipeline_envs = repo_config['envs'][pipeline_name]
-
-    source_url = 'github.com/{}/{}'.format(owner, repo)
-    config = pu.read_config()
-    config['pipelines'][pipeline_name] = {
-        'envs': pipeline_envs,
-        'path': pipeline_path,
-        'stages': pipeline_stages,
-        'source': source_url
-    }
-
-    if 'stages' not in config:
-        config['stages'] = {}
-
-    config['stages'][pipeline_name] = pipeline_stages
-
-    if 'envs' not in config:
-        config['envs'] = {}
-
-    config['envs'][pipeline_name] = pipeline_envs
-
-    if 'popperized' not in config:
-        config['popperized'] = []
-    config['popperized'].append('github/{}/{}'.format(owner, repo))
-
-    pu.write_config(config)
