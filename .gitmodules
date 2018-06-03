@@ -19,6 +19,6 @@
 [submodule "cli/bin/vendor/urllib3"]
 	path = cli/bin/vendor/urllib3
 	url = https://github.com/urllib3/urllib3
-[submodule "cli/bin/vendor/cryptography"]
-	path = cli/bin/vendor/cryptography
-	url = https://github.com/pyca/cryptography
+[submodule "cli/bin/vendor/lark-parser"]
+	path = cli/bin/vendor/lark-parser
+	url = https://github.com/lark-parser/lark

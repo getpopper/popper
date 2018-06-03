@@ -20,8 +20,8 @@ setup(
     install_requires=[
         'click',
         'requests',
-        'pyyaml',
-        'cryptography'
+        'lark-parser',
+        'pyyaml'
     ],
     entry_points='''
         [console_scripts]

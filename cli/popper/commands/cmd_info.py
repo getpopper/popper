@@ -1,7 +1,6 @@
 import click
 import popper.utils as pu
 import requests
-import os
 from popper.cli import pass_context
 
 """
@@ -32,41 +31,22 @@ def cli(ctx, query):
 
 def get_info(query):
     # Checking if the popperized repositories are present or not
-    config = pu.read_config()
-    if 'popperized' not in config:
-        pu.fail('No popperized repositories present.')
-
-    popperized_repos = config['popperized']
-
-    # Checking if the specified pipeline exists
-    if 'github/' + "/".join(query[:-1]) not in popperized_repos:
-        pu.fail("Repository not found.")
-
     info = {}
-    repo_name = "/".join(query[:-1])
-    pipeline_name = query[-1]
-    org_path = os.path.join(pu.get_project_root(), 'org')
-    pipeline_path = os.path.join(org_path, "/".join(query[1:]))
+    org = query[0]
+    repo = query[1]
+    pipe = query[2]
 
-    commit_url = 'https://api.github.com/repos/' + repo_name + '/commits'
+    commit_url = 'https://api.github.com/repos/{}/{}/commits'.format(org, repo)
     r = requests.get(commit_url)
 
     if r.status_code == 200:
         commits = r.json()
-        info['Github Url'] = 'https://github.com/' + "/".join(query[1:])
-        info['Pipeline name'] = pipeline_name
+        info['name'] = pipe
+        info['url'] = 'https://github.com/{}/{}'.format(org, repo)
         if len(commits) > 0 and isinstance(commits[0], type({})):
-            info['Version'] = commits[0].get('sha')
-        try:
-            content = ''
-            with open(os.path.join(pipeline_path, 'README'), 'r') as f:
-                content = f.read()
+            info['version'] = commits[0].get('sha')
 
-            info['README'] = content
-        except FileNotFoundError:
-            pass
-
-        pu.print_yaml(info, fg='yellow')
+        pu.print_yaml(info)
     else:
         pu.fail("Please check if the specified pipeline exists " +
                 " and the internet is connected")
