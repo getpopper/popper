@@ -36,12 +36,6 @@ def get_info(query):
     if 'popperized' not in config:
         pu.fail('No popperized repositories present.')
 
-    popperized_repos = config['popperized']
-
-    # Checking if the specified pipeline exists
-    if 'github/' + "/".join(query[:-1]) not in popperized_repos:
-        pu.fail("Repository not found.")
-
     info = {}
     repo_name = "/".join(query[:-1])
     pipeline_name = query[-1]
