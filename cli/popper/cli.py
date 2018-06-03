@@ -58,7 +58,7 @@ class PopperCLI(click.MultiCommand):
             raise UsageError(
                 "Command '" + name + "' doesn't exist. " +
                 "\nType 'popper --help' for more."
-                + message
+                + message + '\n' + str(e)
             )
         return mod.cli
 
