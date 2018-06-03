@@ -53,10 +53,10 @@ def get_info(query):
 
     if r.status_code == 200:
         commits = r.json()
-        info['Github Url'] = 'https://github.com/' + "/".join(query[1:])
-        info['Pipeline name'] = pipeline_name
+        info['url'] = 'https://github.com/' + "/".join(query[1:])
+        info['name'] = pipeline_name
         if len(commits) > 0 and isinstance(commits[0], type({})):
-            info['Version'] = commits[0].get('sha')
+            info['version'] = commits[0].get('sha')
         try:
             content = ''
             with open(os.path.join(pipeline_path, 'README'), 'r') as f:
@@ -66,7 +66,7 @@ def get_info(query):
         except FileNotFoundError:
             pass
 
-        pu.print_yaml(info, fg='yellow')
+        pu.print_yaml(info)
     else:
         pu.fail("Please check if the specified pipeline exists " +
                 " and the internet is connected")

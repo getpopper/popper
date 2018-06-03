@@ -1,10 +1,7 @@
 import click
 import os
-import glob
 import popper.utils as pu
-from io import BytesIO
 from popper.cli import pass_context
-import yaml
 import requests
 import json
 
@@ -13,7 +10,6 @@ try:
     FileNotFoundError
 except NameError:
     FileNotFoundError = IOError
-
 
 @click.command(
     'search',
@@ -144,7 +140,7 @@ def cli(ctx, pipeline_name, skip_update):
             )
 
     if len(result) != 0:
-        pu.info("Search results :- \n", fg="green")
+        pu.info("Search results:\n", fg="green")
         pu.print_yaml(result)
     else:
         pu.fail("Unable to find any matching pipelines")
@@ -184,14 +180,14 @@ def search_pipeline(repo_url, pipeline_name, org_name, empty_query,
 
     for pipeline in pipelines:
         if empty_query:
-            temp = "{}/{}".format(org_name, pipeline['name'])
+            temp = "{}/{}/{}".format(org_name, repo_name, pipeline['name'])
             results.append(temp)
 
         else:
             if l_distance(pipeline_name.lower(),
                           pipeline['name'].lower()) < 1:
-                temp = "{}/{}" \
-                    .format(org_name, pipeline['name'])
+                temp = "{}/{}/{}" \
+                    .format(org_name, repo_name, pipeline['name'])
 
                 results.append(temp)
 

@@ -182,7 +182,7 @@ test -f pipelines/co2-emissions/setup.sh
 test -f pipelines/co2-emissions/validate.sh
 
 # info command
-popper info popperized/quiho-popper/single-node | grep 'Github Url'
+popper info popperized/lesson/co2-emissions | grep 'url'
 
 # cleanup command
 init_test
@@ -198,7 +198,6 @@ popper cleanup
 ! cat .popper.yml | grep mypipethree
 ! popper stages mypipetwo | grep teardown
 ! popper stages mypipetwo | grep post-run
-
 
 # test popper rm command
 init_test
