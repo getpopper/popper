@@ -223,6 +223,6 @@ popper init pipeone
 popper workflow pipeone > wf.dot
 cat wf.dot | grep digraph
 cat wf.dot | grep ssetup
-cat wf.dot | grep spost-run
+cat wf.dot | grep spostrun
 cat wf.dot | grep svalidate
 cat wf.dot | grep steardown
