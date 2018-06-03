@@ -11,6 +11,7 @@ try:
 except NameError:
     FileNotFoundError = IOError
 
+
 @click.command(
     'search',
     short_help='Used to search for an experiment in your pipeline folder')
