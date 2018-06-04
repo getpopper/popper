@@ -4,50 +4,75 @@ import click
 import os
 import popper.utils as pu
 import sys
-
 from popper.cli import pass_context
 from lark import Lark, InlineTransformer, Tree
+
+# This function increments the node_ids for the workflow graph
+
+
+def increment(node_id):
+    return 's{}'.format(int(node_id[1:]) + 1)
+
+# This function creates an if-node in the workflow graph
+
+
+def create_if_node(node_id, c, prev_node):
+    print('{} [shape=oval, label="{}"];'.format(node_id, c))
+    print('{} -> {};'.format(prev_node, node_id))
+    node_id = increment(node_id)
+    return [True, node_id]
+
+
+""" This function removes the redundant if-else statements
+from the comment stack.
+"""
+
+
+def remove_redundant_if(cs):
+    for i, item in enumerate(cs):
+        if item == '[wf]#if#':
+            if cs[i + 1] == '[wf]#fi#':
+                cs[i] = ''
+                cs[i + 1] = ''
+            elif (cs[i + 1] == '[wf]#elif#'
+                    or cs[i + 1] == '[wf]#else#') and cs[i + 2] == '[wf]#fi#':
+                cs[i] = ''
+                cs[i + 1] = ''
+                cs[i + 2] = ''
+
+    new_cs = []
+    for item in cs:
+        if item != '':
+            new_cs.append(item)
+
+    return new_cs
 
 
 bash_grammar = r"""
 start: expr*
-
 expr: command
     | comment
     | ifstmt
     | loop
     | envvar
-
 ifstmt: if cond elif* [else] fi
 if: "if" -> in_if
 fi: "fi" -> out_if
-
 else: else_token expr+
 else_token: "else" -> in_else
-
 elif: elif_token cond
 elif_token: "elif" -> in_elif
-
 cond: anystring+ [";"] "then" expr+
-
 loop: ("for" |  "while") anystring+ [";"] "do" expr+ done -> in_loop
-
 done: "done" -> out_loop
-
 comment: "#" anystring* NEWLINE -> process_comment
-
 anystring: WORD | DIGIT | okchars
-
 okchars: "+" | "-" | "/" | "[" | "]" | "!" | "$" | "." | "_" | "=" | ":"
        | "`" | "(" | ")" | "," | "|" | "{" | "}" | "&" | ";" | "%" | "'"
        | "<" | ">" | "^" | "@" | "~" | "*" | "\"" | "\\"
-
 command: anystring+ NEWLINE
-
 envvar: LETTER (LETTER|"_"|DIGIT)* "=" anystring+ NEWLINE
-
 singlequotedstring: "'" anystring* "'"
-
 %import common.DIGIT
 %import common.ESCAPED_STRING
 %import common.LETTER
@@ -55,7 +80,6 @@ singlequotedstring: "'" anystring* "'"
 %import common.STRING_INNER
 %import common.WORD
 %import common.WS
-
 %ignore WS
 """
 
@@ -106,7 +130,7 @@ class ObtainDotGraph(InlineTransformer):
         ls = ''
         for n in tree.children:
             if isinstance(n, Tree):
-                ls += self._pretty(level+1, n)
+                ls += self._pretty(level + 1, n)
             else:
                 ls += ['%s' % (n,), ' ']
 
@@ -124,7 +148,6 @@ def cli(ctx, pipeline):
     .dot format. The string defining the graph is printed to stdout so it can
     be piped into other tools. For example, to generate a png file, one can
     make use of the graphviz CLI tools:
-
     popper workflow mypipe | dot -T png -o mypipe.png
     """
     pipes = pu.read_config()['pipelines']
@@ -145,72 +168,91 @@ def cli(ctx, pipeline):
             s = f.read()
             parser.parse(s)
 
-    print('digraph pipeline {')
-
     cs = transformer.comment_stack
-    node_id = 0
-    next_c = ''
+    cs = remove_redundant_if(cs)
+    # print(cs)
+    print('digraph pipeline {')
+    curr_node = None
     prev_node = None
-    curr_stage = None
-    prev_stage = None
-    curr_if_stmt_node_id = None
+    node_id = 's{}'.format(0)
+    curr_if_node = None
+    if_created = False
+    if_index = None
+    for i, item in enumerate(cs):
+        if item == '[wf]#stage#':
+            prev_item = cs[i - 1]
+            next_item = cs[i + 1]
+            label = '"{' + '{} | {}'.format(next_item, prev_item) + '}"'
+            curr_node = (next_item.replace('-', '_')).replace('.sh', ' ')
+            # create the stage node
+            print('{} [{}];'.format(
+                curr_node,
+                'shape=record, label=' + label
+            ))
 
-    while len(cs) > 0:
-        c = cs.pop(0)
+            if prev_node:
+                print('{} -> {};'.format(prev_node, curr_node))
 
-        # get next item on the stack, if there's still one
-        if len(cs) > 0:
-            next_c = cs.pop(0)
-        else:
-            next_c = None
-
-        # check if we're processing the first element of a stage
-        if next_c and next_c == '[wf]#stage#':
-            # create stage parent node
-
-            curr_stage = cs.pop(0).replace('-', '').replace('_', '')
-
-            print('s{} [{}"{}{}|{}{}"];'.format(
-                curr_stage,
-                'shape=record,style=filled,label=',
-                '{', curr_stage, c, '}')
-            )
-
-            # add edge from previous stage
-            if prev_stage:
-                print('s{} -> s{};'.format(prev_stage, curr_stage))
-
-            prev_stage = curr_stage
-            prev_node = curr_stage
+            prev_node = curr_node
             continue
 
-        # add prefix to label based on who's next
-        if str(next_c) == '[wf]#if#':
-            c = 'condition: ' + c
-            curr_if_stmt_node_id = node_id
-        elif str(next_c) == '[wf]#loop#':
-            c = 'loop: ' + c
+        # initialize the if-node
+        elif item == '[wf]#if#':
+            if_created = False
+            c = 'condition'
+            if i > 1 and (not cs[i - 1].startswith('[wf]#')
+                          and '.sh' not in cs[i - 1]):
+                c += ' : {}'.format(cs[i - 1])
 
-        # create node
-        print('s{} [shape=record,label="{}"];'.format(node_id, c))
+            if_index = i - 1
+            curr_if_node = node_id
 
-        # add edge from previous node
-        print('s{} -> s{};'.format(prev_node, node_id))
+        # inside if-elif-else construct
+        elif(
+                item == '[wf]#else#' or
+                item == '[wf]#elif#' or
+                item == '[wf]#fi#'
+        ):
+            if not cs[i - 1].startswith('[wf]#'):
+                if not if_created:
+                    if_created, node_id = create_if_node(node_id, c, prev_node)
 
-        if len(cs) == 0:
-            # if queue is empty, we're done
-            break
+                print('{} [shape=record, label="{}"];'.format(
+                    node_id, cs[i - 1]))
+                print('{} -> {};'.format(curr_if_node, node_id))
+                node_id = increment(node_id)
 
-        # if inside an if stmt, previous node changes to if/elif/else node
-        if next_c == '[wf]#elif#' or next_c == '[wf]#else#':
-            prev_node = curr_if_stmt_node_id
-        else:
-            prev_node = node_id
+                if item == '[wf]#fi':
+                    if_created = False
 
-        if not next_c.startswith('[wf]#'):
-            # put it back because next one it's a regular comment
-            cs.insert(0, next_c)
+                continue
 
-        node_id += 1
+        # inside loop
+        elif item == '[wf]#done':
+            c = 'loop'
+            if not cs[i - 1].startswith('[wf]#') and '.sh' not in cs[i - 1]:
+                c += ' : {}'.format(cs[i - 1])
+
+            print('{} [shape=record,label="{}"];'.format(node_id, c))
+            print('{} -> {};'.format(prev_node, node_id))
+            node_id = increment(node_id)
+
+        # is a comment outside any control structures
+        elif not item.startswith('[wf]#') and '.sh' not in item:
+
+            if i == len(cs) - 1 and not cs[i - 1] == '[wf]#stage#':
+                print('{} [shape=record,label="{}"];'.format(node_id, item))
+                print('{} -> {};'.format(prev_node, node_id))
+                node_id = increment(node_id)
+            elif i < len(cs) - 1:
+                if (
+                        not cs[i + 1].startswith('[wf]#')and
+                        not cs[i - 1] == '[wf]#stage#'
+                ):
+                    print(
+                        '{} [shape=record,label="{}"];'.format(
+                            node_id, item))
+                    print('{} -> {};'.format(prev_node, node_id))
+                    node_id = increment(node_id)
 
     print('}')
