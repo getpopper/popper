@@ -222,7 +222,7 @@ init_test
 popper init pipeone
 popper workflow pipeone > wf.dot
 cat wf.dot | grep digraph
-cat wf.dot | grep ssetup
-cat wf.dot | grep spostrun
-cat wf.dot | grep svalidate
-cat wf.dot | grep steardown
+cat wf.dot | grep setup
+cat wf.dot | grep post_run
+cat wf.dot | grep validate
+cat wf.dot | grep teardown
