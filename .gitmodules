@@ -22,3 +22,6 @@
 [submodule "cli/bin/vendor/lark-parser"]
 	path = cli/bin/vendor/lark-parser
 	url = https://github.com/lark-parser/lark
+[submodule "cli/bin/vendor/pyaes"]
+	path = cli/bin/vendor/pyaes
+	url = https://github.com/ricmoo/pyaes
