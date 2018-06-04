@@ -11,7 +11,11 @@ from popper.cli import pass_context
 
 
 @click.command('archive', short_help='Create a snapshot of the repository.')
-@click.argument('service', required=True)
+@click.option(
+    '--service',
+    help='Name of the archiving service.',
+    required=True,
+)
 @click.option(
     '--key',
     help='Access token for your service.',
