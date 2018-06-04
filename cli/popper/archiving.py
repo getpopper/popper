@@ -161,7 +161,7 @@ class Zenodo(BaseService):
         headers = {"Content-Type": "application/json"}
         r = requests.post(url, params=self.params, json={}, headers=headers)
         if r.status_code == 201:
-            return r.json()['id']
+            self.deposition = r.json()
         else:
             pu.fail(
                 "Status {}: Could not create new deposition."
@@ -173,14 +173,22 @@ class Zenodo(BaseService):
         url = '{}/{}/actions/newversion'.format(self.baseurl, deposition_id)
         r = requests.post(url, params=self.params)
         if r.status_code == 201:
-            return r.json()['id']
+            url = self.baseurl
+            r = requests.get(url, params=self.params)
+            try:
+                self.deposition = r.json()[0]
+            except IndexError:
+                pu.fail(
+                    "Status {}: Could not fetch the depositions."
+                    "Try again later.".format(r.status_code)
+                )
         else:
             pu.fail(
                 "Status {}: Could not create a new version of your deposition."
                 .format(r.status_code)
             )
 
-    def update_metadata_from_yaml(self, deposition_id):
+    def update_metadata_from_yaml(self):
         """Reads required metatdata from .popper.yml and updates the
         metadata for the record. This will only be called when no previous
         deposition is found.
@@ -189,6 +197,7 @@ class Zenodo(BaseService):
             deposition_id (str): The deposition id whose metadata will
                 be updated
         """
+        deposition_id = self.deposition['id']
         data = pu.read_config()['metadata']
         required_data = ['title', 'upload_type', 'abstract', 'author1']
         metadata_is_valid = True
@@ -304,12 +313,14 @@ class Zenodo(BaseService):
                 .format(r.status_code)
             )
 
-    def upload_new_file(self, deposition_id):
+    def upload_new_file(self):
+        deposition_id = self.deposition['id']
         new_file = self.create_archive()
         project_root = pu.get_project_root()
         url = '{}/{}/files'.format(self.baseurl, deposition_id)
         data = {'filename': new_file}
         files = {'file': open(os.path.join(project_root, new_file), 'rb')}
+        self.delete_archive()
         r = requests.post(url, data=data, files=files, params=self.params)
         if r.status_code != 201:
             pu.fail(
@@ -319,17 +330,15 @@ class Zenodo(BaseService):
 
     def publish_snapshot(self):
         if self.deposition is None:
-            deposition_id = self.create_new_deposition()
-            self.update_metadata_from_yaml(deposition_id)
+            self.create_new_deposition()
+            self.update_metadata_from_yaml()
         else:
             if self.is_last_deposition_published():
-                deposition_id = self.create_new_version()
-            else:
-                deposition_id = self.deposition['id']
+                self.create_new_version()
             self.delete_previous_file()
             self.update_metadata()
 
-        self.upload_new_file(deposition_id)
+        self.upload_new_file()
 
         r = requests.get(self.baseurl, params=self.params)
         config = pu.read_config()
