@@ -102,9 +102,20 @@ def initialize_repo(project_root):
         pu.fail('Repository has already been popperized')
         return
 
-    with open(os.path.join(project_root, '.popper.yml'), 'w') as f:
-        f.write('{ metadata: { }, pipelines: { },' +
-                'popperized: ["github/popperized"] }\n')
+    config = {
+        'metadata': {
+            'access_right': "open",
+            'license': "CC-BY-4.0",
+            'upload_type': "publication",
+            'publication_type': "article"
+        },
+        'pipelines': {},
+        'popperized': [
+            "github/popperized"
+        ]
+    }
+
+    pu.write_config(config)
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
         f.write('popper_logs\n')
@@ -120,8 +131,8 @@ def initialize_existing_pipeline(pipeline_path, stages, envs):
         s_filename = os.path.join(pipeline_path, s)
         if not isfile(s_filename) and not isfile(s_filename + '.sh'):
             pu.fail(
-                ("Unable to find script for stage '" + s + "'. You might need "
-                 "to provide values for the --stages flag. See 'init --help'.")
+                "Unable to find script for stage '" + s + "'. You might need "
+                "to provide values for the --stages flag. See 'init --help'."
             )
 
 
