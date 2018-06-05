@@ -10,6 +10,8 @@ function init_test {
   popper init
 }
 
+popper --help
+
 init_test
 test -f .popper.yml
 
