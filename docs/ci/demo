@@ -203,7 +203,7 @@ popper cleanup
 # archive command test
 init_test
 popper init archive_pipe
-date > pipelines/archive_pipe/post-run.sh
+echo "echo \"Today's date is: $(date +"%Y%m%d-%H%M%S")\"" >> pipelines/archive_pipe/post-run.sh
 popper metadata --add title='Popper test archive'
 popper metadata --add author1='Test Author, testauthor@gmail.com, popper'
 popper metadata --add abstract='A short description of the article'
