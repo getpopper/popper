@@ -6,7 +6,7 @@ import pyaes
 import hashlib
 import popper.utils as pu
 
-from popper.archiving import Zenodo
+from popper.archiving import Zenodo, Figshare
 from popper.cli import pass_context
 
 
@@ -25,23 +25,28 @@ from popper.cli import pass_context
 def cli(ctx, service, key):
     """Creates a archive of the repository on the provided service using an
     access token. Reports an error if archive creation is not successful.
-    Currently supported services are Zenodo.
+    Currently supported services are Zenodo and Figshare.
     """
-    supported_services = ['zenodo']
+    services = {
+        'zenodo': Zenodo,
+        'figshare': Figshare
+    }
+    environment_variables = {
+        'zenodo': 'POPPER_ZENODO_API_TOKEN',
+        'figshare': 'POPPER_FIGSHARE_API_TOKEN'
+    }
 
-    if service not in supported_services:
+    if service not in services:
         pu.fail("The service {} is not supported. See popper archive "
                 "--help for more info.".format(service))
 
     if not key:
         try:
-            key = os.environ['POPPER_ZENODO_API_TOKEN']
+            key = os.environ[environment_variables[service]]
         except KeyError:
             key = get_access_token(service)
 
-    if service == 'zenodo':
-        archive = Zenodo(key)
-
+    archive = services[service](key)
     archive.publish_snapshot()
 
     pu.info("Done..!")
