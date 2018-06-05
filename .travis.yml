@@ -4,4 +4,4 @@ services: docker
 script:
 - PATH=$PATH:$PWD/cli/bin docs/ci/demo
 - docker build -t falsifiable/popper cli/
-- docker run --rm -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper
+- docker run --rm -e POPPER_FIGSHARE_API_TOKEN="${POPPER_FIGSHARE_API_TOKEN}" -e POPPER_ZENODO_API_TOKEN="${POPPER_ZENODO_API_TOKEN}" -e POPPER_GITHUB_API_TOKEN="${POPPER_GITHUB_API_TOKEN}" -v `pwd`/docs/ci/demo:/demo --entrypoint=/demo falsifiable/popper
