@@ -173,15 +173,17 @@ popper env mypipeone | grep 'host'
 
 # popper add
 init_test
-popper add popperized/lesson/co2-emissions
-test -d pipelines/co2-emissions
-test -f pipelines/co2-emissions/README.md
-test -f pipelines/co2-emissions/run.sh
-test -f pipelines/co2-emissions/setup.sh
-test -f pipelines/co2-emissions/validate.sh
+#popper add popperized/lesson/co2-emissions
+popper add popperized/quiho-popper/single-node
+#test -d pipelines/co2-emissions
+#test -f pipelines/co2-emissions/README.md
+#test -f pipelines/co2-emissions/run.sh
+#test -f pipelines/co2-emissions/setup.sh
+#test -f pipelines/co2-emissions/validate.sh
 
 # info command
-popper info popperized/lesson/co2-emissions | grep 'url'
+# popper info popperized/lesson/co2-emissions | grep 'url'
+popper info popperized/quiho-popper/single-node
 
 # cleanup command
 init_test
