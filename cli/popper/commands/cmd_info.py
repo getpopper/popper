@@ -27,6 +27,7 @@ def cli(ctx, query):
       popper info popperized/quiho-popper/single-node
     """
     query = query.split('/')
+    # checking the validity of the provided arguments
     if len(query) != 3:
         pu.fail("Bad pipeline name. See 'popper info --help' for more info.")
 
@@ -40,22 +41,22 @@ def get_info(query):
     repo = query[1]
     pipe = query[2]
 
+    # check if the github personal access token has been specified by the user
     POPPER_GITHUB_API_TOKEN = ""
     if 'POPPER_GITHUB_API_TOKEN' in os.environ:
         POPPER_GITHUB_API_TOKEN = os.environ['POPPER_GITHUB_API_TOKEN']
 
     headers = {}
+
     if POPPER_GITHUB_API_TOKEN != "":
         headers = {
             'Authorization': 'token %s' % POPPER_GITHUB_API_TOKEN
         }
 
-    #commit_url = 'https://api.github.com/repos/{}/{}/commits'.format(org, repo)
     commit_url = 'https://api.github.com/repos'
     commit_url += '/{}/{}/git/refs/heads/master'.format(org, repo)
 
     r = requests.get(commit_url, headers=headers)
-    # print(r.json())
 
     if r.status_code == 200:
         r = r.json()
