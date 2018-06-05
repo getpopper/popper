@@ -176,5 +176,5 @@ def initialize_new_pipeline(pipeline_path, stages, envs):
         os.chmod(os.path.join(pipeline_path, s), 0o755)
 
     # write README
-    with open(os.path.join(pipeline_path, 'README'), 'w') as f:
+    with open(os.path.join(pipeline_path, 'README.md'), 'w') as f:
         f.write('# ' + basename(pipeline_path) + '\n')
