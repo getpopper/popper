@@ -183,7 +183,9 @@ test -f pipelines/co2-emissions/setup.sh
 test -f pipelines/co2-emissions/validate.sh
 
 # info command
-popper info popperized/swc-lesson-pipelines/co2-emissions | grep 'url'
+set +e
+popper info popperized/swc-lesson-pipelines/co2-emissions 
+set -e
 
 # cleanup command
 init_test
