@@ -18,12 +18,22 @@ from popper.cli import pass_context
 @click.argument('pipeline', required=True)
 @click.option(
     '--folder',
-    help='Folder where to store the new pipeline, relative to project root.',
+    help='Folder where the new pipeline will be'
+    'stored relative to project root.',
     show_default=True,
     default='pipelines'
 )
+@click.option(
+    '--branch',
+    help='To specify the branch of the repository from where the'
+    'popperized pipeline needs to be added. For example: popper '
+    'add popperized/swc-lesson-pipelines/co2-emissions --branch test.',
+    required=False,
+    show_default=True,
+    default="master",
+)
 @pass_context
-def cli(ctx, pipeline, folder):
+def cli(ctx, pipeline, folder, branch):
     """Add a pipeline to your repository from the existing popperized
     repositories on github. The pipeline argument is provided as owner/repo/
     pipeline. For example, 'popper add popperized/quiho-popper/single-node'
@@ -46,7 +56,8 @@ def cli(ctx, pipeline, folder):
     if not os.path.exists(pipelines_dir):
         os.mkdir(pipelines_dir)
 
-    gh_url = 'https://github.com/{}/{}/archive/master.zip'.format(owner, repo)
+    gh_url = 'https://github.com/{}/{}/'.format(owner, repo)
+    gh_url += 'archive/{}.zip'.format(branch)
 
     pu.info("Downloading pipeline {}... ".format(pipe_name))
 
@@ -57,9 +68,9 @@ def cli(ctx, pipeline, folder):
     with zipfile.ZipFile(BytesIO(r.content)) as z:
         z.extractall()
 
-    os.rename('{}-master/pipelines/{}'.format(repo, pipe_name),
+    os.rename('{}-{}/pipelines/{}'.format(repo, branch, pipe_name),
               os.path.join(folder, pipe_name))
-    shutil.rmtree('{}-master'.format(repo))
+    shutil.rmtree('{}-{}'.format(repo, branch))
 
     pu.info("Updating popper configuration... ")
 
