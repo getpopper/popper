@@ -10,7 +10,7 @@ instructions](https://github.com/systemslab/popper/tree/master/cli#install).
 Show the available commands:
 
 ```bash
-popper help
+popper --help
 ```
 
 Show which version you installed:

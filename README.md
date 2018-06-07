@@ -16,7 +16,7 @@ Quick links to other resources:
   * [5-minute screencast demo of the CLI](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8).
   * [Slidedeck introducing the convention](https://www.slideshare.net/ivotron/the-popper-experimentation-protocol-and-cli-tool-86987253).
   * [10-min video recording of intro and demo](https://air.mozilla.org/mozilla-open-leaders-round-4-final-demos-open-succulent-project/#@52m0s).
-  * [Software Carpentry formatted Lesson](https://ivotron.github.io/popper-lesson).
+  * [Software Carpentry formatted Lesson](https://popperized.github.io/swc-lesson/).
   * [List of repositories that follow the convention](https://github.com/popperized).
 
 ## Installation
