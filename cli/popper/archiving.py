@@ -3,6 +3,7 @@
 import requests
 import json
 import os
+import hashlib
 import subprocess
 import popper.utils as pu
 
@@ -358,6 +359,253 @@ class Zenodo(BaseService):
             )
             config['metadata']['zenodo_doi'] = doi
             config['metadata']['zenodo_doi_url'] = doi_url
+            pu.write_config(config)
+        else:
+            pu.fail(
+                "Status {}: Failed to publish the record."
+                .format(r.status_code)
+            )
+
+
+class Figshare(BaseService):
+
+    def __init__(self, access_token):
+        self.baseurl = 'https://api.figshare.com/v2/account/articles'
+        self.params = {'access_token': access_token}
+        r = requests.get(self.baseurl, params=self.params)
+        try:
+            self.deposition = r.json()[0]
+        except IndexError:
+            self.deposition = None
+        except KeyError:
+            if r.status_code == 403:
+                pu.fail(
+                    "The access token provided was invalid. "
+                    "Please provide a valid access_token"
+                )
+            else:
+                pu.fail(
+                    "Status {}: Could not fetch the depositions."
+                    "Try again later.".format(r.status_code)
+                )
+
+    def is_last_deposition_published(self):
+        if self.deposition is None:
+            return False
+        else:
+            return self.deposition['published_date'] is not None
+
+    def create_new_deposition(self):
+        url = self.baseurl
+        data = {
+            'title': pu.read_config()['metadata']['title']
+        }
+        r = requests.post(url, params=self.params, data=json.dumps(data))
+        if r.status_code == 201:
+            location = r.json()['location']
+            r = requests.get(location, params=self.params)
+            if r.status_code == 200:
+                self.deposition = r.json()
+            else:
+                pu.fail(
+                    "Status {}: Could not fetch the depositions."
+                    "Try again later.".format(r.status_code)
+                )
+        else:
+            pu.fail(
+                "Status {}: Could not create new deposition."
+                .format(r.status_code)
+            )
+
+    def create_new_version(self):
+        """If the article is already published, and its files are modified,
+        a new version is created instead of new deposition. So, there is no
+        need to implement this method.
+        """
+        pass
+
+    def update_metadata(self):
+        """Reads required metatdata from .popper.yml and updates the
+        metadata for the record. This will only be called when no previous
+        deposition is found.
+
+        Args:
+            deposition_id (str): The deposition id whose metadata will
+                be updated
+        """
+        deposition_id = self.deposition['id']
+        config = pu.read_config()['metadata']
+        data = {}
+        required_data = ['title', 'abstract', 'categories', 'keywords']
+        metadata_is_valid = True
+
+        for req in required_data:
+            if req not in config:
+                metadata_is_valid = False
+                break
+
+        if not metadata_is_valid:
+            pu.fail(
+                "Metadata is not defined properly in .popper.yml. "
+                "See the documentation for proper metadata format."
+            )
+
+        # Change abstract to description, if present
+        data['description'] = config['abstract']
+
+        # Collect the authors in a sorted manner
+        authors = []
+        for key in sorted(list(config.keys())):
+            if 'author' in key:
+                name, email, affiliation = map(
+                    lambda x: x.strip(), config[key].split(',')
+                )
+                authors.append({'name': name})
+        if len(authors) != 0:
+            data['authors'] = authors
+
+        # Change the keywords to a list from string of comma separated values
+        data['tags'] = list(
+            map(lambda x: x.strip(), config['keywords'].split(','))
+        )
+
+        categories = []
+        try:
+            categories.append(int(config['categories']))
+        except ValueError:
+            categories = list(
+                map(lambda x: int(x.strip()), config['categories'].split(','))
+            )
+        data['categories'] = categories
+
+        url = '{}/{}'.format(self.baseurl, deposition_id)
+        r = requests.put(
+            url, data=json.dumps(data), params=self.params
+        )
+        if r.status_code != 205:
+            pu.fail(
+                "Status {}: Failed to update metadata.".format(r.status_code)
+            )
+
+    def delete_previous_file(self):
+        deposition_id = self.deposition['id']
+        url = '{}/{}/files'.format(self.baseurl, deposition_id)
+        r = requests.get(url, params=self.params)
+        if r.status_code == 200:
+            try:
+                old_file_id = r.json()[0]['id']
+                url = '{}/{}/files/{}'.format(
+                    self.baseurl, deposition_id, old_file_id
+                )
+                r = requests.delete(url, params=self.params)
+                if r.status_code != 204:
+                    pu.fail(
+                        "Status {}: Failed to delete files of the "
+                        "previous version.".format(r.status_code)
+                    )
+            except IndexError:
+                pass
+        else:
+            pu.fail(
+                "Status {}: Failed to get the files of the previous version."
+                .format(r.status_code)
+            )
+
+    def upload_new_file(self):
+        new_file = self.create_archive()
+        project_root = pu.get_project_root()
+        file_name = os.path.join(project_root, new_file)
+        CHUNK_SIZE = 1048576
+        # Initiate file upload
+        with open(file_name, 'rb') as stream:
+            md5 = hashlib.md5()
+            size = 0
+            data = stream.read(CHUNK_SIZE)
+            while data:
+                size += len(data)
+                md5.update(data)
+                data = stream.read(CHUNK_SIZE)
+        md5, size = md5.hexdigest(), size
+        data = {
+            'name': new_file,
+            'md5': md5,
+            'size': size
+        }
+        deposition_id = self.deposition['id']
+        url = '{}/{}/files'.format(
+            self.baseurl, deposition_id
+        )
+        r = requests.post(url, data=json.dumps(data), params=self.params)
+
+        # Receive the location and issue a get request
+        location = r.json()['location']
+        r = requests.get(location, params=self.params)
+
+        # Receive the upload url and issue a get request to the upload url
+        # to receive the number of file parts
+        file_info = r.json()
+        url = file_info['upload_url']
+        r = requests.get(url, params=self.params)
+
+        # Upload all the file parts
+        parts = r.json()['parts']
+        with open(file_name, 'rb') as stream:
+            for part in parts:
+                upload_data = file_info.copy()
+                upload_data.update(part)
+                url = '{upload_url}/{partNo}'.format(**upload_data)
+
+                stream.seek(part['startOffset'])
+                data = stream.read(part['endOffset'] - part['startOffset'] + 1)
+
+                r = requests.put(url, data=data, params=self.params)
+                if r.status_code != 200:
+                    self.delete_archive()
+                    pu.fail(
+                        "Status {}: Could not upload the file. Please"
+                        "try again later.".format(r.status_code)
+                    )
+
+        self.delete_archive()
+
+        # Complete the file upload
+        url = '{}/{}/files/{}'.format(
+            self.baseurl, deposition_id, file_info['id']
+        )
+        r = requests.post(url, params=self.params)
+        if r.status_code != 202:
+            pu.fail(
+                "Status {}: Could not complete the file upload. Please"
+                "try again later.".format(r.status_code)
+            )
+
+    def publish_snapshot(self):
+        if self.deposition is None:
+            self.create_new_deposition()
+        else:
+            if self.is_last_deposition_published():
+                self.create_new_version()
+            self.delete_previous_file()
+
+        self.upload_new_file()
+        self.update_metadata()
+
+        url = '{}/{}/publish'.format(
+            self.baseurl, self.deposition['id']
+        )
+        r = requests.post(url, params=self.params)
+        if r.status_code == 201:
+            url = r.json()['location']
+            r = requests.get(url, params=self.params)
+            doi = r.json()['doi']
+            doi_url = 'https://doi.org/{}'.format(doi)
+            pu.info(
+                "Snapshot has been successfully published with DOI "
+                "{} and the DOI URL {}".format(doi, doi_url)
+            )
+            config = pu.read_config()
+            config['metadata']['figshare_doi'] = doi
+            config['metadata']['figshare_doi_url'] = doi_url
             pu.write_config(config)
         else:
             pu.fail(
