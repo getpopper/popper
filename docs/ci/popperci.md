@@ -120,12 +120,12 @@ an pipeline:
 
 There are three possible statuses for every pipeline: `FAIL`, `PASS` 
 and `GOLD`. There are two possible values for the status of a 
-validation, `FAIL` or `PASS`. When the pipeline status is `FAIL`, this 
+validation, `true` or `false`. When the pipeline status is `FAIL`, this 
 list of validations is empty since the pipeline execution has failed 
 and validations are not able to execute at all. When the pipeline 
-status' is `GOLD`, the status of all validations is `PASS`. When the 
+status' is `GOLD`, the status of all validations is `true`. When the 
 pipeline runs correctly but one or more validations fail (pipeline's 
-status is `PASS`), the status of one or more validations is `FAIL`.
+status is `PASS`), the status of one or more validations is `false`.
 
 ## Testing Locally
 
