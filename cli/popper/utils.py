@@ -2,7 +2,7 @@ import click
 import os
 import sys
 import yaml
-from subprocess import check_output, CalledProcessError
+import subprocess
 
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
@@ -40,8 +40,10 @@ def get_project_root():
     """
 
     try:
-        base = check_output('git rev-parse --show-toplevel', shell=True)
-    except CalledProcessError:
+        base = subprocess.check_output(
+            'git rev-parse --show-toplevel', shell=True
+        )
+    except subprocess.CalledProcessError:
         fail(
             "Unable to find the root of your project."
             + "Initialize repository first."
@@ -167,3 +169,23 @@ def parse_timeout(timeout):
                      "See popper run --help for more.")
 
     return time_out
+
+
+def get_remote_url():
+    """Python 2/3 comptatible method for getting the remote origin url
+
+    Returns:
+        string - url of remote origin,
+            For example: https://github.com/systemslab/popper
+    """
+    args = ['git', 'config', '--get', 'remote.origin.url']
+    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    output, error = p.communicate()
+    if p.returncode == 0:
+        # Remove the .git/n from the end of the url returned by Popen
+        try:
+            return output.decode()[:-5]  # Python 3 returns bytes
+        except AttributeError:
+            return output[:-5]
+    else:
+        fail("Git remote does not exist. Add a git remote.")
