@@ -238,6 +238,8 @@ popper search quiho
 test -d ./.cache
 popper search quiho --skip-update
 popper search linux --skip-update
+popper search linux --rm popperized
+popper search linux --add popperized
 
 init_test
 set +e
