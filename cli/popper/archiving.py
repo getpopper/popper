@@ -10,7 +10,7 @@ import popper.utils as pu
 from datetime import date
 
 
-class BaseService():
+class BaseService(object):
     """Abstract class for archving services.
 
     Attributes:
@@ -24,17 +24,26 @@ class BaseService():
     params = None
     deposition = None
 
-    def __init__(self, access_token):
-        """The __init__ method is responsible for getting the previous
-        deposition from the service url, using the OAuth access token.
-        It is meant to be overridden by the derived class.
+    def __init__(self):
+        """The __init__ method of the base class is responsible for checking
+        if there are no unstaged changes in the repository and fail otherwise.
 
-        Args:
-            access_token (str): OAuth token for the service
+        The __init__ method of the derived classes should call this method
+        using the super function. The __init__ method of the derived class,
+        however, is responsible for getting the previous relevant deposition
+        from the service url, using the OAuth access token.
         """
-        raise NotImplementedError(
-            "This method is required to be implemented in the base class."
+        args = ['git', 'status', '--ignore-submodules', '--porcelain']
+        p = subprocess.Popen(
+            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        try:
+            output, error = map(lambda x: x.decode(), p.communicate())
+        except AttributeError:
+            output, error = p.communicate()
+
+        if output != '':
+            pu.fail("Please commit all your changes before archiving.")
 
     def is_last_deposition_published(self):
         """The method checks if the last modified/uploaded record is
@@ -132,18 +141,26 @@ class BaseService():
 class Zenodo(BaseService):
 
     def __init__(self, access_token):
+        super(Zenodo, self).__init__()
         self.baseurl = 'https://zenodo.org/api/deposit/depositions'
         self.params = {'access_token': access_token}
         r = requests.get(self.baseurl, params=self.params)
         try:
-            self.deposition = r.json()[0]
-        except IndexError:
-            self.deposition = None
-        except KeyError:
+            depositions = r.json()
+            remote_url = pu.get_remote_url()
+            for deposition in depositions:
+                metadata = deposition['metadata']
+                try:
+                    identifiers = metadata['related_identifiers']
+                    if identifiers[0]['identifier'] == remote_url:
+                        self.deposition = deposition
+                except KeyError:
+                    pass
+        except TypeError:
             if r.status_code == 401:
                 pu.fail(
                     "The access token provided was invalid. "
-                    "Please provide a valid access_token"
+                    "Please provide a valid access_token."
                 )
             else:
                 pu.fail(
@@ -199,12 +216,13 @@ class Zenodo(BaseService):
                 be updated
         """
         deposition_id = self.deposition['id']
-        data = pu.read_config()['metadata']
+        config = pu.read_config()['metadata']
+        data = {}
         required_data = ['title', 'upload_type', 'abstract', 'author1']
         metadata_is_valid = True
 
         for req in required_data:
-            if req not in data:
+            if req not in config:
                 metadata_is_valid = False
                 break
 
@@ -214,28 +232,38 @@ class Zenodo(BaseService):
                 "See the documentation for proper metadata format."
             )
 
+        data['title'] = config['title']
+
         # Change abstract to description, if present
-        data['description'] = '<p>' + data['abstract'] + '</p>'
-        del data['abstract']
+        data['description'] = '<p>' + config['abstract'] + '</p>'
 
         # Collect the authors in a sorted manner
         creators = []
-        for key in sorted(list(data.keys())):
+        for key in sorted(list(config.keys())):
             if 'author' in key:
                 name, email, affiliation = map(
-                    lambda x: x.strip(), data[key].split(',')
+                    lambda x: x.strip(), config[key].split(',')
                 )
                 if len(name.split()) == 2:
                     name = ', '.join(name.split()[::-1])
                 creators.append({'name': name, 'affiliation': affiliation})
-                del data[key]
         data['creators'] = creators
 
         # Change the keywords to a list from string of comma separated values
-        if 'keywords' in data:
+        if 'keywords' in config:
             data['keywords'] = list(
-                map(lambda x: x.strip(), data['keywords'].split(','))
+                map(lambda x: x.strip(), config['keywords'].split(','))
             )
+
+        data['related_identifiers'] = [{
+            "identifier": pu.get_remote_url(),
+            "relation": "hasPart",
+            "scheme": "url"
+        }]
+
+        data['upload_type'] = config['upload_type']
+        if config['upload_type'] == 'publication':
+            data['publication_type'] = config['publication_type']
 
         data = {'metadata': data}
         url = '{}/{}'.format(self.baseurl, deposition_id)
@@ -370,24 +398,31 @@ class Zenodo(BaseService):
 class Figshare(BaseService):
 
     def __init__(self, access_token):
+        super(Figshare, self).__init__()
         self.baseurl = 'https://api.figshare.com/v2/account/articles'
         self.params = {'access_token': access_token}
         r = requests.get(self.baseurl, params=self.params)
-        try:
-            self.deposition = r.json()[0]
-        except IndexError:
-            self.deposition = None
-        except KeyError:
-            if r.status_code == 403:
-                pu.fail(
-                    "The access token provided was invalid. "
-                    "Please provide a valid access_token"
-                )
-            else:
-                pu.fail(
-                    "Status {}: Could not fetch the depositions."
-                    "Try again later.".format(r.status_code)
-                )
+        if r.status_code == 200:
+            depositions = r.json()
+            remote_url = pu.get_remote_url()
+            for deposition in depositions:
+                deposition_id = deposition['id']
+                url = '{}/{}'.format(self.baseurl, deposition_id)
+                r = requests.get(url, params=self.params)
+                deposition = r.json()
+                if remote_url in deposition['references']:
+                    self.deposition = deposition
+                    break
+        elif r.status_code == 403:
+            pu.fail(
+                "The access token provided was invalid. "
+                "Please provide a valid access_token."
+            )
+        else:
+            pu.fail(
+                "Status {}: Could not fetch the depositions."
+                "Try again later.".format(r.status_code)
+            )
 
     def is_last_deposition_published(self):
         if self.deposition is None:
@@ -477,6 +512,7 @@ class Figshare(BaseService):
                 map(lambda x: int(x.strip()), config['categories'].split(','))
             )
         data['categories'] = categories
+        data['references'] = [pu.get_remote_url()]
 
         url = '{}/{}'.format(self.baseurl, deposition_id)
         r = requests.put(
