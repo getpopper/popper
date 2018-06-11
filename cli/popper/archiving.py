@@ -10,7 +10,7 @@ import popper.utils as pu
 from datetime import date
 
 
-class BaseService():
+class BaseService(object):
     """Abstract class for archving services.
 
     Attributes:
@@ -24,17 +24,26 @@ class BaseService():
     params = None
     deposition = None
 
-    def __init__(self, access_token):
-        """The __init__ method is responsible for getting the previous
-        deposition from the service url, using the OAuth access token.
-        It is meant to be overridden by the derived class.
+    def __init__(self):
+        """The __init__ method of the base class is responsible for checking
+        if there are no unstaged changes in the repository and fail otherwise.
 
-        Args:
-            access_token (str): OAuth token for the service
+        The __init__ method of the derived classes should call this method
+        using the super function. The __init__ method of the derived class,
+        however, is responsible for getting the previous relevant deposition
+        from the service url, using the OAuth access token.
         """
-        raise NotImplementedError(
-            "This method is required to be implemented in the base class."
+        args = ['git', 'status', '--ignore-submodules', '--porcelain']
+        p = subprocess.Popen(
+            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
+        try:
+            output, error = map(lambda x: x.decode(), p.communicate())
+        except AttributeError:
+            output, error = p.communicate()
+
+        if output != '':
+            pu.fail("Please commit all your changes before archiving.")
 
     def is_last_deposition_published(self):
         """The method checks if the last modified/uploaded record is
@@ -132,6 +141,7 @@ class BaseService():
 class Zenodo(BaseService):
 
     def __init__(self, access_token):
+        super(Zenodo, self).__init__()
         self.baseurl = 'https://zenodo.org/api/deposit/depositions'
         self.params = {'access_token': access_token}
         r = requests.get(self.baseurl, params=self.params)
@@ -388,6 +398,7 @@ class Zenodo(BaseService):
 class Figshare(BaseService):
 
     def __init__(self, access_token):
+        super(Figshare, self).__init__()
         self.baseurl = 'https://api.figshare.com/v2/account/articles'
         self.params = {'access_token': access_token}
         r = requests.get(self.baseurl, params=self.params)
