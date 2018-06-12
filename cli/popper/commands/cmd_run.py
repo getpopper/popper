@@ -114,14 +114,13 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
-                pu.info("\nStage {} failed.".format(stage), fg='red',
-                        bold=True, blink=True)
+                pu.warn("Stage {} failed.".format(stage))
                 STATUS = "FAIL"
-                pu.info("Logs for {}:.".format(stage), fg='red')
+                pu.warn("Logs for {}:".format(stage))
                 for t in ['.err', '.out']:
                     logfile = 'popper_logs/{}{}'.format(stage_file, t)
                     with open(logfile, 'r') as f:
-                        pu.info(f.read())
+                        pu.warn("\n{}:\n{}".format(logfile, f.read()))
 
                 # Execute teardown when some stage fails and then break
                 teardown_file = pu.get_filename(abs_path, 'teardown')

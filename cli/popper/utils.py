@@ -124,12 +124,12 @@ def get_filename(abs_path, stage):
 
 def fail(msg):
     """Prints the error message on the terminal."""
-    click.secho('ERROR: ' + msg, fg='red', bold=True)
+    click.secho('ERROR: ' + msg, fg='red', bold=True, err=True)
     sys.exit(1)
 
 
-def warn(msg):
-    click.secho('WARNING: ' + msg, fg='magenta', bold=True)
+def warn(msg, **styles):
+    click.secho('WARNING: ' + msg, err=True)
 
 
 def info(msg, **styles):
