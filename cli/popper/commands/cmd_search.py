@@ -1,5 +1,6 @@
 import click
 import os
+import sys
 import popper.utils as pu
 from popper.cli import pass_context
 import requests
@@ -21,8 +22,21 @@ except NameError:
     help=('Skip updating the metadata and search on the local cache'),
     is_flag=True
 )
+@click.option(
+    '--add',
+    help=('To add an org/repo to the popperized list in .popper.yml'),
+)
+@click.option(
+    '--rm',
+    help=('To remove an org/repo from the popperized list in .popper.yml'),
+)
+@click.option(
+    '--list-repos',
+    help=('To list all the repositories available to popper search command'),
+    is_flag=True
+)
 @pass_context
-def cli(ctx, pipeline_name, skip_update):
+def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
     """Searches for the specified pipelines inside the  GitHub
     organizations specified in the .popper.yml file.
 
@@ -41,6 +55,36 @@ def cli(ctx, pipeline_name, skip_update):
 
     popperized/quiho-popper
 
+    To add or remove orgs/repos to/from the popperized list,
+    use the --add and --rm flags while searching.
+
+    *
+        To add an organization/person do:
+
+        popper search quiho --add user_name
+
+        To remove an organization/person do:
+
+        popper search quiho --rm user_name
+
+    *
+        To add a repository do:
+
+        popper search quiho --add user_name/repo_name
+
+
+        To remove an org/repo do:
+
+        popper search quiho --rm user_name/repo_name
+
+
+        (user_name = the username of an organization or a person)
+
+    To view the list repositores that are available in the search
+    database do:
+
+    popper search --list-repos
+
     """
 
     project_root = pu.get_project_root()
@@ -57,8 +101,61 @@ def cli(ctx, pipeline_name, skip_update):
     if 'POPPER_GITHUB_API_TOKEN' in os.environ:
         POPPER_GITHUB_API_TOKEN = os.environ['POPPER_GITHUB_API_TOKEN']
 
+    headers = {}
+    if POPPER_GITHUB_API_TOKEN != "":
+        headers = {
+            'Authorization': 'token %s' % POPPER_GITHUB_API_TOKEN
+        }
+
     config = pu.read_config()
     popperized_list = config['popperized']
+
+    if add:
+        add = 'github/' + add
+        if add not in popperized_list:
+            popperized_list.append(add)
+
+        config['popperized'] = popperized_list
+        pu.write_config(config)
+
+    if rm:
+        rm = 'github/' + rm
+        if rm in popperized_list:
+            popperized_list.remove(rm)
+
+        config['popperized'] = popperized_list
+        pu.write_config(config)
+
+    if list_repos:
+        result = []
+        for p in popperized_list:
+            if p.count('/') == 1:
+                org_name = p.split('/')[1]
+                org_url = ('https://api.github.com/users/{}/repos')
+                org_url = org_url.format(org_name)
+
+                response = requests.get(org_url, headers=headers)
+
+                if response.status_code != 200:
+                    pu.fail("Unable to connect. Please check your network"
+                            " and try again.")
+                else:
+                    repos = response.json()
+                    temp = [r["full_name"] for r in repos]
+                    result.extend(temp)
+            else:
+                result.extend(p[7:])
+
+        if len(result) > 0:
+            pu.info("The list of available poppperized repositories are :-\n")
+            pu.print_yaml(result)
+            sys.exit()
+        else:
+            fail_msg = "There are no popperized repositores available"
+            "for search. Use the --add flag to add org/repo to the"
+            "search database."
+
+            pu.fail(fail_msg)
 
     result = []  # to store the result of the search query as a list
 
@@ -78,19 +175,12 @@ def cli(ctx, pipeline_name, skip_update):
                 org_url = ('https://api.github.com/users/{}/repos'
                            .format(org_name))
 
-                headers = {}
-                if POPPER_GITHUB_API_TOKEN != "":
-                    headers = {
-                        'Authorization': 'token %s' % POPPER_GITHUB_API_TOKEN
-                    }
-
                 response = requests.get(org_url, headers=headers)
+
                 if response.status_code != 200:
                     pu.fail("Unable to connect. Please check your network"
-                            " and try again. Response code = {} {}"
-                            .format(response.status_code, org_url))
+                            " and try again.")
 
-                #
                 with open(os.path.join(cache_dir, org_name + '_repos.json'),
                           'w') as f:
                     json.dump(response.json(), f)
@@ -105,7 +195,8 @@ def cli(ctx, pipeline_name, skip_update):
             with click.progressbar(
                     repos,
                     show_eta=False,
-                    label='Searching {}'.format(org_name),
+                    label='Searching in the repositories'
+                    'of {}'.format(org_name),
                     bar_template='[%(bar)s] %(label)s | %(info)s',
                     show_percent=True) as bar:
 
@@ -133,7 +224,7 @@ def cli(ctx, pipeline_name, skip_update):
                         .format(user, repo))
 
             headers = {}
-            pu.info("Searching {}".format(repo))
+            pu.info("Searching in repository : {}".format(repo))
             result.extend(
                 search_pipeline(repo_url, pipeline_name,
                                 user, empty_query, POPPER_GITHUB_API_TOKEN,
@@ -141,7 +232,7 @@ def cli(ctx, pipeline_name, skip_update):
             )
 
     if len(result) != 0:
-        pu.info("Search results:\n", fg="green")
+        pu.info("\nSearch results:\n", fg="green")
         pu.print_yaml(result)
     else:
         pu.fail("Unable to find any matching pipelines")
