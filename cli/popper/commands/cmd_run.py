@@ -151,7 +151,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
         fg = 'yellow'
     else:
         fg = 'red'
-    pu.info('\nstatus: {}\n' + STATUS, fg=fg, bold=True)
+    pu.info('\nstatus: {}\n'.format(STATUS), fg=fg, bold=True)
 
     return STATUS
 
