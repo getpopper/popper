@@ -158,8 +158,9 @@ html_title = u'Popper 1.0.0 documentation'
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 #
-html_logo = u'https://github.com/systemslab/popper/' \
-            u'blob/ad1d1cea4781e347613de97150dc41441903758d/' \
+html_logo = u'https://raw.githubusercontent.com/' \
+            u'systemslab/' \
+            u'popper/ad1d1cea4781e347613de97150dc41441903758d/' \
             u'images/popper_logo.png'
 
 # The name of an image file (relative to this directory) to use as a favicon of
@@ -284,8 +285,9 @@ latex_documents = [
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
 #
-latex_logo = u'https://github.com/systemslab/' \
-             u'popper/blob/ad1d1cea4781e347613de97150dc41441903758d/' \
+latex_logo = u'https://raw.githubusercontent.com/' \
+             u'systemslab/' \
+             u'popper/ad1d1cea4781e347613de97150dc41441903758d/' \
              u'images/popper_logo.png'
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
