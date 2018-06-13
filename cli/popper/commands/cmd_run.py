@@ -114,7 +114,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
-                pu.info("\n\nStage {} failed.".format(stage))
+                pu.info("\n\nStage '{}' failed.".format(stage))
                 STATUS = "FAIL"
                 for t in ['.err', '.out']:
                     logfile = 'popper_logs/{}{}'.format(stage_file, t)
