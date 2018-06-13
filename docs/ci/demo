@@ -236,9 +236,16 @@ popper rm mypipetwo
 init_test
 popper search quiho
 test -d ./.cache
+popper search --list-repos
 popper search quiho --skip-update
 popper search linux --skip-update
-
+popper search linux --rm popperized
+set +e
+cat .popper.yml | grep 'github/popperized'
+test $? -eq 1
+set -e
+popper search linux --add popperized
+cat .popper.yml | grep 'github/popperized'
 init_test
 set +e
 popper search quiho --skip-update
