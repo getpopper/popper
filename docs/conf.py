@@ -158,10 +158,7 @@ html_title = u'Popper 1.0.0 documentation'
 # The name of an image file (relative to this directory) to place at the top
 # of the sidebar.
 #
-html_logo = u'https://raw.githubusercontent.com/' \
-            u'systemslab/' \
-            u'popper/ad1d1cea4781e347613de97150dc41441903758d/' \
-            u'images/popper_logo.png'
+html_logo = '/figures/popper_logo.png'
 
 # The name of an image file (relative to this directory) to use as a favicon of
 # the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
@@ -184,7 +181,7 @@ html_static_path = ['_static']
 # bottom, using the given strftime format.
 # The empty string is equivalent to '%b %d, %Y'.
 #
-# html_last_updated_fmt = None
+html_last_updated_fmt = '%b %d, %Y'
 
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
@@ -252,7 +249,7 @@ html_static_path = ['_static']
 # html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'SphinxwithMarkdowndoc'
+htmlhelp_basename = 'Popperdoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -278,17 +275,14 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'SphinxwithMarkdown.tex', u'Sphinx with Markdown Documentation',
-     u'Marijn van der Zee', 'manual'),
+    (master_doc, 'Popper.tex', u'Popper Documentation',
+     u'Ivo Jimenez', 'manual'),
 ]
 
 # The name of an image file (relative to this directory) to place at the top of
 # the title page.
 #
-latex_logo = u'https://raw.githubusercontent.com/' \
-             u'systemslab/' \
-             u'popper/ad1d1cea4781e347613de97150dc41441903758d/' \
-             u'images/popper_logo.png'
+# latex_logo = None
 
 # For "manual" documents, if this is true, then toplevel headings are parts,
 # not chapters.
@@ -323,8 +317,8 @@ latex_logo = u'https://raw.githubusercontent.com/' \
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'sphinxwithmarkdown', u'Sphinx with Markdown Documentation',
-     [author], 1)
+    (master_doc, 'Popper', u'Popper Documentation',
+     [u'Ivo Jimenez'], 1)
 ]
 
 # If true, show URL addresses after external links.
@@ -338,8 +332,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'SphinxwithMarkdown', u'Sphinx with Markdown Documentation',
-     author, 'SphinxwithMarkdown', 'One line description of project.',
+    (master_doc, 'Popper', u'Popper Documentation',
+     author, 'Ivo Jimenez', 'One line description of project.',
      'Miscellaneous'),
 ]
 
