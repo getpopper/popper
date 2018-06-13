@@ -145,8 +145,13 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
 
-    fg = 'green' if STATUS == "SUCCESS" else 'red'
-    pu.info('status : ' + STATUS, fg=fg, bold=True)
+    if STATUS == "SUCCESS":
+        fg = 'green'
+    elif STATUS == "GOLD":
+        fg = 'yellow'
+    else:
+        fg = 'red'
+    pu.info('status: ' + STATUS, fg=fg, bold=True)
     sys.stdout.write('\n')
 
     return STATUS
@@ -165,6 +170,11 @@ def execute(stage, timeout, bar=None):
         if not bar:
             pu.info("Running: {}".format(stage))
 
+        if os.environ.get('CI', False):
+            # add new line when in CI environment
+            bar.render_progress()
+            print('')
+
         while p.poll() is None:
 
             if time.time() > time_limit:
@@ -176,7 +186,10 @@ def execute(stage, timeout, bar=None):
                 sleep_time *= 2
 
             if os.environ.get('CI', False):
-                sys.stdout.write('.')
+                # print dot every 10 secs when in CI environment
+                for i in range(sleep_time):
+                    if i % 10 == 0:
+                        sys.stdout.write('.')
                 time.sleep(sleep_time)
                 continue
 
