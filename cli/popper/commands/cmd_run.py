@@ -95,8 +95,8 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     STATUS = "SUCCESS"
 
     with click.progressbar(pipeline['stages'], show_eta=False,
-                           label="Current stage: ", item_show_func=str,
-                           bar_template='[%(bar)s] %(label)s %(info)s',
+                           item_show_func=str,
+                           bar_template='[%(bar)s] %(info)s',
                            show_percent=False) as stages:
 
         for stage in stages:
@@ -151,8 +151,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
         fg = 'yellow'
     else:
         fg = 'red'
-    pu.info('status: ' + STATUS, fg=fg, bold=True)
-    sys.stdout.write('\n')
+    pu.info('\nstatus: {}\n' + STATUS, fg=fg, bold=True)
 
     return STATUS
 
@@ -167,13 +166,10 @@ def execute(stage, timeout, bar=None):
         p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
                              stderr=errf, preexec_fn=os.setsid)
 
-        if not bar:
-            pu.info("Running: {}".format(stage))
-
         if os.environ.get('CI', False):
-            # add new line when in CI environment
-            bar.render_progress()
+            # print info when in CI environment
             print('')
+            pu.info("Running: {}".format(stage))
 
         while p.poll() is None:
 
