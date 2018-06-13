@@ -55,7 +55,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
     if pipeline:
         if ignore_errors:
-            pu.warn("ignore-errors flag is ignored when pipeline "
+            pu.warn("--ignore-errors flag is ignored when pipeline "
                     "argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
@@ -95,8 +95,8 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     STATUS = "SUCCESS"
 
     with click.progressbar(pipeline['stages'], show_eta=False,
-                           label="Current stage: ", item_show_func=str,
-                           bar_template='[%(bar)s] %(label)s %(info)s',
+                           item_show_func=str,
+                           bar_template='[%(bar)s] %(info)s',
                            show_percent=False) as stages:
 
         for stage in stages:
@@ -114,21 +114,21 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
-                pu.warn("Stage {} failed.".format(stage))
+                pu.info("\n\nStage '{}' failed.".format(stage))
                 STATUS = "FAIL"
-                pu.warn("Logs for {}:".format(stage))
                 for t in ['.err', '.out']:
                     logfile = 'popper_logs/{}{}'.format(stage_file, t)
                     with open(logfile, 'r') as f:
-                        pu.warn("\n{}:\n{}".format(logfile, f.read()))
+                        pu.info("\n" + t + ":\n", bold=True, fg='red')
+                        pu.info(f.read())
 
                 # Execute teardown when some stage fails and then break
                 teardown_file = pu.get_filename(abs_path, 'teardown')
                 if (teardown_file and
-                    stage != 'teardown' and
-                    'teardown' in pipeline['stages'] and
-                    'teardown' not in skipped):
-                        execute(teardown_file, timeout)
+                        stage != 'teardown' and
+                        'teardown' in pipeline['stages'] and
+                        'teardown' not in skipped):
+                    execute(teardown_file, timeout)
 
                 break
 
@@ -145,9 +145,13 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     with open('popper_status', 'w') as f:
         f.write(STATUS + '\n')
 
-    fg = 'green' if STATUS == "SUCCESS" else 'red'
-    pu.info('status : ' + STATUS, fg=fg, bold=True)
-    sys.stdout.write('\n')
+    if STATUS == "SUCCESS":
+        fg = 'green'
+    elif STATUS == "GOLD":
+        fg = 'yellow'
+    else:
+        fg = 'red'
+    pu.info('\nstatus: {}\n' + STATUS, fg=fg, bold=True)
 
     return STATUS
 
@@ -162,7 +166,9 @@ def execute(stage, timeout, bar=None):
         p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
                              stderr=errf, preexec_fn=os.setsid)
 
-        if not bar:
+        if os.environ.get('CI', False):
+            # print info when in CI environment
+            print('')
             pu.info("Running: {}".format(stage))
 
         while p.poll() is None:
@@ -174,6 +180,14 @@ def execute(stage, timeout, bar=None):
 
             if sleep_time < 300:
                 sleep_time *= 2
+
+            if os.environ.get('CI', False):
+                # print dot every 10 secs when in CI environment
+                for i in range(sleep_time):
+                    if i % 10 == 0:
+                        sys.stdout.write('.')
+                time.sleep(sleep_time)
+                continue
 
             if bar:
                 for i in range(sleep_time):

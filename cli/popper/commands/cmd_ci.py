@@ -14,7 +14,8 @@ services: docker
 install:
 - git clone --recursive https://github.com/systemslab/popper /tmp/popper
 - export PATH=$PATH:/tmp/popper/cli/bin
-script: popper run > /dev/null
+- export PYTHONUNBUFFERED=1
+script: popper run
 """
     },
     'circle': {
@@ -30,7 +31,8 @@ jobs:
         command: |
         git clone --recursive https://github.com/systemslab/popper /tmp/popper
         export PATH=$PATH:/tmp/popper/cli/bin
-        popper run > /dev/null
+        export PYTHONUNBUFFERED=1
+        popper run
 """
     }
 }
