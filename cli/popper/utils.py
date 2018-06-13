@@ -128,8 +128,8 @@ def fail(msg):
     sys.exit(1)
 
 
-def warn(msg, **styles):
-    click.secho('WARNING: ' + msg, err=True)
+def warn(msg):
+    click.secho('WARNING: ' + msg, bold=True, fg='red', err=True)
 
 
 def info(msg, **styles):
