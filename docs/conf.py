@@ -33,6 +33,16 @@ extensions = [
     'sphinx.ext.githubpages',
 ]
 
+
+# Set default graphviz options
+graphviz_dot_args = [
+    '-Grankdir=LR', '-Gbgcolor=transparent',
+    '-Nshape=box', '-Nfontname=monaco', '-Nfontsize=10']
+
+# Get nice vector graphics
+graphviz_output_format = "svg"
+
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
 
@@ -106,6 +116,7 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'
 
+
 # A list of ignored prefixes for module index sorting.
 # modindex_common_prefix = []
 
@@ -127,21 +138,7 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 
-html_theme_options = {
-    'canonical_url': u'http://popper.readthedocs.io',
-    # 'analytics_id': '',
-    'logo_only': True,
-    'display_version': True,
-    'prev_next_buttons_location': 'bottom',
-    'style_external_links': True,
-    # 'vcs_pageview_mode': '',
-    # Toc options
-    'collapse_navigation': True,
-    'sticky_navigation': True,
-    'navigation_depth': 4,
-    'includehidden': True,
-    'titles_only': False
-}
+html_theme_options = {'logo_only': True}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
