@@ -55,7 +55,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
     if pipeline:
         if ignore_errors:
-            pu.warn("ignore-errors flag is ignored when pipeline "
+            pu.warn("--ignore-errors flag is ignored when pipeline "
                     "argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
@@ -114,13 +114,13 @@ def run_pipeline(project_root, pipeline, timeout, skip):
             ecode = execute(stage_file, timeout, stages)
 
             if ecode != 0:
-                pu.warn("Stage {} failed.".format(stage))
+                pu.info("\n\nStage {} failed.".format(stage))
                 STATUS = "FAIL"
-                pu.warn("Logs for {}:".format(stage))
                 for t in ['.err', '.out']:
                     logfile = 'popper_logs/{}{}'.format(stage_file, t)
                     with open(logfile, 'r') as f:
-                        pu.warn("\n{}:\n{}".format(logfile, f.read()))
+                        pu.info("\n" + t + ":\n", bold=True, fg='red')
+                        pu.info(f.read())
 
                 # Execute teardown when some stage fails and then break
                 teardown_file = pu.get_filename(abs_path, 'teardown')
@@ -174,6 +174,11 @@ def execute(stage, timeout, bar=None):
 
             if sleep_time < 300:
                 sleep_time *= 2
+
+            if os.environ.get('CI', False):
+                sys.stdout.write('.')
+                time.sleep(sleep_time)
+                continue
 
             if bar:
                 for i in range(sleep_time):
