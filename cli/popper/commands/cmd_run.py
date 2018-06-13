@@ -125,10 +125,10 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                 # Execute teardown when some stage fails and then break
                 teardown_file = pu.get_filename(abs_path, 'teardown')
                 if (teardown_file and
-                    stage != 'teardown' and
-                    'teardown' in pipeline['stages'] and
-                    'teardown' not in skipped):
-                        execute(teardown_file, timeout)
+                        stage != 'teardown' and
+                        'teardown' in pipeline['stages'] and
+                        'teardown' not in skipped):
+                    execute(teardown_file, timeout)
 
                 break
 
