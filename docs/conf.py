@@ -1,3 +1,5 @@
+from recommonmark.parser import CommonMarkParser
+
 # -*- coding: utf-8 -*-
 #
 # Sphinx with Markdown documentation build configuration file, created by
@@ -29,6 +31,7 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+
 extensions = [
     'sphinx.ext.githubpages',
 ]
@@ -158,7 +161,8 @@ html_title = u'Popper 1.0.0 documentation'
 html_logo = '../docs/figures/popper_logo.png'
 
 # The name of an image file (relative to this directory) to use as a favicon of
-# the docs.  This file should be a Windows icon file (.ico) being 16x16 or 32x32
+# the docs.  This file should be a Windows icon file (.ico)
+# being 16x16 or 32x32
 # pixels large.
 #
 # html_favicon = None
@@ -330,7 +334,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'Popper', u'Popper Documentation',
-     author, 'Ivo Jimenez', 'One line description of project.',
+     author, 'Ivo Jimenez', 'Popper',
      'Miscellaneous'),
 ]
 
@@ -349,8 +353,6 @@ texinfo_documents = [
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #
 # texinfo_no_detailmenu = False
-
-from recommonmark.parser import CommonMarkParser
 
 source_parsers = {
     '.md': CommonMarkParser,
