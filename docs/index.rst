@@ -13,6 +13,7 @@ it gives examples from multiple domains showing how to follow the protocol; and
 also shows how to use a CI system to continuously validate Popperized 
 experiments.
 
+dev
 
 .. toctree::
    :maxdepth: 2
