@@ -252,6 +252,9 @@ popper search quiho --skip-update
 test $? -eq 1
 set -e
 
+# test listing of available environments
+popper env --ls
+
 # workflow
 init_test
 popper init pipeone
