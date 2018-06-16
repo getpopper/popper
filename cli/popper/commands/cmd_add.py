@@ -65,7 +65,7 @@ def cli(ctx, pipeline, folder, branch):
     if r.status_code != 200:
         pu.fail("Unable to fetch the pipeline. Please check if the name" +
                 " of the pipeline is correct and the internet is connected")
-    with zipfile.ZipFile(BytesIO(r.content)) as z:
+    with pu.ExtractZip(BytesIO(r.content)) as z:
         z.extractall()
 
     os.rename('{}-{}/pipelines/{}'.format(repo, branch, pipe_name),

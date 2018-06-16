@@ -3,6 +3,7 @@ import os
 import sys
 import yaml
 import subprocess
+from zipfile import ZipFile, ZipInfo
 
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
@@ -189,3 +190,17 @@ def get_remote_url():
             return output[:-5]
     else:
         fail("Git remote does not exist. Add a git remote.")
+
+class ExtractZip(ZipFile):
+    def extract(self, member, path=None, pwd=None):
+        if not isintance(member, ZipInfo):
+            member = self.getinfo(member)
+
+        if path is None:
+            path = os.getcwd()
+
+        ret_val = self._extract_member(member, path, pwd)
+        attr = member.external_attr >> 16
+        os.chmod(ret_val, attr)
+        return ret_val
+
