@@ -53,7 +53,7 @@ class PopperCLI(click.MultiCommand):
                     name, commands, 3, 0.3))
             message = ""
             if len(most_similar_commands) != 0:
-                message = "\n\nThe most similar commands are :- " \
+                message = "\n\nThe most similar commands are: " \
                         + most_similar_commands
             raise UsageError(
                 "Command '" + name + "' doesn't exist. " +
