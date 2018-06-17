@@ -118,6 +118,7 @@ def initialize_repo(project_root):
     pu.write_config(config)
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
+        f.write('.cache\n')
         f.write('popper_logs\n')
         f.write('popper_status\n')
 
