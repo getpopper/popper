@@ -26,7 +26,8 @@ from subprocess import check_output
 )
 @click.option(
     '--skip',
-    help='Comma-separated list of stages to skip.',
+    help='Comma-separated list of stages to skip when a pipeline is'
+         'specifier, otherwise a comma-separated list of pipelines to skip.',
     required=False,
 )
 @click.option(
@@ -67,13 +68,16 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                                   time_out, skip)
         else:
             # run all
-            for pipe in pipes:
-                status = run_pipeline(
-                    project_root, pipes[pipe], time_out, skip
-                )
+            skip_list = skip.split(',') if skip else []
 
-                if status == 'FAIL' and not ignore_errors:
-                    break
+            for pipe in pipes:
+                if pipe not in skip_list:
+                    status = run_pipeline(
+                        project_root, pipes[pipe], time_out, []
+                    )
+
+                    if status == 'FAIL' and not ignore_errors:
+                        break
 
     os.chdir(cwd)
 

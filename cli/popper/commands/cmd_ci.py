@@ -15,7 +15,7 @@ install:
 - git clone --recursive https://github.com/systemslab/popper /tmp/popper
 - export PATH=$PATH:/tmp/popper/cli/bin
 - export PYTHONUNBUFFERED=1
-script: popper run
+script: popper run {runargs}
 """
     },
     'circle': {
@@ -32,7 +32,7 @@ jobs:
         git clone --recursive https://github.com/systemslab/popper /tmp/popper
         export PATH=$PATH:/tmp/popper/cli/bin
         export PYTHONUNBUFFERED=1
-        popper run
+        popper run {runargs}
 """
     }
 }
@@ -45,8 +45,13 @@ jobs:
     type=click.Choice(['travis', 'circle', 'jenkins']),
     required=True
 )
+@click.option(
+    '--skip',
+    help='Comma-separated list of pipelines to skip during ci',
+    required=False,
+)
 @pass_context
-def cli(ctx, service):
+def cli(ctx, service, skip):
     """Generates configuration files for distinct CI services.
     """
     project_root = pu.get_project_root()
@@ -54,7 +59,10 @@ def cli(ctx, service):
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)
 
+    runargs = '--skip={}'.format(skip) if skip else ''
+
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
+        ci_file_content = ci_file_content.format(runargs=runargs)
         ci_file = os.path.join(project_root, ci_file)
         # create parent folder
         if not os.path.isdir(os.path.dirname(ci_file)):
