@@ -11,12 +11,6 @@ from io import BytesIO
 from popper.cli import pass_context
 import urllib
 
-def extract_file(zf, info, extract_dir):
-    zf.extract(info.filename, path=extract_dir)
-    out_path = os.path.join(extract_dir, info.filename)
-
-    #perm = 0o777 << 16
-    os.chmod(out_path, info.external_attr)#perm)
 
 @click.command(
     'add',
@@ -68,16 +62,24 @@ def cli(ctx, pipeline, folder, branch):
 
     pu.info("Downloading pipeline {}... ".format(pipe_name))
 
-    file_tmp = urllib.request.urlretrieve(gh_url, filename=None)[0]
-    base_name = os.path.basename(gh_url)
+    r = requests.get(gh_url, stream=True)
+    if r.status_code != 200:
+        pu.fail("Unable to feth the pipeline. Please check if the name" +
+                " of the pipline is correct and the internet is connected")
 
-    _,file_extension = os.path.splitext(base_name)
-    tar = tarfile.open(file_tmp)
+    file_name = gh_url.split('/')[-1]
+    base_name = os.path.basename(gh_url)
+    with open(file_name, 'wb') as f:
+        shutil.copyfileobj(r.raw, f)
+
+    tar = tarfile.open(file_name)
     tar.extractall(pipe_name)
     tar.close()
-    
-    os.rename('{}/{}-{}/pipelines/{}'.format(pipe_name,repo, branch, pipe_name),
-              os.path.join(folder, pipe_name))
+
+    os.remove(file_name)
+
+    os.rename('{}/{}-{}/pipelines/{}'.format(
+        pipe_name, repo, branch, pipe_name), os.path.join(folder, pipe_name))
     shutil.rmtree('{}'.format(pipe_name))
 
     pu.info("Updating popper configuration... ")
