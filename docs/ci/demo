@@ -219,7 +219,7 @@ popper rm mypipetwo
 init_test
 popper search quiho
 test -d ./.cache
-popper search --list-repos
+popper search --ls
 popper search quiho --skip-update
 popper search linux --skip-update
 popper search --rm popperized
