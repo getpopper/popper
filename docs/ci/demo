@@ -222,12 +222,12 @@ test -d ./.cache
 popper search --list-repos
 popper search quiho --skip-update
 popper search linux --skip-update
-popper search linux --rm popperized
+popper search --rm popperized
 set +e
 cat .popper.yml | grep 'github/popperized'
 test $? -eq 1
 set -e
-popper search linux --add popperized
+popper search --add popperized
 cat .popper.yml | grep 'github/popperized'
 init_test
 set +e

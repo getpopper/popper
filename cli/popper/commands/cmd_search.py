@@ -16,7 +16,7 @@ except NameError:
 @click.command(
     'search',
     short_help='Used to search for an experiment in your pipeline folder')
-@click.argument('pipeline_name', required=False)
+@click.argument('keywords', required=False)
 @click.option(
     '--skip-update',
     help=('Skip updating the metadata and search on the local cache'),
@@ -24,88 +24,54 @@ except NameError:
 )
 @click.option(
     '--add',
-    help=('To add an org/repo to the popperized list in .popper.yml'),
+    help=('Add an org/repo to the popperized list in .popper.yml'),
 )
 @click.option(
     '--rm',
-    help=('To remove an org/repo from the popperized list in .popper.yml'),
+    help=('Remove an org/repo from the popperized list in .popper.yml'),
 )
 @click.option(
-    '--list-repos',
-    help=('To list all the repositories available to popper search command'),
+    '--ls',
+    help=('List all the repositories available to search'),
     is_flag=True
 )
 @pass_context
-def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
-    """Searches for the specified pipelines inside the  GitHub
-    organizations specified in the .popper.yml file.
+def cli(ctx, keywords, skip_update, add, rm, ls):
+    """Searches for pipelines on GitHub matching the given keyword(s).
 
-    The organization at -> https://github.com/popperized is present
-    by default.
+    The list of repositories or organizations scraped for Popper pipelines is
+    specified in the 'popperized' list in the .popper.yml file. By default,
+    https://github.com/popperized is added to the configuration.
 
-    If no pipeline name is specified by the user, then a list of all the
-    pipelines from all the listed organizations and their respective
-    repositories will be returned.
+    If no keywords are specified, a list of all the pipelines from all
+    organizations (in the .popper.yml file) and repositories will be returned.
 
     Example:
 
-    popper search quiho
+        popper search quiho
 
     would result in:
 
-    popperized/quiho-popper
+        popperized/quiho-popper
 
-    To add or remove orgs/repos to/from the popperized list,
+    To add or remove orgs/repos to/from the 'popperized' ,
     use the --add and --rm flags while searching.
 
-    *
-        To add an organization/person do:
+        popper search --add org/repo
 
-        popper search quiho --add user_name
+    To remove an organization/person do:
 
-        To remove an organization/person do:
+        popper search --rm org/repo
 
-        popper search quiho --rm user_name
+    To view the list repositories that are available to the search command:
 
-    *
-        To add a repository do:
-
-        popper search quiho --add user_name/repo_name
-
-
-        To remove an org/repo do:
-
-        popper search quiho --rm user_name/repo_name
-
-
-        (user_name = the username of an organization or a person)
-
-    To view the list repositores that are available in the search
-    database do:
-
-    popper search --list-repos
+        popper search --ls
 
     """
+    if (rm or add or ls) and (keywords):
+        pu.fail("'add', 'rm' and 'ls' flags cannot be combined with others.")
 
     project_root = pu.get_project_root()
-
-    empty_query = False
-
-    if not pipeline_name:  # checks if the query is empty or not
-        empty_query = True
-
-    POPPER_GITHUB_API_TOKEN = ""
-
-    # check if the github personal access token has been specified by the user
-
-    if 'POPPER_GITHUB_API_TOKEN' in os.environ:
-        POPPER_GITHUB_API_TOKEN = os.environ['POPPER_GITHUB_API_TOKEN']
-
-    headers = {}
-    if POPPER_GITHUB_API_TOKEN != "":
-        headers = {
-            'Authorization': 'token %s' % POPPER_GITHUB_API_TOKEN
-        }
 
     config = pu.read_config()
     popperized_list = config['popperized']
@@ -117,6 +83,7 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
 
         config['popperized'] = popperized_list
         pu.write_config(config)
+        sys.exit(0)
 
     if rm:
         rm = 'github/' + rm
@@ -125,9 +92,19 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
 
         config['popperized'] = popperized_list
         pu.write_config(config)
+        sys.exit(0)
 
-    if list_repos:
-        result = []
+    gh_token = os.environ.get('POPPER_GITHUB_API_TOKEN', None)
+
+    headers = {}
+    if gh_token:
+        headers = {
+            'Authorization': 'token ' + gh_token
+        }
+
+    result = []  # to store the result of the search query as a list
+
+    if ls:
         for p in popperized_list:
             if p.count('/') == 1:
                 org_name = p.split('/')[1]
@@ -147,17 +124,21 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
                 result.extend(p[7:])
 
         if len(result) > 0:
-            pu.info("The list of available poppperized repositories are :-\n")
+            pu.info("The list of available poppperized repositories are:\n")
             pu.print_yaml(result)
             sys.exit()
         else:
             fail_msg = "There are no popperized repositores available"
-            "for search. Use the --add flag to add org/repo to the"
-            "search database."
+            "for search. Use the --add flag to add an org/repo."
 
             pu.fail(fail_msg)
 
-    result = []  # to store the result of the search query as a list
+        sys.exit(0)
+
+    empty_query = False
+
+    if not keywords:  # checks if the query is empty or not
+        empty_query = True
 
     cache_dir = os.path.join(project_root, '.cache')
 
@@ -195,14 +176,13 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
             with click.progressbar(
                     repos,
                     show_eta=False,
-                    label='Searching in the repositories'
-                    'of {}'.format(org_name),
+                    label='Searching in ' + org_name,
                     bar_template='[%(bar)s] %(label)s | %(info)s',
                     show_percent=True) as bar:
 
                 for r in bar:
                     if l_distance(r["name"].lower(),
-                                  pipeline_name.lower()) < 1:
+                                  keywords.lower()) < 1:
                         temp = ' {}/{}' \
                             .format(org_name, r['name'])
                         result.append(temp)
@@ -211,10 +191,10 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
                         result.extend(
                             search_pipeline(
                                 r["url"],
-                                pipeline_name,
+                                keywords,
                                 org_name,
                                 empty_query,
-                                POPPER_GITHUB_API_TOKEN,
+                                gh_token,
                                 cache_dir,
                                 skip_update))
         else:
@@ -226,8 +206,8 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
             headers = {}
             pu.info("Searching in repository : {}".format(repo))
             result.extend(
-                search_pipeline(repo_url, pipeline_name,
-                                user, empty_query, POPPER_GITHUB_API_TOKEN,
+                search_pipeline(repo_url, keywords,
+                                user, empty_query, gh_token,
                                 cache_dir, skip_update)
             )
 
@@ -238,8 +218,8 @@ def cli(ctx, pipeline_name, skip_update, add, rm, list_repos):
         pu.fail("Unable to find any matching pipelines")
 
 
-def search_pipeline(repo_url, pipeline_name, org_name, empty_query,
-                    POPPER_GITHUB_API_TOKEN, cache_dir, skip_update):
+def search_pipeline(repo_url, keywords, org_name, empty_query,
+                    gh_token, cache_dir, skip_update):
     """Searches for the pipeline inside a github repository.
        Word level levenshtein distances are being calculated to find
        appropriate results for a given query.
@@ -253,8 +233,8 @@ def search_pipeline(repo_url, pipeline_name, org_name, empty_query,
     if not skip_update:
         pipelines_url = repo_url + "/contents/pipelines"
         headers = {}
-        if POPPER_GITHUB_API_TOKEN != "":
-            headers = {'Authorization': 'token %s' % POPPER_GITHUB_API_TOKEN}
+        if gh_token:
+            headers = {'Authorization': 'token ' + gh_token}
 
         response = requests.get(pipelines_url, headers=headers)
 
@@ -276,7 +256,7 @@ def search_pipeline(repo_url, pipeline_name, org_name, empty_query,
             results.append(temp)
 
         else:
-            if l_distance(pipeline_name.lower(),
+            if l_distance(keywords.lower(),
                           pipeline['name'].lower()) < 1:
                 temp = "{}/{}/{}" \
                     .format(org_name, repo_name, pipeline['name'])
