@@ -230,12 +230,12 @@ def search_pipeline(repo_url, keywords, org_name, empty_query,
     results = []
 
     pipelines = ""
+    headers = {}
+    if gh_token:
+        headers = {'Authorization': 'token ' + gh_token}
 
     if not skip_update:
         pipelines_url = repo_url + "/contents/pipelines"
-        headers = {}
-        if gh_token:
-            headers = {'Authorization': 'token ' + gh_token}
 
         response = requests.get(pipelines_url, headers=headers)
 

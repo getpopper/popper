@@ -9,7 +9,6 @@ import yaml
 import tarfile
 from io import BytesIO
 from popper.cli import pass_context
-import urllib
 
 
 @click.command(
@@ -67,20 +66,13 @@ def cli(ctx, pipeline, folder, branch):
         pu.fail("Unable to feth the pipeline. Please check if the name" +
                 " of the pipline is correct and the internet is connected")
 
-    file_name = gh_url.split('/')[-1]
-    base_name = os.path.basename(gh_url)
-    with open(file_name, 'wb') as f:
-        shutil.copyfileobj(r.raw, f)
+    with tarfile.open(
+            mode='r:gz', fileobj=BytesIO(r.content)) as t:
+        t.extractall()
 
-    tar = tarfile.open(file_name)
-    tar.extractall(pipe_name)
-    tar.close()
-
-    os.remove(file_name)
-
-    os.rename('{}/{}-{}/pipelines/{}'.format(
-        pipe_name, repo, branch, pipe_name), os.path.join(folder, pipe_name))
-    shutil.rmtree('{}'.format(pipe_name))
+    os.rename('{}-{}/pipelines/{}'.format(
+        repo, branch, pipe_name), os.path.join(folder, pipe_name))
+    shutil.rmtree('{}-{}'.format(repo, branch))
 
     pu.info("Updating popper configuration... ")
 
@@ -90,7 +82,6 @@ def cli(ctx, pipeline, folder, branch):
     config['pipelines'][pipe_name]['path'] = os.path.join(folder, pipe_name)
 
     pu.write_config(config)
-
     pu.info("Pipeline {} has been added successfully.".format(pipe_name),
             fg="green")
 
