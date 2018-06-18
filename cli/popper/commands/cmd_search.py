@@ -3,6 +3,7 @@ import os
 import sys
 import popper.utils as pu
 from popper.cli import pass_context
+from io import BytesIO
 import requests
 import json
 
@@ -258,8 +259,23 @@ def search_pipeline(repo_url, keywords, org_name, empty_query,
         else:
             if l_distance(keywords.lower(),
                           pipeline['name'].lower()) < 1:
+
                 temp = "{}/{}/{}" \
                     .format(org_name, repo_name, pipeline['name'])
+
+                readme_url = "https://raw.githubusercontent.com"
+                readme_url += "/{}/{}/master".format(org_name, repo_name)
+                readme_url += "/pipelines/{}/README.md".format(
+                    pipeline['name'])
+
+                r = requests.get(readme_url, headers=headers)
+                if r.status_code != 200:
+                    pass
+                else:
+                    content = str(BytesIO(r.content).getvalue(), 'utf-8')
+                    # print(type(content)
+                    content = "\n".join(content.split("\n")[:3])
+                    temp += "\n" + content + "..."
 
                 results.append(temp)
 
