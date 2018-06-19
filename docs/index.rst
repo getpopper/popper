@@ -17,12 +17,31 @@ experiments.
 .. toctree::
    :maxdepth: 2
 
-   protocol/getting_started.md
-   protocol/intro_to_popper.md
-   ci/popperyml.md
-   ci/popperci.md
-   popper_vs_other_software.md
-   protocol/review_workflow.md
+   sections/getting_started.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/concepts.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/cli_features.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/examples/portability.md
+   sections/examples/dataset.md
+   sections/examples/infra.md
+   sections/examples/domain.md
+   sections/examples/validation.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/contributing.md
 
 
 Indices and tables
