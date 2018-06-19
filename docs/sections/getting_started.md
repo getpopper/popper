@@ -41,7 +41,7 @@ git add .
 git commit -m 'adds .popper.yml file'
 ```
 
-### New pipeline
+## New pipeline
 
 Initialize pipeline using `init` (scaffolding):
 
@@ -62,7 +62,7 @@ git add pipelines/myexp
 git commit -m 'adding myexp scaffold'
 ```
 
-### Popper Run
+## Popper Run
 
 Run popper run:
 
@@ -86,11 +86,11 @@ Once a pipeline is executed, one can show the logs:
 ls -l pipelines/myexp/popper_logs
 ```
 
-### Adding Project to GitHub
+## Adding Project to GitHub
 
 Create a repository on github and upload our commits.
 
-### Adding Project to Travis
+## Adding Project to Travis
 
 For this, we need an account at Travis CI. Once we have one, we 
 activate the project so it is continuously validated.
@@ -115,19 +115,6 @@ git push
 ```
 
 Go to TravisCI website to see your experiments being executed.
-
-## Integrating with GitHub
-
-Some of the popper sub-commands (e.g. :- popper search) make use of the GitHub
-API. Since GitHub only allows up to 60 unauthenticated requests per hour on 
-its API, some of these sub-commands will fail to give appropriate results on heavy
-usage. 
-
-To resolve this, we need to :
-  *  Create a GitHub personal access token, as shown [here](https://bit.ly/2rvbeT1).
-  *  Copy the token and set it as an environment variable with the name `POPPER_GITHUB_API_TOKEN` in our computer. 
- 
-This will allow the popper command to use our access token to make authenticated requests.
 
 ## Learn More
 
