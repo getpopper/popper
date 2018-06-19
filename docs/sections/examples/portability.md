@@ -1,7 +1,3 @@
-# Examples
-
-**TODO**
-
 ## Portability
 
 **TODO**
