@@ -33,7 +33,6 @@ experiments.
    :maxdepth: 3
 
    sections/examples.md
-   sections/examples/*
 
 .. toctree::
    :maxdepth: 2
