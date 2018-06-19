@@ -78,9 +78,6 @@
 ### High energy physics
 
 **TODO**
-# Examples
-
-**TODO**
 
 ## Results Validation
 
