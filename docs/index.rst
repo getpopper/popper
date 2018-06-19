@@ -30,7 +30,7 @@ experiments.
    sections/cli_features.md
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 3
 
    sections/examples/portability.md
    sections/examples/dataset.md
