@@ -2,6 +2,7 @@ import click
 import os
 import sys
 import yaml
+import requests
 import subprocess
 
 noalias_dumper = yaml.dumper.SafeDumper
@@ -189,3 +190,33 @@ def get_remote_url():
             return output[:-5]
     else:
         fail("Git remote does not exist. Add a git remote.")
+
+
+def get_gh_headers():
+    """Method for  getting the headers required for making authorized
+    GitHub API requests.
+
+    Returns:
+        headers(dict) : a dictionary representing HTTP-headers and their
+        values.
+    """
+
+    gh_token = os.environ.get('POPPER_GITHUB_API_TOKEN', None)
+
+    headers = {}
+
+    if gh_token:
+        headers = {
+            'Authorization': 'token ' + gh_token
+        }
+
+    return headers
+
+
+def make_gh_request(url, err=True):
+    response = requests.get(url, headers=get_gh_headers())
+    if err and response.status_code != 200:
+        pu.fail("Unable to connect. Please check your network"
+                " and try again.")
+    else:
+        return response
