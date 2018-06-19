@@ -32,11 +32,8 @@ experiments.
 .. toctree::
    :maxdepth: 3
 
-   sections/examples/portability.md
-   sections/examples/dataset.md
-   sections/examples/infra.md
-   sections/examples/domain.md
-   sections/examples/validation.md
+   sections/examples.md
+   sections/examples/*
 
 .. toctree::
    :maxdepth: 2
