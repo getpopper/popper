@@ -210,6 +210,15 @@ popper cleanup
 ! popper stages mypipetwo | grep teardown
 ! popper stages mypipetwo | grep post-run
 
+# popper matrix subcommand
+init_test
+popper init mypipeone
+popper matrix mypipeone --add key1=val1 --add key2=val2
+popper matrix mypipeone | grep -q key1
+popper matrix mypipeone | grep -q key2
+popper matrix mypipeone --rm key1
+! popper matrix mypipeone | grep -q key1
+
 # test popper rm command
 init_test
 popper init mypipetwo
