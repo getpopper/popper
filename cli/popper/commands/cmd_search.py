@@ -210,8 +210,10 @@ def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
 
     if len(result) != 0:
         pu.info("\nSearch results:\n", fg="green")
-        pu.print_yaml(result)
-        if in_readme:
+        for res in result:
+            pu.info("> " + res + "\n")
+
+        if search_params["in_readme"]:
             pu.info("Use popper info command to view the"
                     " details of a pipeline. See popper info --"
                     "help")
@@ -223,6 +225,12 @@ def search_pipeline(s):
     """Searches for the pipeline inside a github repository.
        Word level levenshtein distances are being calculated to find
        appropriate results for a given query.
+
+    Args:
+        s (dict): A python dictionary that contains all the conditions
+                        specified by a user during popper search.
+    Returns:
+        results (list): List of pipelines
     """
 
     repo_name = s["repo_url"].split('/')[-1]
@@ -233,7 +241,7 @@ def search_pipeline(s):
     if not s["skip_update"]:
         pipelines_url = s["repo_url"] + "/contents/pipelines"
 
-        response = pu.make_gh_request(pipelines_url, False)
+        response = pu.make_gh_request(pipelines_url, err=False)
         if response.status_code != 200:
             return results
 
@@ -241,6 +249,7 @@ def search_pipeline(s):
             with open(os.path.join(
                     s["cache_dir"], repo_name + '.json'), 'w') as f:
                 json.dump(response.json(), f)
+
     try:
         with open(os.path.join(s["cache_dir"], repo_name + '.json'), 'r') as f:
             pipelines = json.load(f)
@@ -260,18 +269,17 @@ def search_pipeline(s):
                     .format(s["uname"], repo_name, pipeline['name'])
 
                 if s["in_readme"]:
-                    readme_url = "https://raw.githubusercontent.com"
-                    readme_url += "/{}/{}/master".format(s["uname"], repo_name)
-                    readme_url += "/pipelines/{}/README.md".format(
-                        pipeline['name'])
+                    contents = pu.read_gh_pipeline(
+                        s["uname"],
+                        repo_name,
+                        pipeline["name"]
+                    )
 
-                    r = pu.make_gh_request(readme_url, False)
-                    if r.status_code != 200:
-                        pass
-                    else:
-                        content = str(BytesIO(r.content).getvalue(), 'utf-8')
-                        content = "\n".join(content.split("\n")[:3])
-                        temp += "\n" + content + "..."
+                    if len(contents) != 0:
+                        contents = " ".join(" ".join(
+                            contents[2:4]).split(".")[0:3]
+                        )
+                        temp += "\n" + contents + "\n"
 
                 results.append(temp)
 
@@ -279,8 +287,15 @@ def search_pipeline(s):
 
 
 def l_distance(a, b):
-    """ A modified version of the Levenshtein Distance algorithm to find
-    word level edit distances between two sentences. """
+    """A modified version of the Levenshtein Distance algorithm to find
+    word level edit distances between two sentences.
+
+    Args:
+        a, b (str): The words between which the Levenshtein distance
+                        is to be calculated.
+    Returns:
+        ldist (int): Levenshtein distance between a and b.
+    """
 
     arr1 = a.split("-")
     arr2 = b.split("-")

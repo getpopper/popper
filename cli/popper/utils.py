@@ -4,6 +4,7 @@ import sys
 import yaml
 import requests
 import subprocess
+from io import BytesIO
 
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
@@ -197,7 +198,7 @@ def get_gh_headers():
     GitHub API requests.
 
     Returns:
-        headers(dict) : a dictionary representing HTTP-headers and their
+        headers (dict): a dictionary representing HTTP-headers and their
         values.
     """
 
@@ -213,10 +214,50 @@ def get_gh_headers():
     return headers
 
 
-def make_gh_request(url, err=True):
+def make_gh_request(url, err=True, msg=None):
+    """Method for making GET requests to GitHub API
+
+    Args:
+        url (str): URL on which the API request is to be made.
+        err (bool): Checks if an error message needs to be printed or not.
+        msg (str): Error message to be printed for a failed request.
+
+    Returns:
+        Response object: contains a server's response to an HTTP request.
+    """
+    if not msg:
+        msg = "Unable to connect. Please check your network"
+        "and try again."
+
     response = requests.get(url, headers=get_gh_headers())
     if err and response.status_code != 200:
-        pu.fail("Unable to connect. Please check your network"
-                " and try again.")
+        pu.fail(msg)
     else:
         return response
+
+
+def read_gh_pipeline(uname, repo, pipeline, branch="master"):
+    """Reads the README.md file of a pipeline and returns its
+    contents.
+
+    Args:
+        uname (str): User/org_name
+        repo (str): Name of the repository
+        pipeline (str): Name of the pipeline
+        branch (str): Name of the branch
+
+    Returns:
+        contents (list): the contents of the README.md file
+    """
+    url = "https://raw.githubusercontent.com"
+    url += "/{}/{}/{}".format(uname, repo, branch)
+    url += "/pipelines/{}/README.md".format(pipeline)
+
+    contents = ""
+    r = make_gh_request(url, err=False)
+    if r.status_code != 200:
+        pass
+    else:
+        contents = r.content.decode("utf-8").split("\n")
+
+    return contents

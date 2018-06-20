@@ -61,11 +61,13 @@ def cli(ctx, pipeline, folder, branch):
 
     pu.info("Downloading pipeline {}... ".format(pipe_name))
 
-    r = requests.get(gh_url, stream=True)
-    if r.status_code != 200:
-        pu.fail("Unable to feth the pipeline. Please check if the name" +
-                " of the pipline is correct and the internet is connected")
+    r = pu.make_gh_request(
+        gh_url,
+        msg="Unable to fetch the pipeline. Please check if the name"
+        " of the pipeline is correct and the internet is connected"
+    )
 
+    # Downloading and extracting the tarfile
     with tarfile.open(
             mode='r:gz', fileobj=BytesIO(r.content)) as t:
         t.extractall()
@@ -89,12 +91,20 @@ def cli(ctx, pipeline, folder, branch):
 def get_config(owner, repo):
     """It returns the content of the .popper.yml file of the repository
     whose pipeline we are copying.
+
+    Args:
+        owner (str): The username of the owner of the repository
+        repo  (str): The name of the repository from where the
+                     pipeline is being added
+    Returns:
+        config (dict): .popper.yml configuarion of the pipeline
     """
 
     yaml_url = 'https://raw.githubusercontent.com/{}/{}/{}/.popper.yml'.format(
         owner, repo, 'master')
 
-    r = requests.get(yaml_url)
+    # r = requests.get(yaml_url)
+    r = pu.make_gh_request(yaml_url)
     config = yaml.load(r.content)
 
     return config
