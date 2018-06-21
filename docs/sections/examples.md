@@ -6,7 +6,30 @@
 
 ### Using Virtualenv (Python)
 
-**TODO**
+Python provides the ability of recreating and isolating environments
+with all the dependencies that are needed by an application that is
+written in this language.
+
+This tool is [virtualenv](https://virtualenv.pypa.io/en/stable/) and it can be used 
+to create an isolated environment with all the dependencies of a python application,
+including the version of the python runtime itself. 
+This is a lightweight way of creating portable pipelines.
+
+Popper pipelines automate and create an explicit record of the steps
+that need to be followed in order to create these isolated environments.
+
+Examples:
+
+[sea-surface-mapping](https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/sea-surface-mapping)
+In this case, Popper helps make sure that a virtualenv is enabled and 
+running at the time of execution by throwing an exception if your 
+virtualenv is disabled.
+
+Or if you want Popper to make the virtualenv for you, you can check the following pipeline:
+[validator](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/validator)
+Here, Popper makes a virtualenv for you if it founds that a virtualenv is not enabled.
+And if it founds a virtualenv, Popper deactivates it and creates a new one so you don't have to worry
+about mixing virtual environments. 
 
 ### Using Packrat (R)
 
