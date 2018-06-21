@@ -13,7 +13,7 @@ test -f pipelines/co2-emissions/setup.sh
 test -f pipelines/co2-emissions/validate.sh
 
 # info command
-popper info popperized/swc-lesson-pipelines/co2-emissions | grep 'url'
+popper info popperized/popper-readthedocs-examples/docker-data-science | grep 'url'
 
 # popper add --branch
 init_test

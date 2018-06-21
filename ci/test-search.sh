@@ -6,6 +6,7 @@ source common-setup.sh
 # test popper search command
 init_test
 popper search quiho
+popper search data-science --include-readme | grep '>'
 test -d ./.cache
 popper search --ls
 popper search quiho --skip-update
