@@ -3,6 +3,7 @@ import os
 import sys
 import popper.utils as pu
 from popper.cli import pass_context
+from io import BytesIO
 import requests
 import json
 
@@ -35,8 +36,13 @@ except NameError:
     help=('List all the repositories available to search'),
     is_flag=True
 )
+@click.option(
+    '--include-readme',
+    help=("Includes content from a pipeline's readme in the search results"),
+    is_flag=True
+)
 @pass_context
-def cli(ctx, keywords, skip_update, add, rm, ls):
+def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
     """Searches for pipelines on GitHub matching the given keyword(s).
 
     The list of repositories or organizations scraped for Popper pipelines is
@@ -94,14 +100,6 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
         pu.write_config(config)
         sys.exit(0)
 
-    gh_token = os.environ.get('POPPER_GITHUB_API_TOKEN', None)
-
-    headers = {}
-    if gh_token:
-        headers = {
-            'Authorization': 'token ' + gh_token
-        }
-
     result = []  # to store the result of the search query as a list
 
     if ls:
@@ -111,15 +109,10 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
                 org_url = ('https://api.github.com/users/{}/repos')
                 org_url = org_url.format(org_name)
 
-                response = requests.get(org_url, headers=headers)
-
-                if response.status_code != 200:
-                    pu.fail("Unable to connect. Please check your network"
-                            " and try again.")
-                else:
-                    repos = response.json()
-                    temp = [r["full_name"] for r in repos]
-                    result.extend(temp)
+                response = pu.make_gh_request(org_url)
+                repos = response.json()
+                temp = [r["full_name"] for r in repos]
+                result.extend(temp)
             else:
                 result.extend(p[7:])
 
@@ -135,12 +128,19 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
 
         sys.exit(0)
 
-    empty_query = False
+    search_params = {}
 
     if not keywords:  # checks if the query is empty or not
-        empty_query = True
+        search_params['empty_query'] = True
+    else:
+        search_params['empty_query'] = False
 
     cache_dir = os.path.join(project_root, '.cache')
+
+    search_params["keywords"] = keywords
+    search_params["cache_dir"] = cache_dir
+    search_params["skip_update"] = True if skip_update else False
+    search_params["in_readme"] = True if include_readme else False
 
     if not os.path.exists(cache_dir):
         os.makedirs(cache_dir)
@@ -156,11 +156,7 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
                 org_url = ('https://api.github.com/users/{}/repos'
                            .format(org_name))
 
-                response = requests.get(org_url, headers=headers)
-
-                if response.status_code != 200:
-                    pu.fail("Unable to connect. Please check your network"
-                            " and try again.")
+                response = pu.make_gh_request(org_url)
 
                 with open(os.path.join(cache_dir, org_name + '_repos.json'),
                           'w') as f:
@@ -181,85 +177,109 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
                     show_percent=True) as bar:
 
                 for r in bar:
-                    if l_distance(r["name"].lower(),
-                                  keywords.lower()) < 1:
+                    if search_params["empty_query"]:
+                        temp = ' {}/{}'\
+                            .format(org_name, r['name'])
+
+                        result.append(temp)
+
+                    elif l_distance(r["name"].lower(),
+                                    keywords.lower()) < 1:
                         temp = ' {}/{}' \
                             .format(org_name, r['name'])
                         result.append(temp)
 
                     else:
+                        search_params["repo_url"] = r["url"]
+                        search_params["uname"] = org_name
                         result.extend(
-                            search_pipeline(
-                                r["url"],
-                                keywords,
-                                org_name,
-                                empty_query,
-                                gh_token,
-                                cache_dir,
-                                skip_update))
+                            search_pipeline(search_params))
+
         else:
             # it is a repository
             user, repo = popperized.split('/')[1:]
             repo_url = ('https://api.github.com/repos/{}/{}'
                         .format(user, repo))
 
-            headers = {}
+            search_params["repo_url"] = repo_url
+            search_params["uname"] = user
+
             pu.info("Searching in repository : {}".format(repo))
             result.extend(
-                search_pipeline(repo_url, keywords,
-                                user, empty_query, gh_token,
-                                cache_dir, skip_update)
-            )
+                search_pipeline(search_params))
 
     if len(result) != 0:
         pu.info("\nSearch results:\n", fg="green")
-        pu.print_yaml(result)
+        for res in result:
+            pu.info("> " + res + "\n")
+
+        if search_params["in_readme"]:
+            pu.info("Use popper info command to view the"
+                    " details of a pipeline. See popper info --"
+                    "help")
     else:
         pu.fail("Unable to find any matching pipelines")
 
 
-def search_pipeline(repo_url, keywords, org_name, empty_query,
-                    gh_token, cache_dir, skip_update):
+def search_pipeline(s):
     """Searches for the pipeline inside a github repository.
        Word level levenshtein distances are being calculated to find
        appropriate results for a given query.
+
+    Args:
+        s (dict): A python dictionary that contains all the conditions
+                        specified by a user during popper search.
+    Returns:
+        results (list): List of pipelines
     """
 
-    repo_name = repo_url.split('/')[-1]
+    repo_name = s["repo_url"].split('/')[-1]
     results = []
 
     pipelines = ""
 
-    if not skip_update:
-        pipelines_url = repo_url + "/contents/pipelines"
-        headers = {}
-        if gh_token:
-            headers = {'Authorization': 'token ' + gh_token}
+    if not s["skip_update"]:
+        pipelines_url = s["repo_url"] + "/contents/pipelines"
 
-        response = requests.get(pipelines_url, headers=headers)
-
+        response = pu.make_gh_request(pipelines_url, err=False)
         if response.status_code != 200:
             return results
 
         else:
-            with open(os.path.join(cache_dir, repo_name + '.json'), 'w') as f:
+            with open(os.path.join(
+                    s["cache_dir"], repo_name + '.json'), 'w') as f:
                 json.dump(response.json(), f)
+
     try:
-        with open(os.path.join(cache_dir, repo_name + '.json'), 'r') as f:
+        with open(os.path.join(s["cache_dir"], repo_name + '.json'), 'r') as f:
             pipelines = json.load(f)
     except FileNotFoundError:
         return results
 
     for pipeline in pipelines:
-        if empty_query:
-            temp = "{}/{}/{}".format(org_name, repo_name, pipeline['name'])
+        if s["empty_query"]:
+            temp = "{}/{}/{}".format(s["uname"], repo_name, pipeline['name'])
             results.append(temp)
 
         else:
-            if l_distance(keywords.lower(),
+            if l_distance(s["keywords"].lower(),
                           pipeline['name'].lower()) < 1:
+
                 temp = "{}/{}/{}" \
-                    .format(org_name, repo_name, pipeline['name'])
+                    .format(s["uname"], repo_name, pipeline['name'])
+
+                if s["in_readme"]:
+                    contents = pu.read_gh_pipeline(
+                        s["uname"],
+                        repo_name,
+                        pipeline["name"]
+                    )
+
+                    if len(contents) != 0:
+                        contents = " ".join(" ".join(
+                            contents[2:4]).split(".")[0:3]
+                        )
+                        temp += "\n" + contents + "\n"
 
                 results.append(temp)
 
@@ -267,8 +287,15 @@ def search_pipeline(repo_url, keywords, org_name, empty_query,
 
 
 def l_distance(a, b):
-    """ A modified version of the Levenshtein Distance algorithm to find
-    word level edit distances between two sentences. """
+    """A modified version of the Levenshtein Distance algorithm to find
+    word level edit distances between two sentences.
+
+    Args:
+        a, b (str): The words between which the Levenshtein distance
+                        is to be calculated.
+    Returns:
+        ldist (int): Levenshtein distance between a and b.
+    """
 
     arr1 = a.split("-")
     arr2 = b.split("-")

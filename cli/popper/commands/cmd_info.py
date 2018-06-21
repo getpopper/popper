@@ -3,6 +3,7 @@ import click
 import popper.utils as pu
 import requests
 from popper.cli import pass_context
+from io import BytesIO
 
 """
 Making the code compatible with both python 2.x and 3.x environments.
@@ -16,9 +17,9 @@ except NameError:
 
 
 @click.command('info', short_help='Shows the information about a pipeline')
-@click.argument('query', required=True)
+@click.argument('pipeline', required=True)
 @pass_context
-def cli(ctx, query):
+def cli(ctx, pipeline):
     """Displays the information related to a pipeline.
     It gives details about the pipeline name, version,
     and contents of the pipeline.
@@ -26,44 +27,65 @@ def cli(ctx, query):
     Examples:
       popper info popperized/quiho-popper/single-node
     """
-    query = query.split('/')
+    pipeline = pipeline.split('/')
     # checking the validity of the provided arguments
-    if len(query) != 3:
+    if len(pipeline) != 3:
         pu.fail("Bad pipeline name. See 'popper info --help' for more info.")
 
-    get_info(query)
+    get_info(pipeline)
 
 
-def get_info(query):
+def get_info(pipeline):
+    """Prints the information about the specified pipeline.
+
+    Args:
+        pipeline (list): [org,repo,pipeline_name]
+    """
+
     # Checking if the popperized repositories are present or not
     info = {}
-    org = query[0]
-    repo = query[1]
-    pipe = query[2]
-
-    # check if the github personal access token has been specified by the user
-    POPPER_GITHUB_API_TOKEN = ""
-    if 'POPPER_GITHUB_API_TOKEN' in os.environ:
-        POPPER_GITHUB_API_TOKEN = os.environ['POPPER_GITHUB_API_TOKEN']
-
-    headers = {}
-
-    if POPPER_GITHUB_API_TOKEN != "":
-        headers = {
-            'Authorization': 'token %s' % POPPER_GITHUB_API_TOKEN
-        }
+    org = pipeline[0]
+    repo = pipeline[1]
+    pipe = pipeline[2]
 
     commit_url = 'https://api.github.com/repos'
     commit_url += '/{}/{}/git/refs/heads/master'.format(org, repo)
 
-    r = requests.get(commit_url, headers=headers)
+    r = pu.make_gh_request(
+        commit_url,
+        msg="Please check if the specified pipeline exists "
+        "and the internet is connected."
+    )
 
-    if r.status_code == 200:
-        r = r.json()
-        info['name'] = pipe
-        info['url'] = 'https://github.com/{}/{}'.format(org, repo)
-        info['sha'] = r['object']['sha']
-        pu.print_yaml(info)
+    r = r.json()
+    info['name'] = pipe
+    info['url'] = 'https://github.com/{}/{}'.format(org, repo)
+    info['sha'] = r['object']['sha']
+
+    temp = {}
+    contents = " ".join(pu.read_gh_pipeline(org, repo, pipe)[1:])
+    """
+    readme_url = "https://raw.githubusercontent.com"
+    readme_url += "/{}/{}/master".format(org, repo)
+    readme_url += "/pipelines/{}/README.md".format(pipe)
+
+    r = pu.make_gh_request(readme_url, err=False)
+    content = ""
+    if r.status_code != 200:
+        pass
     else:
-        pu.fail("Please check if the specified pipeline exists " +
-                " and the internet is connected")
+        # str functions take different number of arguments in python 2/3
+        try:
+            content = str(BytesIO(r.content).getvalue(), 'utf-8')
+        except TypeError:
+            content = str(BytesIO(r.content).getvalue()).encode("utf-8")
+
+        content = "\n".join(content.split("\n")[1:])
+    """
+
+    if len(contents) != 0:
+        temp['description'] = contents
+
+    pu.print_yaml(info)
+    if 'description' in temp:
+        pu.print_yaml(temp)
