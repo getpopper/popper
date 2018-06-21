@@ -10,6 +10,9 @@ function init_test {
   popper init
 }
 
+echo $POPPER_ZENODO_API_TOKEN
+exit 1
+
 popper --help
 
 init_test
