@@ -11,12 +11,31 @@ from lark import Lark, InlineTransformer, Tree
 
 
 def increment(node_id):
+    """Increments the id of a node during the dot graph
+    generation.
+
+    Returns:
+        node_id(str): incremented id for the next node
+    """
     return 's{}'.format(int(node_id[1:]) + 1)
 
 # This function creates an if-node in the workflow graph
 
 
 def create_if_node(node_id, c, prev_node):
+    """Writes an if node during the dot graph generation
+    and returns its node id.
+
+    Args:
+        node_id (str): the id of the 'if' node.
+        c (str): label for the 'if' node.
+        prev_node (str): the id of the parent node.
+
+    Returns:
+        A list comprising of :
+            node_id (str): node id of the newly created 'if' node,
+            True for the successful generation of the 'if' node
+    """
     print('{} [shape=oval, label="{}"];'.format(node_id, c))
     print('{} -> {};'.format(prev_node, node_id))
     node_id = increment(node_id)
@@ -34,8 +53,9 @@ def remove_redundant_if(cs):
             if cs[i + 1] == '[wf]#fi#':
                 cs[i] = ''
                 cs[i + 1] = ''
-            elif (cs[i + 1] == '[wf]#elif#'
-                    or cs[i + 1] == '[wf]#else#') and cs[i + 2] == '[wf]#fi#':
+            elif (
+                    cs[i + 1] == '[wf]#elif#'or cs[i + 1] == '[wf]#else#'
+            ) and cs[i + 2] == '[wf]#fi#':
                 cs[i] = ''
                 cs[i + 1] = ''
                 cs[i + 2] = ''
@@ -200,8 +220,10 @@ def cli(ctx, pipeline):
         elif item == '[wf]#if#':
             if_created = False
             c = 'condition'
-            if i > 1 and (not cs[i - 1].startswith('[wf]#')
-                          and '.sh' not in cs[i - 1]):
+            if i > 1 and (
+                    not cs[i - 1].startswith('[wf]#') and
+                    '.sh' not in cs[i - 1]
+            ):
                 c += ' : {}'.format(cs[i - 1])
 
             if_index = i - 1
