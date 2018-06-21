@@ -4,17 +4,10 @@ metadata:
   publication_type: article
   upload_type: publication
 pipelines:
-  run-container:
-    envs:
-    - host
-    path: pipelines/run-container
-    stages:
-    - setup
-    - run
   run-tests:
     envs:
     - host
-    path: pipelines/run-tests
+    path: ci/run-tests
     stages:
     - run
 popperized:
