@@ -1,0 +1,21 @@
+metadata:
+  access_right: open
+  license: CC-BY-4.0
+  publication_type: article
+  upload_type: publication
+pipelines:
+  run-container:
+    envs:
+    - host
+    path: pipelines/run-container
+    stages:
+    - setup
+    - run
+  run-tests:
+    envs:
+    - host
+    path: pipelines/run-tests
+    stages:
+    - run
+popperized:
+- github/popperized

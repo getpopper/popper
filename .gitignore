@@ -7,3 +7,9 @@ wiki
 docs/_build
 cli/popper.egg-info/
 .idea/
+.cache
+popper_logs
+popper_status
+.cache
+popper_logs
+popper_status
