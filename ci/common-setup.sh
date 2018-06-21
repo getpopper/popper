@@ -9,8 +9,10 @@ function init_test {
   popper init
 }
 
-if USE_VIRTUALENV
+if [ $USE_VIRTUALENV ];
 then
   source /tmp/popper-env/bin/activate
 fi
+
+which popper
 
