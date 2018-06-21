@@ -1,0 +1,28 @@
+metadata:
+  access_right: open
+  license: CC-BY-4.0
+  publication_type: article
+  upload_type: publication
+pipelines:
+  run-tests:
+    envs:
+    - host
+    path: ci
+    stages:
+    - setup
+    - test-default
+    - test-init
+    - test-existing
+    - test-run
+    - test-ci
+    - test-stages
+    - test-env
+    - test-cleanup
+    - test-workflow
+    - test-metadata
+    - test-add
+    - test-search
+    - test-rm
+    - test-archive
+popperized:
+- github/popperized
