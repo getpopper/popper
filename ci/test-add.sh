@@ -3,6 +3,8 @@ set -ex
 
 source common-setup.sh
 
+sleep 10
+
 # popper add
 init_test
 popper add popperized/swc-lesson-pipelines/co2-emissions

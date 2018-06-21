@@ -3,6 +3,8 @@ set -ex
 
 source common-setup.sh
 
+sleep 10
+
 # test popper search command
 init_test
 popper search quiho
