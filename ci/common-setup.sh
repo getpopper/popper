@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 function init_test {
   cd
