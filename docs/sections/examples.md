@@ -49,7 +49,9 @@ setup stage builds the docker image, installing and setting up the dependencies
 specified in our `requirements.txt` file, while each of the other two stages
 will run one of the two scripts inside the container, ouputting results inside
 a `results` directory. This example can be found in full
-[here](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/docker-data-science).
+[here](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/docker-data-science),
+and is also explored in greater depth in this [Software Carpentry
+lesson](https://popperized.github.io/swc-lesson/05-pipeline-portability-with-docker/index.html).
 
 Using this comparmentalized splitting of stages and keeping our dependencies
 inside docker, we become capable of sharing our experiments with whomever we
