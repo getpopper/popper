@@ -7,4 +7,7 @@ install:
 - git clone --recursive https://github.com/systemslab/popper /tmp/popper
 - export PATH=$PATH:/tmp/popper/cli/bin
 - export PYTHONUNBUFFERED=1
-script: popper run 
+script:
+  - USE_VIRTUALENV=1 popper run 
+  - docker build -t falsifiable/popper cli/
+  - docker run --rm -e CI=1 -e POPPER_FIGSHARE_API_TOKEN="${POPPER_FIGSHARE_API_TOKEN}" -e POPPER_ZENODO_API_TOKEN="${POPPER_ZENODO_API_TOKEN}" -e POPPER_GITHUB_API_TOKEN="${POPPER_GITHUB_API_TOKEN}" -v `pwd`:/repo --workdir=/repo falsifiable/popper run

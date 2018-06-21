@@ -7,8 +7,22 @@ pipelines:
   run-tests:
     envs:
     - host
-    path: ci/run-tests
+    path: ci
     stages:
-    - run
+    - setup
+    - test-default
+    - test-init
+    - test-existing
+    - test-run
+    - test-ci
+    - test-stages
+    - test-env
+    - test-cleanup
+    - test-workflow
+    - test-metadata
+    - test-add
+    - test-search
+    - test-rm
+    - test-archive
 popperized:
 - github/popperized
