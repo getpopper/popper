@@ -64,24 +64,6 @@ def get_info(pipeline):
 
     temp = {}
     contents = " ".join(pu.read_gh_pipeline(org, repo, pipe)[1:])
-    """
-    readme_url = "https://raw.githubusercontent.com"
-    readme_url += "/{}/{}/master".format(org, repo)
-    readme_url += "/pipelines/{}/README.md".format(pipe)
-
-    r = pu.make_gh_request(readme_url, err=False)
-    content = ""
-    if r.status_code != 200:
-        pass
-    else:
-        # str functions take different number of arguments in python 2/3
-        try:
-            content = str(BytesIO(r.content).getvalue(), 'utf-8')
-        except TypeError:
-            content = str(BytesIO(r.content).getvalue()).encode("utf-8")
-
-        content = "\n".join(content.split("\n")[1:])
-    """
 
     if len(contents) != 0:
         temp['description'] = contents
