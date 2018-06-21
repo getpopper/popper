@@ -18,7 +18,46 @@
 
 ### Using Docker
 
-**TODO**
+In recent years, [Docker](https://www.docker.com/) has emerged in the devops
+world as a powerful tool for for builiding and using versatile reusable
+environments for development and deployment. We can leverage Docker to run our
+experiments in isolated and easily recreatable environments. In this example
+we'll build a pipeline for a simple data science experiment using whose only
+requirement on the host machine is having `docker` installed. You can find
+instructions on installing Docker at the [official
+website](https://docs.docker.com/install/).
+
+
+The directory structure for this pipeline is as follows:
+
+```
+docker-data-science
+├── setup.sh
+├── analyze.sh
+├── analyze.sh
+├── generate-figures.sh
+└── docker
+    ├── Dockerfile
+    ├── requirements.txt
+    ├── app.py
+    └── generate-figures.py
+```
+
+We have three stages as well as a directory for our docker image, including the
+two python scripts we want to run: `app.py`, and `generate_figures.py`. The
+setup stage builds the docker image, installing and setting up the dependencies
+specified in our `requirements.txt` file, while each of the other two stages
+will run one of the two scripts inside the container, ouputting results inside
+a `results` directory. This example can be found in full
+[here](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/docker-data-science),
+and is also explored in greater depth in this [Software Carpentry
+lesson](https://popperized.github.io/swc-lesson/05-pipeline-portability-with-docker/index.html).
+
+Using this comparmentalized splitting of stages and keeping our dependencies
+inside docker, we become capable of sharing our experiments with whomever we
+want. In addition to this, we can also do other things, such as validating your
+experiments on every commit, as seen in the continous validation section of this
+documentation.
 
 ### Using Vagrant
 
