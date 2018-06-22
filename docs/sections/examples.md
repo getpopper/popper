@@ -22,7 +22,7 @@ In recent years, [Docker](https://www.docker.com/) has emerged in the devops
 world as a powerful tool for for builiding and using versatile reusable
 environments for development and deployment. We can leverage Docker to run our
 experiments in isolated and easily recreatable environments. In this example
-we'll build a pipeline for a simple data science experiment using whose only
+we'll build a pipeline for a simple data science experiment whose only
 requirement on the host machine is having `docker` installed. You can find
 instructions on installing Docker at the [official
 website](https://docs.docker.com/install/).
@@ -61,7 +61,26 @@ documentation.
 
 ### Using Vagrant
 
-**TODO**
+[Vagrant](https://www.vagrantup.com/) is another option for isolating
+environments during experiments. Vagrant is a cli tool for easily creating,
+provisioning, and running virtual machines. It is an excellent choice for
+certain use cases that require a high degree of customization of the runtime
+environment, such as operating system research. However, for cases where this
+fine control is not necessary, it may be wise to consider a more lightweight
+solution for keeping your environment porable, as seen in the sections
+preceding this one.
+
+An example of a pipeline that uses Vagrant can be found
+[here](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/vagrant-linux).
+This pipeline is intended to measure the performance impact of cgroups on a
+specific linux kernel version. For this it first uses a docker image to compile
+a specified version of a kernel. After this is done, it provisions a vagrant
+box using the `.deb` packages produced by the last stage. It then runs a
+synthetic benchmark with and without cgroups. Finally, it takes the results
+from these tests and charts them using a jupyter notebook. We can see from this
+pipeline the advantages of splitting the our processes into discrete stages, as
+well as the power afforded by combining several tools commonly used in devops,
+taking advantage of each of their individual strengths.
 
 ## Dataset Management
 
