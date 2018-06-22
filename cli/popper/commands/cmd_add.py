@@ -11,6 +11,7 @@ from io import BytesIO
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
 
+
 @click.command(
     'add',
     short_help='Add a pipeline from popperized repositories on github.'
@@ -42,7 +43,7 @@ def cli(ctx, pipeline, folder, branch):
     """
     if len(pipeline.split('/')) != 3:
         raise BadArgumentUsage(
-                "Bad pipeline name. See 'popper add --help' for more info.")
+            "Bad pipeline name. See 'popper add --help' for more info.")
 
     owner, repo, pipe_name = pipeline.split('/')
 
