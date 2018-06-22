@@ -1,5 +1,15 @@
 # Examples
 
+In this section we present a examples of Popper pipelines. All these 
+are available on github and can be added to a local repo by doing:
+
+```bash
+popper add popperized/<repo>/<pipeline>
+```
+
+Where `<repo>` is the name of the repository where a pipeline is 
+contained, and `<pipeline>` is the name of the pipeline.
+
 ## Pipeline portability
 
 **TODO**
@@ -117,6 +127,82 @@ documentation.
 ### High energy physics
 
 **TODO**
+
+### Applied Mathematical Science
+
+[BLIS](https://github.com/flame/blis) is a portable software framework
+for instantiating high-performance BLAS-like dense linear algebra
+libraries. This experiment corresponds to the one presented in the
+[first BLIS paper](http://doi.acm.org/10.1145/2764454). A [subsequent
+report](http://dl.acm.org/citation.cfm?id=2738033) documents how to
+repeat this experiment. This pipeline corresponds to sections
+2.1-2.3 of the replicability report and consists of three stages:
+
+  * `build-docker-image`. [A Docker
+    image](https://github.com/ivotron/docker-blis/tree/master/Dockerfile)
+    prepares all the binaries for BLIS, OpenBLAS and Atlas
+    precompiled.
+  * `run`. Executes the experiment that compares BLIS against other
+    BLAS implementations, generating output to the `results/` folder.
+  * `analyze`. Runs the analysis on the output of the experiment,
+    corresponding to figures 13-15 from the original paper. To
+    visualize results locally, one can execute the following:
+
+    ```bash
+    docker run -d \
+      -v `pwd`:/code/experiment -p 8888:8888  jupter notebook
+      --NotebookApp.token=""
+    ```
+
+    After the above executes, open Browser and point it to
+    <http://localhost:8888>. To see an example of how the notebook looks
+    click
+    [here](https://github.com/popperized/popper-readthedocs-examples/blob/master/pipelines/blis/results/visualize.ipynb).
+
+The pipeline is available on github at [this
+repository](https://github.com/popperized/popper-readthedocs-examples/master/pipelines/blis).
+
+### High Performance Computing
+
+A typical experiment in HPC assumes many things from the 
+environment: an NFS mount point available in compute nodes, a batch 
+scheduler, applications installed/compiled directly on the host (i.e. 
+without any type of virtualization), among others. In this case, 
+Popper is followed to record the scripts used to compile, install and 
+run the experiment, as well as analyze its results. We assume SLURM as 
+the batch scheduler and use spack to install the software stack.
+
+We assume that the `$HOME/mypaper` folder is available in the users' 
+laptop as well as on the nodes of the machine where the experiment 
+runs.
+
+The experiment corresponds to an execution of the 
+[LULESH](https://codesign.llnl.gov/lulesh.php) MPI [proxy 
+application](http://www.lanl.gov/projects/codesign/proxy-apps/assets/docs/proxyapps_strategy.pdf)
+compiled against [mpiP](http://mpip.sourceforge.net/). The experiment 
+consists of three stages:
+
+  * `install` installs the dependencies via [`spack`](https://github.com/llnl/spack). 
+    Since `spack` installs 
+    dependencies from source, the `install` stage should be executed 
+    in a node with the same architecture as the one of the compute 
+    nodes where LULESH will run (e.g. in a "head" node of the 
+    machine).
+
+  * `run`. Executes LULESH by sending the job to the SLURM batch 
+    scheduler.
+
+  * `analyze`. Post-process the results that are gathered by `mpiP`. 
+    Once the experiment finishes, `mpiP` places a text file in the 
+    `results/` folder (a text file file ending in `.mpiP`) that 
+    contains MPI runtime metrics. The `analyze.sh` script launches a 
+    [Jupyter](http://jupyter.org/) notebook server (using Docker) that 
+    analyzes the output of `mpiP` and generates a graph summarizing 
+    MPI statistics. To see an example of how the notebook looks see 
+    [here](https://github.com/popperized/popper-readthedocs-examples/blob/master/pipelines/mpip/results/notebook.ipynb).
+
+The pipeline is available on github at [this
+repository](https://github.com/popperized/popper-readthedocs-examples/master/pipelines/mpip).
 
 ## Results Validation
 
