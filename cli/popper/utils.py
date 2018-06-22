@@ -98,19 +98,38 @@ def is_popperized():
     return os.path.isfile(config_filename)
 
 
-def update_config(name, stages, envs, relative_path):
-    """Updates the configuration for a pipeline"""
+def update_config(name, stages='', envs='', vars=[], relative_path=''):
+    """Updates the configuration for a pipeline."""
 
     if name == 'paper':
         stages = 'build'
 
     config = read_config()
+    pipeline_config = config['pipelines'][name]
+    if not stages:
+        stages = ','.join(pipeline_config['stages'])
+    if not envs:
+        envs = ','.join(pipeline_config['envs'])
+    if not relative_path:
+        relative_path = pipeline_config['path']
+
     config['pipelines'][name] = {
         'stages': stages.split(','),
         'envs': envs.split(','),
+        'vars': vars,
         'path': relative_path
     }
     write_config(config)
+
+
+def read_pipeline_config(name):
+    """Returns the configuration for a pipeline."""
+
+    config = read_config()
+    try:
+        return config['pipelines'][name]
+    except KeyError:
+        fail("Pipeline {} does not exist.".format(name))
 
 
 def get_filename(abs_path, stage):
