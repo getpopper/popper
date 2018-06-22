@@ -9,7 +9,7 @@ import yaml
 import tarfile
 from io import BytesIO
 from popper.cli import pass_context
-
+from popper.exceptions import BadArgumentUsage
 
 @click.command(
     'add',
@@ -41,7 +41,8 @@ def cli(ctx, pipeline, folder, branch):
     'popperized' organization.
     """
     if len(pipeline.split('/')) != 3:
-        pu.fail("Bad pipeline name. See 'popper add --help' for more info.")
+        raise BadArgumentUsage(
+                "Bad pipeline name. See 'popper add --help' for more info.")
 
     owner, repo, pipe_name = pipeline.split('/')
 

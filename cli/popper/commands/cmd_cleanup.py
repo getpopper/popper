@@ -25,9 +25,14 @@ def cli(ctx):
     project_root = pu.get_project_root()
     pipelines = popper_config['pipelines']
     
+    pipeline_folders = []
+
+    # Removing nonexistent pipelines from .popper.yml
     for p in list(pipelines):
         pipeline = pipelines[p]
-
+        
+        pipeline_folder = pipeline['path'].split('/')[0]
+        pipeline_folders.append(pipeline_folder)
         pipe_path = os.path.join(project_root,pipeline['path'])
         
         if os.path.exists(pipe_path):

@@ -3,6 +3,7 @@ import click
 import popper.utils as pu
 import requests
 from popper.cli import pass_context
+from popper.exceptions import BadArgumentUsage
 from io import BytesIO
 
 """
@@ -30,7 +31,8 @@ def cli(ctx, pipeline):
     pipeline = pipeline.split('/')
     # checking the validity of the provided arguments
     if len(pipeline) != 3:
-        pu.fail("Bad pipeline name. See 'popper info --help' for more info.")
+        raise BadArgumentUsage(
+                "Bad pipeline name. See 'popper info --help' for more info.")
 
     get_info(pipeline)
 

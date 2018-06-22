@@ -4,7 +4,7 @@ import popper.utils as pu
 import sys
 
 from popper.cli import pass_context
-
+from popper.exceptions import BadArgumentUsage
 
 @click.command('env', short_help='Modify environments for a pipeline.')
 @click.argument('pipeline', required=False)
@@ -45,7 +45,8 @@ def cli(ctx, pipeline, add, rm, ls):
 
     if not add and not rm and not ls:
         if not pipeline:
-            pu.fail('Expecting name of a pipeline')
+            raise BadArgumentUsage(
+                    'Expecting name of a pipeline')
 
         if pipeline not in config['pipelines']:
             pu.fail("Pipeline '{}' not found in .popper.yml".format(pipeline))

@@ -30,8 +30,8 @@ from os.path import isfile, isdir, basename
 @click.option(
     '--infer-stages',
     help=('Infers the name of the stages from the existing bash scripts'
-          'on the folder while creating a new pipeline from the existing'
-          'folder.'),
+          ' on the folder while creating a new pipeline from the existing'
+          ' folder.'),
     is_flag=True
 )
 @pass_context
@@ -63,6 +63,10 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
 
     # init repo
     if name is None:
+        if existing:
+            raise BadArgumentUsage(
+                    "Pipeline path not specified. See popper init --help")
+        
         initialize_repo(project_root)
         return
 
