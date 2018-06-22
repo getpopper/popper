@@ -194,10 +194,6 @@ Popper is followed to record the scripts used to compile, install and
 run the experiment, as well as analyze its results. We assume SLURM as 
 the batch scheduler and use spack to install the software stack.
 
-We assume that the `$HOME/mypaper` folder is available in the users' 
-laptop as well as on the nodes of the machine where the experiment 
-runs.
-
 The experiment corresponds to an execution of the 
 [LULESH](https://codesign.llnl.gov/lulesh.php) MPI [proxy 
 application](http://www.lanl.gov/projects/codesign/proxy-apps/assets/docs/proxyapps_strategy.pdf)
