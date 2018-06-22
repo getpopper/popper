@@ -106,6 +106,7 @@ def update_config(name, stages='', envs='', vars=[], relative_path=''):
 
     config = read_config()
     pipeline_config = config['pipelines'][name]
+
     if not stages:
         stages = ','.join(pipeline_config['stages'])
     if not envs:
