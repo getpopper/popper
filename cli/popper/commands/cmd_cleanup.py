@@ -6,12 +6,6 @@ import popper.utils as pu
 
 from popper.cli import pass_context
 
-# For compatibility between python 2.x and 3.x versions
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = IOError
-
 @click.command(
     'cleanup', short_help='Synchronize your pipelines and popper.yml file.'
 )
@@ -25,16 +19,12 @@ def cli(ctx):
     project_root = pu.get_project_root()
     pipelines = popper_config['pipelines']
     
-    pipeline_folders = []
-
     # Removing nonexistent pipelines from .popper.yml
     for p in list(pipelines):
         pipeline = pipelines[p]
-        
-        pipeline_folder = pipeline['path'].split('/')[0]
-        pipeline_folders.append(pipeline_folder)
         pipe_path = os.path.join(project_root,pipeline['path'])
         
+        # Checking if the pipeline exists
         if os.path.exists(pipe_path):
 
             # Synchronizing stages

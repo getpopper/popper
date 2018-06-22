@@ -26,4 +26,3 @@ test -f pipelines/co2-emissions/README.md
 test -f pipelines/co2-emissions/run.sh
 test -f pipelines/co2-emissions/setup.sh
 test -f pipelines/co2-emissions/validate.sh
-
