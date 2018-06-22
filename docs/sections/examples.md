@@ -30,15 +30,15 @@ that need to be followed in order to create these isolated environments.
 
 Examples:
 
-* [Sea-Surface-Mapping](https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/sea-surface-mapping);
-In this case, the pipeline **sea-surface-mapping** helps make sure that a virtualenv is enabled and 
-running at the time of execution by throwing an exception if your virtualenv is disabled.
+* [Sea-Surface-Mapping](https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/sea-surface-mapping).
+  In this case, the pipeline **sea-surface-mapping** helps make sure that a virtualenv is enabled and 
+  running at the time of execution by throwing an exception if a virtualenv is not active.
 
-Another alternative is to create a virtual environment as part of the execution of a pipeline.
-* [Validator](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/validator);
-Here, the pipeline **validator** makes a virtualenv for you if it finds that a virtualenv is not enabled.
-And if it does find a virtualenv, The pipeline deactivates it and creates a new one so you don't have to worry
-about mixing up virtual environments. 
+* [Validator](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/validator).
+  Another alternative is to create a virtual environment as part of the execution of a pipeline.
+  Here, the pipeline **validator** makes a virtualenv for you if it finds that a virtualenv is not enabled.
+  And if it does find a virtualenv, the pipeline deactivates it and creates a new one so you don't have to worry
+  about mixing up virtual environments. 
 
 ### Using Packrat (R)
 
