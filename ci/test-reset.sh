@@ -11,4 +11,3 @@ popper reset
 cat .popper.yml | grep 'myp'
 test $? -ne 0
 set -e
-

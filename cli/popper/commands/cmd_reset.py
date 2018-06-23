@@ -3,6 +3,8 @@
 import click
 import os
 import shutil
+import sys
+from shutil import copytree
 import popper.utils as pu
 
 from popper.cli import pass_context
@@ -16,10 +18,11 @@ def cli(ctx):
     """Resets a popper repository completely, removing all the installed
     pipelines and folders leaving behind a newly created .popper.yml file
     """
+
     project_root = pu.get_project_root()
 
     for file_name in os.listdir(project_root):
-        if file_name == ".git":
+        if file_name in [".git", ".cache"]:
             continue
 
         file_path = os.path.join(project_root, file_name)
