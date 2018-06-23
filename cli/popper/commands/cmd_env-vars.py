@@ -25,17 +25,14 @@ def cli(ctx, pipeline, add, rm):
     """Add or remove environment variables defined for matrix execution of
     a pipeline."""
 
-    config = pu.read_pipeline_config(pipeline)
+    config, pipeline_config = pu.read_config(pipeline)
 
     if add and rm:
         raise UsageError("Both add and rm cannot be given at the same time. "
                          "See popper env-vars --help for more information.")
 
     if add:
-        try:  # This try catch block ensures backward compatibility
-            env_vars = config['vars']
-        except KeyError:
-            env_vars = []
+        env_vars = pipeline_config.get('vars', [])
         vars_add = {}
         for var in add:
             key, val = var.split('=')
@@ -44,9 +41,8 @@ def cli(ctx, pipeline, add, rm):
         pu.update_config(pipeline, vars=env_vars)
 
     elif rm:
-        try:  # This try catch block ensures backward compatibility
-            env_vars = config['vars']
-        except KeyError:
+        env_vars = pipeline_config.get('vars', None)
+        if not env_vars:
             pu.fail("No environment variables defined for this pipeline.")
 
         vars_del = {}
@@ -76,7 +72,7 @@ def cli(ctx, pipeline, add, rm):
 
     else:
         try:
-            env_vars = config['vars']
+            env_vars = pipeline_config['vars']
             if len(env_vars) == 0:
                 raise KeyError
             pu.print_yaml(env_vars)

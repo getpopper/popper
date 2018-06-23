@@ -54,11 +54,18 @@ def get_project_root():
     return base.decode('utf-8').strip()
 
 
-def read_config():
+def read_config(name=None):
     """Reads config from .popper.yml file.
 
+    Args:
+        name (default=None): Name of a pipeline, whose config is to be returned
+
     Returns:
-        config (dict): dictionary representing the YAML file contents.
+        If name is not provided:
+            config (dict): dictionary representing the YAML file contents.
+        If name is provided:
+            Two-tuple consisting of config (dict) and pipeline_config (dict) :
+            dictionary representing the pipeline configuration
     """
     config_filename = os.path.join(get_project_root(), '.popper.yml')
 
@@ -76,7 +83,13 @@ def read_config():
                      "Consider deleting it and reinitializing the repo. "
                      "See popper init --help for more.")
 
-    return config
+    if not name:
+        return config
+    else:
+        pipeline_config = config['pipelines'].get(name, None)
+        if not pipeline_config:
+            fail("Pipeline {} does not exist.".format(name))
+        return config, pipeline_config
 
 
 def write_config(config):
@@ -105,14 +118,16 @@ def update_config(name, stages='', envs='', vars=[], relative_path=''):
         stages = 'build'
 
     config = read_config()
-    pipeline_config = config['pipelines'][name]
+    if config['pipelines'].get(name, None):
+        if not stages:
+            stages = ','.join(config[name]['stages'])
+        if not envs:
+            envs = ','.join(config[name]['envs'])
+        if not relative_path:
+            relative_path = config[name]['path']
 
-    if not stages:
-        stages = ','.join(pipeline_config['stages'])
-    if not envs:
-        envs = ','.join(pipeline_config['envs'])
-    if not relative_path:
-        relative_path = pipeline_config['path']
+    if name == 'paper':
+        stages = 'build'
 
     config['pipelines'][name] = {
         'stages': stages.split(','),
@@ -121,16 +136,6 @@ def update_config(name, stages='', envs='', vars=[], relative_path=''):
         'path': relative_path
     }
     write_config(config)
-
-
-def read_pipeline_config(name):
-    """Returns the configuration for a pipeline."""
-
-    config = read_config()
-    try:
-        return config['pipelines'][name]
-    except KeyError:
-        fail("Pipeline {} does not exist.".format(name))
 
 
 def get_filename(abs_path, stage):
