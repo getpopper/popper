@@ -28,14 +28,12 @@ def cli(ctx):
         if os.path.exists(pipe_path):
 
             # Synchronizing stages
-            stages = pipeline['stages']
 
-            for stage in stages:
-                stage_path = os.path.join(pipe_path, stage + '.sh')
-                if os.path.exists(stage_path):
-                    pass
-                else:
-                    pipeline['stages'].remove(stage)
+            stages = [x[:-3]
+                      for x in os.listdir(pipe_path)
+                      if x.endswith(".sh")]
+
+            pipelines[p]['stages'] = stages
 
         else:
             del pipelines[p]
