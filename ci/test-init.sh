@@ -21,4 +21,3 @@ cat .popper.yml | grep '\- three'
 test -f pipelines/pipetwo/one.sh
 test -f pipelines/pipetwo/two.sh
 test -f pipelines/pipetwo/three.sh
-

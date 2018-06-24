@@ -24,5 +24,6 @@ pipelines:
     - test-search
     - test-rm
     - test-archive
+    - test-reset  
 popperized:
 - github/popperized
