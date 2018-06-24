@@ -19,7 +19,7 @@ Show which version you installed:
 popper version
 ```
 
-> **NOTE**: this exercise was written using 0.5
+> **NOTE**: this exercise was written using 1.0.0
 
 Create a project repository (if you are not familiar with git, look [here](https://www.learnenough.com/git-tutorial)):
 
@@ -69,16 +69,6 @@ Run popper run:
 ```bash
 popper run
 ```
-To run a pipeline named myexp:
-```bash
-popper run myexp
-```
-
-> **NOTE:** By default, `popper run` runs all commands directly on 
-the host. We recommend running an isolated environment. In order to do 
-this, one can create a pipeline using the `--env` flag of the `popper 
-init` command. For example, `popper init <pipeline> --env=alpine-3.4` 
-runs a command inside an `alpine-3.4` container.
 
 Once a pipeline is executed, one can show the logs:
 
@@ -88,17 +78,30 @@ ls -l pipelines/myexp/popper_logs
 
 ## Adding Project to GitHub
 
-Create a repository on github and upload our commits.
+Create a repository [on 
+github](https://help.github.com/articles/create-a-repo/), register the 
+remote repository to your local git and push all your commits:
+
+```bash
+git remote add origin git@github.com:<user>/<repo>
+git push -u origin master
+```
+
+where `<user>` is your username and `<repo>` is the name of the 
+repository you have created.
 
 ## Adding Project to Travis
 
-For this, we need an account at Travis CI. Once we have one, we 
-activate the project so it is continuously validated.
+For this, we need to [login to Travis 
+CI](https://docs.travis-ci.com/user/getting-started/#Prerequisites) 
+using our Github credentials. Once this is done, we [activate the 
+project](https://docs.travis-ci.com/user/getting-started/#To-get-started-with-Travis-CI) 
+so it is continuously validated.
 
 Generate `.travis.yml` file:
 
 ```bash
-popper ci travis
+popper ci --service travis
 ```
 
 And commit the file:
@@ -116,20 +119,3 @@ git push
 
 Go to TravisCI website to see your experiments being executed.
 
-## Learn More
-
-A more detailed description of Popper is explained in [the next 
-section](intro_to_popper.html).
-
-A [step-by-step guide](../tutorial/from_scratch.html) describes how to 
-"Popperize" a repository. Additionally, the following is a list of 
-examples on how to bootstrap a Popper project (repository) in specific 
-domains:
-
-  * [Data Science](../tutorial/data-science.html)
-  * [High Performance Computing (HPC)](../tutorial/hpc.html)
-  * [Mathematical Sciences](../tutorial/math_science.html)
-
-A list of articles describing the Popper protocol, as well as other 
-Popperized papers that have been submitted for publication can be 
-found [here](https://falsifiable.us/pubs).
