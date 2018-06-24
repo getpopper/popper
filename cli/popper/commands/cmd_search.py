@@ -3,6 +3,7 @@ import os
 import sys
 import popper.utils as pu
 from popper.cli import pass_context
+from popper.exceptions import BadArgumentUsage
 from io import BytesIO
 import requests
 import json
@@ -75,7 +76,8 @@ def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
 
     """
     if (rm or add or ls) and (keywords):
-        pu.fail("'add', 'rm' and 'ls' flags cannot be combined with others.")
+        raise BadArgumentUsage(
+                "'add', 'rm' and 'ls' flags cannot be combined with others.")
 
     project_root = pu.get_project_root()
 
