@@ -12,7 +12,7 @@ Popper adheres to our code of conduct, [posted in this repository](CODE_OF_CONDU
 
 ## What to working on
 
-Take a look at the issues in our [future milestones](https://github.com/systemslab/popper/milestones) or browse some [bugs](https://github.com/systemslab/popper/labels/bug) to get started!
+Take a look at the issues in our [list of projects](https://github.com/systemslab/popper/projects) or browse some [bugs](https://github.com/systemslab/popper/labels/bug) to get started!
 
 You can also see the work that's being done on various [GitHub issues](https://github.com/systemslab/popper/issues) through [our branches](https://github.com/systemslab/popper/branches).
 
