@@ -39,6 +39,15 @@ experiments.
 
    sections/contributing.md
 
+.. toctree::
+   :maxdepth: 2
+
+   sections/tutorial.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/faq.md
 
 Indices and tables
 ==================

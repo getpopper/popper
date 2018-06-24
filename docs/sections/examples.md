@@ -12,8 +12,6 @@ contained, and `<pipeline>` is the name of the pipeline.
 
 ## Pipeline portability
 
-**TODO**
-
 ### Using Virtualenv (Python)
 
 Python provides the ability of recreating and isolating environments
@@ -46,7 +44,8 @@ Examples:
 
 ### Using Spack
 
-**TODO**
+See [this 
+example](http://popper.readthedocs.io/en/latest/sections/examples.html#high-performance-computing).
 
 ### Using Docker
 
@@ -66,7 +65,6 @@ The directory structure for this pipeline is as follows:
 docker-data-science
 ├── setup.sh
 ├── analyze.sh
-├── analyze.sh
 ├── generate-figures.sh
 └── docker
     ├── Dockerfile
@@ -85,7 +83,7 @@ a `results` directory. This example can be found in full
 and is also explored in greater depth in this [Software Carpentry
 lesson](https://popperized.github.io/swc-lesson/05-pipeline-portability-with-docker/index.html).
 
-Using this comparmentalized splitting of stages and keeping our dependencies
+Using this compartmentalized splitting of stages and keeping our dependencies
 inside docker, we become capable of sharing our experiments with whomever we
 want. In addition to this, we can also do other things, such as validating your
 experiments on every commit, as seen in the continous validation section of this
@@ -147,7 +145,9 @@ taking advantage of each of their individual strengths.
 
 ### Machine learning
 
-**TODO**
+See [this 
+example](http://popper.readthedocs.io/en/latest/sections/examples.html#using-docker).
+
 
 ### Linux kernel development
 
@@ -259,21 +259,21 @@ without the need for manual intervention. In addition to this, the
 status of a pipeline (integrity over time) can be tracked by a 
 [continuous integration (CI) 
 service](https://en.wikipedia.org/wiki/Comparison_of_continuous_integration_software). 
-In this section we describe how Popper integrates with some existing 
-CI services.
+In this section we describe how to generate configuration files and 
+how to setup a CI service so that it continously validate the 
+integrity of a pipeline.
 
-The [PopperCLI](https://github.com/systemslab/popper/popper) tool 
-includes a `ci` subcommand that can be executed to generate 
-configuration files for multiple CI systems. The syntax of this 
-command is the following:
+The `popper` command includes `ci` subcommand that can be executed to 
+generate configuration files for multiple CI systems. The syntax of 
+this command is the following:
 
 ```bash
-popper ci <system-name>
+popper ci --service <name>
 ```
 
-Where `<system-name>` is the name of CI system (see `popper ci --help` 
-to get a list of supported systems). In the following, we show how to 
-link github with some of the supported CI systems.
+Where `<name>` is the name of CI system (see `popper ci --help` to get 
+a list of supported systems). In the following, we show how to link 
+github with some of the supported CI systems.
 
 #### TravisCI
 
@@ -286,7 +286,7 @@ Once the project is registered on Travis, we proceed to generate a
 
 ```bash
 cd my-popper-repo/
-popper ci travis
+popper ci --service travis
 ```
 
 And commit the file:
@@ -323,9 +323,9 @@ what we do for TravisCI (see above):
 
     ```bash
     cd my-popper-repo/
-    popper ci circleci
+    popper ci --service circle
     git add .circleci
-    git commit -m 'Adds CircleCI config file'
+    git commit -m 'Adds CircleCI config files'
     git push
     ```
 
@@ -336,7 +336,7 @@ done in a similar way:
 
 ```bash
 cd my-popper-repo/
-popper ci jenkins
+popper ci --service jenkins
 git add Jenkinsfile
 git commit -m 'Adds Jenkinsfile'
 git push
@@ -352,17 +352,16 @@ particular, the `New Pipeline from a Single Repository` has to be
 selected (as opposed to `Auto-discover Pipelines`).
 
 As part of our efforts, we provide a ready-to-use Docker image for 
-Jenkins with all the required dependencies. See [here](./jenkins.md) 
-for an example of how to use it. We also host an instance of this 
-image at <http://ci.falsifiable.us> and can provide accounts for users 
-to make use of this Jenkins server (for an account, send an email to 
-<ivo@cs.ucsc.edu>).
+Jenkins with all the required dependencies (see below) for an example 
+of how to use it. We also host an instance of this image at 
+<http://ci.falsifiable.us> and allow anyone to make use of this 
+Jenkins server.
 
 ##### Jenkins Docker Image
 
 We have created an image with all the plugins necessary to 
-automatically validate Popper pipelines. To launch an instance of this 
-Docker image server:
+automatically validate pipelines. To launch an instance of this Docker 
+image server:
 
 ```bash
 docker run -d --name=jenkins \
@@ -381,19 +380,18 @@ for this image.
 
 ##### [`ci.falsifiable.us`](http://ci.falsifiable.us)
 
-To make use of our server, please first send a message to 
-<ivo@cs.ucsc.edu> to request an account. After an account is created, 
-you will be able to access the server. Follow the steps [outlined 
-here](http://popper.readthedocs.io/en/latest/ci/popperci.html#jenkins) 
-to add a `Jenkinsfile` to your project. Alternatively, create this 
-file manually with the following contents:
+Create an account by clicking the `Sign Up` link on the top right 
+corner. After this, you will be able to access the server. Follow the 
+steps outlined above to generate a `Jenkinsfile` using the `popper` 
+command. Alternatively, create this file manually with the following 
+contents:
 
 ```
 stage ('Popper') {
   node {
-    sh "curl -O https://raw.githubusercontent.com/systemslab/popper/master/popper/_check/check.py"
-    sh "chmod 755 check.py"
-    sh "./check.py"
+    sh "git clone --recursive https://github.com/systemslab/popper /tmp/popper"
+    sh "export PATH=$PATH:/tmp/popper/cli/bin"
+    sh "export PYTHONUNBUFFERED=1"
   }
 }
 ```
@@ -403,19 +401,5 @@ guide](https://jenkins.io/doc/book/blueocean/creating-pipelines/) on
 how to create a new project using the Blue Ocean UI.
 
 ### Artifact evaluation criteria
-
-The following provides a list of steps with the goal of reviewing a 
-popper pipeline that someone else has created:
-
- 1. The `popper workflow` command generates a graph that gives a 
-    high-level view of what the pipeline does.
-
- 2. Inspect the content of each of the scripts from the pipeline.
-
- 3. Test that the pipeline works on your machine by running `popper 
-    run`.
-
- 4. Check that the git repo was archived (snapshotted) to zenodo or 
-    figshare by running `popper zenodo` or `popper figshare`.
 
 **TODO**
