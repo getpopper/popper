@@ -114,17 +114,14 @@ def is_popperized():
 def update_config(name, stages='', envs='', vars=[], relative_path=''):
     """Updates the configuration for a pipeline."""
 
-    if name == 'paper':
-        stages = 'build'
-
     config = read_config()
     if config['pipelines'].get(name, None):
         if not stages:
-            stages = ','.join(config[name]['stages'])
+            stages = ','.join(config['pipelines'][name]['stages'])
         if not envs:
-            envs = ','.join(config[name]['envs'])
+            envs = ','.join(config['pipelines'][name]['envs'])
         if not relative_path:
-            relative_path = config[name]['path']
+            relative_path = config['pipelines'][name]['path']
 
     if name == 'paper':
         stages = 'build'
