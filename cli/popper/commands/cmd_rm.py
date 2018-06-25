@@ -9,17 +9,16 @@ from popper.cli import pass_context
 @click.argument('pipeline', required=True)
 @pass_context
 def cli(ctx, pipeline):
-    """This command is used to remove a popper pipeline from the user's repository
-    effectively to keep the pipelines folder and the .popper.yml files in sync.
-
-    Examples:
-
-      popper rm single-node
-
+    """Remove a popper pipeline from the user's repository effectively
+    to keep the pipelines folder and the .popper.yml files in sync.
     """
 
-    pipeline_dir = os.path.join(pu.get_project_root(), 'pipelines')
-    popper_config = pu.read_config()
+    project_root = pu.get_project_root()
+
+    if pipeline == 'paper':
+        pipeline_dir = project_root
+    else:
+        pipeline_dir = os.path.join(project_root, 'pipelines')
 
     pipeline_path = os.path.join(pipeline_dir, pipeline)
 
