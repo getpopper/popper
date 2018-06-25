@@ -131,6 +131,10 @@ file of the pipeline.
 
 **TODO**
 
+## Popper Badges
+
+**TODO**
+
 ## The `popper.yml` configuration file
 
 The `popper` command reads the `.popper.yml` file in the root of a 
