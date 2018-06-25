@@ -88,7 +88,8 @@ git clean -dx --force
 
 ### Testing Remotely via a CI service
 
-This is explained [here](ci-setup).
+This is explained 
+[here](examples.html#continuous-validation-ci-setup).
 
 ### Popper Badges
 

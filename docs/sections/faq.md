@@ -16,9 +16,8 @@ A Popper pipeline is a simple sequence of bash scripts. Popper is not
 a replacement for scientific workflow engines, instead, its goal is to 
 capture the highest-most workflow: the human interaction with a 
 terminal. For more on this, please take a look at the [Popper vs. 
-other 
-software](http://popper.rtfd.io/en/docs-reorg/sections/concepts.html#scientific-workflow-engines) 
-section of our documentation.
+other software](concepts.html#scientific-workflow-engines) section of 
+our documentation.
 
 ### Can I follow Popper in computational science research, as opposed to computer science?
 

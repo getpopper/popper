@@ -233,18 +233,17 @@ domain specific languages).
 Popper can be seen as a service-agnostic way of automating tests that 
 can run on multiple CI services with minimal effort. The `popper ci` 
 command [generates configuration 
-files](http://popper.readthedocs.io/en/latest/ci/popperci.html#ci-system-configuration) 
-that existing CI systems read in order to execute a popper pipeline. 
-Additionally, with most of existing tools and services, users don't 
-have a way of easily checking the integrity of a pipeline locally, 
-whereas Popper can be used easily to [test a pipeline 
-locally](http://popper.readthedocs.io/en/latest/ci/popperci.html#testing-locally). 
-Lastly, since the concept of a pipeline and validations associated to 
-them is a first-class citizen in Popper, we can not only check that a 
-pipeline can execute correctly (SUCCESS or FAILURE) but we can also 
-[verify that the output is the one 
-expected](http://popper.readthedocs.io/en/latest/ci/popperci.html#ci-functionality) 
-by the original implementers.
+files](examples.html#continuous-validation-ci-setup) that existing CI 
+systems read in order to execute a popper pipeline. Additionally, with 
+most of existing tools and services, users don't have a way of easily 
+checking the integrity of a pipeline locally, whereas Popper can be 
+used easily to [test a pipeline 
+locally](cli_features.html#testing-locally). Lastly, since the concept 
+of a pipeline and validations associated to them is a first-class 
+citizen in Popper, we can not only check that a pipeline can execute 
+correctly (SUCCESS or FAILURE) but we can also verify that the output 
+is the one expected by the original implementers as explained 
+[here](cli_features.html#continously-validating-a-pipeline).
 
 ### Reprozip / Sciunit
 
