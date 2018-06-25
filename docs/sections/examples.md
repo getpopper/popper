@@ -126,7 +126,50 @@ taking advantage of each of their individual strengths.
 
 ### On CloudLab using geni-lib
 
-**TODO**
+[CloudLab](https://www.cloudlab.us/) provides researchers with control and
+visibility all the way down to the bare metal.
+
+Most **CloudLab** resources provide hard isolation from other users, so it can
+support hundreds of simultaneous ***slices***, with each getting an artifact-free
+environment suitable for scientific experimentation with new cloud architectures.
+Run standard cloud software stacks such as *OpenStack* and *Hadoop*. 
+Or, build your own from the ground up. The bare metal's the limit!
+
+**CloudLab** is built from the software technologies that make up [Emulab](emulab.net) and
+ parts of **GENI**, so it provides a familiar, consistent interface for researchers.
+ 
+An example of how to use **CloudLab** with **Popper** can be found 
+[here](https://github.com/popperized/popper-readthedocs-examples/tree/doc-356).
+
+In order to use this pipeline follow the next guide.
+
+1) Fork or download the pipeline.
+
+2) Obtain credentials ([see here](http://docs.cloudlab.us/geni-lib/intro/creds/cloudlab.html)).
+This will result in having a cloudlab.pem file on your machine.
+
+3) This pipeline makes use of the following environment variables.
+
+    * `CLOUDLAB_USER`. Your user at CloudLab.
+    * `CLOUDLAB_PASSWORD`. Your password for CloudLab.
+    * `CLOUDLAB_PROJECT`. The name of the project your account belongs to on CloudLab.
+    * `CLOUDLAB_PUBKEY_PATH`. The path to your SSH key registered with CloudLab.
+    * `SSHKEY`. The path to your private SSH key registered with CloudLab.
+    * `CLOUDLAB_CERT_PATH`. The path to the cloudlab.pem file downloaded in step 1.
+
+4) Execute the command: `popper run data-generation`
+
+#### Travis:
+The experiment is continuously tested via Travis.
+If you want to make use of **Travis** as your CI, continue reading.
+
+To declare environment variables on Travis [see here](https://docs.travis-ci.com/user/environment-variables/#Defining-Variables-in-Repository-Settings)
+
+This pipeline has sensitive data as `SSHKEY`, `CLOUDLAB_CERT_PATH` and `CLOUDLAB_PUBKEY_PATH`.
+In order to publish your project and test it using Travis, you'll need to make use of encrypted files. 
+
+That's why this [file](https://github.com/popperized/popper-readthedocs-examples/blob/doc-356/pipelines/data-generation/travis-secrets/secrets.zip.enc) 
+is required to execute this pipeline on **Travis**. To understand how encrypted files work on **Travis** [check this site](https://docs.travis-ci.com/user/encrypting-files/).
 
 ### On Chameleon using enos
 
