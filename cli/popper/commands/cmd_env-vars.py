@@ -5,19 +5,19 @@ from popper.cli import pass_context
 from popper.exceptions import UsageError
 
 
-@click.command('matrix', short_help='Define execution matrix for a '
-               'pipeline using environment variables.')
+@click.command('env-vars', short_help='Define environment variables '
+               'for matrix execution of a pipeline using .')
 @click.argument('pipeline', required=True)
 @click.option(
     '--add',
     multiple=True,
-    help='Add environment variable in the form key=value',
+    help='Add a set of environment variables in the form of key=value',
     required=False
 )
 @click.option(
     '--rm',
     multiple=True,
-    help='Remove environment variable using the key',
+    help='Remove a set of environment variable in the form of key=value',
     required=False
 )
 @pass_context
