@@ -24,6 +24,7 @@ pipelines:
     - test-search
     - test-rm
     - test-archive
-    - test-reset  
+    - test-reset
+    - test-env-vars
 popperized:
 - github/popperized
