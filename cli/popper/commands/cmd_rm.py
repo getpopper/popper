@@ -29,14 +29,6 @@ def cli(ctx, pipeline):
         popper_config = pu.read_config()
         del popper_config['pipelines'][pipeline]
 
-        if 'stages' in popper_config:
-            if pipeline in popper_config['stages']:
-                del popper_config['stages'][pipeline]
-
-        if 'envs' in popper_config:
-            if pipeline in popper_config['envs']:
-                del popper_config['envs'][pipeline]
-
         pu.info("Pipeline {} removed successfully".format(pipeline),
                 fg="green")
 
