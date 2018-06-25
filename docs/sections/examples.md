@@ -44,8 +44,7 @@ Examples:
 
 ### Using Spack
 
-See [this 
-example](http://popper.readthedocs.io/en/latest/sections/examples.html#high-performance-computing).
+See [this example](examples.html#high-performance-computing).
 
 ### Using Docker
 
@@ -145,8 +144,7 @@ taking advantage of each of their individual strengths.
 
 ### Machine learning
 
-See [this 
-example](http://popper.readthedocs.io/en/latest/sections/examples.html#using-docker).
+See [this example](examples.html#using-docker).
 
 
 ### Linux kernel development
