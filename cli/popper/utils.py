@@ -54,11 +54,18 @@ def get_project_root():
     return base.decode('utf-8').strip()
 
 
-def read_config():
+def read_config(name=None):
     """Reads config from .popper.yml file.
 
+    Args:
+        name (default=None): Name of a pipeline, whose config is to be returned
+
     Returns:
-        config (dict): dictionary representing the YAML file contents.
+        If name is not provided:
+            config (dict): dictionary representing the YAML file contents.
+        If name is provided:
+            Two-tuple consisting of config (dict) and pipeline_config (dict) :
+            dictionary representing the pipeline configuration
     """
     config_filename = os.path.join(get_project_root(), '.popper.yml')
 
@@ -76,7 +83,13 @@ def read_config():
                      "Consider deleting it and reinitializing the repo. "
                      "See popper init --help for more.")
 
-    return config
+    if not name:
+        return config
+    else:
+        pipeline_config = config['pipelines'].get(name, None)
+        if not pipeline_config:
+            fail("Pipeline {} does not exist.".format(name))
+        return config, pipeline_config
 
 
 def write_config(config):
@@ -98,16 +111,25 @@ def is_popperized():
     return os.path.isfile(config_filename)
 
 
-def update_config(name, stages, envs, relative_path):
-    """Updates the configuration for a pipeline"""
+def update_config(name, stages='', envs='', vars=[], relative_path=''):
+    """Updates the configuration for a pipeline."""
+
+    config = read_config()
+    if config['pipelines'].get(name, None):
+        if not stages:
+            stages = ','.join(config['pipelines'][name]['stages'])
+        if not envs:
+            envs = ','.join(config['pipelines'][name]['envs'])
+        if not relative_path:
+            relative_path = config['pipelines'][name]['path']
 
     if name == 'paper':
         stages = 'build'
 
-    config = read_config()
     config['pipelines'][name] = {
         'stages': stages.split(','),
         'envs': envs.split(','),
+        'vars': vars,
         'path': relative_path
     }
     write_config(config)

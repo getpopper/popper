@@ -91,9 +91,11 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
         # new pipeline
         abs_path = os.path.join(project_root, 'pipelines', name)
         relative_path = os.path.join('pipelines', name)
-        initialize_new_pipeline(abs_path, stages, envs)
+        initialize_new_pipeline(abs_path, stages)
 
-    pu.update_config(name, stages, envs, relative_path)
+    pu.update_config(
+        name, stages=stages, envs=envs, relative_path=relative_path
+    )
 
     pu.info('Initialized pipeline ' + name, fg='blue', bold=True)
 
@@ -160,7 +162,7 @@ def initialize_paper(paper_path, envs):
         f.write('# ' + basename(paper_path) + '\n')
 
 
-def initialize_new_pipeline(pipeline_path, stages, envs):
+def initialize_new_pipeline(pipeline_path, stages):
     """This function is used for initalizing a new pipeline."""
 
     # create folders
