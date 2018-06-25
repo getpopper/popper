@@ -401,3 +401,17 @@ how to create a new project using the Blue Ocean UI.
 ### Artifact evaluation criteria
 
 **TODO**
+
+## Provenance and automatic dependency resolution
+
+### ReproZip
+
+**TODO**
+
+### Sumatra
+
+**TODO**
+
+### Sci-Unit
+
+**TODO**
