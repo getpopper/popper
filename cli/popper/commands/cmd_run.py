@@ -41,6 +41,7 @@ from subprocess import check_output
 )
 @pass_context
 def cli(ctx, pipeline, timeout, skip, ignore_errors):
+
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
     all pipelines are executed in lexicographical order. Reports an error if
