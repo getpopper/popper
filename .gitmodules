@@ -25,6 +25,3 @@
 [submodule "cli/bin/vendor/pyaes"]
 	path = cli/bin/vendor/pyaes
 	url = https://github.com/ricmoo/pyaes
-[submodule "cli/bin/vendor/gitpython"]
-	path = cli/bin/vendor/gitpython
-	url = https://github.com/gitpython-developers/gitpython
