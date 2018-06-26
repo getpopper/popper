@@ -3,20 +3,18 @@
 import click
 import os
 import shutil
-import sys
-from shutil import copytree
 import popper.utils as pu
 
 from popper.cli import pass_context
 
 
 @click.command(
-    'reset', short_help='Resets a popper repository completely.'
+    'reset', short_help='Delete all pipelines in the project.'
 )
 @pass_context
 def cli(ctx):
-    """Resets a popper repository completely, removing all the installed
-    pipelines and folders leaving behind a newly created .popper.yml file
+    """Resets a popper repository completely, removing all existing
+    pipelines and folders, leaving behind a newly created .popper.yml file.
     """
 
     project_root = pu.get_project_root()

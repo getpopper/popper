@@ -7,7 +7,8 @@ from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
 
 
-@click.command('env', short_help='Modify environments for a pipeline.')
+@click.command('env', short_help='Define or remove execution environments of a'
+               ' pipeline.')
 @click.argument('pipeline', required=False)
 @click.option(
     '--add',

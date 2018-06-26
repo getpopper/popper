@@ -8,7 +8,7 @@ from popper.cli import pass_context
 
 
 @click.command(
-    'cleanup', short_help='Synchronize your pipelines and popper.yml file.'
+    'cleanup', short_help='Clean the popper.yml by removing deleted pipelines.'
 )
 @pass_context
 def cli(ctx):

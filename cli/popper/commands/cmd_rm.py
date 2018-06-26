@@ -5,7 +5,7 @@ import popper.utils as pu
 from popper.cli import pass_context
 
 
-@click.command('rm', short_help='Removes a pipeline effectively')
+@click.command('rm', short_help='Remove a pipeline from the project.')
 @click.argument('pipeline', required=True)
 @pass_context
 def cli(ctx, pipeline):
