@@ -7,6 +7,7 @@ import subprocess
 import time
 import signal
 import sys
+import re
 
 from popper.cli import pass_context
 from subprocess import check_output
@@ -54,6 +55,22 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                 "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
+    # Checks if popper is being executed by Travis.
+    if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
+        # Get last commit message
+        commit = os.environ['TRAVIS_COMMIT_MESSAGE']
+
+        if "popperci:skip" in commit:
+            pu.info("popperci:skip flag detected. Skipping execution of commit")
+            sys.exit(0)
+
+        if "popperci:whitelist" in commit:
+            try:
+                # Checks if the last commit message has the flag `popperci:whitelist[pipeline]` and gets the pipeline.
+                pipeline = re.search('popperci:whitelist\[(.+?)\]', commit).group(1)
+            except AttributeError:
+                pipeline = None
+
     if pipeline:
         if ignore_errors:
             pu.warn("--ignore-errors flag is ignored when pipeline "
@@ -96,7 +113,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
     check_output('rm -rf popper_logs/ popper_status', shell=True)
     check_output('mkdir -p popper_logs/', shell=True)
 
-    STATUS = "SUCCESS"
+    status = "SUCCESS"
 
     with click.progressbar(pipeline['stages'], show_eta=False,
                            item_show_func=str,
@@ -119,7 +136,7 @@ def run_pipeline(project_root, pipeline, timeout, skip):
 
             if ecode != 0:
                 pu.info("\n\nStage '{}' failed.".format(stage))
-                STATUS = "FAIL"
+                status = "FAIL"
                 for t in ['.err', '.out']:
                     logfile = 'popper_logs/{}{}'.format(stage_file, t)
                     with open(logfile, 'r') as f:
@@ -137,27 +154,27 @@ def run_pipeline(project_root, pipeline, timeout, skip):
                 break
 
             if 'valid' in stage:
-                STATUS = "GOLD"
+                status = "GOLD"
                 with open('popper_logs/validate.sh.out', 'r') as f:
                     validate_output = f.readlines()
                     if len(validate_output) == 0:
-                        STATUS = "SUCCESS"
+                        status = "SUCCESS"
                     for line in validate_output:
                         if '[true]' not in line:
-                            STATUS = "SUCCESS"
+                            status = "SUCCESS"
 
     with open('popper_status', 'w') as f:
-        f.write(STATUS + '\n')
+        f.write(status + '\n')
 
-    if STATUS == "SUCCESS":
+    if status == "SUCCESS":
         fg = 'green'
-    elif STATUS == "GOLD":
+    elif status == "GOLD":
         fg = 'yellow'
     else:
         fg = 'red'
-    pu.info('\nstatus: {}\n'.format(STATUS), fg=fg, bold=True)
+    pu.info('\nstatus: {}\n'.format(status), fg=fg, bold=True)
 
-    return STATUS
+    return status
 
 
 def execute(stage, timeout, bar=None):
