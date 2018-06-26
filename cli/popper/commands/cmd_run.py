@@ -61,13 +61,16 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         commit = os.environ['TRAVIS_COMMIT_MESSAGE']
 
         if "popperci:skip" in commit:
-            pu.info("popperci:skip flag detected. Skipping execution of commit")
+            pu.info("popperci:skip flag detected. "
+                    "Skipping execution of commit")
             sys.exit(0)
 
         if "popperci:whitelist" in commit:
             try:
-                # Checks if the last commit message has the flag `popperci:whitelist[pipeline]` and gets the pipeline.
-                pipeline = re.search('popperci:whitelist\[(.+?)\]', commit).group(1)
+                # Checks if the last commit message has the flag
+                # `popperci:whitelist[pipeline]` and gets the pipeline.
+                pipeline = re.search('popperci:whitelist\[(.+?)\]',
+                                     commit).group(1)
             except AttributeError:
                 pipeline = None
 
