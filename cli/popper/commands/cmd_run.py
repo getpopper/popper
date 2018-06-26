@@ -57,26 +57,26 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                 "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
-    commit = git.Repo('.').head.reference.commit.message
+    commit = git.Git().log('-1', '--pretty=%B')
 
-    if "popperci:skip" in commit:
-        pu.info("popperci:skip flag detected. "
+    if "popper:skip" in commit:
+        pu.info("popper:skip flag detected. "
                 "Skipping execution of commit")
         sys.exit(0)
 
-    if "popperci:whitelist" in commit:
-        pu.info("popperci:whitelist flag detected.")
+    if "popper:whitelist" in commit:
+        pu.info("popper:whitelist flag detected.")
         try:
             # Checks if the last commit message has the flag
-            # `popperci:whitelist[pipeline]` and gets the pipeline.
-            pipeline = re.search('popperci:whitelist\[(.+?)\]',
+            # `popper:whitelist[pipeline]` and gets the pipeline.
+            pipeline = re.search('popper:whitelist\[(.+?)\]',
                                  commit).group(1)
-            pu.info("Executing popperci:whitelist[{}]"
+            pu.info("Executing popper:whitelist[{}]"
                     .format(pipeline))
         except AttributeError:
             pipeline = None
             pu.warn("Couldn't find pipeline associated with the "
-                    "popperci:whitelist flag. "
+                    "popper:whitelist flag. "
                     "Assigning pipeline to None")
 
     if pipeline:
