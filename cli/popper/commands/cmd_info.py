@@ -1,10 +1,7 @@
-import os
 import click
 import popper.utils as pu
-import requests
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
-from io import BytesIO
 
 """
 Making the code compatible with both python 2.x and 3.x environments.
@@ -17,7 +14,8 @@ except NameError:
     FileNotFoundError = IOError
 
 
-@click.command('info', short_help='Shows the information about a pipeline')
+@click.command('info', short_help='Show details about a pipeline hosted on '
+               'github.')
 @click.argument('pipeline', required=True)
 @pass_context
 def cli(ctx, pipeline):

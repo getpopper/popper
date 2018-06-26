@@ -3,7 +3,7 @@ import popper.utils as pu
 from popper.cli import pass_context
 
 
-@click.command('metadata', short_help='Modify metadata for a repo.')
+@click.command('metadata', short_help='Modify metadata for the project.')
 @click.option(
     '--add',
     help="Add or overwrite metadata entry (in key=value format).",

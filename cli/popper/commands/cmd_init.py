@@ -7,7 +7,7 @@ from popper.cli import pass_context
 from os.path import isfile, isdir, basename
 
 
-@click.command('init', short_help='Initialize a Popper repo or pipeline.')
+@click.command('init', short_help='Initialize a Popper project or pipeline.')
 @click.argument('name', required=False)
 @click.option(
     '--stages',

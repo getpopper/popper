@@ -5,8 +5,8 @@ from popper.cli import pass_context
 from popper.exceptions import UsageError
 
 
-@click.command('env-vars', short_help='Define environment variables '
-               'for matrix execution of a pipeline using .')
+@click.command('env-vars', short_help='Define or remove executions of a'
+               'pipeline.')
 @click.argument('pipeline', required=True)
 @click.option(
     '--add',
@@ -22,8 +22,7 @@ from popper.exceptions import UsageError
 )
 @pass_context
 def cli(ctx, pipeline, add, rm):
-    """Add or remove environment variables defined for matrix execution of
-    a pipeline."""
+    """Define or remove executions of a pipeline."""
 
     config, pipeline_config = pu.read_config(pipeline)
 

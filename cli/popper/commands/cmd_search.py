@@ -4,8 +4,6 @@ import sys
 import popper.utils as pu
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
-from io import BytesIO
-import requests
 import json
 
 # For compatibility between python 2.x and 3.x versions
@@ -17,7 +15,7 @@ except NameError:
 
 @click.command(
     'search',
-    short_help='Used to search for an experiment in your pipeline folder')
+    short_help='Search for pipelines matching one or more keywords.')
 @click.argument('keywords', required=False)
 @click.option(
     '--skip-update',
