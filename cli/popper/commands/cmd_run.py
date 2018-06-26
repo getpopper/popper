@@ -72,7 +72,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                 # `popperci:whitelist[pipeline]` and gets the pipeline.
                 pipeline = re.search('popperci:whitelist\[(.+?)\]',
                                      commit).group(1)
-                pu.info("Executing popperci:whitelist[", pipeline, "]")
+                pu.info("Executing popperci:whitelist[{pipeline}]".format(pipeline))
             except AttributeError:
                 pipeline = None
                 pu.warn("Couldn't find pipeline associated with the "
