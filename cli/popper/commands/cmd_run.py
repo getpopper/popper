@@ -8,6 +8,7 @@ import time
 import signal
 import sys
 import re
+import git
 
 from popper.cli import pass_context
 from subprocess import check_output
@@ -55,30 +56,27 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                 "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
-    # Checks if popper is being executed by Travis.
-    if 'TRAVIS' in os.environ and os.environ['TRAVIS'] == 'true':
-        # Get last commit message
-        commit = os.environ['TRAVIS_COMMIT_MESSAGE']
+    commit = git.Repo('.').head.reference.commit.message
 
-        if "popperci:skip" in commit:
-            pu.info("popperci:skip flag detected. "
-                    "Skipping execution of commit")
-            sys.exit(0)
+    if "popperci:skip" in commit:
+        pu.info("popperci:skip flag detected. "
+                "Skipping execution of commit")
+        sys.exit(0)
 
-        if "popperci:whitelist" in commit:
-            pu.info("popperci:whitelist flag detected.")
-            try:
-                # Checks if the last commit message has the flag
-                # `popperci:whitelist[pipeline]` and gets the pipeline.
-                pipeline = re.search('popperci:whitelist\[(.+?)\]',
-                                     commit).group(1)
-                pu.info("Executing popperci:whitelist[{}]"
-                        .format(pipeline))
-            except AttributeError:
-                pipeline = None
-                pu.warn("Couldn't find pipeline associated with the "
-                        "popperci:whitelist flag. "
-                        "Assigning pipeline to None")
+    if "popperci:whitelist" in commit:
+        pu.info("popperci:whitelist flag detected.")
+        try:
+            # Checks if the last commit message has the flag
+            # `popperci:whitelist[pipeline]` and gets the pipeline.
+            pipeline = re.search('popperci:whitelist\[(.+?)\]',
+                                 commit).group(1)
+            pu.info("Executing popperci:whitelist[{}]"
+                    .format(pipeline))
+        except AttributeError:
+            pipeline = None
+            pu.warn("Couldn't find pipeline associated with the "
+                    "popperci:whitelist flag. "
+                    "Assigning pipeline to None")
 
     if pipeline:
         if ignore_errors:
