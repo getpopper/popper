@@ -146,7 +146,27 @@ This is explained [here](./other_resources.html#ci-setup).
 
 ## Visualizing a pipeline
 
-**TODO**
+Popper gives a user the ability to visualize the workflow of a pipeline using the
+`popper workflow pipeline_name` command. The command generates a workflow diagram 
+corresponding to a Popper pipeline, in the .dot format. The string defining
+the graph is printed to stdout so it can be piped into other tools. 
+For example,to generate a png file, one can make use of the graphviz CLI tools: 
+
+```bash
+popper workflow mypipe | dot -T png -o mypipe.png. 
+```
+
+Suppose you want to visualize the [co2-emissions](https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/co2-emissions) pipeline. 
+Assuming that this pipeline is added to your repository (as explained in `Searching and Importing pipelines), you need to type:
+
+```bash
+popper workflow co2-emissions | dot -T png -o co2_workflow.png
+```
+
+This will lead to the generation of the following dot graph:
+ 
+![](/figures/example_co2_workflow.png)
+
 
 ## Adding metadata to a project
 
@@ -266,8 +286,8 @@ init paper` and has by default a single stage named `build.sh`.
 #### `envs`
 
 The `envs` entry in `.popper.yml` specifies the environment in which a 
-pipeline is used, when the pipeline is executed as part of the `popper 
-run` command. The available environments are:
+pipeline is executed as part of the `popper run` command. The available 
+environments are:
 
   * `host`. The experiment is executed directly on the host.
   * `alpine-3.4`, `ubuntu-16.04` and `centos-7.2`. For each of these, 
@@ -327,7 +347,7 @@ The `metadata` YAML entry specifies a set of key-value pairs that
 describes and gives us information about a project.
 
 By default, a project's metadata will be initialized with the
-following key-value pairs :- 
+following key-value pairs:
 
 ```
 $> popper metadata
