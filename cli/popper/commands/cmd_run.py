@@ -77,7 +77,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
             except AttributeError:
                 pipeline = None
                 pu.warn("Couldn't find pipeline associated with the "
-                        "popperci:whitelist flag"
+                        "popperci:whitelist flag. "
                         "Assigning pipeline to None")
 
     if pipeline:
