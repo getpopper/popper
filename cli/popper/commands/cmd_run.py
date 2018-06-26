@@ -57,7 +57,10 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                 "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
 
-    commit = git.Git().log('-1', '--pretty=%B')
+    try:
+        commit = git.Git().log('-1', '--pretty=%B')
+    except Exception:
+        commit = ""
 
     if "popper:skip" in commit:
         pu.info("popper:skip flag detected. "
