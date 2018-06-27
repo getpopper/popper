@@ -1,5 +1,7 @@
-#!bin/bash
+#!/bin/bash
 set -ex
+
+source common-setup.sh
 
 popper badge cloudlab
 
