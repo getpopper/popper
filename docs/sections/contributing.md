@@ -48,20 +48,20 @@ search`](cli_features.html#searching-and-importing-existing-pipelines)
 command, so users can add it easily to their repos (using `popper 
 add`). To add a repository containing one or more pipelines to this 
 organization, please first create the repository on GitHub under an 
-organization you own, and then either transfer ownership of the repo 
-to the `popperized` organization, or [open an issue][ghnew] requesting 
-the repository to be forked or mirrored (**NOTE**: forks and mirrors 
-are need to be updated manually in order to reflect changes done on 
-the base/upstream repository).
+organization you own and then do one of the following:
+
+  * Transfer ownership of the repo to the `popperized` organization.
+  * [Open an issue][ghnew] requesting the repository to be forked or 
+    mirrored. **NOTE**: forks and mirrors need to be updated manually 
+    in order to reflect changes done on the base/upstream repository.
 
 ### Document the pipeline
 
 We encourage contributors to document pipelines by adding them to our 
-[list of examples](examples.html) of the official documentation. To 
-add new documentation:
+[list of examples](examples.html). To add new documentation:
 
  1. Fork the [official repo][poppergh].
- 2. Add a new section on the 
+ 2. Add a new item on the 
     [`docs/sections/examples.md`](https://github.com/systemslab/popper/blob/master/docs/sections/examples.md) 
     file.
  3. Open pull request against the `master` branch.
