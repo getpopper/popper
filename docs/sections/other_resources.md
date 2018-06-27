@@ -27,7 +27,19 @@ popper ci --service <name>
 
 Where `<name>` is the name of CI system (see `popper ci --help` to get 
 a list of supported systems). In the following, we show how to link 
-github with some of the supported CI systems.
+github with some of the supported CI systems. In order to do so, we 
+first need to create a repository on github and upload our commits:
+
+```bash
+# set the new remote
+git remote add origin <your-github-repo-url>
+
+# verify the remote URL
+git remote -v
+
+# push changes in your local repository up to github
+git push -u origin master
+```
 
 ### TravisCI
 
