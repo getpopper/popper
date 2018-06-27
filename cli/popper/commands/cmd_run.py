@@ -56,7 +56,9 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         pu.info("No pipelines defined in .popper.yml. "
                 "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
+
     if os.environ.get('CI', False):
+        # if commit is null, it throws an exception. 
         try:
             commit = git.Git().log('-1', '--pretty=%B')
         except Exception:
