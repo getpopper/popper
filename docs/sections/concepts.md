@@ -1,6 +1,6 @@
 # Concepts
 
-## Scientific exploration pipelines
+## Scientific Exploration Pipelines
 
 Over the last decade software engineering and systems administration 
 communities (also referred to as 
@@ -25,8 +25,6 @@ scripted. There are two main goals for Popper:
     strict set of tools, making it possible to apply it on multiple 
     toolchains.
 
-### Popper Pipelines
-
 A common generic analysis/experimentation workflow involving a 
 computational component is the one shown below. We refer to this as a 
 pipeline in order to abstract from experiments, simulations, analysis 
@@ -41,6 +39,8 @@ archives, etc.).
 experimental sciences is to document an experiment's evolution. This 
 is rarely done and, if done, usually in an ad-hoc way (an actual 
 notebook or a text file).](/figures/workflow.png)
+
+## Popper Pipelines
 
 The idea behind Popper is simple: make an article self-contained by 
 including in a code repository the manuscript along with every 
@@ -145,14 +145,6 @@ popper pipeline init <name>
 
 Where `<name>` is the name of the pipeline to initialize. More details 
 on how pipelines are executed is presented in the next section.
-
-## Pipeline portability
-
-**TODO**
-
-## Continuous Validation of Pipelines
-
-**TODO**
 
 ## Popper vs. Other Software
 

@@ -42,7 +42,7 @@ experiments.
 .. toctree::
    :maxdepth: 2
 
-   sections/tutorial.md
+   sections/other_resources.md
 
 .. toctree::
    :maxdepth: 2
