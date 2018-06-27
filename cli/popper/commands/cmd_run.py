@@ -102,8 +102,9 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
+            skipped = skip.split(',') if skip is not None else []
             status = run_pipeline(project_root, pipes[os.path.basename(cwd)],
-                                  time_out, skip)
+                                  time_out, skipped)
         else:
             # run all
             skip_list = skip.split(',') if skip else []
