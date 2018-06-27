@@ -11,6 +11,7 @@ import re
 
 from popper.cli import pass_context
 from subprocess import check_output
+from collections import defaultdict
 
 
 @click.command('run', short_help='Run pipeline and report on its status.')
@@ -96,7 +97,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                     "argument is provided")
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
-        status = run_pipeline(project_root, pipes[pipeline], time_out, skip)
+        skipped = skip.split(',') if skip is not None else []
+        status = run_pipeline(project_root, pipes[pipeline], time_out, skipped)
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
@@ -105,11 +107,21 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         else:
             # run all
             skip_list = skip.split(',') if skip else []
+            
+            skipped_stages = defaultdict(list)
+            for skip in skip_list:
+                pair = skip.split(':')
+                if len(pair) == 2:
+                    pipe, stage = pair
+                    skipped_stages[pipe].append(stage)
 
             for pipe in pipes:
                 if pipe not in skip_list:
                     status = run_pipeline(
-                        project_root, pipes[pipe], time_out, []
+                        project_root,
+                        pipes[pipe],
+                        time_out,
+                        skipped_stages[pipe]
                     )
 
                     if status == 'FAIL' and not ignore_errors:
@@ -121,7 +133,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         pu.fail("Failed to execute pipeline")
 
 
-def run_pipeline(project_root, pipeline, timeout, skip):
+def run_pipeline(project_root, pipeline, timeout, skipped):
     abs_path = os.path.join(project_root, pipeline['path'])
 
     pu.info("Executing " + os.path.basename(abs_path), fg='blue',
@@ -142,11 +154,6 @@ def run_pipeline(project_root, pipeline, timeout, skip):
         for stage in stages:
 
             stage_file = pu.get_filename(abs_path, stage)
-
-            if skip:
-                skipped = skip.split(',')
-            else:
-                skipped = []
 
             if not stage_file or stage in skipped:
                 continue
