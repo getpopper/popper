@@ -59,7 +59,7 @@ test ! -f pipelines/mypipetwo/popper_logs/setup.sh.err
 test ! -f pipelines/mypipetwo/popper_logs/setup.sh.out
 
 
-git commit --allow-empty -m "popper:whitelist[pipeone] this is a test"
+git commit --allow-empty -m "popper:whitelist[mypipeone] this is a test"
 popper run
 
 test -f pipelines/mypipeone/popper_logs/setup.sh.err
