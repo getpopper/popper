@@ -39,3 +39,14 @@ do
   test -f pipelines/pipetwo/popper_logs/$stage.sh.out
 done
 
+# test skipping based on commit
+init_test
+
+popper init pipeone
+popper init pipetwo
+
+git commit --allow-empty -m "popper:skip this is a test"
+popper run
+
+git commit --allow-empty -m "popper:whitelist[pipeone] this is a test"
+popper run
