@@ -53,8 +53,13 @@ Coming soon:
 
 ## Results Validation
 
-  * [Codifying validation of results][pyv2] (and also [here][docker]).
-  * [Parameterization using environment variables][envvar-parameters]
+  * [Statistical validations][pyv2].
+  * [Bitwise image comparison][docker].
+
+## Pipeline Parametrization
+
+  * [Using environment variables][envvar-parameters]
+  * [Using baseliner][cloudlab].
 
 ## Provenance and automatic dependency resolution
 

@@ -2,7 +2,43 @@
 
 ## New pipeline initialization
 
-**TODO**
+Create a Git repository:
+
+```bash
+mkdir mypaper
+cd mypaper
+git init
+echo '# mypaper' > README.md
+git add .
+git commit -m 'first commit'
+```
+
+Initialize the popper repository and add the configuration file to git:
+
+```bash
+popper init
+git add .
+git commit -m 'adds .popper.yml file'
+```
+
+Initialize pipeline using `init` (scaffolding):
+
+```bash
+popper init myexp
+```
+
+Show what this did:
+
+```bash
+ls -l pipelines/myexp
+```
+
+Commit the "empty" pipeline:
+
+```bash
+git add pipelines/myexp
+git commit -m 'adding myexp scaffold'
+```
 
 ## Searching and importing existing pipelines
 
@@ -10,7 +46,23 @@
 
 ## Executing a pipeline
 
-**TODO**
+To automatically run a pipeline:
+
+```bash
+popper run myexp
+```
+
+or to execute all the pipelines in a project:
+
+```bash
+popper run
+```
+
+Once a pipeline is checked, one can show the logs:
+
+```bash
+ls -l pipelines/myexp/popper_logs
+```
 
 ## Continously validating a pipeline
 
@@ -88,10 +140,23 @@ git clean -dx --force
 
 ### Testing Remotely via a CI service
 
-This is explained 
-[here](examples.html#continuous-validation-ci-setup).
+This is explained [here](./other_resources.html#ci-setup).
 
-### Popper Badges
+<!--
+
+## Visualizing a pipeline
+
+**TODO**
+
+## Adding metadata to a project
+
+**TODO**
+
+## Archiving a project and obtaining DOIs
+
+**TODO**
+
+## Popper Badges
 
 We maintain a badging service that can be used to keep track of the 
 status of a pipeline. In order to enable this, the `--enable-badging` 
@@ -119,22 +184,7 @@ popper badge <exp>
 Which prints to `stdout` the text that should be added to the `README` 
 file of the pipeline.
 
-
-## Visualizing a pipeline
-
-**TODO**
-
-## Adding metadata to a project
-
-**TODO**
-
-## Archiving a project and obtaining DOIs
-
-**TODO**
-
-## Popper Badges
-
-**TODO**
+-->
 
 ## The `popper.yml` configuration file
 
