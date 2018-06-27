@@ -72,14 +72,14 @@ Coming soon:
 
 [pyv1]: https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/sea-surface-mapping
 [pyv2]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/validator
-[spack]: https://github.com/popperized/popper-readthedocs-examples/master/pipelines/mpip
+[spack]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/mpip
 [docker]: https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/docker-data-science
 [vagrant]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/vagrant-linux
 [sumatra]: https://github.com/popperized/open-comp-rsc-popper
 [nwp-wrf]: https://github.com/popperized/nwp-popper
-[genomics]: https://github.com/popperized/popper-readthedocs-examples/master/pipelines/genomics
+[genomics]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/genomics
 [datapackages]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/datapackage
-[postgres]: https://github.com/popperized/popper-readthedocs-examples/master/pipelines/pgbench
+[postgres]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/pgbench
 [data-world]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/data-world
 [envvar-parameters]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/envvar-param
 [cloudlab]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/cloudlab-benchmarking
