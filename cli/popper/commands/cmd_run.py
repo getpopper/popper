@@ -56,31 +56,31 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         pu.info("No pipelines defined in .popper.yml. "
                 "Run popper init --help for more info.", fg='yellow')
         sys.exit(0)
-
-    try:
-        commit = git.Git().log('-1', '--pretty=%B')
-    except Exception:
-        commit = ""
-
-    if "popper:skip" in commit:
-        pu.info("popper:skip flag detected. "
-                "Skipping execution of commit")
-        sys.exit(0)
-
-    if "popper:whitelist" in commit:
-        pu.info("popper:whitelist flag detected.")
+    if os.environ.get('CI', False):
         try:
-            # Checks if the last commit message has the flag
-            # `popper:whitelist[pipeline]` and gets the pipeline.
-            pipeline = re.search('popper:whitelist\[(.+?)\]',
-                                 commit).group(1)
-            pu.info("Executing popper:whitelist[{}]"
-                    .format(pipeline))
-        except AttributeError:
-            pipeline = None
-            pu.warn("Couldn't find pipeline associated with the "
-                    "popper:whitelist flag. "
-                    "Assigning pipeline to None")
+            commit = git.Git().log('-1', '--pretty=%B')
+        except Exception:
+            commit = ""
+
+        if "popper:skip" in commit:
+            pu.info("popper:skip flag detected. "
+                    "Skipping execution of commit")
+            sys.exit(0)
+
+        if "popper:whitelist" in commit:
+            pu.info("popper:whitelist flag detected.")
+            try:
+                # Checks if the last commit message has the flag
+                # `popper:whitelist[pipeline]` and gets the pipeline.
+                pipeline = re.search('popper:whitelist\[(.+?)\]',
+                                     commit).group(1)
+                pu.info("Executing popper:whitelist[{}]"
+                        .format(pipeline))
+            except AttributeError:
+                pipeline = None
+                pu.warn("Couldn't find pipeline associated with the "
+                        "popper:whitelist flag. "
+                        "Assigning pipeline to None")
 
     if pipeline:
         if ignore_errors:
