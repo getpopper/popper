@@ -9,13 +9,13 @@ popper init mypipeone
 popper run mypipeone
 test -f pipelines/mypipeone/popper_logs/setup.sh.err
 test -f pipelines/mypipeone/popper_logs/setup.sh.out
+test -f pipelines/mypipeone/popper_logs/run.sh.err
 test -f pipelines/mypipeone/popper_logs/run.sh.out
-test -f pipelines/mypipeone/popper_logs/run.sh.out
+test -f pipelines/mypipeone/popper_logs/post-run.sh.err
 test -f pipelines/mypipeone/popper_logs/post-run.sh.out
-test -f pipelines/mypipeone/popper_logs/post-run.sh.out
+test -f pipelines/mypipeone/popper_logs/validate.sh.err
 test -f pipelines/mypipeone/popper_logs/validate.sh.out
-test -f pipelines/mypipeone/popper_logs/validate.sh.out
-test -f pipelines/mypipeone/popper_logs/teardown.sh.out
+test -f pipelines/mypipeone/popper_logs/teardown.sh.err
 test -f pipelines/mypipeone/popper_logs/teardown.sh.out
 test -f pipelines/mypipeone/popper_status
 
@@ -42,11 +42,28 @@ done
 # test skipping based on commit
 init_test
 
-popper init pipeone
-popper init pipetwo
+popper init mypipeone
+popper init mypipetwo
 
 git commit --allow-empty -m "popper:skip this is a test"
+
 popper run
+
+test ! -f pipelines/mypipeone/popper_logs/setup.sh.err
+test ! -f pipelines/mypipeone/popper_logs/setup.sh.out
+
+test ! -f pipelines/mypipetwo/popper_logs/setup.sh.err
+test ! -f pipelines/mypipetwo/popper_logs/setup.sh.out
+
 
 git commit --allow-empty -m "popper:whitelist[pipeone] this is a test"
 popper run
+
+test -f pipelines/mypipeone/popper_logs/setup.sh.err
+test -f pipelines/mypipeone/popper_logs/setup.sh.out
+
+test ! -f pipelines/mypipetwo/popper_logs/setup.sh.err
+test ! -f pipelines/mypipetwo/popper_logs/setup.sh.out
+
+
+
