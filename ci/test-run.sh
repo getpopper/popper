@@ -42,8 +42,8 @@ done
 # test skipping based on commit
 init_test
 
-git config user.email "travis@test.com"
-git config user.name "travis ci"
+git config user.email "<>"
+git config user.name "test travis ci"
 
 popper init mypipeone
 popper init mypipetwo
