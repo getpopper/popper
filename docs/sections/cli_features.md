@@ -157,7 +157,9 @@ popper workflow mypipe | dot -T png -o mypipe.png.
 ```
 
 Suppose you want to visualize the [co2-emissions](https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/co2-emissions) pipeline. 
-Assuming that this pipeline is added to your repository (as explained in `Searching and Importing pipelines), you need to type:
+Assuming that this pipeline is added to your repository (as explained ini
+[Searching and Importing pipelines](cli_features.html#searching-and-importing-existing-pipelines),
+you need to type:
 
 ```bash
 popper workflow co2-emissions | dot -T png -o co2_workflow.png
