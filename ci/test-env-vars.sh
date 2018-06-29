@@ -9,7 +9,10 @@ popper env-vars mypipeone | grep -q key2
 
 set +e
 popper env-vars mypipeone --rm key1=val1
-test $? -ne 0
+if [ $? -eq 0 };
+then
+  exit 1
+fi
 set -e
 
 popper env-vars mypipeone --rm key1=val1 --rm key2=val2

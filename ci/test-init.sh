@@ -10,7 +10,10 @@ popper init --stages=one,two,teardown sample_exp
 
 set +e
 popper init --stages=one,teardown,three sample_exp2
-test $? -ne 0
+if [ $? -eq 0];
+then
+  exit 1
+fi
 set -e
 
 cat .popper.yml | grep '\- host'
