@@ -3,7 +3,7 @@ set -ex
 
 source common-setup.sh
 
-popper badge cloudlab
+popper badge cloudlab | grep "\[\!\[.*\](.*)\](.*)"
 
 set +e
 popper badge
