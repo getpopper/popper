@@ -146,7 +146,29 @@ This is explained [here](./other_resources.html#ci-setup).
 
 ## Visualizing a pipeline
 
-**TODO**
+Popper gives a user the ability to visualize the workflow of a pipeline using the
+`popper workflow pipeline_name` command. The command generates a workflow diagram 
+corresponding to a Popper pipeline, in the .dot format. The string defining
+the graph is printed to stdout so it can be piped into other tools. 
+For example,to generate a png file, one can make use of the graphviz CLI tools: 
+
+```bash
+popper workflow mypipe | dot -T png -o mypipe.png. 
+```
+
+Suppose you want to visualize the [co2-emissions](https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/co2-emissions) pipeline. 
+Assuming that this pipeline is added to your repository (as explained ini
+[Searching and Importing pipelines](cli_features.html#searching-and-importing-existing-pipelines),
+you need to type:
+
+```bash
+popper workflow co2-emissions | dot -T png -o co2_workflow.png
+```
+
+This will lead to the generation of the following dot graph:
+ 
+![](/figures/example_co2_workflow.png)
+
 
 ## Adding metadata to a project
 
@@ -206,10 +228,16 @@ my-paper/
     └── data-generation
 ```
 
-That is, it contains three pipelines named `data-generation` and `analysis`. The `.popper.yml` for this project looks 
-like:
+That is, it contains three pipelines named `paper`,`data-generation` and `analysis`. The `.popper.yml` for this project 
+looks like:
 
 ```yaml
+
+metadata:
+  access_right: open
+  license: CC-BY-4.0
+  publication_type: article
+  upload_type: publication
 
 pipelines:
   paper:
@@ -238,13 +266,8 @@ pipelines:
     - validate
     - teardown
 
-metadata:
-  author: My Name
-  name: The name of my study
-
 popperized:
   - github/popperized
-  - github/ivotron/quiho-popper
 ```
 
 At the top-level of the YAML file there are entries named `pipelines`, `metadata` and 
@@ -264,20 +287,20 @@ init paper` and has by default a single stage named `build.sh`.
 
 #### `envs`
 
-The `envs` entry in `.popper.yml` specifies the environment that a 
-pipeline is used when the pipeline is executed as part of the `popper 
-run` command. The available environments are:
+The `envs` entry in `.popper.yml` specifies the environment in which a 
+pipeline is executed as part of the `popper run` command. The available 
+environments are:
 
   * `host`. The experiment is executed directly on the host.
   * `alpine-3.4`, `ubuntu-16.04` and `centos-7.2`. For each of these, 
-    `popper check` is executed within a docker container whose base 
+    `popper run` is executed within a docker container whose base 
     image is the given Linux distribution name. The container has 
     `docker` available inside it so other containers can be executed 
-    from within the `popper check` container.
+    from within the `popper run` container.
 
 The `popper init` command can be used to initialize a pipeline. By 
-default, the `host` is registered when using `popper init`. The 
-`--env` flag of `popper init` can be used to specify another 
+default, the `host` is the registered environment when using `popper init`. 
+The `--env` flag of `popper init` can be used to specify another 
 environment. For example:
 
 ```bash
@@ -290,13 +313,13 @@ inside a docker container using the `alpine-3.4` popper check image.
 To add more environment(s):  
 
 ```bash
-popper env myexp --add ubuntu-xenial,centos-7.2
+popper env mypipe --add ubuntu-xenial,centos-7.2
 ```
 
-To remove enviroment(s):  
+To remove an enviroment from the pipeline:  
 
 ```bash
-popper env myexp --rm centos-7.2
+popper env mypipe --rm centos-7.2
 ```
 
 #### `stages`
@@ -322,26 +345,45 @@ pipeline showed in the example.
 
 ### Metadata
 
-The `metadata` YAML entry specifies the set of data that gives information
-about the user's project. It can be added using the `popper metadata --add command`
-For example :
+The `metadata` YAML entry specifies a set of key-value pairs that
+describes and gives us information about a project.
+
+By default, a project's metadata will be initialized with the
+following key-value pairs:
+
+```
+$> popper metadata
+
+access_right: open
+license: CC-BY-4.0
+publication_type: article
+upload_type: publication
+``` 
+
+A custom key-value pair can be added using the 
+popper metadata --add KEY=VALUE` command.
+For example:
 
 ```bash
-popper metadata --add authors='Dennis Ritchie'
+popper metadata --add year=2018
 ```
 
-This adds a metadata entry 'authors' to the the project
-metadata.
+This adds a metadata entry 'year' to the metadata.
+The metadata will now look like: 
 
-To view the `metadata` of a repository type: 
-
-```bash
-popper metadata
 ```
-To remove the entry 'authors' from the `metadata`:
+access_right: open
+license: CC-BY-4.0
+publication_type: article
+upload_type: publication
+year: '2019'
+```
+To remove the entry 'year' from the `metadata`, 
+the `popper metadata --rm KEY` command can be used
+as show below:
 
 ```bash
-popper metadata --rm authors
+popper metadata --rm year
 ```
 
 ### Popperized repositories catalog
