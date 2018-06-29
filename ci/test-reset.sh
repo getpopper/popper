@@ -9,5 +9,8 @@ popper init myp
 set +e
 popper reset
 cat .popper.yml | grep 'myp'
-test $? -ne 0
+if [ $? -eq 0 ];
+then
+  exit 1
+fi
 set -e

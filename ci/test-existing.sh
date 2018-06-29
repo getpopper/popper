@@ -26,12 +26,18 @@ cat .popper.yml| grep 'ci2:'
 cat .popper.yml| grep ' - script1'
 set +e
 cat .popper.yml| grep ' - script2'
-test $? -eq 1
+if [ $? -eq 0];
+then
+  exit 1
+fi
 set -e
 cat .popper.yml| grep ' - script3'
 
 set +e
 popper init --existing
-test $? -ne 0
+if [ $? -eq 0];
+then
+  exit 1
+fi
 set -e
 
