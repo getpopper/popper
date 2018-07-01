@@ -161,7 +161,7 @@ class ObtainDotGraph(InlineTransformer):
 
 
 @click.command('workflow', short_help='Get .dot diagram of a pipeline.')
-@click.argument('pipeline', required=True)
+@click.argument('pipeline', required=False)
 @pass_context
 def cli(ctx, pipeline):
     """Generates a workflow diagram corresponding to a Popper pipeline, in the
@@ -171,6 +171,13 @@ def cli(ctx, pipeline):
     popper workflow mypipe | dot -T png -o mypipe.png
     """
     pipes = pu.read_config()['pipelines']
+
+    if not pipeline:
+        get_pipe = pu.in_pipeline(name=True)
+        if get_pipe is not None:
+            pipeline = get_pipe
+        else:
+            pu.fail("This is not a pipeline")
 
     if pipeline not in pipes:
         pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))

@@ -9,7 +9,7 @@ from popper.cli import pass_context
 @click.command(
     'stages', short_help='See and manipulate stages of a pipeline.'
 )
-@click.argument('pipeline', required=True)
+@click.argument('pipeline', required=False)
 @click.option(
     '--set',
     help='Comma separated list of stages in the pipeline.',
@@ -19,6 +19,14 @@ from popper.cli import pass_context
 def cli(ctx, pipeline, set):
     """View or change the stages of a pipeline.
     """
+
+    if not pipeline:
+        get_pipe = pu.in_pipeline(name=True)
+        if get_pipe is not None:
+            pipeline = get_pipe
+        else:
+            pu.fail("This is not a pipeline")
+
     config = pu.read_config()
     if pipeline in config['pipelines']:
         if set:

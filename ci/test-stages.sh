@@ -18,6 +18,23 @@ popper stages mypipeone | grep -q run
 popper stages mypipeone | grep -q teardown
 ! popper stages mypipeone | grep -q validate # make sure validate does not show up
 
+set +e
+popper stages
+if [ $? -eq 0 ];
+then
+    exit 1
+fi
+set -e
+
+init_test
+popper init mypipeone
+cd pipelines/mypipeone
+popper stages | grep -q setup
+popper stages | grep -q run
+popper stages | grep -q post-run
+popper stages | grep -q validate
+popper stages | grep -q teardown
+
 # within the pipeline folder, without some stages
 init_test
 popper init mypipeone
