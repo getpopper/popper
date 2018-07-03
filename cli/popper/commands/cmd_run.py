@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 import click
 import os
 import popper.utils as pu
@@ -108,7 +107,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         else:
             # run all
             skip_list = skip.split(',') if skip else []
-            
+
             skipped_stages = defaultdict(list)
             for skip in skip_list:
                 pair = skip.split(':')
