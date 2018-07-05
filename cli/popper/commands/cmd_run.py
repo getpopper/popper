@@ -56,7 +56,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         sys.exit(0)
 
     if os.environ.get('CI', False):
-        args = ['git', 'log', '-2', '--pretty=%B']
+        args = ['git', 'log', '-1', '--pretty=%B']
 
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
@@ -70,10 +70,27 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         else:
             commit = ""
 
-	print(commit)
-	print(type(commit))
-	print(commit[0])
-	print(commit[1])
+        if "merge" in commit:
+            pu.info("merge detected.")
+            commit_id = re.search('merge (.+?) into')
+
+            print(commit_id)
+
+            args = ['git', 'show', '-s', '--format=%B', commit_id]
+
+            p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            output, error = p.communicate()
+
+            if p.returncode == 0:
+                try:
+                    commit = output.decode()  # Python 3 returns bytes
+                except AttributeError:
+                    commit = output
+            else:
+                commit = ""
+            
+            print(commit)
 
         if "popper:skip" in commit:
             pu.info("popper:skip flag detected. "
