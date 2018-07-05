@@ -56,7 +56,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         sys.exit(0)
 
     if os.environ.get('CI', False):
-        args = ['git', 'log', '-1', '--pretty=%B']
+        args = ['git', 'log', '-2', '--pretty=%B']
 
         p = subprocess.Popen(args, stdout=subprocess.PIPE,
                              stderr=subprocess.PIPE)
