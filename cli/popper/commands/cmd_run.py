@@ -84,7 +84,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
             if p.returncode == 0:
                 try:
-                    commit = output.decode()  # Python 3 returns bytes
+                    commit = output.decode()  # Python 3  returns bytes
                 except AttributeError:
                     commit = output
             else:
