@@ -7,7 +7,7 @@ from popper.exceptions import UsageError
 
 @click.command('env-vars', short_help='Define or remove executions of a'
                'pipeline.')
-@click.argument('pipeline', required=True)
+@click.argument('pipeline', required=False)
 @click.option(
     '--add',
     multiple=True,
@@ -23,6 +23,13 @@ from popper.exceptions import UsageError
 @pass_context
 def cli(ctx, pipeline, add, rm):
     """Define or remove executions of a pipeline."""
+
+    if not pipeline:
+        get_pipe = pu.in_pipeline(name=True)
+        if get_pipe is not None:
+            pipeline = get_pipe
+        else:
+            pu.fail("This is not a pipeline")
 
     config, pipeline_config = pu.read_config(pipeline)
 

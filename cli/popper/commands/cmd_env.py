@@ -45,24 +45,6 @@ def cli(ctx, pipeline, add, rm, ls):
     """
     config = pu.read_config()
 
-    if not add and not rm and not ls:
-        if not pipeline:
-            raise BadArgumentUsage(
-                'Expecting name of a pipeline')
-
-        if pipeline not in config['pipelines']:
-            pu.fail("Pipeline '{}' not found in .popper.yml".format(pipeline))
-
-        pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
-        sys.exit(0)
-
-    if add:
-        config['pipelines'][pipeline]['envs'] += add.split(',')
-
-    if rm:
-        for e in rm.split(','):
-            config['pipelines'][pipeline]['envs'].remove(e)
-
     if ls:
         try:
             response = requests.get(
@@ -76,5 +58,29 @@ def cli(ctx, pipeline, add, rm, ls):
 
         except requests.exceptions.RequestException as e:
             click.echo(click.style("Error: " + str(e), fg='red'), err=True)
+
+        sys.exit(0)
+
+    if not pipeline:
+        get_pipe = pu.in_pipeline(name=True)
+        if get_pipe is not None:
+            pipeline = get_pipe
+        else:
+            pu.fail("This is not a pipeline")
+
+    if not add and not rm:
+
+        if pipeline not in config['pipelines']:
+            pu.fail("Pipeline '{}' not found in .popper.yml".format(pipeline))
+
+        pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
+        sys.exit(0)
+
+    if add:
+        config['pipelines'][pipeline]['envs'] += add.split(',')
+
+    if rm:
+        for e in rm.split(','):
+            config['pipelines'][pipeline]['envs'].remove(e)
 
     pu.write_config(config)

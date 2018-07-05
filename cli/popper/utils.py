@@ -283,3 +283,38 @@ def read_gh_pipeline(uname, repo, pipeline, branch="master"):
         contents = r.content.decode("utf-8").split("\n")
 
     return contents
+
+
+def in_pipeline(name=False):
+    """Checks if the current working directory is a pipeline
+    or not.
+
+    Args:
+        name (bool): Set as True if the user wants the name of the pipeline.
+
+    Returns:
+        pipeline_name (str): The name of the current pipeline. Returned iff
+        the argument `name` is set to True.
+
+        True/False (bool): True if the user is inside a pipeline. False
+        otherwise. Returned iff the argument `name` is set to False.
+    """
+
+    cwd = os.getcwd()
+    pipeline_name = os.path.basename(cwd)
+    pipelines = read_config()['pipelines']
+
+    if pipeline_name in pipelines:
+        pipeline = pipelines[pipeline_name]
+        rel_path = os.path.relpath(cwd, get_project_root())
+
+        if rel_path == pipeline['path']:
+            if name:
+                return pipeline_name
+            else:
+                return True
+
+    if name:
+        return None
+    else:
+        return False
