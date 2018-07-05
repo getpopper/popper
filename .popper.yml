@@ -26,5 +26,6 @@ pipelines:
     - test-archive
     - test-reset
     - test-env-vars
+    - test-badge
 popperized:
 - github/popperized
