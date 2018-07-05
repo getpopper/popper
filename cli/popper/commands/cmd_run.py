@@ -71,6 +71,9 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
             commit = ""
 
 	print(commit)
+	print(type(commit))
+	print(commit[0])
+	print(commit[1])
 
         if "popper:skip" in commit:
             pu.info("popper:skip flag detected. "
