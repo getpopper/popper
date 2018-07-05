@@ -74,7 +74,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
         if "Merge" in commit:
             pu.info("merge detected.")
-            commit_id = re.search('merge (.+?) into')
+            commit_id = re.search('merge (.+?) into', commit).group(1)
 
             print(commit_id)
 
