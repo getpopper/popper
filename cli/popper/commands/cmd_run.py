@@ -70,6 +70,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         else:
             commit = ""
 
+        print(commit)
+
         if "merge" in commit:
             pu.info("merge detected.")
             commit_id = re.search('merge (.+?) into')
@@ -89,8 +91,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                     commit = output
             else:
                 commit = ""
-            
-            print(commit)
+
+        print(commit)
 
         if "popper:skip" in commit:
             pu.info("popper:skip flag detected. "
