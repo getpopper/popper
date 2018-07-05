@@ -21,4 +21,12 @@ popper env mypipeone | grep 'host'
 # test listing of available environments
 popper env --ls
 
-
+set +e
+popper env
+if [ $? -eq 0 ];
+then
+    exit 1
+fi
+set -e
+cd pipelines/mypipeone
+popper env
