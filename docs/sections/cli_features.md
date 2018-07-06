@@ -142,8 +142,6 @@ git clean -dx --force
 
 This is explained [here](./other_resources.html#ci-setup).
 
-<!--
-
 ## Visualizing a pipeline
 
 Popper gives a user the ability to visualize the workflow of a pipeline using the
@@ -177,36 +175,6 @@ This will lead to the generation of the following dot graph:
 ## Archiving a project and obtaining DOIs
 
 **TODO**
-
-## Popper Badges
-
-We maintain a badging service that can be used to keep track of the 
-status of a pipeline. In order to enable this, the `--enable-badging` 
-flag has to be passed to the `popper ci` subcommand.
-
-![Badging service.](/figures/cibadges.png)
-
-Badges are commonly used to denote the status of a software project 
-with respect to certain aspect, e.g. whether the latest version can be 
-built without errors, or the percentage of code that unit tests cover 
-(code coverage). Badges available for Popper are shown in the above 
-figure. If badging is enabled, after the execution of a pipeline, the 
-status of a pipeline is recorded in the badging server, which keeps 
-track of statuses for every revision of ever pipeline.
-
-Users can include a link to the badge in the `README` page of a 
-pipeline, which can be displayed on the web interface of the version 
-control system (GitHub in this case). The CLI tool can generate links 
-for pipelines:
-
-```bash
-popper badge <exp>
-```
-
-Which prints to `stdout` the text that should be added to the `README` 
-file of the pipeline.
-
--->
 
 ## The `popper.yml` configuration file
 
