@@ -35,7 +35,7 @@ Each article consists of two parts:
 | 07/13  | chameleon      | Rafa   |
 | 07/20  | GSoC 1         | Ankit  |
 | 07/27  | repro/repeat   | Ivo    |
-| 08/03  |                |        |
+| 08/03  | cloudlab       | Fran   |
 | 08/10  |                |        |
 | 08/17  |                |        |
 | 08/24  |                |        |
