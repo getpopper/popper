@@ -13,7 +13,6 @@ popper metadata --add title='Popper test archive'
 popper metadata --add author1='Test Author, testauthor@gmail.com, popper'
 popper metadata --add abstract='A short description of the article'
 popper metadata --add keywords='comma, separated, keywords'
-git remote add origin https://github.com/systemslab/popper-test.git
 git add . && git commit -m "Add metadata"
 # popper archive --service zenodo
 popper metadata --add categories='1656'
