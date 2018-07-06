@@ -7,6 +7,7 @@ import time
 import signal
 import sys
 import re
+import requests
 
 from popper.cli import pass_context
 from subprocess import check_output
@@ -148,6 +149,21 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                         break
 
     os.chdir(cwd)
+
+    if os.environ.get('CI', False):
+        baseurl = pu.read_config().get(
+            'badge_server_url', 'https://badges.falsifiable.us'
+        )
+        org, repo = pu.get_remote_url().split('/')[-2:]
+        badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
+        data = {
+            'timestamp': int(time.time()),
+            'commit_id': check_output(['git', 'rev-parse', 'HEAD'])[:-1],
+            'status': status
+        }
+        r = requests.post(badge_server_url, data=data)
+        if r.status_code != 201:
+            pu.warn("Could not create a record on the badge server")
 
     if status == 'FAIL':
         pu.fail("Failed to execute pipeline")

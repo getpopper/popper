@@ -206,7 +206,7 @@ def get_remote_url():
     p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = p.communicate()
     if p.returncode == 0:
-        # Remove the .git/n from the end of the url returned by Popen
+        # Remove the .git\n from the end of the url returned by Popen
         try:
             return output.decode()[:-5]  # Python 3 returns bytes
         except AttributeError:
