@@ -19,13 +19,31 @@ test -f pipelines/mypipeone/popper_logs/teardown.sh.err
 test -f pipelines/mypipeone/popper_logs/teardown.sh.out
 test -f pipelines/mypipeone/popper_status
 
+# test skipping stages
+init_test
+popper init pipeone --stages=one,two,three,four
+
+popper run pipeone --skip=one,two
+
+for stage in one two
+do
+  test ! -f pipelines/pipeone/popper_logs/$stage.sh.err
+  test ! -f pipelines/pipeone/popper_logs/$stage.sh.out
+done
+
+for stage in three four
+do
+  test -f pipelines/pipeone/popper_logs/$stage.sh.err
+  test -f pipelines/pipeone/popper_logs/$stage.sh.out
+done
+
 # test skipping pipelines
 init_test
 
 popper init pipeone --stages=one,two,three
 popper init pipetwo --stages=four,five,six
 
-popper run --skip=pipeone
+popper run --skip=pipeone,pipetwo:five
 
 for stage in one two three
 do
@@ -33,11 +51,14 @@ do
   test ! -f pipelines/pipeone/popper_logs/$stage.sh.out
 done
 
-for stage in four five six
+for stage in four six
 do
   test -f pipelines/pipetwo/popper_logs/$stage.sh.err
   test -f pipelines/pipetwo/popper_logs/$stage.sh.out
 done
+
+test ! -f pipelines/pipetwo/popper_logs/five.sh.err
+test ! -f pipelines/pipetwo/popper_logs/five.sh.out
 
 # test skipping based on commit
 init_test
@@ -67,6 +88,5 @@ test -f pipelines/mypipeone/popper_logs/setup.sh.out
 
 test ! -f pipelines/mypipetwo/popper_logs/setup.sh.err
 test ! -f pipelines/mypipetwo/popper_logs/setup.sh.out
-
 
 
