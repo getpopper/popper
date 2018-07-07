@@ -70,6 +70,26 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         else:
             commit = ""
 
+        # Check for pull requests
+        if "Merge" in commit:
+
+            pu.info("merge detected.")
+            commit_id = re.search('Merge (.+?) into', commit).group(1)
+
+            args = ['git', 'show', '-s', '--format=%B', commit_id]
+
+            p = subprocess.Popen(args, stdout=subprocess.PIPE,
+                                 stderr=subprocess.PIPE)
+            output, error = p.communicate()
+
+            if p.returncode == 0:
+                try:
+                    commit = output.decode()  # Python 3  returns bytes
+                except AttributeError:
+                    commit = output
+            else:
+                commit = ""
+
         if "popper:skip" in commit:
             pu.info("popper:skip flag detected. "
                     "Skipping execution of commit")
