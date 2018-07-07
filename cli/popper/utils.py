@@ -253,7 +253,7 @@ def make_gh_request(url, err=True, msg=None):
 
     response = requests.get(url, headers=get_gh_headers())
     if err and response.status_code != 200:
-        pu.fail(msg)
+        fail(msg)
     else:
         return response
 
