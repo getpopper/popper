@@ -7,10 +7,17 @@ source common-setup.sh
 init_test
 popper init myp
 set +e
-popper reset
+echo -e "yes" | popper reset
 cat .popper.yml | grep 'myp'
 if [ $? -eq 0 ];
 then
   exit 1
 fi
+
+init_test
+popper init myp
+echo -e "no" | popper reset
 set -e
+cat .popper.yml | grep 'myp'
+
+
