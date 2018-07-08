@@ -18,6 +18,7 @@ git add .
 git commit -m "Add mypipeone"
 popper run
 
-# Kill the server
+# Kill the server and clean up
 set -ex
 ps -ef | grep "app.py" | awk '{print $2}' | xargs kill
+rm -rf /tmp/popper-badge-server
