@@ -17,6 +17,7 @@ git remote add origin https://github.com/systemslab/popper.git
 git add .
 git commit -m "Add mypipeone"
 popper run
+git remote remove origin
 
 # Kill the server and clean up
 set -ex
