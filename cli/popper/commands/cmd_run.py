@@ -154,10 +154,11 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
     if remote_url and os.environ.get('CI', False):
         baseurl = pu.read_config().get(
-            'badge_server_url', 'https://badges.falsifiable.us'
+            'badge-server-url', 'https://badges.falsifiable.us'
         )
         org, repo = remote_url.split('/')[-2:]
         badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
+        print(badge_server_url)
         try:
             commit_id = check_output(['git', 'rev-parse', 'HEAD'])[:-1]
             data = {

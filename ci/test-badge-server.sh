@@ -1,14 +1,15 @@
 #!/bin/bash
 
 # Clone and start the server
-python -m virtualenv ~/popper-badge-server
-git clone https://github.com/popperized/popper-badge-server.git ~/popper-badge-server/src
-source ~/popper-badge-server/bin/activate
-pip install -r ~/popper-badge-server/src/requirements.txt
-python ~/popper-badge-server/src/app.py &
+python -m virtualenv /tmp/popper-badge-server
+git clone https://github.com/popperized/popper-badge-server.git ~/tmp/popper-badge-server/src
+source /tmp/popper-badge-server/bin/activate
+pip install -r /tmp/popper-badge-server/src/requirements.txt
+python /tmp/popper-badge-server/src/app.py &
 deactivate
 
 # Use popper run to test the badge server
+source common-setup.sh
 init_test
 sed -i '$s/.*/badge-server-url: http:\/\/127.0.0.1:5000/' .popper.yml
 popper init mypipeone
