@@ -4,7 +4,6 @@ import sys
 import yaml
 import requests
 import subprocess
-from io import BytesIO
 
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
@@ -212,7 +211,7 @@ def get_remote_url():
         except AttributeError:
             return output[:-5]
     else:
-        fail("Git remote does not exist. Add a git remote.")
+        return ''
 
 
 def get_gh_headers():

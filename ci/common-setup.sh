@@ -7,7 +7,6 @@ function init_test {
   mkdir /tmp/mypaper
   cd /tmp/mypaper
   git init
-  git remote add origin https://github.com/systemslab/popper.git
   popper init
 }
 

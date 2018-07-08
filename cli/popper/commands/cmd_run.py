@@ -150,20 +150,26 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
     os.chdir(cwd)
 
-    if os.environ.get('CI', False):
+    remote_url = pu.get_remote_url()
+
+    if remote_url and os.environ.get('CI', False):
         baseurl = pu.read_config().get(
             'badge_server_url', 'https://badges.falsifiable.us'
         )
-        org, repo = pu.get_remote_url().split('/')[-2:]
+        org, repo = remote_url.split('/')[-2:]
         badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
-        data = {
-            'timestamp': int(time.time()),
-            'commit_id': check_output(['git', 'rev-parse', 'HEAD'])[:-1],
-            'status': status
-        }
-        r = requests.post(badge_server_url, data=data)
-        if r.status_code != 201:
-            pu.warn("Could not create a record on the badge server")
+        try:
+            commit_id = check_output(['git', 'rev-parse', 'HEAD'])[:-1]
+            data = {
+                'timestamp': int(time.time()),
+                'commit_id': commit_id,
+                'status': status
+            }
+            r = requests.post(badge_server_url, data=data)
+            if r.status_code != 201:
+                pu.warn("Could not create a record on the badge server")
+        except subprocess.CalledProcessError:
+            pu.warn("No commit log found")
 
     if status == 'FAIL':
         pu.fail("Failed to execute pipeline")

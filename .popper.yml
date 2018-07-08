@@ -27,5 +27,7 @@ pipelines:
     - test-reset
     - test-env-vars
     - test-badge
+    - test-badge-server
 popperized:
 - github/popperized
+badge-server-url: https://badges.falsifiable.us

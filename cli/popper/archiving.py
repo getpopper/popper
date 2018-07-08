@@ -45,6 +45,10 @@ class BaseService(object):
         if output != '':
             pu.fail("Please commit all your changes before archiving.")
 
+        remote_url = pu.get_remote_url()
+        if not remote_url:
+            pu.fail("Failed to fetch remote url for git repository.")
+
     def is_last_deposition_published(self):
         """The method checks if the last modified/uploaded record is
         published or not. This will be overridden by the derived class.
