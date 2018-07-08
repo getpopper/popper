@@ -16,3 +16,7 @@ git remote add origin https://github.com/systemslab/popper.git
 git add .
 git commit -m "Add mypipeone"
 popper run
+
+# Kill the server
+set -ex
+ps -ef | grep "app.py" | awk '{print $2}' | xargs kill
