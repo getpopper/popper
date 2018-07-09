@@ -158,7 +158,6 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         )
         org, repo = remote_url.split('/')[-2:]
         badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
-        print(badge_server_url)
         try:
             commit_id = check_output(['git', 'rev-parse', 'HEAD'])[:-1]
             data = {
@@ -166,9 +165,12 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                 'commit_id': commit_id,
                 'status': status
             }
-            r = requests.post(badge_server_url, data=data)
-            if r.status_code != 201:
-                pu.warn("Could not create a record on the badge server")
+            try:
+                r = requests.post(badge_server_url, data=data)
+                if r.status_code != 201:
+                    pu.warn("Could not create a record on the badge server")
+            except requests.exceptions.RequestException:
+                pu.warn("Could not communicate with the badge server")
         except subprocess.CalledProcessError:
             pu.warn("No commit log found")
 
