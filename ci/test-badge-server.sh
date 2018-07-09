@@ -10,6 +10,8 @@ source common-setup.sh
 init_test
 sed -i '$s/.*/badge-server-url: http:\/\/127.0.0.1:5000/' .popper.yml
 popper init mypipeone
+git config --global user.email "testuser@example.com"
+git config --global user.name "Test User"
 git remote add origin https://github.com/systemslab/popper.git
 git add .
 git commit -m "Add mypipeone"
@@ -17,6 +19,5 @@ popper run
 git remote remove origin
 
 # Kill the server and clean up
-set -ex
 kill $(ps -ef | grep "app.py" | awk '{print $2}')
 rm -rf /tmp/popper-badge-server
