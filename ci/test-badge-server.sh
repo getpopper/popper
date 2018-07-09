@@ -18,5 +18,5 @@ git remote remove origin
 
 # Kill the server and clean up
 set -ex
-ps -ef | grep "app.py" | awk '{print $2}' | xargs kill
+kill $(ps -ef | grep "app.py" | awk '{print $2}')
 rm -rf /tmp/popper-badge-server
