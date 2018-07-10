@@ -21,3 +21,6 @@ fi
 
 set -e
 
+git remote add origin https://github.com/systemslab/popper.git
+popper badge popper | grep 'http://badges.falsifiable.us/systemslab/popper'
+popper badge popper | grep 'http://popper.rtfd.io/en/latest/sections/badge_server.html'
