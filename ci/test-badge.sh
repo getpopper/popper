@@ -21,3 +21,5 @@ fi
 
 set -e
 
+popper badge popper | grep 'http://badges.falsifiable.us/systemslab/popper'
+popper badge popper | grep 'http://popper.rtfd.io/en/latest/sections/badge_server.html'
