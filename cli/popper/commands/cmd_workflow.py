@@ -2,7 +2,9 @@
 
 import click
 import os
+import sys
 import popper.utils as pu
+
 from popper.cli import pass_context
 from lark import Lark, InlineTransformer, Tree
 
