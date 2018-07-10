@@ -14,7 +14,6 @@ pipelines:
     - test-init
     - test-existing
     - test-run
-    - test-badge-server
     - test-ci
     - test-stages
     - test-env
