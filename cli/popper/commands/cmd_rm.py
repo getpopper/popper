@@ -14,17 +14,19 @@ def cli(ctx, pipeline):
     """
 
     project_root = pu.get_project_root()
+    pipeline_dir = project_root
 
-    if pipeline == 'paper':
-        pipeline_dir = project_root
-    else:
-        pipeline_dir = os.path.join(project_root, 'pipelines')
+    pipelines = pu.read_config()['pipelines']
 
-    pipeline_path = os.path.join(pipeline_dir, pipeline)
+    if pipeline in pipelines:
+        path = pipelines[pipeline]['path']
+        pipeline_dir = os.path.join(
+                pipeline_dir,
+                path)
 
-    if os.path.isdir(pipeline_path):
+    if os.path.isdir(pipeline_dir):
 
-        shutil.rmtree(pipeline_path)
+        shutil.rmtree(pipeline_dir)
 
         popper_config = pu.read_config()
         del popper_config['pipelines'][pipeline]
