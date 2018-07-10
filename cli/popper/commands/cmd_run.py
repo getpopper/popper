@@ -154,7 +154,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
 
     if remote_url and os.environ.get('CI', False):
         baseurl = pu.read_config().get(
-            'badge-server-url', 'https://badges.falsifiable.us'
+            'badge-server-url', 'http://badges.falsifiable.us'
         )
         org, repo = remote_url.split('/')[-2:]
         badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
