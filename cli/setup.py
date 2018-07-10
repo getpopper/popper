@@ -19,7 +19,7 @@ setup(
     install_requires=[
         'click',
         'requests',
-        'lark-parser',
+        'lark-parser==0.5.6',
         'pyyaml',
         'pyaes'
     ],
