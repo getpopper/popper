@@ -17,6 +17,8 @@ def cli(ctx):
     pipelines and folders, leaving behind a newly created .popper.yml file.
     """
 
+    click.confirm("This will remove all the pipeline files in this project,"
+                  " do you want to continue?", abort=True)
     project_root = pu.get_project_root()
 
     for file_name in os.listdir(project_root):
