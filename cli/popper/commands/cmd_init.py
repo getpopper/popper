@@ -117,7 +117,8 @@ def initialize_repo(project_root):
         'pipelines': {},
         'popperized': [
             "github/popperized"
-        ]
+        ],
+        'badge-server-url': 'http://badges.falsifiable.us',
     }
 
     pu.write_config(config)

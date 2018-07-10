@@ -29,3 +29,4 @@ pipelines:
     - test-badge
 popperized:
 - github/popperized
+badge-server-url: http://badges.falsifiable.us
