@@ -3,7 +3,7 @@ set -ex
 
 source common-setup.sh
 
-popper badge cloudlab | grep "\[\!\[.*\](.*)\](.*)"
+popper badge --service cloudlab | grep "\[\!\[.*\](.*)\](.*)"
 
 set +e
 popper badge
@@ -12,7 +12,7 @@ then
   exit 1
 fi
 
-popper badge errorout
+popper badge --service errorout
 
 if [ $? -eq 0 ];
 then
@@ -21,5 +21,5 @@ fi
 
 set -e
 
-popper badge popper | grep 'http://badges.falsifiable.us/systemslab/popper'
-popper badge popper | grep 'http://popper.rtfd.io/en/latest/sections/badge_server.html'
+popper badge --service popper | grep 'http://badges.falsifiable.us/systemslab/popper'
+popper badge --service popper | grep 'http://popper.rtfd.io/en/latest/sections/badge_server.html'
