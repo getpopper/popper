@@ -3,6 +3,8 @@
 import click
 import popper.utils as pu
 
+from popper.cli import pass_context
+
 
 services = {
     'cloudlab': (
@@ -31,20 +33,19 @@ services = {
 }
 
 
-@click.command('service',
-               short_help='Generates markdown for service badges')
-@click.argument('service', required=False)
-def cli(service):
+@click.command('badge', short_help='Generates markdown for service badges')
+@click.option(
+    '--service',
+    help='Name of the service for which badge is required',
+    required=True,
+)
+@pass_context
+def cli(ctx, service):
     """Generates markdown for the badge of a service. Currently available
     services are: CloudLab, Chameleon, Google Cloud Engine and Popper.
     """
-    if service is None or service not in services:
-
-        if service is None:
-            pu.fail('Please specify a service')
-        else:
-            pu.fail('Unknown service')
-
+    if service not in services:
+        pu.fail('Unknown service')
         pu.info('Available services:')
         for s in services:
             pu.info(' - {}'.format(s))
