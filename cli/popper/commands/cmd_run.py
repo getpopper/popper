@@ -339,10 +339,10 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment)
     if status_copy != status:
         status = "FAIL"
 
-    check_output('chmod +x popper_status', shell=True)
-
     with open('popper_status', 'w') as f:
         f.write(status + '\n')
+
+    check_output('chmod +x popper_status', shell=True)
 
     if status == "SUCCESS":
         fg = 'green'
