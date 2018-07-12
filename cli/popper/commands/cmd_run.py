@@ -39,8 +39,24 @@ from collections import defaultdict
          'only when no pipeline argument is provided ',
     required=False,
 )
+@click.option(
+    '--volume',
+    is_flag=True,
+    help="Volume available to the pipeline. Can be given "
+         "multiple times. This flag is ignored when the "
+         "environment is 'host'.",
+    required=False,
+)
+@click.option(
+    '--environment',
+    is_flag=True,
+    help="Environment variable available to the pipeline. "
+         "Can be given multiple times. "
+         "This flag is ignored when the environment is 'host'.",
+    required=False,
+)
 @pass_context
-def cli(ctx, pipeline, timeout, skip, ignore_errors):
+def cli(ctx, pipeline, timeout, skip, volume, environment, ignore_errors):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
     all pipelines are executed in lexicographical order. Reports an error if
@@ -48,8 +64,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
     """
     cwd = os.getcwd()
     pipes = pu.read_config()['pipelines']
+
     project_root = pu.get_project_root()
-    time_out = pu.parse_timeout(timeout)
 
     if len(pipes) == 0:
         pu.info("No pipelines defined in .popper.yml. "
@@ -118,13 +134,13 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         skipped = skip.split(',') if skip is not None else []
-        status = run_pipeline(project_root, pipes[pipeline], time_out, skipped)
+        status = run_pipeline(project_root, pipes[pipeline], timeout, skipped, volume, environment)
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
             skipped = skip.split(',') if skip is not None else []
             status = run_pipeline(project_root, pipes[os.path.basename(cwd)],
-                                  time_out, skipped)
+                                  timeout, skipped, volume, environment)
         else:
             # run all
             skip_list = skip.split(',') if skip else []
@@ -141,8 +157,10 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                     status = run_pipeline(
                         project_root,
                         pipes[pipe],
-                        time_out,
-                        skipped_stages[pipe]
+                        timeout,
+                        skipped_stages[pipe],
+                        volume,
+                        environment
                     )
 
                     if status == 'FAIL' and not ignore_errors:
@@ -178,16 +196,67 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         pu.fail("Failed to execute pipeline")
 
 
-def run_pipeline(project_root, pipeline, timeout, skipped):
-    abs_path = os.path.join(project_root, pipeline['path'])
-
-    pu.info("Executing " + os.path.basename(abs_path), fg='blue',
+def run_in_docker(envs, abs_path, skipped, timeout, volumes, environments):
+    pu.info("Executing in Docker...", fg='blue',
             bold=True, blink=True)
 
-    os.chdir(abs_path)
+    docker_flags = ""
 
-    check_output('rm -rf popper_logs/ popper_status', shell=True)
-    check_output('mkdir -p popper_logs/', shell=True)
+    if environments:
+        for environment in environments:
+            docker_flags += "-e " + environment + " "
+
+    if volumes:
+        for volume in volumes:
+            docker_flags += "-v " + volume + " "
+
+    popper_flags = ""
+
+    if skipped:
+        popper_flags += "--skip=" + skipped + " "
+
+    cmd_args = " run --rm -i " + docker_flags
+
+    cmd_args += " --volume " + abs_path + ":" + abs_path + " --workdir " + abs_path + " --volume " \
+                + " /var/run/docker.sock:/var/run/docker.sock " + " falsifiable/poppercheck:"
+
+    status = []
+
+    for env in envs:
+        try:
+            output = ""
+            output = check_output("docker " + cmd_args + env + " " + popper_flags, shell=True)
+        except Exception:
+            pu.warn("Please make sure you're using a valid docker image.\n"
+                    "You can check the available docker images here:\n"
+                    "https://hub.docker.com/r/falsifiable/poppercheck/tags/")
+
+        try:
+            status.append(re.search('status: (.+?)\n',
+                                    output).group(1))
+        except Exception:
+            status.append("FAIL")
+
+        if status[-1] == "SUCCESS":
+            fg = 'green'
+        elif status[-1] == "GOLD":
+            fg = 'yellow'
+        else:
+            fg = 'red'
+        pu.info("Environment " + env + ":\n" + "status: {}\n".format(status[-1]), fg=fg, bold=True)
+
+    # Checks if all status are the same.
+    if status.count(status[0]) == len(status):
+        STATUS = status[0]
+    else:
+        STATUS = "FAIL"
+
+    return STATUS
+
+
+def run_on_host(pipeline, abs_path, skipped, timeout):
+    pu.info("Executing on host...", fg='blue',
+            bold=True, blink=True)
 
     status = "SUCCESS"
 
@@ -233,6 +302,42 @@ def run_pipeline(project_root, pipeline, timeout, skipped):
                     for line in validate_output:
                         if '[true]' not in line:
                             status = "SUCCESS"
+    return status
+
+
+def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment):
+
+    timeout = pu.parse_timeout(time_out)
+
+    abs_path = os.path.join(project_root, pipeline['path'])
+
+    pu.info("Executing " + os.path.basename(abs_path), fg='blue',
+            bold=True, blink=True)
+
+    os.chdir(abs_path)
+
+    check_output('rm -rf popper_logs/ popper_status', shell=True)
+    check_output('mkdir -p popper_logs/', shell=True)
+
+    envs = pipeline['envs']
+
+    status = "SUCCESS"
+
+    if len(envs) == 0:
+        pu.warn("No environment in .popper.yml, using host")
+        envs = ["host"]
+
+    if "host" in envs:
+        status = run_on_host(pipeline, abs_path, skipped, timeout)
+        envs.remove("host")
+
+    status_copy = status
+
+    if len(envs) > 0:
+        status = run_in_docker(envs, abs_path, skipped, time_out, volume, environment)
+
+    if status_copy != status:
+        status = "FAIL"
 
     with open('popper_status', 'w') as f:
         f.write(status + '\n')

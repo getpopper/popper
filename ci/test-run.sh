@@ -60,6 +60,18 @@ done
 test ! -f pipelines/pipetwo/popper_logs/five.sh.err
 test ! -f pipelines/pipetwo/popper_logs/five.sh.out
 
+# test run in docker
+init_test
+
+popper init mypipeone
+
+popper env mypipeline --add alpine-3.4,centos-7.4
+
+popper env mypipeline --rm host
+
+popper run mypipeone
+
+
 # test skipping based on commit
 init_test
 
@@ -88,5 +100,6 @@ test -f pipelines/mypipeone/popper_logs/setup.sh.out
 
 test ! -f pipelines/mypipetwo/popper_logs/setup.sh.err
 test ! -f pipelines/mypipetwo/popper_logs/setup.sh.out
+
 
 
