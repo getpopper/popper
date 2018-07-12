@@ -311,13 +311,13 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment)
 
     abs_path = os.path.join(project_root, pipeline['path'])
 
-    check_output('rm -rf popper_logs/ popper_status', shell=True)
-    check_output('mkdir -p popper_logs/', shell=True)
-
     pu.info("Executing " + os.path.basename(abs_path), fg='blue',
             bold=True, blink=True)
 
     os.chdir(abs_path)
+
+    check_output('rm -rf popper_logs/ popper_status', shell=True)
+    check_output('mkdir -p popper_logs/', shell=True)
 
     envs = pipeline['envs']
 
@@ -331,7 +331,6 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment)
         status = run_on_host(pipeline, abs_path, skipped, timeout)
         envs.remove("host")
 
-
     status_copy = status
 
     if len(envs) > 0:
@@ -341,6 +340,7 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment)
         status = "FAIL"
 
     check_output('chmod +x popper_status', shell=True)
+
     with open('popper_status', 'w') as f:
         f.write(status + '\n')
 
