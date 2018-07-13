@@ -63,7 +63,6 @@ from collections import defaultdict
          "Can't be given multiple times.",
     required=False,
 )
-
 @pass_context
 def cli(ctx, pipeline, timeout, skip, volume, environment, ignore_errors,
         docker):
@@ -293,7 +292,6 @@ def run_on_host(pipeline, abs_path, skipped, timeout, docker):
 
 def run_pipeline(project_root, pipeline, time_out, skipped, volume,
                  environment, docker):
-
     timeout = pu.parse_timeout(time_out)
 
     abs_path = os.path.join(project_root, pipeline['path'])
@@ -404,7 +402,7 @@ def get_cmd_args(environments, volumes, abs_path):
 
     cmd_args = "run -u `id -u` --rm -i " + docker_flags
 
-    cmd_args += "--volume " + abs_path + ":" + abs_path + " --workdir " +\
+    cmd_args += "--volume " + abs_path + ":" + abs_path + " --workdir " + \
                 abs_path + " --volume" \
                 + " /var/run/docker.sock:/var/run/docker.sock " + \
                 "falsifiable/poppercheck:"
@@ -424,11 +422,11 @@ def get_popper_flags(skipped, timeout):
 
 
 def execute_cmd_docker_command(cmd_args, env, popper_flags):
-
     try:
-        print("docker "+cmd_args+env+" "+ popper_flags)
-        output = check_output("docker " + cmd_args + env + " " +
-                              popper_flags + " --docker="+env, shell=True)
+        print("docker " + cmd_args + env + " " + popper_flags)
+        output = check_output("docker " + cmd_args + env + " "
+                              + popper_flags + " --docker=" + env,
+                              shell=True)
     except Exception:
         output = ""
         pu.warn("Please make sure you're using a valid docker image.\n"
@@ -439,7 +437,6 @@ def execute_cmd_docker_command(cmd_args, env, popper_flags):
 
 
 def update_status_based_on_output(output, env):
-
     try:
         status = re.search("status: (.+?)\n", output).group(1)
     except Exception:

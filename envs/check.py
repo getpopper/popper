@@ -27,8 +27,8 @@ def execute(stage, timeout, docker):
     sys.stdout.write('Running stage: ' + stage + ' ')
 
     with open(out_fname, "wb") as outf, open(err_fname, "wb") as errf:
-        p = subprocess.Popen('./' + stage, shell=True, stdout=outf, stderr=errf,
-                             preexec_fn=os.setsid)
+        p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
+                             stderr=errf, preexec_fn=os.setsid)
 
         while p.poll() is None:
             sys.stdout.write('.')
@@ -45,14 +45,16 @@ def execute(stage, timeout, docker):
     return p.poll()
 
 
-def check_pipeline(skip, timeout, docker, exit_on_fail=True, show_logs_on_fail=True):
+def check_pipeline(skip, timeout, docker, exit_on_fail=True,
+                   show_logs_on_fail=True):
 
     docker_flag = ""
 
     if docker:
         docker_flag = docker + "_"
 
-    check_output("rm -rf " + docker_flag + "popper_logs/ popper_status", shell=True)
+    check_output("rm -rf " + docker_flag + "popper_logs/ popper_status",
+                 shell=True)
     check_output("mkdir " + docker_flag + "popper_logs/", shell=True)
 
     STATUS = "SUCCESS"
@@ -73,7 +75,8 @@ def check_pipeline(skip, timeout, docker, exit_on_fail=True, show_logs_on_fail=T
             if show_logs_on_fail:
                 print("Logs for {}:.".format(stage))
                 for t in ['.err', '.out']:
-                    with open(docker_flag+"popper_logs/{}{}".format(stage, t), 'r') as f:
+                    with open(docker_flag +
+                              "popper_logs/{}{}".format(stage, t), 'r') as f:
                         print(f.read())
             break
 
@@ -138,8 +141,10 @@ class Unbuffered(object):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('--timeout', default="10800s", help='Timeout in seconds.')
-    parser.add_argument('--docker', default=None, help='Timeout in seconds.')
+    parser.add_argument('--timeout', default="10800s",
+                        help='Timeout in seconds.')
+    parser.add_argument('--docker', default=None,
+                        help='Timeout in seconds.')
     parser.add_argument('--skip', default=None, required=False,
                         help='Comma-separated list of stages to skip.')
     args = parser.parse_args()
