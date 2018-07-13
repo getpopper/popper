@@ -397,7 +397,7 @@ def get_cmd_args(environments, volumes, abs_path):
 
     cmd_args = "run --rm -i " + docker_flags
 
-    cmd_args += "--volume " + abs_path + ":" + abs_path + " --workdir " + abs_path + " --volume" \
+    cmd_args += "--volume " + abs_path + ":" + abs_path + ":Z --workdir " + abs_path + " --volume" \
                 + " /var/run/docker.sock:/var/run/docker.sock " + "falsifiable/poppercheck:"
 
     return cmd_args
