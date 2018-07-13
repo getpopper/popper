@@ -7,7 +7,7 @@ install:
 - export PATH=$PATH:$PWD/cli/bin
 - export PYTHONUNBUFFERED=1
 script:
-  - cd envs && ./build_images.sh
+  - cd envs && ./build_images
   - popper run 
   - USE_VIRTUALENV=1 popper run 
   - docker build -t falsifiable/popper cli/
