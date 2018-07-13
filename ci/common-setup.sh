@@ -3,9 +3,10 @@ set -ex
 
 function init_test {
   cd
-  rm -rf /tmp/mypaper
-  mkdir /tmp/mypaper
+  sudo rm -rf /tmp/mypaper
+  sudo mkdir /tmp/mypaper
   cd /tmp/mypaper
+  chmod 777 .
   git init
   popper init
 }
