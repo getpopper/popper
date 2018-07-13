@@ -6,7 +6,6 @@ function init_test {
   sudo rm -rf /tmp/mypaper
   sudo mkdir /tmp/mypaper
   cd /tmp/mypaper
-  chmod 777 .
   git init
   popper init
 }
