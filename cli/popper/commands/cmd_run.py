@@ -58,14 +58,15 @@ from collections import defaultdict
 @click.option(
     '--docker',
     is_flag=True,
-    help="Environment variable available to the pipeline. "
-         "Can be given multiple times. "
-         "This flag is ignored when the environment is 'host'.",
+    help="Name of environment that will be executed in Docker."
+         "It is used to determine if the execution is via Docker."
+         "Can't be given multiple times.",
     required=False,
 )
 
 @pass_context
-def cli(ctx, pipeline, timeout, skip, volume, environment, ignore_errors, docker):
+def cli(ctx, pipeline, timeout, skip, volume, environment, ignore_errors,
+        docker):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
     all pipelines are executed in lexicographical order. Reports an error if
@@ -143,13 +144,15 @@ def cli(ctx, pipeline, timeout, skip, volume, environment, ignore_errors, docker
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         skipped = skip.split(',') if skip is not None else []
-        status = run_pipeline(project_root, pipes[pipeline], timeout, skipped, volume, environment, docker)
+        status = run_pipeline(project_root, pipes[pipeline], timeout, skipped,
+                              volume, environment, docker)
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
             skipped = skip.split(',') if skip is not None else []
             status = run_pipeline(project_root, pipes[os.path.basename(cwd)],
-                                  timeout, skipped, volume, environment, docker)
+                                  timeout, skipped, volume, environment,
+                                  docker)
         else:
             # run all
             skip_list = skip.split(',') if skip else []
@@ -239,7 +242,8 @@ def run_on_host(pipeline, abs_path, skipped, timeout, docker):
     if docker:
         docker_flag = docker + "_"
 
-    check_output("rm -rf " + docker_flag + "popper_logs/ " + docker_flag + "popper_status", shell=True)
+    check_output("rm -rf " + docker_flag + "popper_logs/ " + docker_flag +
+                 "popper_status", shell=True)
     check_output("mkdir " + docker_flag + "popper_logs/", shell=True)
 
     with click.progressbar(pipeline['stages'], show_eta=False,
@@ -287,7 +291,8 @@ def run_on_host(pipeline, abs_path, skipped, timeout, docker):
     return status
 
 
-def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment, docker):
+def run_pipeline(project_root, pipeline, time_out, skipped, volume,
+                 environment, docker):
 
     timeout = pu.parse_timeout(time_out)
 
@@ -307,13 +312,15 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment,
         envs = ["host"]
 
     if "host" in envs:
-        status = run_on_host(pipeline, abs_path, skipped, timeout, docker)
+        status = run_on_host(pipeline, abs_path, skipped, timeout,
+                             docker)
         envs.remove("host")
 
     status_copy = status
 
     if len(envs) > 0:
-        status = run_in_docker(envs, abs_path, skipped, timeout, volume, environment)
+        status = run_in_docker(envs, abs_path, skipped, timeout,
+                               volume, environment)
 
     if status and status_copy and status_copy != status:
         status = "FAIL"
@@ -397,8 +404,10 @@ def get_cmd_args(environments, volumes, abs_path):
 
     cmd_args = "run -u `id -u` --rm -i " + docker_flags
 
-    cmd_args += "--volume " + abs_path + ":" + abs_path + " --workdir " + abs_path + " --volume" \
-                + " /var/run/docker.sock:/var/run/docker.sock " + "falsifiable/poppercheck:"
+    cmd_args += "--volume " + abs_path + ":" + abs_path + " --workdir " +\
+                abs_path + " --volume" \
+                + " /var/run/docker.sock:/var/run/docker.sock " + \
+                "falsifiable/poppercheck:"
 
     return cmd_args
 
@@ -418,7 +427,8 @@ def execute_cmd_docker_command(cmd_args, env, popper_flags):
 
     try:
         print("docker "+cmd_args+env+" "+ popper_flags)
-        output = check_output("docker " + cmd_args + env + " " + popper_flags + " --docker="+env, shell=True)
+        output = check_output("docker " + cmd_args + env + " " +
+                              popper_flags + " --docker="+env, shell=True)
     except Exception:
         output = ""
         pu.warn("Please make sure you're using a valid docker image.\n"
@@ -441,7 +451,8 @@ def update_status_based_on_output(output, env):
         fg = 'yellow'
     else:
         fg = 'red'
-    pu.info("Environment " + env + ":\n" + "status: {}\n".format(status), fg=fg, bold=True)
+    pu.info("Environment " + env + ":\n" + "status: {}\n".format(status),
+            fg=fg, bold=True)
 
     return status
 

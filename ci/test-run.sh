@@ -71,6 +71,22 @@ popper env mypipeone --rm host
 
 popper run mypipeone
 
+test -f pipelines/mypipeone/alpine-3.4_popper_logs/setup.sh.err
+test -f pipelines/mypipeone/alpine-3.4_popper_logs/setup.sh.out
+
+test -f pipelines/mypipeone/debian-9_popper_logs/setup.sh.err
+test -f pipelines/mypipeone/debian-9_popper_logs/setup.sh.out
+
+test -f pipelines/mypipeone/centos-7.4_popper_logs/setup.sh.err
+test -f pipelines/mypipeone/centos-7.4_popper_logs/setup.sh.out
+
+test ! -f pipelines/mypipeone/popper_logs/setup.sh.err
+test ! -f pipelines/mypipeone/popper_logs/setup.sh.out
+
+
+test -f pipelines/mypipeone/popper_status
+
+
 # test skipping based on commit
 init_test
 
