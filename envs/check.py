@@ -73,13 +73,13 @@ def check_pipeline(skip, timeout, docker, exit_on_fail=True, show_logs_on_fail=T
             if show_logs_on_fail:
                 print("Logs for {}:.".format(stage))
                 for t in ['.err', '.out']:
-                    with open('popper_logs/{}{}'.format(stage, t), 'r') as f:
+                    with open(docker_flag+"popper_logs/{}{}".format(stage, t), 'r') as f:
                         print(f.read())
             break
 
         if stage == 'validate.sh':
             STATUS = "GOLD"
-            with open('popper_logs/validate.sh.out', 'r') as f:
+            with open(docker_flag + "popper_logs/validate.sh.out", 'r') as f:
                 validate_output = f.readlines()
                 if len(validate_output) == 0:
                     STATUS = "SUCCESS"
