@@ -98,6 +98,7 @@ def check_pipeline(skip, timeout, docker, exit_on_fail=True,
     if STATUS == 'FAIL' and exit_on_fail:
         sys.exit(1)
 
+
 def parse_timeout(timeout):
     """Takes timeout as string and parses it to obtain the number of seconds.
     Generates valid error if proper format is not used.
