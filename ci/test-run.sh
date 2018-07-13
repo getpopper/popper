@@ -67,10 +67,11 @@ popper init mypipeone
 
 popper env mypipeone --add alpine-3.4
 
-chmod -R 777 .
+chmod 777 *
 
 popper run mypipeone
 
+chmod 777 *
 
 
 # test skipping based on commit
