@@ -6,7 +6,6 @@ import subprocess
 import time
 import signal
 import sys
-import popper.utils as pu
 
 from subprocess import check_output
 from os import path
@@ -96,6 +95,34 @@ def check_pipeline(skip, timeout, docker, exit_on_fail=True, show_logs_on_fail=T
     if STATUS == 'FAIL' and exit_on_fail:
         sys.exit(1)
 
+def parse_timeout(timeout):
+    """Takes timeout as string and parses it to obtain the number of seconds.
+    Generates valid error if proper format is not used.
+
+    Returns:
+        Value of timeout in seconds (float).
+    """
+    time_out = 0
+    to_seconds = {"s": 1, "m": 60, "h": 3600}
+    try:
+        time_out = float(timeout)
+    except ValueError:
+        literals = timeout.split()
+        for literal in literals:
+            unit = literal[-1].lower()
+            try:
+                value = float(literal[:-1])
+            except ValueError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
+            try:
+                time_out += value * to_seconds[unit]
+            except KeyError:
+                fail("invalid timeout format used. "
+                     "See popper run --help for more.")
+
+    return time_out
+
 
 class Unbuffered(object):
     def __init__(self, stream):
@@ -118,7 +145,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     sys.stdout = Unbuffered(sys.stdout)
 
-    timeout = pu.parse_timeout(args.timeout)
+    timeout = parse_timeout(args.timeout)
 
     if path.isdir('./pipelines'):
         for f in os.listdir('pipelines'):
