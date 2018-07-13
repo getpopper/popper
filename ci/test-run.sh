@@ -69,7 +69,7 @@ popper env mypipeone --add alpine-3.4
 popper env mypipeone --add debian-9
 popper env mypipeone --add centos-7.4
 
-popper env mypipeline --rm host
+popper env mypipeone --rm host
 
 popper run mypipeone
 
