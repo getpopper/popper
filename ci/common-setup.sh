@@ -3,8 +3,8 @@ set -ex
 
 function init_test {
   cd
-  sudo rm -rf /tmp/mypaper
-  sudo mkdir /tmp/mypaper
+  rm -rf /tmp/mypaper
+  mkdir /tmp/mypaper
   cd /tmp/mypaper
   git init
   popper init
