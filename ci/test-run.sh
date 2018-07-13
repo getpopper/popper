@@ -69,10 +69,6 @@ popper env mypipeone --add alpine-3.4,centos-7.4
 
 popper env mypipeone --rm host
 
-popper run mypipeone
-
-test -f pipelines/mypipeone/popper_status
-
 
 # test skipping based on commit
 init_test
