@@ -65,7 +65,9 @@ init_test
 
 popper init mypipeone
 
-popper env mypipeone --add alpine-3.4
+popper env mypipeone --add alpine-3.4, debian-9, centos-7.4
+
+popper env mypipeline --rm host
 
 popper run mypipeone
 

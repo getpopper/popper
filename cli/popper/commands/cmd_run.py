@@ -318,7 +318,9 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment,
     if status and status_copy != status:
         status = "FAIL"
 
-    check_output("echo " + status + " > popper_status", shell=True)
+    with open('popper_status', 'wb') as f:
+        f.write(status + '\n')
+        f.close()
 
     if status == "SUCCESS":
         fg = 'green'
