@@ -315,7 +315,7 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume, environment,
     if len(envs) > 0:
         status = run_in_docker(envs, abs_path, skipped, timeout, volume, environment)
 
-    if status and status_copy != status:
+    if status and status_copy and status_copy != status:
         status = "FAIL"
 
     with open('popper_status', 'wb') as f:
