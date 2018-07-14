@@ -423,7 +423,7 @@ def get_popper_flags(skipped, timeout):
 
 def execute_cmd_docker_command(cmd_args, env, popper_flags):
     try:
-        print("docker " + cmd_args + env + " " + popper_flags)
+        print("docker " + cmd_args + env + " " + popper_flags + " --docker="+env)
         output = check_output("docker " + cmd_args + env + " "
                               + popper_flags + " --docker=" + env,
                               shell=True)
