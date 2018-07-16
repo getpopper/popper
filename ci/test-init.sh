@@ -24,3 +24,13 @@ cat .popper.yml | grep '\- three'
 test -f pipelines/pipetwo/one.sh
 test -f pipelines/pipetwo/two.sh
 test -f pipelines/pipetwo/three.sh
+
+# initializing a pipeline in a custom folder
+popper init samples/experiment
+cat .popper.yml | grep 'samples/experiment'
+test -d samples/experiment
+test -f samples/experiment/setup.sh
+test -f samples/experiment/run.sh
+test -f samples/experiment/post-run.sh
+test -f samples/experiment/validate.sh
+test -f samples/experiment/teardown.sh
