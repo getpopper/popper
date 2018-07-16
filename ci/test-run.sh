@@ -85,7 +85,6 @@ test -f popper_status
 EOF
 
 chmod +x test-execution-envs
-
 popper env mypipeone --add alpine-3.4,debian-9,centos-7.4
 popper env mypipeone --rm host
 popper run mypipeone
