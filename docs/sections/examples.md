@@ -13,13 +13,10 @@ contained, and `<pipeline>` is the name of the pipeline.
 ## Pipeline portability
 
   * [Using Virtualenv (Python)][pyv1] (and also [here][pyv2]).
+  * [Using Packrat (R)][packrat].
   * [Using Spack][spack].
   * [Using Docker][docker].
   * [Using Vagrant][vagrant].
-
-Coming soon:
-
-  * Using Packrat (R)
 
 ## Dataset Management
 
@@ -82,3 +79,4 @@ Coming soon:
 [cloudlab]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/cloudlab-benchmarking
 [chameleoncloud]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/chameleon-benchmarking
 [gcp]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/gce-benchmarking
+[packrat]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/sea-surface-mapping-r
