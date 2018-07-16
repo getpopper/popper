@@ -90,7 +90,6 @@ popper env mypipeone --add alpine-3.4,debian-9,centos-7.4
 popper env mypipeone --rm host
 popper run mypipeone
 
-
 # test skipping based on commit
 init_test
 
