@@ -63,34 +63,33 @@ test ! -f pipelines/pipetwo/popper_logs/five.sh.out
 # test run in docker
 init_test
 
-popper init mypipeone
+popper init mypipeone --stages=setup,run,post-run,validate,test-execution-envs,teardown
+
+cat > test-execution-envs <<EOF
+#!/bin/bash
+
+test -f alpine-3.4_popper_logs/setup.sh.err
+test -f alpine-3.4_popper_logs/setup.sh.out
+
+test -f debian-9_popper_logs/setup.sh.err
+test -f debian-9_popper_logs/setup.sh.out
+
+test -f centos-7.4_popper_logs/setup.sh.err
+test -f centos-7.4_popper_logs/setup.sh.out
+
+test ! -f popper_logs/setup.sh.err
+test ! -f popper_logs/setup.sh.out
+
+test -f popper_status
+
+EOF
+
+chmod +x test-execution-envs
+
 popper env mypipeone --add alpine-3.4,debian-9,centos-7.4
 popper env mypipeone --rm host
 popper run mypipeone
 
-ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
-
-cd ..
-
-ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
-
-cd ..
-
-ls -R | grep ":$" | sed -e 's/:$//' -e 's/[^-][^\/]*\//--/g' -e 's/^/   /' -e 's/-/|/'
-
-test -f pipelines/mypipeone/alpine-3.4_popper_logs/setup.sh.err
-test -f pipelines/mypipeone/alpine-3.4_popper_logs/setup.sh.out
-
-test -f pipelines/mypipeone/debian-9_popper_logs/setup.sh.err
-test -f pipelines/mypipeone/debian-9_popper_logs/setup.sh.out
-
-test -f pipelines/mypipeone/centos-7.4_popper_logs/setup.sh.err
-test -f pipelines/mypipeone/centos-7.4_popper_logs/setup.sh.out
-
-test ! -f pipelines/mypipeone/popper_logs/setup.sh.err
-test ! -f pipelines/mypipeone/popper_logs/setup.sh.out
-
-test -f pipelines/mypipeone/popper_status
 
 # test skipping based on commit
 init_test
