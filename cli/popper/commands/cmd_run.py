@@ -263,7 +263,8 @@ def run_on_host(pipeline, abs_path, skipped, timeout, docker):
                 pu.info("\n\nStage '{}' failed.".format(stage))
                 status = "FAIL"
                 for t in ['.err', '.out']:
-                    logfile = docker_flag + "popper_logs/{}{}".format(stage_file, t)
+                    logfile = docker_flag + \
+                              "popper_logs/{}{}".format(stage_file, t)
                     with open(logfile, 'r') as f:
                         pu.info("\n" + t + ":\n", bold=True, fg='red')
                         pu.info(f.read())
@@ -280,7 +281,8 @@ def run_on_host(pipeline, abs_path, skipped, timeout, docker):
 
             if 'valid' in stage:
                 status = "GOLD"
-                with open( docker_flag + "popper_logs/validate.sh.out", 'r') as f:
+                with open(docker_flag +
+                          "popper_logs/validate.sh.out", 'r') as f:
                     validate_output = f.readlines()
                     if len(validate_output) == 0:
                         status = "SUCCESS"
@@ -423,7 +425,8 @@ def get_popper_flags(skipped, timeout):
 
 def execute_cmd_docker_command(cmd_args, env, popper_flags):
     try:
-        print("docker " + cmd_args + env + " " + popper_flags + " --docker="+env)
+        print("docker " + cmd_args + env + " " +
+              popper_flags + " --docker=" + env)
         output = check_output("docker " + cmd_args + env + " "
                               + popper_flags + " --docker=" + env,
                               shell=True)
