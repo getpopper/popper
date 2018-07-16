@@ -40,10 +40,6 @@ git add pipelines/myexp
 git commit -m 'adding myexp scaffold'
 ```
 
-## Searching and importing existing pipelines
-
-**TODO**
-
 ## Executing a pipeline
 
 To automatically run a pipeline:
@@ -191,17 +187,33 @@ popper workflow co2-emissions | dot -T png -o co2_workflow.png
 ```
 
 This will lead to the generation of the following dot graph:
- 
+
 ![](/figures/example_co2_workflow.png)
 
 
 ## Adding metadata to a project
 
-**TODO**
+Metadata to a project can be added using the `metadata` command, which 
+adds a `key-value` pair to the repository (to the `.popper.yml` file). 
+For example:
 
-## Archiving a project and obtaining DOIs
+```
+popper metadata --add author='Jane Doe'
+```
 
-**TODO**
+The above adds the metadata item `author` to the project. To retrieve 
+the list of keys:
+
+```bash
+popper metadata
+```
+
+And one removes a key by doing:
+
+```bash
+popper metadata --rm author
+```
+
 
 ## The `popper.yml` configuration file
 

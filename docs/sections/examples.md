@@ -29,11 +29,8 @@ Coming soon:
 ## Infrastructure automation
 
   * [On CloudLab using geni-lib][cloudlab].
-
-Coming soon:
-
-  * On Chameleon using enos.
-  * On EC2/GCE using terraform.
+  * [On Chameleon using enos](chameleoncloud).
+  * [On Google Compute Platform using terraform](gcp).
 
 ## Domain-specific pipelines
 
@@ -83,3 +80,5 @@ Coming soon:
 [data-world]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/data-world
 [envvar-parameters]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/envvar-param
 [cloudlab]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/cloudlab-benchmarking
+[chameleoncloud]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/chameleon-benchmarking
+[gcp]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/gce-benchmarking

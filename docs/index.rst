@@ -37,17 +37,17 @@ experiments.
 .. toctree::
    :maxdepth: 2
 
-   sections/contributing.md
-
-.. toctree::
-   :maxdepth: 2
-
    sections/other_resources.md
 
 .. toctree::
    :maxdepth: 2
 
    sections/faq.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/contributing.md
 
 Indices and tables
 ==================
