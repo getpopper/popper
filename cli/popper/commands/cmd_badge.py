@@ -55,7 +55,7 @@ services = {
     '--inplace',
     help=(
         'Write markup for badge to the README. '
-        'Can\'t be used when --service is provided'
+        'Can\'t be used when --history is provided'
     ),
     required=False,
     is_flag=True

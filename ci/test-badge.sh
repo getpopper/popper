@@ -29,3 +29,4 @@ popper badge --history
 init_test
 touch README.md
 popper badge --service gce --inplace
+cat README.md | grep 'https://img.shields.io/badge/GCE-ready-blue.svg'
