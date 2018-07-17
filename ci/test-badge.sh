@@ -23,3 +23,10 @@ set -e
 
 popper badge --service popper | grep 'http://badges.falsifiable.us/systemslab/popper'
 popper badge --service popper | grep 'http://popper.rtfd.io/en/latest/sections/badge_server.html'
+
+popper badge --history
+
+init_test
+touch README.md
+popper badge --service gce --inplace
+cat README.md | grep 'https://img.shields.io/badge/GCE-ready-blue.svg'
