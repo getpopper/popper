@@ -94,6 +94,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
             abs_path = os.path.join(project_root, name)
             initialize_new_pipeline(abs_path, stages)
             relative_path = name
+            name = name.split('/')[-1]
         else:
             abs_path = os.path.join(project_root, 'pipelines', name)
             relative_path = os.path.join('pipelines', name)
