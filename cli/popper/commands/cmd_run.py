@@ -325,7 +325,7 @@ def run_pipeline(project_root, pipeline, time_out, skipped, volume,
     if status and status_copy and status_copy != status:
         status = "FAIL"
 
-    with open('popper_status', 'wb') as f:
+    with open('popper_status', 'w') as f:
         f.write(status + '\n')
         f.close()
 
