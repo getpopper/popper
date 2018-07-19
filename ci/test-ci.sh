@@ -11,6 +11,9 @@ test -f .travis.yml
 popper ci --service circle
 test -f .circleci/config.yml
 
+popper ci --service jenkins
+test -f Jenkinsfile
+
 # test skipping
 init_test
 

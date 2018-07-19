@@ -34,6 +34,17 @@ jobs:
         export PYTHONUNBUFFERED=1
         popper run {runargs}
 """
+    },
+    'jenkins': {
+        './Jenkinsfile': """
+---
+stage ('Popper') {{ node {{
+  sh "git clone --recursive https://github.com/systemslab/popper /tmp/popper"
+  sh "export PATH=$PATH:/tmp/popper/cli/bin"
+  sh "export PYTHONUNBUFFERED=1"
+  sh "popper run {runargs}"
+}}}}
+"""
     }
 }
 
