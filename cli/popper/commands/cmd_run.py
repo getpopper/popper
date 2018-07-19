@@ -39,8 +39,33 @@ from collections import defaultdict
          'only when no pipeline argument is provided ',
     required=False,
 )
+@click.option(
+    '--volume',
+    is_flag=True,
+    help="Volume available to the pipeline. Can be given "
+         "multiple times. This flag is ignored when the "
+         "environment is 'host'.",
+    required=False,
+)
+@click.option(
+    '--environment',
+    is_flag=True,
+    help="Environment variable available to the pipeline. "
+         "Can be given multiple times. "
+         "This flag is ignored when the environment is 'host'.",
+    required=False,
+)
+@click.option(
+    '--docker',
+    is_flag=True,
+    help="Name of environment that will be executed in Docker."
+         "It is used to determine if the execution is via Docker."
+         "Can't be given multiple times.",
+    required=False,
+)
 @pass_context
-def cli(ctx, pipeline, timeout, skip, ignore_errors):
+def cli(ctx, pipeline, timeout, skip, volume, environment, ignore_errors,
+        docker):
     """Executes a pipeline and reports its status. When PIPELINE is given, it
     executes only the pipeline with such a name. If the argument is omitted,
     all pipelines are executed in lexicographical order. Reports an error if
@@ -48,8 +73,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
     """
     cwd = os.getcwd()
     pipes = pu.read_config()['pipelines']
+
     project_root = pu.get_project_root()
-    time_out = pu.parse_timeout(timeout)
 
     if len(pipes) == 0:
         pu.info("No pipelines defined in .popper.yml. "
@@ -118,13 +143,15 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         if pipeline not in pipes:
             pu.fail("Cannot find pipeline {} in .popper.yml".format(pipeline))
         skipped = skip.split(',') if skip is not None else []
-        status = run_pipeline(project_root, pipes[pipeline], time_out, skipped)
+        status = run_pipeline(project_root, pipes[pipeline], timeout, skipped,
+                              volume, environment, docker)
     else:
         if os.path.basename(cwd) in pipes:
             # run just the one for CWD
             skipped = skip.split(',') if skip is not None else []
             status = run_pipeline(project_root, pipes[os.path.basename(cwd)],
-                                  time_out, skipped)
+                                  timeout, skipped, volume, environment,
+                                  docker)
         else:
             # run all
             skip_list = skip.split(',') if skip else []
@@ -141,8 +168,11 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
                     status = run_pipeline(
                         project_root,
                         pipes[pipe],
-                        time_out,
-                        skipped_stages[pipe]
+                        timeout,
+                        skipped_stages[pipe],
+                        volume,
+                        environment,
+                        docker
                     )
 
                     if status == 'FAIL' and not ignore_errors:
@@ -178,18 +208,42 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors):
         pu.fail("Failed to execute pipeline")
 
 
-def run_pipeline(project_root, pipeline, timeout, skipped):
-    abs_path = os.path.join(project_root, pipeline['path'])
-
-    pu.info("Executing " + os.path.basename(abs_path), fg='blue',
+def run_in_docker(envs, abs_path, skipped, timeout, volumes, environments):
+    pu.info("Executing in Docker...", fg='blue',
             bold=True, blink=True)
 
-    os.chdir(abs_path)
+    cmd_args = get_cmd_args(environments, volumes, abs_path)
+    popper_flags = get_popper_flags(skipped, timeout)
 
-    check_output('rm -rf popper_logs/ popper_status', shell=True)
-    check_output('mkdir -p popper_logs/', shell=True)
+    status = []
+
+    for env in envs:
+        output = execute_cmd_docker_command(cmd_args, env, popper_flags)
+        status.append(update_status_based_on_output(output, env))
+
+    # Checks if all status are the same.
+    if status.count(status[0]) == len(status):
+        STATUS = status[0]
+    else:
+        STATUS = "FAIL"
+
+    return STATUS
+
+
+def run_on_host(pipeline, abs_path, skipped, timeout, docker):
+    pu.info("Executing on host...", fg='blue',
+            bold=True, blink=True)
 
     status = "SUCCESS"
+
+    docker_flag = ""
+
+    if docker:
+        docker_flag = docker + "_"
+
+    check_output("rm -rf " + docker_flag + "popper_logs/ " + docker_flag +
+                 "popper_status", shell=True)
+    check_output("mkdir " + docker_flag + "popper_logs/", shell=True)
 
     with click.progressbar(pipeline['stages'], show_eta=False,
                            item_show_func=str,
@@ -203,13 +257,14 @@ def run_pipeline(project_root, pipeline, timeout, skipped):
             if not stage_file or stage in skipped:
                 continue
 
-            ecode = execute(stage_file, timeout, stages)
+            ecode = execute(stage_file, timeout, docker, stages)
 
             if ecode != 0:
                 pu.info("\n\nStage '{}' failed.".format(stage))
                 status = "FAIL"
                 for t in ['.err', '.out']:
-                    logfile = 'popper_logs/{}{}'.format(stage_file, t)
+                    logfile = docker_flag + \
+                              "popper_logs/{}{}".format(stage_file, t)
                     with open(logfile, 'r') as f:
                         pu.info("\n" + t + ":\n", bold=True, fg='red')
                         pu.info(f.read())
@@ -220,22 +275,59 @@ def run_pipeline(project_root, pipeline, timeout, skipped):
                         stage != 'teardown' and
                         'teardown' in pipeline['stages'] and
                         'teardown' not in skipped):
-                    execute(teardown_file, timeout)
+                    execute(teardown_file, timeout, docker)
 
                 break
 
             if 'valid' in stage:
                 status = "GOLD"
-                with open('popper_logs/validate.sh.out', 'r') as f:
+                with open(docker_flag +
+                          "popper_logs/validate.sh.out", 'r') as f:
                     validate_output = f.readlines()
                     if len(validate_output) == 0:
                         status = "SUCCESS"
                     for line in validate_output:
                         if '[true]' not in line:
                             status = "SUCCESS"
+    return status
+
+
+def run_pipeline(project_root, pipeline, time_out, skipped, volume,
+                 environment, docker):
+    timeout = pu.parse_timeout(time_out)
+
+    abs_path = os.path.join(project_root, pipeline['path'])
+
+    pu.info("Executing " + os.path.basename(abs_path), fg='blue',
+            bold=True, blink=True)
+
+    envs = pipeline['envs']
+
+    os.chdir(abs_path)
+
+    status = ""
+
+    if len(envs) == 0:
+        pu.warn("No environment in .popper.yml, using host")
+        envs = ["host"]
+
+    if "host" in envs:
+        status = run_on_host(pipeline, abs_path, skipped, timeout,
+                             docker)
+        envs.remove("host")
+
+    status_copy = status
+
+    if len(envs) > 0:
+        status = run_in_docker(envs, abs_path, skipped, timeout,
+                               volume, environment)
+
+    if status and status_copy and status_copy != status:
+        status = "FAIL"
 
     with open('popper_status', 'w') as f:
         f.write(status + '\n')
+        f.close()
 
     if status == "SUCCESS":
         fg = 'green'
@@ -248,11 +340,17 @@ def run_pipeline(project_root, pipeline, timeout, skipped):
     return status
 
 
-def execute(stage, timeout, bar=None):
+def execute(stage, timeout, docker, bar=None):
     time_limit = time.time() + timeout
     sleep_time = 1
-    out_fname = 'popper_logs/{}.{}'.format(stage, 'out')
-    err_fname = 'popper_logs/{}.{}'.format(stage, 'err')
+
+    docker_flag = ""
+
+    if docker:
+        docker_flag = docker + "_"
+
+    out_fname = docker_flag + "popper_logs/{}.{}".format(stage, 'out')
+    err_fname = docker_flag + "popper_logs/{}.{}".format(stage, 'err')
 
     with open(out_fname, "wb") as outf, open(err_fname, "wb") as errf:
         p = subprocess.Popen('./' + stage, shell=True, stdout=outf,
@@ -291,6 +389,72 @@ def execute(stage, timeout, bar=None):
                     time.sleep(0.5)
 
     return p.poll()
+
+
+def get_cmd_args(environments, volumes, abs_path):
+    docker_flags = ""
+
+    if environments:
+        for environment in environments:
+            docker_flags += "-e " + environment + " "
+
+    if volumes:
+        for volume in volumes:
+            docker_flags += "-v " + volume + " "
+
+    cmd_args = "run -u `id -u` --rm -i " + docker_flags
+
+    cmd_args += "--volume " + abs_path + ":" + abs_path + " --workdir " + \
+                abs_path + " --volume" \
+                + " /var/run/docker.sock:/var/run/docker.sock " + \
+                "falsifiable/poppercheck:"
+
+    return cmd_args
+
+
+def get_popper_flags(skipped, timeout):
+    popper_flags = ""
+
+    if skipped:
+        popper_flags += "--skip=" + ', '.join(skipped) + " "
+    if timeout:
+        popper_flags += "--timeout=" + str(timeout) + " "
+
+    return popper_flags
+
+
+def execute_cmd_docker_command(cmd_args, env, popper_flags):
+    try:
+        print("docker " + cmd_args + env + " " +
+              popper_flags + " --docker=" + env)
+        output = check_output("docker " + cmd_args + env + " "
+                              + popper_flags + " --docker=" + env,
+                              shell=True)
+    except Exception:
+        output = ""
+        pu.warn("Please make sure you're using a valid docker image.\n"
+                "You can check the available docker images here:\n"
+                "https://hub.docker.com/r/falsifiable/poppercheck/tags/")
+
+    return output
+
+
+def update_status_based_on_output(output, env):
+    try:
+        status = re.search("status: (.+?)\n", output).group(1)
+    except Exception:
+        status = "FAIL"
+
+    if status == "SUCCESS":
+        fg = 'green'
+    elif status == "GOLD":
+        fg = 'yellow'
+    else:
+        fg = 'red'
+    pu.info("Environment " + env + ":\n" + "status: {}\n".format(status),
+            fg=fg, bold=True)
+
+    return status
 
 
 class Unbuffered(object):
