@@ -141,7 +141,7 @@ html_theme = "sphinx_rtd_theme"
 # further.  For a list of options available for each theme, see the
 # documentation.
 
-html_theme_options = {'logo_only': True}
+html_theme_options = {'logo_only': True, 'navigation_depth': 3}
 
 # Add any paths that contain custom themes here, relative to this directory.
 # html_theme_path = []
@@ -149,7 +149,7 @@ html_theme_options = {'logo_only': True}
 # The name for this set of Sphinx documents.
 # "<project> v<release> documentation" by default.
 #
-html_title = u'Popper 1.0.0 documentation'
+# html_title = u'Popper v< documentation'
 
 # A shorter title for the navigation bar.  Default is the same as html_title.
 #
@@ -165,7 +165,7 @@ html_logo = '../docs/figures/popper_logo.png'
 # being 16x16 or 32x32
 # pixels large.
 #
-# html_favicon = None
+html_favicon = '../docs/figures/popper_logo.ico'
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

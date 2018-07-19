@@ -89,9 +89,15 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
         initialize_paper(abs_path, envs)
     else:
         # new pipeline
-        abs_path = os.path.join(project_root, 'pipelines', name)
-        relative_path = os.path.join('pipelines', name)
-        initialize_new_pipeline(abs_path, stages)
+
+        if '/' in name:
+            abs_path = os.path.join(project_root, name)
+            initialize_new_pipeline(abs_path, stages)
+            relative_path = name
+        else:
+            abs_path = os.path.join(project_root, 'pipelines', name)
+            relative_path = os.path.join('pipelines', name)
+            initialize_new_pipeline(abs_path, stages)
 
     pu.update_config(
         name, stages=stages, envs=envs, relative_path=relative_path
