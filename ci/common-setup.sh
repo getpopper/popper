@@ -15,5 +15,8 @@ then
   source /tmp/popper-env/bin/activate
 fi
 
+export PATH=$PATH:$PWD/cli/bin
+export PYTHONUNBUFFERED=1
+
 which popper
 

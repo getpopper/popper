@@ -42,27 +42,27 @@ cd pipelines/mypipeone
 rm teardown.sh
 rm post-run.sh
 popper run
-test -f popper_logs/setup.sh.err
-test -f popper_logs/setup.sh.out
-test -f popper_logs/run.sh.out
-test -f popper_logs/run.sh.out
-test -f popper_logs/validate.sh.out
-test -f popper_logs/validate.sh.out
-rm -r popper_logs
+test -f popper/host/setup.sh.err
+test -f popper/host/setup.sh.out
+test -f popper/host/run.sh.out
+test -f popper/host/run.sh.out
+test -f popper/host/validate.sh.out
+test -f popper/host/validate.sh.out
+rm -r popper
 
 # run all pipelines
 cd /tmp/mypaper
 popper init mypipetwo --stages=one,two
 popper run
-test -f pipelines/mypipeone/popper_logs/setup.sh.err
-test -f pipelines/mypipeone/popper_logs/setup.sh.out
-test -f pipelines/mypipeone/popper_logs/run.sh.out
-test -f pipelines/mypipeone/popper_logs/run.sh.out
-test -f pipelines/mypipeone/popper_logs/validate.sh.out
-test -f pipelines/mypipeone/popper_logs/validate.sh.out
-test -f pipelines/mypipetwo/popper_logs/one.sh.err
-test -f pipelines/mypipetwo/popper_logs/one.sh.out
-test -f pipelines/mypipetwo/popper_logs/two.sh.out
-test -f pipelines/mypipetwo/popper_logs/two.sh.out
-test -f pipelines/mypipetwo/popper_status
+test -f pipelines/mypipeone/popper/host/setup.sh.err
+test -f pipelines/mypipeone/popper/host/setup.sh.out
+test -f pipelines/mypipeone/popper/host/run.sh.out
+test -f pipelines/mypipeone/popper/host/run.sh.out
+test -f pipelines/mypipeone/popper/host/validate.sh.out
+test -f pipelines/mypipeone/popper/host/validate.sh.out
+test -f pipelines/mypipetwo/popper/host/one.sh.err
+test -f pipelines/mypipetwo/popper/host/one.sh.out
+test -f pipelines/mypipetwo/popper/host/two.sh.out
+test -f pipelines/mypipetwo/popper/host/two.sh.out
+test -f pipelines/mypipetwo/popper/host/popper_status
 
