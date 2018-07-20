@@ -3,7 +3,12 @@ set -ex
 
 function init_test {
   cd
-  rm -rf /tmp/mypaper
+  set +e
+  if ! rm -rf /tmp/mypaper; then
+    # try to remove using docker
+    docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf /tmp/mypaper
+  fi
+  set -e
   mkdir /tmp/mypaper
   cd /tmp/mypaper
   git init
