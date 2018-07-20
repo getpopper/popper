@@ -1,0 +1,11 @@
+#!/bin/bash
+
+for d in envs/* ; do
+  if [ ! -d $d ]; then
+    continue
+  fi
+  if [ "$d" == 'envs/jenkins' ]; then
+    continue
+  fi
+  docker push falsifiable/popper:$(basename $d)
+done

@@ -41,7 +41,6 @@ for d in envs/* ; do
   echo "############"
   cp $d/Dockerfile .
   docker build -t falsifiable/popper:$(basename $d) .
-  docker push falsifiable/popper:$(basename $d)
   rm Dockerfile
 done
 rm -f .dockerignore
