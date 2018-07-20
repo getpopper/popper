@@ -75,9 +75,11 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
     pipelines = get_pipelines_to_execute(cwd, pipeline, project_pipelines)
 
     if os.environ.get('CI', False):
-        pu.info("Found 'CI' variable, ignoring PIPELINE arg and --skip flag.")
-        skip = ''
-        pipelines = pipelines_from_commit_message(project_pipelines)
+        pipes_from_log = pipelines_from_commit_message(project_pipelines)
+        if len(pipes_from_log) != 0:
+            pu.info("Found 'CI', ignoring PIPELINE arg and --skip flag.")
+            skip = ''
+            pipelines = pipes_from_log
 
     for pipe_n, pipe_d in pipelines.items():
         for env in pipe_d.get('envs', ['host']):
@@ -138,6 +140,15 @@ def update_badge(status):
 
 
 def pipelines_from_commit_message(project_pipelines):
+
+    # check if repo is empty
+    p = subprocess.Popen(['git', 'rev-parse', 'HEAD'])
+    p.communicate()
+
+    if p.returncode != 0:
+        pu.info('Repository seems to be empty, skipping')
+        return {}
+
     args = ['git', 'log', '-1', '--pretty=%B']
 
     msg = check_output(args)

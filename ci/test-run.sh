@@ -38,7 +38,6 @@ do
 done
 
 # test skipping based on commit
-export CI=1
 init_test
 
 git config user.email "<>"
@@ -98,5 +97,3 @@ test ! -f pipelines/mypipetwo/popper/host/setup.sh.err
 test ! -f pipelines/mypipetwo/popper/host/setup.sh.out
 test -f pipelines/mypipethree/popper/host/setup.sh.err
 test -f pipelines/mypipethree/popper/host/setup.sh.out
-
-unset CI
