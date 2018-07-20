@@ -26,7 +26,8 @@ popper/
 wiki/
 EOF
 
-echo $DOCKER_PASSWORD | docker login -u ivotron --password-stdin
+docker logout
+echo "$DOCKERHUB_PASSWORD" | docker login -u ivotron --password-stdin
 
 for d in envs/* ; do
   if [ ! -d $d ]; then
