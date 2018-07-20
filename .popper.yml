@@ -24,7 +24,6 @@ pipelines:
     - test-search
     - test-rm
     - test-archive
-    - test-reset
     - test-env-vars
     - test-badge
 popperized:
