@@ -3,21 +3,22 @@ set -ex
 
 source common-setup.sh
 
+if [ -f /.dockerenv ]; then
+  output_dir=popper/
+else
+  output_dir=popper/host
+fi
+
 # run
 init_test
 popper init mypipeone
 popper run mypipeone
-test -f pipelines/mypipeone/popper/host/setup.sh.err
-test -f pipelines/mypipeone/popper/host/setup.sh.out
-test -f pipelines/mypipeone/popper/host/run.sh.err
-test -f pipelines/mypipeone/popper/host/run.sh.out
-test -f pipelines/mypipeone/popper/host/post-run.sh.err
-test -f pipelines/mypipeone/popper/host/post-run.sh.out
-test -f pipelines/mypipeone/popper/host/validate.sh.err
-test -f pipelines/mypipeone/popper/host/validate.sh.out
-test -f pipelines/mypipeone/popper/host/teardown.sh.err
-test -f pipelines/mypipeone/popper/host/teardown.sh.out
-test -f pipelines/mypipeone/popper/host/popper_status
+
+for s in 'setup run post-trun validate teardown'; do
+  test -f pipelines/mypipeone/$output_dir/$s.sh.err
+  test -f pipelines/mypipeone/$output_dir/$s.sh.out
+done
+test -f pipelines/mypipeone/$output_dir/popper_status
 
 # test skipping stages
 init_test
@@ -27,8 +28,8 @@ popper run pipeone --skip=one,two
 
 for stage in one two
 do
-  test ! -f pipelines/pipeone/popper/host/$stage.sh.err
-  test ! -f pipelines/pipeone/popper/host/$stage.sh.out
+  test ! -f pipelines/pipeone/$output_dir/$stage.sh.err
+  test ! -f pipelines/pipeone/$output_dir/$stage.sh.out
 done
 
 for stage in three four
@@ -52,12 +53,12 @@ git commit --allow-empty -m "popper:whitelist[mypipeone] this is a test"
 
 popper run --no-badge-update
 
-test -f pipelines/mypipeone/popper/host/setup.sh.err
-test -f pipelines/mypipeone/popper/host/setup.sh.out
-test ! -f pipelines/mypipetwo/popper/host/setup.sh.err
-test ! -f pipelines/mypipetwo/popper/host/setup.sh.out
-test ! -f pipelines/mypipethree/popper/host/setup.sh.err
-test ! -f pipelines/mypipethree/popper/host/setup.sh.out
+test -f pipelines/mypipeone/$output_dir/setup.sh.err
+test -f pipelines/mypipeone/$output_dir/setup.sh.out
+test ! -f pipelines/mypipetwo/$output_dir/setup.sh.err
+test ! -f pipelines/mypipetwo/$output_dir/setup.sh.out
+test ! -f pipelines/mypipethree/$output_dir/setup.sh.err
+test ! -f pipelines/mypipethree/$output_dir/setup.sh.out
 
 git clean -df
 
@@ -65,12 +66,12 @@ git commit --allow-empty -m "popper:whitelist[mypipeone,mypipetwo] this is a tes
 
 popper run --no-badge-update
 
-test -f pipelines/mypipeone/popper/host/setup.sh.err
-test -f pipelines/mypipeone/popper/host/setup.sh.out
-test -f pipelines/mypipetwo/popper/host/setup.sh.err
-test -f pipelines/mypipetwo/popper/host/setup.sh.out
-test ! -f pipelines/mypipethree/popper/host/setup.sh.err
-test ! -f pipelines/mypipethree/popper/host/setup.sh.out
+test -f pipelines/mypipeone/$output_dir/setup.sh.err
+test -f pipelines/mypipeone/$output_dir/setup.sh.out
+test -f pipelines/mypipetwo/$output_dir/setup.sh.err
+test -f pipelines/mypipetwo/$output_dir/setup.sh.out
+test ! -f pipelines/mypipethree/$output_dir/setup.sh.err
+test ! -f pipelines/mypipethree/$output_dir/setup.sh.out
 
 git clean -df
 
@@ -78,12 +79,12 @@ git commit --allow-empty -m "popper:skip[mypipeone] this is a test"
 
 popper run --no-badge-update
 
-test ! -f pipelines/mypipeone/popper/host/setup.sh.err
-test ! -f pipelines/mypipeone/popper/host/setup.sh.out
-test -f pipelines/mypipetwo/popper/host/setup.sh.err
-test -f pipelines/mypipetwo/popper/host/setup.sh.out
-test -f pipelines/mypipethree/popper/host/setup.sh.err
-test -f pipelines/mypipethree/popper/host/setup.sh.out
+test ! -f pipelines/mypipeone/$output_dir/setup.sh.err
+test ! -f pipelines/mypipeone/$output_dir/setup.sh.out
+test -f pipelines/mypipetwo/$output_dir/setup.sh.err
+test -f pipelines/mypipetwo/$output_dir/setup.sh.out
+test -f pipelines/mypipethree/$output_dir/setup.sh.err
+test -f pipelines/mypipethree/$output_dir/setup.sh.out
 
 git clean -df
 
@@ -91,9 +92,9 @@ git commit --allow-empty -m "popper:skip[mypipeone,mypipetwo] this is a test"
 
 popper run --no-badge-update
 
-test ! -f pipelines/mypipeone/popper/host/setup.sh.err
-test ! -f pipelines/mypipeone/popper/host/setup.sh.out
-test ! -f pipelines/mypipetwo/popper/host/setup.sh.err
-test ! -f pipelines/mypipetwo/popper/host/setup.sh.out
-test -f pipelines/mypipethree/popper/host/setup.sh.err
-test -f pipelines/mypipethree/popper/host/setup.sh.out
+test ! -f pipelines/mypipeone/$output_dir/setup.sh.err
+test ! -f pipelines/mypipeone/$output_dir/setup.sh.out
+test ! -f pipelines/mypipetwo/$output_dir/setup.sh.err
+test ! -f pipelines/mypipetwo/$output_dir/setup.sh.out
+test -f pipelines/mypipethree/$output_dir/setup.sh.err
+test -f pipelines/mypipethree/$output_dir/setup.sh.out

@@ -77,8 +77,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
     if os.environ.get('CI', False):
         pipes_from_log = pipelines_from_commit_message(project_pipelines)
         if len(pipes_from_log) != 0:
-            pu.info("Found 'CI', ignoring PIPELINE arg and --skip flag.")
-            skip = ''
+            pu.info("Found 'CI', ignoring PIPELINE argument.")
             pipelines = pipes_from_log
 
     for pipe_n, pipe_d in pipelines.items():
