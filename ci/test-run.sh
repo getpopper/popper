@@ -14,7 +14,7 @@ init_test
 popper init mypipeone
 popper run mypipeone
 
-for s in 'setup run post-run validate teardown'; do
+for s in setup run post-run validate teardown; do
   test -f pipelines/mypipeone/$output_dir/$s.sh.err
   test -f pipelines/mypipeone/$output_dir/$s.sh.out
 done
