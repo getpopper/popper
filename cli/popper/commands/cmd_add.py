@@ -2,7 +2,6 @@
 
 import click
 import os
-import requests
 import popper.utils as pu
 import shutil
 import yaml
@@ -17,11 +16,9 @@ from popper.exceptions import BadArgumentUsage
     short_help='Add a pipeline from popperized repositories on github.'
 )
 @click.argument('pipeline', required=True)
-@click.option(
-    '--folder',
-    help='Folder where the new pipeline will be'
-    'stored, relative to project root.',
-    show_default=True,
+@click.argument(
+    'folder',
+    required=False,
     default='pipelines'
 )
 @click.option(
@@ -53,7 +50,12 @@ def cli(ctx, pipeline, folder, branch):
         pu.fail("Pipeline {} already in repo.".format(pipe_name))
 
     project_root = pu.get_project_root()
-    pipelines_dir = os.path.join(project_root, folder)
+    if folder.startswith('/'):
+        pipelines_dir = folder
+    else:
+        if folder != 'pipelines':
+            folder = os.path.join('pipelines', folder)
+        pipelines_dir = os.path.join(project_root, folder)
 
     if not os.path.exists(pipelines_dir):
         os.mkdir(pipelines_dir)
@@ -75,7 +77,7 @@ def cli(ctx, pipeline, folder, branch):
         t.extractall()
 
     os.rename('{}-{}/pipelines/{}'.format(
-        repo, branch, pipe_name), os.path.join(folder, pipe_name))
+        repo, branch, pipe_name), os.path.join(pipelines_dir, pipe_name))
     shutil.rmtree('{}-{}'.format(repo, branch))
 
     pu.info("Updating popper configuration... ")
@@ -86,8 +88,10 @@ def cli(ctx, pipeline, folder, branch):
     config['pipelines'][pipe_name]['path'] = os.path.join(folder, pipe_name)
 
     pu.write_config(config)
-    pu.info("Pipeline {} has been added successfully.".format(pipe_name),
-            fg="green")
+    pu.info(
+        "Pipeline {} has been added successfully.".format(pipe_name),
+        fg="green"
+    )
 
 
 def get_config(owner, repo):
