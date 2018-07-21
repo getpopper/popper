@@ -113,6 +113,9 @@ def get_pipelines_to_execute(cwd, pipe_n, project_pipelines):
 
 
 def update_badge(status):
+    if pu.is_repo_empty():
+        pu.warn('No commit log found')
+
     remote_url = pu.get_remote_url()
 
     if remote_url:
@@ -121,31 +124,23 @@ def update_badge(status):
         )
         org, repo = remote_url.split('/')[-2:]
         badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
+        data = {
+            'timestamp': int(time.time()),
+            'commit_id': pu.get_head_commit(),
+            'status': status
+        }
         try:
-            commit_id = check_output(['git', 'rev-parse', 'HEAD'])[:-1]
-            data = {
-                'timestamp': int(time.time()),
-                'commit_id': commit_id,
-                'status': status
-            }
-            try:
-                r = requests.post(badge_server_url, data=data)
-                if r.status_code != 201:
-                    pu.warn("Could not create a record on the badge server")
-            except requests.exceptions.RequestException:
-                pu.warn("Could not communicate with the badge server")
-        except subprocess.CalledProcessError:
-            pu.warn("No commit log found")
+            r = requests.post(badge_server_url, data=data)
+            if r.status_code != 201:
+                pu.warn("Could not create a record on the badge server")
+        except requests.exceptions.RequestException:
+            pu.warn("Could not communicate with the badge server")
 
 
 def pipelines_from_commit_message(project_pipelines):
 
     # check if repo is empty
-    p = subprocess.Popen(['git', 'rev-parse', 'HEAD'])
-    p.communicate()
-
-    if p.returncode != 0:
-        pu.info('Repository seems to be empty, skipping')
+    if pu.is_repo_empty():
         return {}
 
     args = ['git', 'log', '-1', '--pretty=%B']
