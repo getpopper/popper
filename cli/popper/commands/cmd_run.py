@@ -98,7 +98,7 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
                                   skip, ignore_errors, output)
             if status == 'FAIL' and not ignore_errors:
                 break
-    else:
+    if not len(pipelines):
         pu.info("No pipelines to execute")
         sys.exit(0)
 

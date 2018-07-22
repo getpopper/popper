@@ -3,6 +3,12 @@ set -ex
 
 source common-setup.sh
 
+if [ -f /.dockerenv ]; then
+  output_dir=popper
+else
+  output_dir=popper/host
+fi
+
 init_test
 popper init mypipeone --stages=stageone
 popper init mypipetwo --stages=stageone
@@ -44,20 +50,20 @@ popper run --requirement-level warn
 
 test ! -d pipelines/mypipeone/popper_logs
 
-test -d pipelines/mypipetwo/popper_logs
-test -f pipelines/mypipetwo/popper_logs/stageone.sh.out
-test -f pipelines/mypipetwo/popper_logs/stageone.sh.err
+test -d pipelines/mypipetwo/$output_dir
+test -f pipelines/mypipetwo/$output_dir/stageone.sh.out
+test -f pipelines/mypipetwo/$output_dir/stageone.sh.err
 
 # ignore warning
 popper run --requirement-level ignore
 
-test -d pipelines/mypipeone/popper_logs
-test -f pipelines/mypipeone/popper_logs/stageone.sh.out
-test -f pipelines/mypipeone/popper_logs/stageone.sh.err
+test -d pipelines/mypipeone/$output_dir
+test -f pipelines/mypipeone/$output_dir/stageone.sh.out
+test -f pipelines/mypipeone/$output_dir/stageone.sh.err
 
-test -d pipelines/mypipetwo/popper_logs
-test -f pipelines/mypipetwo/popper_logs/stageone.sh.out
-test -f pipelines/mypipetwo/popper_logs/stageone.sh.err
+test -d pipelines/mypipetwo/$output_dir
+test -f pipelines/mypipetwo/$output_dir/stageone.sh.out
+test -f pipelines/mypipetwo/$output_dir/stageone.sh.err
 
 
 # test for running single pipe
@@ -81,19 +87,19 @@ then
 fi
 set -e
 
-rm -rf pipelines/mypipeone/popper_logs
+rm -rf pipelines/mypipeone/$output_dir
 
 # warn on missing reqs
 popper run mypipeone --requirement-level warn
 
-test ! -d pipelines/mypipeone/popper_logs
+test ! -d pipelines/mypipeone/$output_dir
 
 # ignore warning
 popper run mypipeone --requirement-level ignore
 
-test -d pipelines/mypipeone/popper_logs
-test -f pipelines/mypipeone/popper_logs/stageone.sh.out
-test -f pipelines/mypipeone/popper_logs/stageone.sh.err
+test -d pipelines/mypipeone/$output_dir
+test -f pipelines/mypipeone/$output_dir/stageone.sh.out
+test -f pipelines/mypipeone/$output_dir/stageone.sh.err
 
 # test success
 export TEST_VAR_ONE=1
@@ -101,7 +107,7 @@ popper run mypipeone
 
 # test running from CWD
 
-rm -rf pipelines/mypipeone/popper_logs
+rm -rf pipelines/mypipeone/$output_dir
 cd pipelines/mypipeone
 
 # success
