@@ -118,16 +118,21 @@ def get_config(owner, repo):
 def create_path(path):
     """Recursively creates path if it does not exist."""
 
+    try:
+        FileNotFoundError
+    except NameError:
+        FileNotFoundError = IOError
+
     if not os.path.exists(path):
         try:
-            os.mkdir(path)
-        except FileNotFoundError:
-            create_path(os.path.join(os.path.split(path)[0]))
             os.mkdir(path)
         except PermissionError:
             pu.fail(
                 "Could not create the necessary path.\n"
                 "Please make sure you have the correct permissions."
             )
+        except FileNotFoundError:
+            create_path(os.path.join(os.path.split(path)[0]))
+            os.mkdir(path)
 
     return
