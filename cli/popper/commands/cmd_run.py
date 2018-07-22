@@ -114,7 +114,7 @@ def get_pipelines_to_execute(cwd, pipe_n, project_pipelines):
 
 def update_badge(status):
     if pu.is_repo_empty():
-        pu.warn('No commit log found')
+        pu.warn('No commit log found. Skipping badge server update')
 
     remote_url = pu.get_remote_url()
 

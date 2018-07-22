@@ -4,7 +4,7 @@ set -ex
 source common-setup.sh
 
 if [ -f /.dockerenv ]; then
-  output_dir=popper/
+  output_dir=popper
 else
   output_dir=popper/host
 fi
@@ -34,8 +34,8 @@ done
 
 for stage in three four
 do
-  test -f pipelines/pipeone/popper/host/$stage.sh.err
-  test -f pipelines/pipeone/popper/host/$stage.sh.out
+  test -f pipelines/pipeone/$output_dir/$stage.sh.err
+  test -f pipelines/pipeone/$output_dir/$stage.sh.out
 done
 
 # test skipping based on commit
