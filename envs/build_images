@@ -1,29 +1,43 @@
 #!/usr/bin/env bash
 set -e
 
-push_too="false"
-while getopts ":p" o; do
-  case "${o}" in
-    p)
-      push_too="true"
-      ;;
-  esac
-done
+rm -f .dockerignore
+cat << EOF > .dockerignore
+.DS_Store
+.dockerignore
+.git/
+.gitignore
+.gitmodules
+.popper.yml
+.ropeproject/
+.sass-cache/
+.travis.yml
+.vendor/
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+Dockerfile
+LICENSE
+README.md
+ci/
+doc/
+docs/
+envs/
+popper/
+wiki/
+EOF
 
-for d in ./* ; do
+for d in envs/* ; do
   if [ ! -d $d ]; then
+    continue
+  fi
+  if [ "$d" == 'envs/jenkins' ]; then
     continue
   fi
   echo "############"
   echo "# Building $(basename $d)"
   echo "############"
-  pushd $d
-  cp ../check.py .
-  docker build -t falsifiable/poppercheck:$(basename $d) .
-  rm check.py
-  popd
-
-  if [ "$push_too" == "true" ]; then
-    docker push falsifiable/poppercheck:$(basename $d)
-  fi
+  cp $d/Dockerfile .
+  docker build -t falsifiable/popper:$(basename $d) .
+  rm Dockerfile
 done
+rm -f .dockerignore

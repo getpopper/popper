@@ -32,6 +32,7 @@ contained, and `<pipeline>` is the name of the pipeline.
 ## Domain-specific pipelines
 
   * [Atmospheric science][nwp-wrf].
+  * [Applied math][blis].
   * [Machine learning][docker].
   * [Linux kernel development][vagrant].
   * [Relational databases][postgres].
@@ -43,7 +44,6 @@ Coming soon:
 
   * Distributed file systems
   * High energy physics
-  * Applied Mathematical Science
 
 ## Results Validation
 
@@ -80,3 +80,4 @@ Coming soon:
 [chameleoncloud]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/chameleon-benchmarking
 [gcp]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/gce-benchmarking
 [packrat]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/sea-surface-mapping-r
+[blis]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/blis

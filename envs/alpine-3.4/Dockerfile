@@ -1,8 +1,8 @@
 FROM python:2.7-alpine3.4
 RUN apk add --no-cache curl bash git && \
-    curl -SL https://download.docker.com/linux/static/stable/x86_64/docker-17.06.2-ce.tgz | tar -xzv docker/docker && \
+    curl -SL https://download.docker.com/linux/static/stable/x86_64/docker-18.06.0-ce.tgz | tar -xzv docker/docker && \
     mv docker/docker /usr/bin && \
-    pip install --no-cache-dir pyaml && \
     rm -r docker/
-ADD check.py /
-ENTRYPOINT ["/check.py"]
+ADD cli /cli
+RUN pip install --no-cache-dir /cli
+ENTRYPOINT ["popper"]

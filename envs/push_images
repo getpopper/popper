@@ -1,0 +1,15 @@
+#!/bin/bash
+if [ -n "$DOCKERHUB_PASSWORD" ]; then
+  docker logout
+  echo "$DOCKERHUB_PASSWORD" | docker login -u ivotron --password-stdin
+fi
+
+for d in envs/* ; do
+  if [ ! -d $d ]; then
+    continue
+  fi
+  if [ "$d" == 'envs/jenkins' ]; then
+    continue
+  fi
+  docker push falsifiable/popper:$(basename $d)
+done
