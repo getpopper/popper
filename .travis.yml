@@ -8,5 +8,5 @@ script:
   - export PATH=$PATH:$PWD/cli/bin
   - popper run
   - USE_VIRTUALENV=1 popper run
-  - docker run --rm -e CI=1 -e POPPER_FIGSHARE_API_TOKEN="${POPPER_FIGSHARE_API_TOKEN}" -e POPPER_ZENODO_API_TOKEN="${POPPER_ZENODO_API_TOKEN}" -e POPPER_GITHUB_API_TOKEN="${POPPER_GITHUB_API_TOKEN}" -v `pwd`:/repo -v /var/run/docker.sock:/var/run/docker.sock --workdir=/repo falsifiable/popper:alpine-3.4 run --skip=test-envs,test-badge
+  - docker run --rm -e CI=1 -e POPPER_FIGSHARE_API_TOKEN="${POPPER_FIGSHARE_API_TOKEN}" -e POPPER_ZENODO_API_TOKEN="${POPPER_ZENODO_API_TOKEN}" -e POPPER_GITHUB_API_TOKEN="${POPPER_GITHUB_API_TOKEN}" -v `pwd`:/repo -v /var/run/docker.sock:/var/run/docker.sock --workdir=/repo falsifiable/popper:alpine-3.4 run --skip=test-env,test-badge
   - envs/push_images
