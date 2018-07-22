@@ -1,6 +1,8 @@
 #!/bin/bash
-docker logout
-echo "$DOCKERHUB_PASSWORD" | docker login -u ivotron --password-stdin
+if [ -n "$DOCKERHUB_PASSWORD" ]; then
+  docker logout
+  echo "$DOCKERHUB_PASSWORD" | docker login -u ivotron --password-stdin
+fi
 
 for d in envs/* ; do
   if [ ! -d $d ]; then

@@ -36,33 +36,40 @@ popper stages | grep -q validate
 popper stages | grep -q teardown
 
 # within the pipeline folder, without some stages
+
+if [ -f /.dockerenv ]; then
+  output_dir=popper
+else
+  output_dir=popper/host
+fi
+
 init_test
 popper init mypipeone
 cd pipelines/mypipeone
 rm teardown.sh
 rm post-run.sh
 popper run
-test -f popper/host/setup.sh.err
-test -f popper/host/setup.sh.out
-test -f popper/host/run.sh.out
-test -f popper/host/run.sh.out
-test -f popper/host/validate.sh.out
-test -f popper/host/validate.sh.out
+test -f $output_dir/setup.sh.err
+test -f $output_dir/setup.sh.out
+test -f $output_dir/run.sh.out
+test -f $output_dir/run.sh.out
+test -f $output_dir/validate.sh.out
+test -f $output_dir/validate.sh.out
 rm -r popper
 
 # run all pipelines
 cd /tmp/mypaper
 popper init mypipetwo --stages=one,two
 popper run
-test -f pipelines/mypipeone/popper/host/setup.sh.err
-test -f pipelines/mypipeone/popper/host/setup.sh.out
-test -f pipelines/mypipeone/popper/host/run.sh.out
-test -f pipelines/mypipeone/popper/host/run.sh.out
-test -f pipelines/mypipeone/popper/host/validate.sh.out
-test -f pipelines/mypipeone/popper/host/validate.sh.out
-test -f pipelines/mypipetwo/popper/host/one.sh.err
-test -f pipelines/mypipetwo/popper/host/one.sh.out
-test -f pipelines/mypipetwo/popper/host/two.sh.out
-test -f pipelines/mypipetwo/popper/host/two.sh.out
-test -f pipelines/mypipetwo/popper/host/popper_status
+test -f pipelines/mypipeone/$output_dir/setup.sh.err
+test -f pipelines/mypipeone/$output_dir/setup.sh.out
+test -f pipelines/mypipeone/$output_dir/run.sh.out
+test -f pipelines/mypipeone/$output_dir/run.sh.out
+test -f pipelines/mypipeone/$output_dir/validate.sh.out
+test -f pipelines/mypipeone/$output_dir/validate.sh.out
+test -f pipelines/mypipetwo/$output_dir/one.sh.err
+test -f pipelines/mypipetwo/$output_dir/one.sh.out
+test -f pipelines/mypipetwo/$output_dir/two.sh.out
+test -f pipelines/mypipetwo/$output_dir/two.sh.out
+test -f pipelines/mypipetwo/$output_dir/popper_status
 

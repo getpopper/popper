@@ -288,7 +288,7 @@ def execute(stage, timeout, output_dir, bar=None):
         if os.environ.get('CI', False):
             # print info when in CI environment
             print('')
-            pu.info("Running: {}".format(stage))
+            sys.stdout.write('Running: {}'.format(stage))
 
         while p.poll() is None:
 
