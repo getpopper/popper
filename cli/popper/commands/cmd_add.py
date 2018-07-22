@@ -123,15 +123,14 @@ def create_path(path):
     if not os.path.exists(path):
         try:
             os.mkdir(path)
-        except OSError as e:
+        except (OSError, IOError) as e:
             if e.errno == EPERM or e.errno == EACCES:
                 pu.fail(
                     "Could not create the necessary path.\n"
                     "Please make sure you have the correct permissions."
                 )
-        except IOError as e:
-            if e.errno == ENOENT:
+            elif e.errno == ENOENT:
                 create_path(os.path.join(os.path.split(path)[0]))
                 os.mkdir(path)
-
-    return
+            else:
+                pu.fail("Failed due to unknown reasons.")
