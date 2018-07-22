@@ -57,8 +57,7 @@ def cli(ctx, pipeline, folder, branch):
             folder = os.path.join('pipelines', folder)
         pipelines_dir = os.path.join(project_root, folder)
 
-    if not os.path.exists(pipelines_dir):
-        os.mkdir(pipelines_dir)
+    create_path(pipelines_dir)
 
     gh_url = 'https://github.com/{}/{}/'.format(owner, repo)
     gh_url += 'archive/{}.tar.gz'.format(branch)
@@ -114,3 +113,21 @@ def get_config(owner, repo):
     config = yaml.load(r.content)
 
     return config
+
+
+def create_path(path):
+    """Recursively creates path if it does not exist."""
+
+    if not os.path.exists(path):
+        try:
+            os.mkdir(path)
+        except FileNotFoundError:
+            create_path(os.path.join(os.path.split(path)[0]))
+            os.mkdir(path)
+        except PermissionError:
+            pu.fail(
+                "Could not create the necessary path.\n"
+                "Please make sure you have the correct permissions."
+            )
+
+    return
