@@ -7,8 +7,10 @@ import shutil
 import yaml
 import tarfile
 from io import BytesIO
+
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
+from errno import EACCES, EPERM, ENOENT
 
 
 @click.command(
@@ -118,21 +120,18 @@ def get_config(owner, repo):
 def create_path(path):
     """Recursively creates path if it does not exist."""
 
-    try:
-        FileNotFoundError
-    except NameError:
-        FileNotFoundError = IOError
-
     if not os.path.exists(path):
         try:
             os.mkdir(path)
-        except PermissionError:
-            pu.fail(
-                "Could not create the necessary path.\n"
-                "Please make sure you have the correct permissions."
-            )
-        except FileNotFoundError:
-            create_path(os.path.join(os.path.split(path)[0]))
-            os.mkdir(path)
+        except OSError as e:
+            if e.errno == EPERM or e.errno == EACCES:
+                pu.fail(
+                    "Could not create the necessary path.\n"
+                    "Please make sure you have the correct permissions."
+                )
+        except IOError as e:
+            if e.errno == ENOENT:
+                create_path(os.path.join(os.path.split(path)[0]))
+                os.mkdir(path)
 
     return
