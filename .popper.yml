@@ -12,6 +12,7 @@ pipelines:
     - setup
     - test-default
     - test-init
+    - test-require
     - test-existing
     - test-run
     - test-ci
@@ -24,6 +25,7 @@ pipelines:
     - test-search
     - test-rm
     - test-archive
+    - test-reset
     - test-env-vars
     - test-badge
 popperized:

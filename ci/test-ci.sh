@@ -25,3 +25,6 @@ popper ci --service travis --skip=pipetwo,pipethree
 
 cat .travis.yml | grep 'popper run --skip=pipetwo,pipethree'
 
+popper ci --service travis --skip=pipetwo,pipethree --requirement-level warn
+
+cat .travis.yml | grep 'popper run --skip=pipetwo,pipethree --requirement-level warn'

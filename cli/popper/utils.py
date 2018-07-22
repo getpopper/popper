@@ -110,7 +110,8 @@ def is_popperized():
     return os.path.isfile(config_filename)
 
 
-def update_config(name, stages='', envs='', vars=[], relative_path=''):
+def update_config(name, stages='', envs='', vars=[], reqs={},
+                  relative_path=''):
     """Updates the configuration for a pipeline."""
 
     config = read_config()
@@ -121,6 +122,8 @@ def update_config(name, stages='', envs='', vars=[], relative_path=''):
             envs = ','.join(config['pipelines'][name]['envs'])
         if not relative_path:
             relative_path = config['pipelines'][name]['path']
+        if not reqs:
+            reqs = config['pipelines'][name].get('requirements', {})
 
     if name == 'paper':
         stages = 'build'
@@ -129,7 +132,8 @@ def update_config(name, stages='', envs='', vars=[], relative_path=''):
         'stages': stages.split(','),
         'envs': envs.split(','),
         'vars': vars,
-        'path': relative_path
+        'requirements': reqs,
+        'path': relative_path,
     }
     write_config(config)
 
@@ -282,20 +286,6 @@ def read_gh_pipeline(uname, repo, pipeline, branch="master"):
         contents = r.content.decode("utf-8").split("\n")
 
     return contents
-
-
-def get_head_commit():
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])[:-1]
-
-
-def is_repo_empty():
-
-    p = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.communicate()
-    if p.returncode != 0:
-        return True
-    return False
 
 
 def in_pipeline(name=False):
