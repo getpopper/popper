@@ -6,8 +6,8 @@ source common-setup.sh
 # archive command test
 init_test
 popper init archive_pipe
-git config --global user.email "testuser@example.com"
-git config --global user.name "Test User"
+git config user.email "testuser@example.com"
+git config user.name "Test User"
 echo "echo \"Today's date is: $(date +"%Y%m%d-%H%M%S")\"" >> pipelines/archive_pipe/post-run.sh
 popper metadata --add title='Popper test archive'
 popper metadata --add author1='Test Author, testauthor@gmail.com, popper'
