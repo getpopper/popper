@@ -288,6 +288,20 @@ def read_gh_pipeline(uname, repo, pipeline, branch="master"):
     return contents
 
 
+def get_head_commit():
+    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])[:-1]
+
+
+def is_repo_empty():
+
+    p = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
+                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    p.communicate()
+    if p.returncode != 0:
+        return True
+    return False
+
+
 def in_pipeline(name=False):
     """Checks if the current working directory is a pipeline
     or not.
