@@ -189,7 +189,13 @@ def run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
     abs_path = '{}/{}'.format(project_root, pipe_d['path'])
     docker_cmd = 'docker run --rm -v {0}:{0}'.format(project_root)
     docker_cmd += ' --workdir={}'.format(abs_path)
-    docker_cmd += ' falsifiable/popper:{} run '.format(env)
+
+    if '/' in env:
+        img = env
+    else:
+        img = 'falsifiable/popper:{}'.format(env)
+
+    docker_cmd += ' {} run '.format(img)
 
     popper_flags = ' --timeout={}'.format(timeout)
     popper_flags += ' --skip {}'.format(','.join(skip)) if skip else ''
@@ -332,7 +338,8 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
 
     if env != 'host':
         return run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
-                             ignore_errors, '{}/{}'.format(output_dir, env))
+                             ignore_errors, '{}/{}'.format(
+                                 output_dir, env.replace('/', '_')))
 
     return run_on_host(project_root, pipe_n, pipe_d, skip_list,
                        timeout_parsed, os.path.join(output_dir, 'host'))

@@ -23,8 +23,7 @@ popper env --ls
 
 set +e
 popper env
-if [ $? -eq 0 ];
-then
+if [ $? -eq 0 ]; then
     exit 1
 fi
 set -e
@@ -63,3 +62,15 @@ test -f pipelines/mypipe/popper/host/one.sh.err
 test -f pipelines/mypipe/popper/host/one.sh.out
 test -f pipelines/mypipe/popper/host/two.sh.err
 test -f pipelines/mypipe/popper/host/two.sh.out
+
+# test running user-defined container images
+init_test
+
+popper init mypipe --stages=one
+popper env mypipe --add user/img-with-popper-inside:alpine-3.4
+popper env mypipe --rm host
+
+popper run
+
+test -f "pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.err"
+test -f "pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.out"
