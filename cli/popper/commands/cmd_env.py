@@ -4,7 +4,6 @@ import popper.utils as pu
 import sys
 
 from popper.cli import pass_context
-from popper.exceptions import BadArgumentUsage
 
 
 @click.command('env', short_help='Define or remove execution environments of a'
@@ -49,7 +48,7 @@ def cli(ctx, pipeline, add, rm, ls):
         try:
             response = requests.get(
                 "https://hub.docker.com/v2/repositories/"
-                "falsifiable/poppercheck/tags")
+                "falsifiable/popper/tags")
             environments = []
             for result in response.json()['results']:
                 environments.append(result['name'])
