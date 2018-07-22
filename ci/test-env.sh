@@ -68,3 +68,6 @@ init_test
 
 popper init mypipe --stages=one
 popper env mypipe --add user/img-with-popper-inside:alpine-3.4
+
+test -f pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.err
+test -f pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.out

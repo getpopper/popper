@@ -338,7 +338,8 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
 
     if env != 'host':
         return run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
-                             ignore_errors, '{}/{}'.format(output_dir, env))
+                             ignore_errors, '{}/{}'.format(
+                                 output_dir, env.replace('/', '_')))
 
     return run_on_host(project_root, pipe_n, pipe_d, skip_list,
                        timeout_parsed, os.path.join(output_dir, 'host'))
