@@ -20,8 +20,7 @@ from errno import EACCES, EPERM, ENOENT
 @click.argument('pipeline', required=True)
 @click.argument(
     'folder',
-    required=False,
-    default='pipelines'
+    required=False
 )
 @click.option(
     '--branch',
@@ -46,18 +45,33 @@ def cli(ctx, pipeline, folder, branch):
 
     owner, repo, pipe_name = pipeline.split('/')
 
+    if folder:
+        path, basename = os.path.split(folder)
+        if not basename:  # Only true when trailing slash is present
+            path, basename = os.path.split(path)
+        if basename:
+            new_pipe_name = basename  # Use basename as the name of pipeline
+        else:
+            pu.fail("The path is invalid.")
+    else:  # If no pipeline name is provided, use the original pipeline name
+        new_pipe_name = pipe_name
+
     config = pu.read_config()
 
-    if pipe_name in config['pipelines']:
-        pu.fail("Pipeline {} already in repo.".format(pipe_name))
+    if new_pipe_name in config['pipelines']:
+        pu.fail("Pipeline {} already in repo.".format(new_pipe_name))
 
     project_root = pu.get_project_root()
-    if folder.startswith('/'):
-        pipelines_dir = folder
-    else:
-        if folder != 'pipelines':
-            folder = os.path.join('pipelines', folder)
-        pipelines_dir = os.path.join(project_root, folder)
+
+    if not folder:  # Put it in the pipelines directory, default case
+        folder = os.path.join('pipelines', new_pipe_name)
+    elif '/' not in folder:  # Put it in the path inside pipelines directory
+        folder = os.path.join('pipelines', folder)
+
+    pipelines_dir = os.path.join(project_root, folder)
+
+    # Remove the trailing slash, is present
+    folder = folder[:-1] if folder[-1] == '/' else folder
 
     create_path(pipelines_dir)
 
@@ -73,24 +87,27 @@ def cli(ctx, pipeline, folder, branch):
     )
 
     # Downloading and extracting the tarfile
-    with tarfile.open(
-            mode='r:gz', fileobj=BytesIO(r.content)) as t:
+    with tarfile.open(mode='r:gz', fileobj=BytesIO(r.content)) as t:
         t.extractall()
 
-    os.rename('{}-{}/pipelines/{}'.format(
-        repo, branch, pipe_name), os.path.join(pipelines_dir, pipe_name))
-    shutil.rmtree('{}-{}'.format(repo, branch))
+    try:
+        os.rename('{}-{}/pipelines/{}'.format(
+            repo, branch, pipe_name), pipelines_dir)
+    except OSError:
+        pu.fail("Make sure the path is empty.")
+    finally:
+        shutil.rmtree('{}-{}'.format(repo, branch))
 
     pu.info("Updating popper configuration... ")
 
     repo_config = get_config(owner, repo)
 
-    config['pipelines'][pipe_name] = repo_config['pipelines'][pipe_name]
-    config['pipelines'][pipe_name]['path'] = os.path.join(folder, pipe_name)
+    config['pipelines'][new_pipe_name] = repo_config['pipelines'][pipe_name]
+    config['pipelines'][new_pipe_name]['path'] = folder
 
     pu.write_config(config)
     pu.info(
-        "Pipeline {} has been added successfully.".format(pipe_name),
+        "Pipeline {} has been added successfully.".format(new_pipe_name),
         fg="green"
     )
 
