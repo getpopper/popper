@@ -49,6 +49,15 @@ from subprocess import check_output
     required=False,
 )
 @click.option(
+    '--requirement-level',
+    type=click.Choice(['warn', 'ignore', 'fail']), default='fail',
+    help='Determines how to handle missing requirements. warn simply'
+         'emits a wanring and continues normally; ignore runs the'
+         'specified pipelines despite missing unfulfilled'
+         'requirements; fail exits with an error on unfilfilled'
+         'requirements.'
+)
+@click.option(
     '--no-badge-update',
     help='Do not update the status of the pipeline against the badge server.',
     is_flag=True,
@@ -56,7 +65,7 @@ from subprocess import check_output
 )
 @pass_context
 def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
-        no_badge_update):
+        no_badge_update, requirement_level):
     """Executes one or more pipelines and reports on their status. When
     PIPELINE is given, it executes only the pipeline with that name. If the
     argument is omitted, all pipelines are executed in lexicographical order.
@@ -80,12 +89,18 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
             pu.info("Found 'CI', ignoring PIPELINE argument.")
             pipelines = pipes_from_log
 
+    pipelines = {pipe_n: pipe_c for pipe_n, pipe_c in pipelines.items()
+                 if check_requirements(pipe_n, pipe_c, requirement_level)}
+
     for pipe_n, pipe_d in pipelines.items():
         for env in pipe_d.get('envs', ['host']):
             status = run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
                                   skip, ignore_errors, output)
             if status == 'FAIL' and not ignore_errors:
                 break
+    if not len(pipelines):
+        pu.info("No pipelines to execute")
+        sys.exit(0)
 
     os.chdir(cwd)
 
@@ -181,6 +196,29 @@ def pipelines_from_commit_message(project_pipelines):
 
     print('pipes: {}'.format(pipelines))
     return pipelines
+
+
+def check_requirements(pipe_n, pipeline, requirement_level):
+    if 'requirements' not in pipeline:
+        return True
+
+    reqs = pipeline['requirements'].get('vars', [])
+    missing_reqs = [envvar for envvar in reqs if envvar not in os.environ]
+
+    if len(missing_reqs):
+        msg = ('Required environment variables for pipeline {} unset: {}'
+               .format(pipe_n, ','.join(missing_reqs)))
+
+        if requirement_level == 'fail':
+            pu.fail(msg)
+
+        pu.warn(msg)
+
+        if requirement_level == 'warn':
+            pu.info('Skipping pipeline {}'.format(pipe_n))
+
+        return requirement_level == 'ignore'
+    return True
 
 
 def run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,

@@ -61,8 +61,15 @@ stage ('Popper') {{ node {{
     help='Comma-separated list of pipelines to skip during ci',
     required=False,
 )
+@click.option('--requirement-level',
+              type=click.Choice(['warn', 'ignore', 'fail']), default='fail',
+              help='Determines how to handle missing requirements. warn simply'
+                   'emits a wanring and continues normally; ignore runs the'
+                   'specified pipelines despite missing unfulfilled'
+                   'requirements; fail exits with an error on unfilfilled'
+                   'requirements')
 @pass_context
-def cli(ctx, service, skip):
+def cli(ctx, service, skip, requirement_level):
     """Generates configuration files for distinct CI services.
     """
     project_root = pu.get_project_root()
@@ -71,6 +78,8 @@ def cli(ctx, service, skip):
         pu.fail("Unrecognized service " + service)
 
     runargs = '--skip={}'.format(skip) if skip else ''
+
+    runargs += ' --requirement-level {}'.format(requirement_level)
 
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
         ci_file_content = ci_file_content.format(runargs=runargs)
