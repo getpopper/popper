@@ -132,8 +132,7 @@ def initialize_repo(project_root):
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
         f.write('.cache\n')
-        f.write('popper_logs\n')
-        f.write('popper_status\n')
+        f.write('popper\n')
 
     pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
