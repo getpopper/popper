@@ -58,7 +58,7 @@ def cli(ctx, pipeline, folder, branch):
 
     if not os.path.exists(pipelines_dir):
         try:
-            os.mkdir(pipelines_dir)
+            os.makedirs(pipelines_dir)
         except (OSError, IOError) as e:
             pu.fail("Could not create the necessary path.\n")
 
@@ -66,7 +66,7 @@ def cli(ctx, pipeline, folder, branch):
     gh_url += 'archive/{}.tar.gz'.format(branch)
 
     pu.info(
-        "Downloading pipeline {}... as {}".format(pipe_name, new_pipe_name)
+        "Downloading pipeline {} as {}...".format(pipe_name, new_pipe_name)
     )
 
     r = pu.make_gh_request(
