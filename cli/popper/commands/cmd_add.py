@@ -10,7 +10,6 @@ from io import BytesIO
 
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
-from errno import EACCES, EPERM, ENOENT
 
 
 @click.command(
@@ -45,16 +44,8 @@ def cli(ctx, pipeline, folder, branch):
 
     owner, repo, pipe_name = pipeline.split('/')
 
-    if folder:
-        path, basename = os.path.split(folder)
-        if not basename:  # Only true when trailing slash is present
-            path, basename = os.path.split(path)
-        if basename:
-            new_pipe_name = basename  # Use basename as the name of pipeline
-        else:
-            pu.fail("The path is invalid.")
-    else:  # If no pipeline name is provided, use the original pipeline name
-        new_pipe_name = pipe_name
+    new_pipe_name, folder = pu.get_name_and_path_for_new_pipeline(
+        folder, pipe_name)
 
     config = pu.read_config()
 
@@ -63,22 +54,20 @@ def cli(ctx, pipeline, folder, branch):
 
     project_root = pu.get_project_root()
 
-    if not folder:  # Put it in the pipelines directory, default case
-        folder = os.path.join('pipelines', new_pipe_name)
-    elif '/' not in folder:  # Put it in the path inside pipelines directory
-        folder = os.path.join('pipelines', folder)
-
     pipelines_dir = os.path.join(project_root, folder)
 
-    # Remove the trailing slash, is present
-    folder = folder[:-1] if folder[-1] == '/' else folder
-
-    create_path(pipelines_dir)
+    if not os.path.exists(pipelines_dir):
+        try:
+            os.mkdir(pipelines_dir)
+        except (OSError, IOError) as e:
+            pu.fail("Could not create the necessary path.\n")
 
     gh_url = 'https://github.com/{}/{}/'.format(owner, repo)
     gh_url += 'archive/{}.tar.gz'.format(branch)
 
-    pu.info("Downloading pipeline {}... ".format(pipe_name))
+    pu.info(
+        "Downloading pipeline {}... as {}".format(pipe_name, new_pipe_name)
+    )
 
     r = pu.make_gh_request(
         gh_url,
@@ -127,27 +116,7 @@ def get_config(owner, repo):
     yaml_url = 'https://raw.githubusercontent.com/{}/{}/{}/.popper.yml'.format(
         owner, repo, 'master')
 
-    # r = requests.get(yaml_url)
     r = pu.make_gh_request(yaml_url)
     config = yaml.load(r.content)
 
     return config
-
-
-def create_path(path):
-    """Recursively creates path if it does not exist."""
-
-    if not os.path.exists(path):
-        try:
-            os.mkdir(path)
-        except (OSError, IOError) as e:
-            if e.errno == EPERM or e.errno == EACCES:
-                pu.fail(
-                    "Could not create the necessary path.\n"
-                    "Please make sure you have the correct permissions."
-                )
-            elif e.errno == ENOENT:
-                create_path(os.path.join(os.path.split(path)[0]))
-                os.mkdir(path)
-            else:
-                pu.fail("Failed due to unknown reasons.")
