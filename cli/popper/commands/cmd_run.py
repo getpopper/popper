@@ -160,7 +160,7 @@ def pipelines_from_commit_message(project_pipelines):
 
     args = ['git', 'log', '-1', '--pretty=%B']
 
-    msg = check_output(args)
+    msg = str(check_output(args))
 
     # check for pull requests
     if 'Merge' in msg:
@@ -194,7 +194,7 @@ def pipelines_from_commit_message(project_pipelines):
         for p in pipe_list:
             pipelines.update({p: project_pipelines[p]})
 
-    print('pipes: {}'.format(pipelines))
+    print('Only running pipes: {}'.format(', '.join(pipelines.keys())))
     return pipelines
 
 
