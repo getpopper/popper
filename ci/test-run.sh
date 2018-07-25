@@ -41,6 +41,11 @@ done
 # test skipping based on commit
 init_test
 
+if [ -z $CI ]; then
+  ci_not_set=1
+  export CI=1
+fi
+
 git config user.email "<>"
 git config user.name "test travis ci"
 
@@ -98,3 +103,7 @@ test ! -f pipelines/mypipetwo/$output_dir/setup.sh.err
 test ! -f pipelines/mypipetwo/$output_dir/setup.sh.out
 test -f pipelines/mypipethree/$output_dir/setup.sh.err
 test -f pipelines/mypipethree/$output_dir/setup.sh.out
+
+if [ $ci_not_set ]; then
+  unset CI
+fi
