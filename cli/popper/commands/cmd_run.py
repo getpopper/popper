@@ -160,16 +160,16 @@ def pipelines_from_commit_message(project_pipelines):
 
     args = ['git', 'log', '-1', '--pretty=%B']
 
-    msg = check_output(args)
+    msg = str(check_output(args))
 
     # check for pull requests
-    if "Merge" in msg:
+    if 'Merge' in msg:
         pu.info("Merge detected. Reading message from merged commit.")
         commit_id = re.search('Merge (.+?) into', msg).group(1)
 
         args = ['git', 'show', '-s', '--format=%B', commit_id]
 
-        msg = check_output(args)
+        msg = str(check_output(args))
 
     if 'popper:skip[' in msg:
         pu.info("Found 'popper:skip' keyword.")
@@ -194,7 +194,7 @@ def pipelines_from_commit_message(project_pipelines):
         for p in pipe_list:
             pipelines.update({p: project_pipelines[p]})
 
-    print('pipes: {}'.format(pipelines))
+    print('Only running pipes: {}'.format(', '.join(pipelines.keys())))
     return pipelines
 
 
@@ -260,7 +260,8 @@ def run_on_host(project_root, pipe_n, pipe_d, skip_list, timeout, output_dir):
     status = "SUCCESS"
 
     with click.progressbar(pipe_d['stages'], show_eta=False,
-                           item_show_func=str,
+                           item_show_func=(lambda s: status if s is None
+                                           else str(s)),
                            bar_template='[%(bar)s] %(info)s',
                            show_percent=False) as stages:
 
@@ -369,6 +370,8 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
     timeout_parsed = pu.parse_timeout(timeout)
 
     skip_list = skip.split(',') if skip else []
+
+    click.echo('Executing pipeline: {}'.format(pipe_n))
 
     if os.path.isfile('/.dockerenv'):
         return run_on_host(project_root, pipe_n, pipe_d, skip_list,
