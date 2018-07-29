@@ -11,7 +11,8 @@ On The Popper Convention:
     Arpaci-Dusseau. _The Popper Convention: Making Reproducible 
     Systems Evaluation Practical_. In 2017 IEEE International Parallel 
     and Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017.
-    \[[pdf][repparpdf]\] \[[github][reppargh]\].
+    \[[pdf][repparpdf]\] \[[github][reppargh]\] 
+    \[[bibtex][repparbib]\].
   * Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
     Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
     Arpaci-Dusseau. _Standing on the Shoulders of Giants by Managing 
@@ -63,6 +64,7 @@ Articles following the convention:
 [cnertgh]: https://github.com/systemslab/popperci-paper
 [repparpdf]: https://github.com/systemslab/popper-paper/raw/master/paper/paper.pdf
 [reppargh]: https://github.com/systemslab/popper-paper
+[repparbib]: https://scholar.googleusercontent.com/scholar.bib?q=info:ybMbxWy8G5AJ:scholar.google.com/&output=citation&scisig=AAGBfm0AAAAAW14p2clPVP5OPbBVgQ3OWT7yfbaoR3Mo&scisf=4&ct=citation&cd=-1&hl=en
 [icpe18pdf]: https://github.com/ivotron/quiho-popper/raw/master/paper/paper.pdf
 [icpe18gh]: https://github.com/ivotron/quiho-popper
 [cudelepdf]: https://github.com/michaelsevilla/cudele-popper/raw/master/paper/paper.pdf
