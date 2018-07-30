@@ -241,18 +241,12 @@ is the one expected by the original implementers as explained
 
 [Reprozip](https://www.reprozip.org/) "allows you to pack your 
 research along with all necessary data files, libraries, environment 
-variables and options", while [Sciunit](sciunit.run) "are efficient, 
+variables and options", while [Sciunit](https://sciunit.run) "are efficient, 
 lightweight, self-contained packages of computational experiments that 
 can be guaranteed to repeat or reproduce regardless of deployment 
 issues". They accomplish this by making use of 
 [`ptrace`](https://en.wikipedia.org/wiki/Ptrace) to track all 
-dependencies of an application.
-
-Popper can help in automating the tasks required to install 
-Reprozip/Sciunit, as well as to create and execute Reprozip packages 
-and Sciunits. However, a Popper pipeline is already self-contained and 
-can be made portable by explicitly using language (e.g. virtualenv), 
-OS-level (e.g. Singularity) or hardware (e.g. Virtualbox) 
-virtualization tools. In these cases, using Reprozip or Sciunit would 
-be redundant, since they make use of Docker or Vagrant "underneath the 
-covers" in order to provide portable experiment packages/units.
+dependencies of an application. Popper can help in automating the tasks 
+required to install these tools; create and execute 
+Reprozip packages and Sciunits; and re-execute experiments in order 
+to verify that results are being reproduced.
