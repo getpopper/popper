@@ -152,27 +152,36 @@ def get_pipelines_to_execute(cwd, pipe_n, project_pipelines):
 
 def update_badge(status):
     if pu.is_repo_empty():
-        pu.warn('No commit log found. Skipping badge server update')
+        pu.warn('No commit log found. Skipping badge server update.')
+        return
 
     remote_url = pu.get_remote_url()
+    if not remote_url:
+        pu.warn('No remote url found. Skipping badge server update.')
+        return
 
-    if remote_url:
-        baseurl = pu.read_config().get(
-            'badge-server-url', 'http://badges.falsifiable.us'
-        )
-        org, repo = remote_url.split('/')[-2:]
-        badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
-        data = {
-            'timestamp': int(time.time()),
-            'commit_id': pu.get_head_commit(),
-            'status': status
-        }
-        try:
-            r = requests.post(badge_server_url, data=data)
-            if r.status_code != 201:
-                pu.warn("Could not create a record on the badge server")
-        except requests.exceptions.RequestException:
-            pu.warn("Could not communicate with the badge server")
+    baseurl = pu.read_config().get(
+        'badge-server-url', 'http://badges.falsifiable.us'
+    )
+    org, repo = remote_url.split('/')[-2:]
+    badge_server_url = '{}/{}/{}'.format(baseurl, org, repo)
+    branch_name = check_output(
+        ['git', 'rev-parse', '--abbrev-ref', 'HEAD']
+    )[:-1]
+    data = {
+        'timestamp': int(time.time()),
+        'commit_id': pu.get_head_commit(),
+        'status': status,
+        'branch': branch_name,
+    }
+    try:
+        r = requests.post(badge_server_url, data=data)
+        if r.status_code != 201 and r.status_code != 200:
+            pu.warn("Could not create a record on the badge server.")
+        else:
+            pu.info(r.json()['message'], fg="green")
+    except requests.exceptions.RequestException:
+        pu.warn("Could not communicate with the badge server.")
 
 
 def pipelines_from_commit_message(project_pipelines):
@@ -303,7 +312,8 @@ def run_on_host(project_root, pipe_n, pipe_d, skip_list, timeout, output_dir):
                 pu.info("\n\nStage '{}' failed.".format(stage))
                 status = "FAIL"
                 for t in ['.err', '.out']:
-                    logfile = os.path.join(output_dir, stage_file + t)
+                    logfile = docker_flag + \
+                        "popper_logs/{}{}".format(stage_file, t)
                     with open(logfile, 'r') as f:
                         pu.info("\n" + t + ":\n", bold=True, fg='red')
                         pu.info(f.read())
