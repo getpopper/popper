@@ -23,6 +23,7 @@ pipelines:
     - test-matrix-execution
     - test-metadata
     - test-mv
+    - test-ls
     - test-rm
     - test-run
     - test-search
