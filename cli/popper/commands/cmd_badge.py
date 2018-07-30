@@ -7,6 +7,7 @@ import popper.utils as pu
 
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
+from errno import ENOENT
 
 
 services = {
@@ -101,8 +102,11 @@ def cli(ctx, service, history, inplace):
                     content = f.read()
                     f.seek(0, 0)
                     f.write(markup + '\n\n' + content)
-            except FileNotFoundError:
-                pu.fail("README.md does not exist at the root of the project")
+            except IOError as e:
+                if e.errno == ENOENT:
+                    pu.fail(
+                        "README.md does not exist at the root of the project"
+                    )
         else:
             name, _, _ = services[service]
             pu.info('To add the "{}" badge to your readme, put this markdown '
