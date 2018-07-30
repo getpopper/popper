@@ -65,7 +65,7 @@ test ! -f pipelines/mypipetwo/$output_dir/setup.sh.out
 test ! -f pipelines/mypipethree/$output_dir/setup.sh.err
 test ! -f pipelines/mypipethree/$output_dir/setup.sh.out
 
-git clean -df
+git clean -dxf
 
 git commit --allow-empty -m "popper:whitelist[mypipeone,mypipetwo] this is a test"
 
@@ -78,7 +78,7 @@ test -f pipelines/mypipetwo/$output_dir/setup.sh.out
 test ! -f pipelines/mypipethree/$output_dir/setup.sh.err
 test ! -f pipelines/mypipethree/$output_dir/setup.sh.out
 
-git clean -df
+git clean -dxf
 
 git commit --allow-empty -m "popper:skip[mypipeone] this is a test"
 
@@ -91,7 +91,7 @@ test -f pipelines/mypipetwo/$output_dir/setup.sh.out
 test -f pipelines/mypipethree/$output_dir/setup.sh.err
 test -f pipelines/mypipethree/$output_dir/setup.sh.out
 
-git clean -df
+git clean -dxf
 
 git commit --allow-empty -m "popper:skip[mypipeone,mypipetwo] this is a test"
 
