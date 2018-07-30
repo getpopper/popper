@@ -10,24 +10,25 @@ pipelines:
     path: ci
     stages:
     - setup
-    - test-default
-    - test-init
-    - test-require
-    - test-existing
-    - test-run
-    - test-ci
-    - test-stages
-    - test-env
-    - test-cleanup
-    - test-workflow
-    - test-metadata
     - test-add
-    - test-search
-    - test-rm
     - test-archive
-    - test-reset
-    - test-env-vars
     - test-badge
+    - test-ci
+    - test-cleanup
+    - test-defaults
+    - test-env
+    - test-env-vars
+    - test-existing
+    - test-init
+    - test-matrix-execution
+    - test-metadata
+    - test-mv
+    - test-rm
+    - test-run
+    - test-search
+    - test-stages
+    - test-workflow
+    - teardown
 popperized:
 - github/popperized
 badge-server-url: http://badges.falsifiable.us
