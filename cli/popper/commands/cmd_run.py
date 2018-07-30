@@ -94,10 +94,13 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
 
     for pipe_n, pipe_d in pipelines.items():
         for env in pipe_d.get('envs', ['host']):
-            status = run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
-                                  skip, ignore_errors, output)
+            args = [project_root, pipe_n, pipe_d, env, timeout, skip,
+                    ignore_errors, output]
+            executions = get_executions_for_pipeline(pipe_d.get('vars'))
+            status = run_pipeline(*args, executions=executions)
             if status == 'FAIL' and not ignore_errors:
                 break
+
     if not len(pipelines):
         pu.info("No pipelines to execute")
         sys.exit(0)
@@ -109,6 +112,26 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
 
     if status == 'FAIL':
         pu.fail("Failed to execute pipeline")
+
+
+def get_executions_for_pipeline(env_vars):
+    executions = []
+    if env_vars:
+        for env_var in env_vars:
+            executions.append(env_var)
+    else:
+        executions.append("")
+    return executions
+
+
+def set_env_vars(env_vars):
+    for env_var in env_vars:
+        os.environ[env_var] = env_vars[env_var]
+
+
+def unset_env_vars(env_vars):
+    for env_var in env_vars:
+        del os.environ[env_var]
 
 
 def get_pipelines_to_execute(cwd, pipe_n, project_pipelines):
@@ -222,11 +245,13 @@ def check_requirements(pipe_n, pipeline, requirement_level):
 
 
 def run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
-                  ignore_errors, output_dir):
+                  ignore_errors, output_dir, env_vars):
 
     abs_path = '{}/{}'.format(project_root, pipe_d['path'])
     docker_cmd = 'docker run --rm -v {0}:{0}'.format(project_root)
     docker_cmd += ' --workdir={}'.format(abs_path)
+    docker_cmd += ''.join([' -e {0}="{1}"'.format(k, env_vars[k])
+                           for k in env_vars]) if env_vars else ''
 
     if '/' in env:
         img = env
@@ -366,24 +391,37 @@ def execute(stage, timeout, output_dir, bar=None):
 
 
 def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
-                 skip, ignore_errors, output_dir):
+                 skip, ignore_errors, output_dir, executions):
     timeout_parsed = pu.parse_timeout(timeout)
 
     skip_list = skip.split(',') if skip else []
 
     click.echo('Executing pipeline: {}'.format(pipe_n))
 
-    if os.path.isfile('/.dockerenv'):
-        return run_on_host(project_root, pipe_n, pipe_d, skip_list,
-                           timeout_parsed, output_dir)
+    status = 'SUCCESS'
+    for number_of_run, env_vars in enumerate(executions):
+        set_env_vars(env_vars)
+        if os.path.isfile('/.dockerenv'):
+            status = run_on_host(project_root, pipe_n, pipe_d, skip_list,
+                                 timeout_parsed, output_dir)
+        elif env != 'host':
+            status = \
+                run_in_docker(project_root, pipe_n, pipe_d, env,
+                              timeout, skip, ignore_errors, '{}/{}/{}'.
+                              format(output_dir, env.replace('/', '_'),
+                                     number_of_run if env_vars else ""),
+                              env_vars)
+        else:
+            status = \
+                run_on_host(project_root, pipe_n, pipe_d, skip_list,
+                            timeout_parsed, os.path. join(output_dir, 'host',
+                                                          str(number_of_run)
+                                                          if env_vars else ""))
+        unset_env_vars(env_vars)
+        if status == 'FAIL' and not ignore_errors:
+            break
 
-    if env != 'host':
-        return run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
-                             ignore_errors, '{}/{}'.format(
-                                 output_dir, env.replace('/', '_')))
-
-    return run_on_host(project_root, pipe_n, pipe_d, skip_list,
-                       timeout_parsed, os.path.join(output_dir, 'host'))
+    return status
 
 
 class Unbuffered(object):
