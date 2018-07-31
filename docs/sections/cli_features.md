@@ -57,7 +57,7 @@ popper run
 Once a pipeline is run, one can show the logs:
 
 ```bash
-ls -l pipelines/myexp/popper_logs
+ls -l pipelines/myexp/popper/host
 ```
 
 ## Continously validating a pipeline
