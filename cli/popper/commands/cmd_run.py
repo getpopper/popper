@@ -312,8 +312,7 @@ def run_on_host(project_root, pipe_n, pipe_d, skip_list, timeout, output_dir):
                 pu.info("\n\nStage '{}' failed.".format(stage))
                 status = "FAIL"
                 for t in ['.err', '.out']:
-                    logfile = docker_flag + \
-                        "popper_logs/{}{}".format(stage_file, t)
+                    logfile = os.path.join(output_dir, stage_file + t)
                     with open(logfile, 'r') as f:
                         pu.info("\n" + t + ":\n", bold=True, fg='red')
                         pu.info(f.read())
