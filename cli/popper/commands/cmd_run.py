@@ -307,7 +307,6 @@ def run_on_host(project_root, pipe_n, pipe_d, skip_list, timeout, output_dir):
                 continue
 
             ecode = execute(stage_file, timeout, output_dir, stages)
-
             if ecode != 0:
                 pu.info("\n\nStage '{}' failed.".format(stage))
                 status = "FAIL"
