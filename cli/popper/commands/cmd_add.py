@@ -61,6 +61,8 @@ def cli(ctx, pipeline, folder, branch):
             os.makedirs(pipelines_dir)
         except (OSError, IOError) as e:
             pu.fail("Could not create the necessary path.\n")
+    elif len(os.listdir(pipelines_dir)) != 0:
+        pu.fail("The path already exists and is not empty.")
 
     gh_url = 'https://github.com/{}/{}/'.format(owner, repo)
     gh_url += 'archive/{}.tar.gz'.format(branch)
@@ -83,7 +85,12 @@ def cli(ctx, pipeline, folder, branch):
         os.rename('{}-{}/pipelines/{}'.format(
             repo, branch, pipe_name), pipelines_dir)
     except OSError:
-        pu.fail("Make sure the path is empty.")
+        pu.fail(
+            "Could not rename {} to {}.".format(
+                '{}-{}/pipelines/{}'.format(repo, branch, pipe_name),
+                pipelines_dir
+            )
+        )
     finally:
         shutil.rmtree('{}-{}'.format(repo, branch))
 
