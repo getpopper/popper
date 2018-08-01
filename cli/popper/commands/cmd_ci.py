@@ -45,6 +45,19 @@ stage ('Popper') {{ node {{
   sh "popper run {runargs}"
 }}}}
 """
+    },
+    'gitlab': {
+
+        '.gitlab-ci.yml': """
+image: python:2.7
+
+before_script:
+  - git clone --recursive https://github.com/systemslab/popper /tmp/popper
+  - export PATH=$PATH:/tmp/popper/cli/bin
+
+popper:
+  script: popper run {runargs}
+"""
     }
 }
 
@@ -53,7 +66,7 @@ stage ('Popper') {{ node {{
 @click.option(
     '--service',
     help='Name of CI service for which config files get generated.',
-    type=click.Choice(['travis', 'circle', 'jenkins']),
+    type=click.Choice(['travis', 'circle', 'jenkins', 'gitlab']),
     required=True
 )
 @click.option(
@@ -77,9 +90,9 @@ def cli(ctx, service, skip, requirement_level):
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)
 
-    runargs = '--skip={}'.format(skip) if skip else ''
+    runargs = '--skip={} '.format(skip) if skip else ''
 
-    runargs += ' --requirement-level {}'.format(requirement_level)
+    runargs += '--requirement-level {}'.format(requirement_level)
 
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
         ci_file_content = ci_file_content.format(runargs=runargs)
