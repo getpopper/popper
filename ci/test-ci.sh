@@ -14,6 +14,10 @@ test -f .circleci/config.yml
 popper ci --service jenkins
 test -f Jenkinsfile
 
+popper ci --service gitlab
+test -f .gitlab-ci.yml
+
+
 # test skipping
 init_test
 
