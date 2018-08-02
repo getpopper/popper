@@ -136,23 +136,23 @@ init_test
 popper init pipe --stages=stageone
 
 popper require pipe -b docker
-popper require pipe -b virtualenv
+popper require pipe -b git
 
 cat .popper.yml | grep "\- docker"
-cat .popper.yml | grep "\- virtualenv"
+cat .popper.yml | grep "\- git"
 
-# travis has docker and virtualenv, so this should be ok
+# travis has docker and pip, so this should be ok
 popper run pipe
 
 init_test
 
 popper init pipe --stages=stageone
 
-popper require pipe -b docker:+17.03
-popper require pipe -b virtualenv:+15.2.0
+popper require pipe -b docker:+16.03
+popper require pipe -b git:+1.13.2
 
-cat .popper.yml | grep "\- docker:+17.03"
-cat .popper.yml | grep "\- virtualenv:+15.1.0"
+cat .popper.yml | grep "\- docker:+16.03"
+cat .popper.yml | grep "\- git:+1.13.2"
 
 # Travis should have a more recent version of those
 popper run pipe
@@ -163,10 +163,10 @@ init_test
 popper init pipe --stages=stageone
 
 popper require pipe -b docker:+234.03
-popper require pipe -b virtualenv:+513.2.0
+popper require pipe -b git:+513.2.0
 
 cat .popper.yml | grep "\- docker:+234.03"
-cat .popper.yml | grep "\- virtualenv:+513.2.0"
+cat .popper.yml | grep "\- git:+513.2.0"
 
 # Ridiculous versions so it fails on Travis.
 
@@ -184,10 +184,10 @@ init_test
 popper init pipe --stages=stageone
 
 popper require pipe -b docker:18
-popper require pipe -b virtualenv:15.
+popper require pipe -b git:2.
 
 cat .popper.yml | grep "\- docker:18"
-cat .popper.yml | grep "\- virtualenv:15."
+cat .popper.yml | grep "\- git:2."
 
 # This should be okay for a while
 
