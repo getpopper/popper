@@ -19,7 +19,6 @@ popper require mypipetwo -e TEST_VAR_TWO
 cat .popper.yml | grep "\- TEST_VAR_ONE"
 cat .popper.yml | grep "\- TEST_VAR_TWO"
 
-
 unset TEST_VAR_ONE
 export TEST_VAR_TWO=1
 
@@ -130,3 +129,66 @@ popper require mypipeone --clear
 
 popper run mypipeone
 
+# test require --bin
+
+init_test
+
+popper init pipe --stages=stageone
+
+popper require pipe --bin docker
+popper require pipe --bin virtualenv
+
+cat .popper.yml | grep "\- docker"
+cat .popper.yml | grep "\- virtualenv"
+
+# travis has docker and virtualenv, so this should be ok
+popper run pipe
+
+init_test
+
+popper init pipe --stages=stageone
+
+popper require pipe --bin docker:+17.03
+popper require pipe --bin virtualenv:+15.2.0
+
+cat .popper.yml | grep "\- docker:+17.03"
+cat .popper.yml | grep "\- virtualenv:+15.2.0"
+
+# Travis should have a more recent version of those
+popper run pipe
+
+
+init_test
+
+popper init pipe --stages=stageone
+
+popper require pipe --bin docker:+234.03
+popper require pipe --bin virtualenv:+513.2.0
+
+cat .popper.yml | grep "\- docker:+234.03"
+cat .popper.yml | grep "\- virtualenv:+513.2.0"
+
+# Ridiculous versions so it fails on Travis.
+
+# Failure
+set +e
+popper run pipe
+if [ $? -eq 0 ];
+then
+  exit 1
+fi
+set -e
+
+init_test
+
+popper init pipe --stages=stageone
+
+popper require pipe --bin docker:18
+popper require pipe --bin virtualenv:15.
+
+cat .popper.yml | grep "\- docker:18"
+cat .popper.yml | grep "\- virtualenv:15."
+
+# This should be okay for a while
+
+popper run pipe

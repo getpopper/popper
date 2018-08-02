@@ -8,10 +8,12 @@ from popper.cli import pass_context
 @click.argument('pipeline', required=False)
 @click.option('--env', '-e', help='Declare a required environment variable.',
               required=False, multiple=True)
+@click.option('--binary', '--bin', help='Declare a required binary dependency.',
+              required=False, multiple=True)
 @click.option('--clear', help='Clear the current requirement list',
               is_flag=True)
 @pass_context
-def cli(ctx, pipeline, env, clear):
+def cli(ctx, pipeline, env, binary, clear):
     """ Adds pipeline requirements to .popper.yml """
 
     # try to get pipeline from current directory
@@ -34,5 +36,10 @@ def cli(ctx, pipeline, env, clear):
     var_reqs |= set(env)
     var_reqs = list(var_reqs)
     reqs['vars'] = var_reqs
+
+    bin_reqs = set([]) if clear else set(reqs.get('bin', []))
+    bin_reqs |= set(binary)
+    bin_reqs = list(bin_reqs)
+    reqs['bin'] = bin_reqs
 
     pu.update_config(pipeline, reqs=reqs)
