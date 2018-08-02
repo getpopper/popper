@@ -152,7 +152,7 @@ popper require pipe -b docker:+17.03
 popper require pipe -b virtualenv:+15.2.0
 
 cat .popper.yml | grep "\- docker:+17.03"
-cat .popper.yml | grep "\- virtualenv:+15.2.0"
+cat .popper.yml | grep "\- virtualenv:+15.1.0"
 
 # Travis should have a more recent version of those
 popper run pipe
