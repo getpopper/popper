@@ -24,6 +24,7 @@ pipelines:
     - test-metadata
     - test-mv
     - test-ls
+    - test-require
     - test-rm
     - test-run
     - test-search
