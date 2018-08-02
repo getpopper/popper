@@ -54,10 +54,10 @@ or to execute all the pipelines in a project:
 popper run
 ```
 
-Once a pipeline is checked, one can show the logs:
+Once a pipeline is run, one can show the logs:
 
 ```bash
-ls -l pipelines/myexp/popper_logs
+ls -l pipelines/myexp/popper/host
 ```
 
 ## Continously validating a pipeline
@@ -84,7 +84,7 @@ status is `PASS`), the status of one or more validations is `false`.
 
 The 
 [PopperCLI](https://github.com/systemslab/popper/tree/master/popper) 
-tool includes a `check` subcommand that can be executed to test 
+tool includes a `run` subcommand that can be executed to test 
 locally. This subcommand is the same that is executed by the PopperCI 
 service, so the output of its invocation should be, in most cases, the 
 same as the one obtained when PopperCI executes it. This helps in 
@@ -92,31 +92,31 @@ cases where one is testing locally. To execute test locally:
 
 ```bash
 cd my/paper/repo
-popper check myexperiment
+popper run myexperiment
 
-Popper check started
-Running stage setup.sh ....
-Running stage run.sh ................
-Running stage validate.sh .
-Running stage teardown.sh ..
-Popper check finished: SUCCESS
+[####################################] None
+
+status: SUCCESS
 ```
 
-The status of the execution is stored in the `popper_status` file, 
-while `stdout` and `stderr` output for each stage is written to the 
-`popper_logs` folder.
+The status of the execution, as well as the `stdout` and `stderr` output for
+each stage is stored in the `popper/host` directory inside your pipeline. In
+addition to the `host` directory, a new directory will be created for every
+environment you set your pipeline to run on.
 
 ```bash
-tree popper_logs
-popper_logs/
-├── run.sh.out
+popper/host
+├── popper_status
+├── post-run.sh.err
+├── post-run.sh.out
 ├── run.sh.err
-├── setup.sh.out
+├── run.sh.out
 ├── setup.sh.err
-├── teardown.sh.out
+├── setup.sh.out
 ├── teardown.sh.err
-├── validate.sh.out
-└── validate.sh.err
+├── teardown.sh.out
+├── validate.sh.err
+└── validate.sh.out
 ```
 
 These files are added to the 
