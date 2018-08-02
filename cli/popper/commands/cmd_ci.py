@@ -49,11 +49,23 @@ stage ('Popper') {{ node {{
     'gitlab': {
 
         '.gitlab-ci.yml': """
-image: python:2.7
+---
+image: docker:stable
+
+variables:
+  DOCKER_DRIVER: overlay
+
+services:
+- docker:dind
 
 before_script:
-  - git clone --recursive https://github.com/systemslab/popper /tmp/popper
-  - export PATH=$PATH:/tmp/popper/cli/bin
+- docker info
+- apk update
+- apk upgrade
+- apk add python python-dev py-pip build-base git bash
+- pip install virtualenv
+- git clone --recursive https://github.com/systemslab/popper /tmp/popper
+- export PATH=$PATH:/tmp/popper/cli/bin
 
 popper:
   script: popper run {runargs}
