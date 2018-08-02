@@ -13,6 +13,7 @@ import requests
 
 from popper.cli import pass_context
 from subprocess import check_output
+from collections import defaultdict
 
 
 @click.command('run',
@@ -92,6 +93,8 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
     pipelines = {pipe_n: pipe_c for pipe_n, pipe_c in pipelines.items()
                  if check_requirements(pipe_n, pipe_c, requirement_level)}
 
+    pipelines = check_skiplist(pipelines, skip)
+
     for pipe_n, pipe_d in pipelines.items():
         for env in pipe_d.get('envs', ['host']):
             args = [project_root, pipe_n, pipe_d, env, timeout, skip,
@@ -148,6 +151,35 @@ def get_pipelines_to_execute(cwd, pipe_n, project_pipelines):
             pipelines = project_pipelines
 
     return pipelines
+
+
+def check_skiplist(pipelines, skiplist):
+    """
+    Filters a list of pipelines based on a list of pipelines and stages to
+    skip.
+    """
+    if skiplist is None:
+        return pipelines
+    new_pipelist = {}
+    pu.info(skiplist)
+    skiplist = set(skiplist.split(','))
+    # parse stages to skip in the form of pipe:stage
+    stage_skip = defaultdict(set)
+    for item in skiplist:
+        tup = item.split(':')
+        if len(tup) > 1:
+            pipe, stage_n = tup
+            stage_skip[pipe].add(stage_n)
+    # only include pipes and stages that aren't in the skip list
+    for name, pipeline in pipelines.items():
+        if name in skiplist:
+            continue
+        stages = [stage for stage in pipeline['stages']
+                  if stage not in skiplist and stage not in stage_skip[name]]
+        pipeline = dict(pipeline)
+        pipeline['stages'] = stages
+        new_pipelist[name] = pipeline
+    return new_pipelist
 
 
 def update_badge(status):
