@@ -183,10 +183,10 @@ init_test
 
 popper init pipe --stages=stageone
 
-popper require pipe -b docker:17
+popper require pipe -b docker:+17
 popper require pipe -b git:2.
 
-cat .popper.yml | grep "\- docker:17"
+cat .popper.yml | grep "\- docker:+17"
 cat .popper.yml | grep "\- git:2."
 
 # This should be okay for a while
