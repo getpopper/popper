@@ -172,14 +172,15 @@ def check_skiplist(pipelines, skiplist):
     for item in skiplist:
         tup = item.split(':')
         if len(tup) > 1:
-            pipe, stage = tup
-            stage_skip[pipe].add(stage)
+            pipe, stage_n = tup
+            stage_skip[pipe].add(stage_n)
 
     # only include pipes and stages that aren't in the skip list
     for name, pipeline in pipelines.items():
         if name in skiplist:
             continue
-        stages = set(pipeline['stages']) - skiplist - stage_skip[name]
+        stages = [stage for stage in pipeline['stages']
+                  if stage not in skiplist and stage not in stage_skip[name]]
 
         pipeline = dict(pipeline)
         pipeline['stages'] = stages
