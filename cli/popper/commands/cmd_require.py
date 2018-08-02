@@ -8,7 +8,7 @@ from popper.cli import pass_context
 @click.argument('pipeline', required=False)
 @click.option('--env', '-e', help='Declare a required environment variable.',
               required=False, multiple=True)
-@click.option('--binary', '--bin', help='Declare a required binary dependency.',
+@click.option('--binary', '-b', help='Declare a required binary dependency.',
               required=False, multiple=True)
 @click.option('--clear', help='Clear the current requirement list',
               is_flag=True)

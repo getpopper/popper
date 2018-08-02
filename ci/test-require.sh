@@ -129,14 +129,14 @@ popper require mypipeone --clear
 
 popper run mypipeone
 
-# test require --bin
+# test require -b
 
 init_test
 
 popper init pipe --stages=stageone
 
-popper require pipe --bin docker
-popper require pipe --bin virtualenv
+popper require pipe -b docker
+popper require pipe -b virtualenv
 
 cat .popper.yml | grep "\- docker"
 cat .popper.yml | grep "\- virtualenv"
@@ -148,8 +148,8 @@ init_test
 
 popper init pipe --stages=stageone
 
-popper require pipe --bin docker:+17.03
-popper require pipe --bin virtualenv:+15.2.0
+popper require pipe -b docker:+17.03
+popper require pipe -b virtualenv:+15.2.0
 
 cat .popper.yml | grep "\- docker:+17.03"
 cat .popper.yml | grep "\- virtualenv:+15.2.0"
@@ -162,8 +162,8 @@ init_test
 
 popper init pipe --stages=stageone
 
-popper require pipe --bin docker:+234.03
-popper require pipe --bin virtualenv:+513.2.0
+popper require pipe -b docker:+234.03
+popper require pipe -b virtualenv:+513.2.0
 
 cat .popper.yml | grep "\- docker:+234.03"
 cat .popper.yml | grep "\- virtualenv:+513.2.0"
@@ -183,8 +183,8 @@ init_test
 
 popper init pipe --stages=stageone
 
-popper require pipe --bin docker:18
-popper require pipe --bin virtualenv:15.
+popper require pipe -b docker:18
+popper require pipe -b virtualenv:15.
 
 cat .popper.yml | grep "\- docker:18"
 cat .popper.yml | grep "\- virtualenv:15."
