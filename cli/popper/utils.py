@@ -335,3 +335,47 @@ def in_pipeline(name=False):
         return None
     else:
         return False
+
+
+def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
+    """Returns name and path when a new pipeline is added or initialized
+
+    When a new pipeline is added the name and path is decided from the
+    argument provided. When a / is in the name, we treat the string as a path.
+    If <name> is a string without /, then put it in the pipelines/ folder. If
+    it does contains a /, then treat it as a path, where the last component of
+    the path (i.e. the basename of the string) is the name of the pipeline and
+    the preceding substring is the folder.
+
+    Arguments:
+        folder (string) -- Path/name of new pipeline provided as argument to
+            popper init or popper add commands
+
+    Keyword Arguments:
+        pipeline_name (string) -- In case path is None, name of the new
+        pipeline needs to be provided, which is the same as that of the added
+        pipline for popper add. Not applicable for popper init (default: {''})
+
+    Returns:
+        pipeline_name (string) -- New pipeline name
+
+        path (string) -- New pipeline path, relative to the project root
+    """
+    if folder:
+        path, basename = os.path.split(folder)
+        if not basename:  # Only true when trailing slash is present
+            path, basename = os.path.split(path)
+        new_pipeline_name = basename
+
+        if '/' in folder:
+            path = folder
+            if folder[-1] == '/':  # Remove the traoling slash if present
+                path = folder[:-1]
+        else:
+            path = os.path.join('pipelines', basename)
+
+    else:  # If no path is provided, use the original pipeline name
+        path = os.path.join('pipelines', pipeline_name)
+        new_pipeline_name = pipeline_name
+
+    return new_pipeline_name, path
