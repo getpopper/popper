@@ -1,3 +1,6 @@
+
+<img src="docs/figures/popper_logo.png" width="200">
+
 # Popper
 
 [![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper) [![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper) [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
@@ -29,6 +32,8 @@ command line help:
 ```bash
 popper --help
 ```
+
+[![asciicast](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.png)](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8)
 
 For a quickstart guide on how to use the CLI, look [here](http://popper.readthedocs.io/en/latest/protocol/getting_started.html#quickstart-guide).
 
