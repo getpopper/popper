@@ -14,6 +14,27 @@ test -f pipelines/co2-emissions/run.sh
 test -f pipelines/co2-emissions/setup.sh
 test -f pipelines/co2-emissions/validate.sh
 
+init_test
+popper add popperized/swc-lesson-pipelines/co2-emissions foo/emissions
+test -d foo/emissions
+cat .popper.yml | grep 'emissions:'
+cat .popper.yml | grep 'path: foo/emissions'
+test -f foo/emissions/run.sh
+
+init_test
+popper add popperized/swc-lesson-pipelines/co2-emissions foo
+test -d pipelines/foo
+cat .popper.yml | grep 'foo:'
+cat .popper.yml | grep 'path: pipelines/foo'
+test -f pipelines/foo/run.sh
+
+init_test
+popper add popperized/swc-lesson-pipelines/co2-emissions foo/
+test -d foo/
+cat .popper.yml | grep 'foo:'
+cat .popper.yml | grep 'path: foo'
+test -f foo/run.sh
+
 # info command
 popper info popperized/popper-readthedocs-examples/docker-data-science | grep 'url'
 

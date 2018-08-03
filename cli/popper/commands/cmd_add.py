@@ -2,12 +2,12 @@
 
 import click
 import os
-import requests
 import popper.utils as pu
 import shutil
 import yaml
 import tarfile
 from io import BytesIO
+
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
 
@@ -17,12 +17,9 @@ from popper.exceptions import BadArgumentUsage
     short_help='Add a pipeline from popperized repositories on github.'
 )
 @click.argument('pipeline', required=True)
-@click.option(
-    '--folder',
-    help='Folder where the new pipeline will be'
-    'stored, relative to project root.',
-    show_default=True,
-    default='pipelines'
+@click.argument(
+    'folder',
+    required=False
 )
 @click.option(
     '--branch',
@@ -47,21 +44,32 @@ def cli(ctx, pipeline, folder, branch):
 
     owner, repo, pipe_name = pipeline.split('/')
 
+    new_pipe_name, folder = pu.get_name_and_path_for_new_pipeline(
+        folder, pipe_name)
+
     config = pu.read_config()
 
-    if pipe_name in config['pipelines']:
-        pu.fail("Pipeline {} already in repo.".format(pipe_name))
+    if new_pipe_name in config['pipelines']:
+        pu.fail("Pipeline {} already in repo.".format(new_pipe_name))
 
     project_root = pu.get_project_root()
+
     pipelines_dir = os.path.join(project_root, folder)
 
     if not os.path.exists(pipelines_dir):
-        os.mkdir(pipelines_dir)
+        try:
+            os.makedirs(pipelines_dir)
+        except (OSError, IOError) as e:
+            pu.fail("Could not create the necessary path.\n")
+    elif len(os.listdir(pipelines_dir)) != 0:
+        pu.fail("The path already exists and is not empty.")
 
     gh_url = 'https://github.com/{}/{}/'.format(owner, repo)
     gh_url += 'archive/{}.tar.gz'.format(branch)
 
-    pu.info("Downloading pipeline {}... ".format(pipe_name))
+    pu.info(
+        "Downloading pipeline {} as {}...".format(pipe_name, new_pipe_name)
+    )
 
     r = pu.make_gh_request(
         gh_url,
@@ -70,24 +78,34 @@ def cli(ctx, pipeline, folder, branch):
     )
 
     # Downloading and extracting the tarfile
-    with tarfile.open(
-            mode='r:gz', fileobj=BytesIO(r.content)) as t:
+    with tarfile.open(mode='r:gz', fileobj=BytesIO(r.content)) as t:
         t.extractall()
 
-    os.rename('{}-{}/pipelines/{}'.format(
-        repo, branch, pipe_name), os.path.join(folder, pipe_name))
-    shutil.rmtree('{}-{}'.format(repo, branch))
+    try:
+        os.rename('{}-{}/pipelines/{}'.format(
+            repo, branch, pipe_name), pipelines_dir)
+    except OSError:
+        pu.fail(
+            "Could not rename {} to {}.".format(
+                '{}-{}/pipelines/{}'.format(repo, branch, pipe_name),
+                pipelines_dir
+            )
+        )
+    finally:
+        shutil.rmtree('{}-{}'.format(repo, branch))
 
     pu.info("Updating popper configuration... ")
 
     repo_config = get_config(owner, repo)
 
-    config['pipelines'][pipe_name] = repo_config['pipelines'][pipe_name]
-    config['pipelines'][pipe_name]['path'] = os.path.join(folder, pipe_name)
+    config['pipelines'][new_pipe_name] = repo_config['pipelines'][pipe_name]
+    config['pipelines'][new_pipe_name]['path'] = folder
 
     pu.write_config(config)
-    pu.info("Pipeline {} has been added successfully.".format(pipe_name),
-            fg="green")
+    pu.info(
+        "Pipeline {} has been added successfully.".format(new_pipe_name),
+        fg="green"
+    )
 
 
 def get_config(owner, repo):
@@ -105,7 +123,6 @@ def get_config(owner, repo):
     yaml_url = 'https://raw.githubusercontent.com/{}/{}/{}/.popper.yml'.format(
         owner, repo, 'master')
 
-    # r = requests.get(yaml_url)
     r = pu.make_gh_request(yaml_url)
     config = yaml.load(r.content)
 
