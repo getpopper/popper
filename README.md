@@ -1,9 +1,4 @@
-
-
-
-
 <img src="docs/figures/popper_logo.png" width="200">
-
 # 
 
 [![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper) [![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)  [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper) [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
