@@ -15,6 +15,24 @@ done
 test -f pipelines/mypipeone/$output_dir/popper_status
 
 
+# failing run
+init_test
+popper init pipea --stages=fail
+
+echo exit 1 >> pipelines/pipea/fail.sh
+
+if popper run;
+then
+  exit 1
+fi
+
+popper init pipeb
+
+if popper run;
+then
+  exit 1
+fi
+
 # test skipping pipelines
 init_test
 popper init pipeone --stages=one

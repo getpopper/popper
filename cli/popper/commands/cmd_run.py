@@ -95,18 +95,12 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
 
     pipelines = check_skiplist(pipelines, skip)
 
-    for pipe_n, pipe_d in pipelines.items():
-        for env in pipe_d.get('envs', ['host']):
-            args = [project_root, pipe_n, pipe_d, env, timeout, skip,
-                    ignore_errors, output]
-            executions = get_executions_for_pipeline(pipe_d.get('vars'))
-            status = run_pipeline(*args, executions=executions)
-            if status == 'FAIL' and not ignore_errors:
-                break
-
     if not len(pipelines):
         pu.info("No pipelines to execute")
         sys.exit(0)
+
+    status = run_pipelines(pipelines, project_root, timeout, skip,
+                           ignore_errors, output)
 
     os.chdir(cwd)
 
@@ -115,6 +109,20 @@ def cli(ctx, pipeline, timeout, skip, ignore_errors, output,
 
     if status == 'FAIL':
         pu.fail("Failed to execute pipeline")
+
+
+def run_pipelines(pipelines, project_root, timeout, skip,
+                  ignore_errors, output):
+    status = 'SUCCESS'
+    for pipe_n, pipe_d in pipelines.items():
+        for env in pipe_d.get('envs', ['host']):
+            executions = get_executions_for_pipeline(pipe_d.get('vars'))
+            status = run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
+                                  skip, ignore_errors, output,
+                                  executions=executions)
+            if status == 'FAIL' and not ignore_errors:
+                return status
+    return status
 
 
 def get_executions_for_pipeline(env_vars):
