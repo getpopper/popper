@@ -1,4 +1,5 @@
-<img src="docs/figures/popper_logo.png" width="200">
+
+![popper logo](docs/figures/popper_logo.png) <!-- .element width="15%" -->
 
 # 
 
@@ -14,6 +15,12 @@ Popper is a convention and CLI tool for generating reproducible papers. This rep
     convention and the CLI tool.
   * Contents of our [landing page](http://falsifiable.us) ([`gh-pages`](https://github.com/systemslab/popper/tree/gh-pages) branch).
 
+
+#### 5 minute screencast demo of the CLI
+  
+  [![asciicast](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.png)](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8)
+
+
 Quick links to other resources:
 
   * [Slidedeck introducing the convention](https://www.slideshare.net/ivotron/the-popper-experimentation-protocol-and-cli-tool-86987253).
@@ -21,9 +28,6 @@ Quick links to other resources:
   * [Software Carpentry formatted Lesson](https://popperized.github.io/swc-lesson/).
   * [List of repositories that follow the convention](https://github.com/popperized).
 
-#### 5 minute screencast demo of the CLI
-  
-  [![asciicast](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.png)](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8)
 
 ## Installation
 
