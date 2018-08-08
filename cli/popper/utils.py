@@ -111,7 +111,7 @@ def is_popperized():
 
 
 def update_config(name, stages='', envs='', vars=[], reqs={},
-                  relative_path=''):
+                  relative_path='', timeout=None):
     """Updates the configuration for a pipeline."""
 
     config = read_config()
@@ -124,6 +124,8 @@ def update_config(name, stages='', envs='', vars=[], reqs={},
             relative_path = config['pipelines'][name]['path']
         if not reqs:
             reqs = config['pipelines'][name].get('requirements', {})
+        if timeout is None:
+            timeout = config['pipelines'][name].get('timeout')
 
     if name == 'paper':
         stages = 'build'
@@ -135,6 +137,10 @@ def update_config(name, stages='', envs='', vars=[], reqs={},
         'requirements': reqs,
         'path': relative_path,
     }
+
+    if timeout is not None:
+        config['pipelines'][name]['timeout'] = timeout
+
     write_config(config)
 
 
