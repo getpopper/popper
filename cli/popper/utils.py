@@ -379,3 +379,17 @@ def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
         new_pipeline_name = pipeline_name
 
     return new_pipeline_name, path
+
+
+def get_repo_name():
+    """Finds the root folder of a local Github repository and returns it.
+
+    Returns:
+        repo_name (str): the name of the root folder.
+    """
+    repo_name = subprocess.Popen(
+        "basename `git rev-parse --show-toplevel`",
+        shell=True,
+        stdout=subprocess.PIPE).stdout.read()
+
+    return repo_name.decode("utf-8")[:-1]

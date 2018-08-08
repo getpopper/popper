@@ -2,6 +2,7 @@ import click
 import os
 import glob
 import popper.utils as pu
+import popper.template as pt
 from popper.exceptions import BadArgumentUsage
 from popper.cli import pass_context
 from os.path import isfile, isdir, basename
@@ -91,14 +92,14 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
         # new pipeline
         new_name, relative_path = pu.get_name_and_path_for_new_pipeline(name)
         abs_path = os.path.join(project_root, relative_path)
-        initialize_new_pipeline(abs_path, stages)
+        env_list = envs.split(',')
+
+        initialize_new_pipeline(abs_path, stages, env_list)
         name = new_name
 
     pu.update_config(
         name, stages=stages, envs=envs, relative_path=relative_path
     )
-
-    pu.info('Initialized pipeline ' + name, fg='blue', bold=True)
 
 
 def initialize_repo(project_root):
@@ -163,7 +164,7 @@ def initialize_paper(paper_path, envs):
         f.write('# ' + basename(paper_path) + '\n')
 
 
-def initialize_new_pipeline(pipeline_path, stages):
+def initialize_new_pipeline(pipeline_path, stages, envs):
     """This function is used for initalizing a new pipeline."""
 
     # create folders
@@ -183,5 +184,5 @@ def initialize_new_pipeline(pipeline_path, stages):
         os.chmod(os.path.join(pipeline_path, s), 0o755)
 
     # write README
-    with open(os.path.join(pipeline_path, 'README.md'), 'w') as f:
-        f.write('# ' + basename(pipeline_path) + '\n')
+    content = pt.ReadMe()
+    content.init_pipeline(pipeline_path, stages, envs)
