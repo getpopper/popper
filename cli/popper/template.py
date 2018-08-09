@@ -1,23 +1,32 @@
 import os
 from popper import utils
 
-
 class ReadMe:
     def __init__(self):
         self.repo_name = utils.get_repo_name()
+        self.project_root = utils.get_project_root()
 
     def write_readme(self, content, path):
+        """ Creates a README.md file with the specified content
+        at the given path.
+
+        Args:
+            content (str): The contents for the README.md file
+            path (str): The absolute path where the README.md file
+                        is to be created,
+        """
+
         with open(os.path.join(path, 'README.md'), 'w') as f:
             f.write(content)
 
     def init_project(self):
         content = """
-        # <repo-name>
+# {0}
 
 This repository contains [Popper](https://github.com/systemslab/popper) pipelines. To show a list of available pipelines using the [`popper` CLI tool](https://github.com/systemslab/popper):
 
 ```bash
-cd {}
+cd {0}
 popper ls
 ```
 
@@ -34,7 +43,8 @@ popper --help
 ```
 """
         content = content.format(self.repo_name)
-    
+        self.write_readme(content, self.project_root)
+
     def init_pipeline(self, pipeline_path, stages, envs):
         """ Generates a README template for the newly initialized
         pipeline.
@@ -61,10 +71,10 @@ NOTE: replace all the **TODO** marks with your own content.
 **TODO**: insert high-level description of the pipeline. It consists of the following stages:
 """
             for i, stage in enumerate(stages.split(',')):
-                    content += """
+                content += """
 * [`{0}`](./{0}.sh). **TODO**. Add high-level description of stage `{0}`.
 """
-                    content = content.format(stage)
+                content = content.format(stage)
 
         content += """
 

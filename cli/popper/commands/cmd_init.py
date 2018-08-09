@@ -7,6 +7,7 @@ from popper.exceptions import BadArgumentUsage
 from popper.cli import pass_context
 from os.path import isfile, isdir, basename
 
+content = pt.ReadMe()
 
 @click.command('init', short_help='Initialize a Popper project or pipeline.')
 @click.argument('name', required=False)
@@ -129,6 +130,8 @@ def initialize_repo(project_root):
         f.write('.cache\n')
         f.write('popper\n')
 
+    # write README
+    content.init_project()
     pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
 
@@ -184,5 +187,4 @@ def initialize_new_pipeline(pipeline_path, stages, envs):
         os.chmod(os.path.join(pipeline_path, s), 0o755)
 
     # write README
-    content = pt.ReadMe()
     content.init_pipeline(pipeline_path, stages, envs)
