@@ -10,6 +10,31 @@ class ReadMe:
         with open(os.path.join(path, 'README.md'), 'w') as f:
             f.write(content)
 
+    def init_project(self):
+        content = """
+        # <repo-name>
+
+This repository contains [Popper](https://github.com/systemslab/popper) pipelines. To show a list of available pipelines using the [`popper` CLI tool](https://github.com/systemslab/popper):
+
+```bash
+cd {}
+popper ls
+```
+
+to execute one of the pipelines:
+
+```bash
+popper run <pipeline-name>
+```
+
+where `<pipeline-name>` is one of the pipelines in the repository. For more on what other information from this repository is available, you can run:
+
+```bash
+popper --help
+```
+"""
+        content = content.format(self.repo_name)
+    
     def init_pipeline(self, pipeline_path, stages, envs):
         """ Generates a README template for the newly initialized
         pipeline.
