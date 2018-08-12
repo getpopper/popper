@@ -35,3 +35,9 @@ test -f samples/experiment/post-run.sh
 test -f samples/experiment/validate.sh
 test -f samples/experiment/teardown.sh
 
+
+# Set per pipeline timeout values
+init_test
+popper init pipe --timeout 600s
+cat .popper.yml | grep "timeout: 600s"
+

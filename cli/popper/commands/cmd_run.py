@@ -25,10 +25,9 @@ from collections import defaultdict
     help='Timeout limit for pipeline. Use s for seconds, m for minutes and h '
          'for hours. A single integer can also be used to specify timeout '
          'in seconds. Use double quotes if you wish to use more than one unit.'
-         'For example: --timeout "2m 20s" will mean 140 seconds.',
+         'For example: --timeout "2m 20s" will mean 140 seconds. A value of 0'
+         'means no timeout. Defaults to 10800 seconds',
     required=False,
-    show_default=True,
-    default="10800s"
 )
 @click.option(
     '--output',
@@ -468,7 +467,7 @@ def execute(stage, timeout, output_dir, bar=None):
 
         while p.poll() is None:
 
-            if time.time() > time_limit:
+            if timeout != 0.0 and time.time() > time_limit:
                 os.killpg(os.getpgid(p.pid), signal.SIGTERM)
                 sys.stdout.write(' time out!')
                 break
@@ -498,6 +497,8 @@ def execute(stage, timeout, output_dir, bar=None):
 
 def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
                  skip, ignore_errors, output_dir, executions):
+    if timeout is None:
+        timeout = pipe_d.get('timeout', "10800s")
     timeout_parsed = pu.parse_timeout(timeout)
 
     skip_list = skip.split(',') if skip else []

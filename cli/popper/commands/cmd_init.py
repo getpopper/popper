@@ -22,6 +22,13 @@ from os.path import isfile, isdir, basename
     default='host'
 )
 @click.option(
+    '--timeout',
+    help='Sets the default timeout for the execution of a pipeline. Pipelines'
+         'without a set timeout value will default to 10800 seconds of'
+         'timeout.',
+    required=False
+)
+@click.option(
     '--existing',
     help=('Treat NAME as a path and define a pipeline by '
           'creating an entry in .popper.yml for this existing folder.'),
@@ -34,7 +41,7 @@ from os.path import isfile, isdir, basename
     is_flag=True
 )
 @pass_context
-def cli(ctx, name, stages, envs, existing, infer_stages):
+def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
     """Initializes a repository or a pipeline. Without an argument, this
     command initializes a popper repository. If an argument is given, a
     pipeline or paper folder is initialized. If the given name is 'paper',
@@ -95,7 +102,8 @@ def cli(ctx, name, stages, envs, existing, infer_stages):
         name = new_name
 
     pu.update_config(
-        name, stages=stages, envs=envs, relative_path=relative_path
+        name, stages=stages, envs=envs, relative_path=relative_path,
+        timeout=timeout
     )
 
     pu.info('Initialized pipeline ' + name, fg='blue', bold=True)
