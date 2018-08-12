@@ -73,7 +73,7 @@ following command:
 
 `popper env your-popper-pipeline --add debian-9`
 
-###### NOTE: Docker is required in order to run your project on an execution environment different from host
+> **NOTE**: Docker is required in order to run your project on an execution environment different from host
 
 Your `envs:` section should now look like this: 
 
