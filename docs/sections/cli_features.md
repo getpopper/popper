@@ -224,6 +224,14 @@ git clean -dx --dry-run
 git clean -dx --force
 ```
 
+#### Execution timeout
+
+By default, `popper run` will set a timeout on the execution of your
+pipelines. You may modify the timeout using the `--timeout` option,
+in the form of `popper run --timeout 600s`. You can also disable
+the timeout altogether by setting `--timeout` to 0.
+
+
 ### Testing Remotely via a CI service
 
 This is explained [here](./other_resources.html#ci-setup).
