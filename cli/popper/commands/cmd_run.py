@@ -274,12 +274,27 @@ def check_requirements(pipe_n, pipeline, requirement_level):
     if 'requirements' not in pipeline:
         return True
 
-    reqs = pipeline['requirements'].get('vars', [])
-    missing_reqs = [envvar for envvar in reqs if envvar not in os.environ]
+    var_reqs = pipeline['requirements'].get('vars', [])
+    bin_reqs = pipeline['requirements'].get('bin', [])
 
-    if len(missing_reqs):
-        msg = ('Required environment variables for pipeline {} unset: {}'
-               .format(pipe_n, ','.join(missing_reqs)))
+    missing_vars = [envvar for envvar in var_reqs if envvar not in os.environ]
+    missing_binaries = [bin for bin in bin_reqs if not bin_exists(bin)]
+
+    missing_versions = [bin_requirements(bin) for bin in bin_reqs
+                        if bin not in missing_binaries]
+    missing_versions = [msg for msg in missing_versions if msg is not None]
+
+    msg = ""
+    if missing_vars:
+        msg += ('Required environment variables for pipeline {} unset: {}\n'
+                .format(pipe_n, ','.join(missing_vars)))
+    if missing_binaries:
+        msg += ('Required binaries for pipeline {} not available: {}\n'
+                .format(pipe_n, ','.join(missing_binaries)))
+    if missing_versions:
+        msg += ('Requirements for pipeline {} not fulfilled:\n{}\n'
+                .format(pipe_n, '\n'.join(missing_versions)))
+    if msg:
 
         if requirement_level == 'fail':
             pu.fail(msg)
@@ -290,7 +305,42 @@ def check_requirements(pipe_n, pipeline, requirement_level):
             pu.info('Skipping pipeline {}'.format(pipe_n))
 
         return requirement_level == 'ignore'
+
     return True
+
+
+def bin_requirements(bin):
+
+    if ':' not in bin:
+        return None
+
+    binary = re.search('(.+):', bin).group(1) if ':' in bin else bin
+
+    version = str(check_output(binary + " --version", shell=True))
+
+    required_version = re.search('\+?(\d+(?:\.\d+)*)', bin).group(1)
+    version = re.search('(\d+(\.\d+)*\.?)', version).group(1)
+
+    meets_reqs = required_version <= version \
+        if '+' in bin else version.startswith(required_version)
+
+    op = '+' if '+' in bin else ""
+
+    msg = 'Required ' + binary + ' version: ' + op + \
+          required_version + ' - Version found: ' + version
+
+    return msg if not meets_reqs else None
+
+
+def bin_exists(bin):
+    binary = re.search('(.+):', bin).group(1) if ':' in bin else bin
+
+    try:
+        check_output(binary + " --version", shell=True,
+                     stderr=subprocess.STDOUT)
+        return True
+    except subprocess.CalledProcessError:
+        return False
 
 
 def run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
