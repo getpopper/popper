@@ -60,6 +60,96 @@ Once a pipeline is run, one can show the logs:
 ls -l pipelines/myexp/popper/host
 ```
 
+## Reusing existing pipelines
+
+Many times, when starting an experiment, it is useful to be able to use
+existing pipelines as scaffolding for the operations we wish to make. The
+[Popperized](https://github.com/popperized) GitHub organization exists as a
+curated list of existing Popperized experiments and examples, for the purpose
+of both learning and scaffolding new projects. Additionally, the CLI includes
+capabilities easily sift through and import these pipelines.
+
+
+### Searching for existing pipelines
+
+The Popper CLI is capable of searching for premade and template pipelines that
+you can modify for your own uses. You can use the `popper search` command to
+find pipelines using keywords. For example, to search for pipelines that use
+docker you can simply run:
+
+```bash
+$ popper search docker
+[####################################] Searching in popperized | 100%
+
+Search results:
+
+> popperized/popper-readthedocs-examples/docker-data-science
+
+> popperized/swc-lesson-pipelines/docker-data-science
+```
+
+By default, this command will look inside the
+[Popperized](https://github.com/popperized) GitHub organization but you
+can configure it to search the GitHub organization or repository of your choice
+using the `popper search --add <org-or-repo-name>` command. If you've added
+more organizations, you may list them with `popper search --ls`, or remove one
+with `popper search --rm <org-or-repo-name>
+
+Additionally, when searching for a pipeline, you may choose to include the
+contents of the readme in your search if you wish by providing the additional
+`--include` flag to `popper search`.
+
+
+### Importing existing pipelines
+
+Once you have found a pipeline you're interested in importing, you can use
+`popper add` plus the full pipeline name to add the pipeline to the popperized
+project:
+
+```bash
+$ popper add popperized/popper-readthedocs-examples/docker-data-science
+Downloading pipeline docker-data-science as docker-data-science...
+Updating popper configuration...
+Pipeline docker-data-science has been added successfully.
+```
+
+This will download the contents of the repo to your project tree and register
+it in your `.popper.yml` configuration file. If you want to add the pipeline
+inside a different folder, you can also specify that in the `popper add`
+command:
+
+```bash
+$ popper add popperized/popper-readthedocs-examples/docker-data-science docker-pipeline
+Downloading pipeline docker-data-science as docker-pipeline...
+Updating popper configuration...
+Pipeline docker-pipeline has been added successfully.
+
+$ tree
+mypaper
+└── pipelines
+    └── docker-pipeline
+        ├── README.md
+        ├── analyze.sh
+        ├── docker
+        │   ├── Dockerfile
+        │   ├── app.py
+        │   ├── generate_figures.py
+        │   └── requirements.txt
+        ├── generate-figures.sh
+        ├── results
+        │   ├── naive_bayes.png
+        │   ├── naive_bayes_results.csv
+        │   ├── svm_estimator.png
+        │   └── svm_estimator_results.csv
+        └── setup.sh
+
+```
+
+You can also tell `popper add` to instead pull the pipeline from another git
+branch by optionally providing the `--branch <branch-name>` option to the
+command.
+
+
 ## Continously validating a pipeline
 
 The following is the list of steps that are verified when validating
