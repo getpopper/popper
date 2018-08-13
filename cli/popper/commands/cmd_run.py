@@ -514,7 +514,7 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
             status = run_on_host(project_root, pipe_n, pipe_d, skip_list,
                                  timeout_parsed, output_dir)
         elif env != 'host':
-            for idx, arg in enumerate(args):
+            for idx, arg in enumerate(args if args else [""]):
                 if len(args) == 1:
                     idx = ""
                 else:
