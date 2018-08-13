@@ -110,7 +110,7 @@ def is_popperized():
     return os.path.isfile(config_filename)
 
 
-def update_config(name, stages='', envs='', vars=[], reqs={},
+def update_config(name, stages='', envs={}, vars=[], reqs={},
                   relative_path='', timeout=None):
     """Updates the configuration for a pipeline."""
 
@@ -119,7 +119,7 @@ def update_config(name, stages='', envs='', vars=[], reqs={},
         if not stages:
             stages = ','.join(config['pipelines'][name]['stages'])
         if not envs:
-            envs = ','.join(config['pipelines'][name]['envs'])
+            envs = config['pipelines'][name].get('envs', {})
         if not relative_path:
             relative_path = config['pipelines'][name]['path']
         if not reqs:
@@ -132,7 +132,7 @@ def update_config(name, stages='', envs='', vars=[], reqs={},
 
     config['pipelines'][name] = {
         'stages': stages.split(','),
-        'envs': envs.split(','),
+        'envs': envs,
         'vars': vars,
         'requirements': reqs,
         'path': relative_path,

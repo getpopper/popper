@@ -102,7 +102,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
         name = new_name
 
     pu.update_config(
-        name, stages=stages, envs=envs, relative_path=relative_path,
+        name, stages=stages, envs={envs: {'args': []}}, relative_path=relative_path,
         timeout=timeout
     )
 

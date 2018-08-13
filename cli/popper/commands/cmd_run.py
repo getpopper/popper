@@ -116,9 +116,10 @@ def run_pipelines(pipelines, project_root, timeout, skip,
     for pipe_n, pipe_d in pipelines.items():
         for env in pipe_d.get('envs', ['host']):
             executions = get_executions_for_pipeline(pipe_d.get('vars'))
-            status = run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
-                                  skip, ignore_errors, output,
-                                  executions=executions)
+            status = run_pipeline(project_root, pipe_n, pipe_d, env,
+                                  timeout, skip, ignore_errors, output,
+                                  executions=executions,
+                                  args=pipe_d['envs'][env]['args'])
             if status == 'FAIL' and not ignore_errors:
                 return status
     return status
@@ -321,7 +322,7 @@ def bin_requirements(bin):
     if ':' not in bin:
         return None
 
-    binary = re.search('(.+):', bin).group(1) if ':' in bin else bin
+    binary = re.search('(.+):', bin).group(1)
 
     version = str(check_output(binary + " --version", shell=True))
 
@@ -351,11 +352,12 @@ def bin_exists(bin):
 
 
 def run_in_docker(project_root, pipe_n, pipe_d, env, timeout, skip,
-                  ignore_errors, output_dir, env_vars):
+                  ignore_errors, output_dir, env_vars, args):
 
     abs_path = '{}/{}'.format(project_root, pipe_d['path'])
     docker_cmd = 'docker run --rm -v {0}:{0}'.format(project_root)
-    docker_cmd += ' --workdir={}'.format(abs_path)
+    docker_cmd += ' --workdir={} '.format(abs_path)
+    docker_cmd += ' '.join(args)
     docker_cmd += ''.join([' -e {0}="{1}"'.format(k, env_vars[k])
                            for k in env_vars]) if env_vars else ''
 
@@ -496,7 +498,7 @@ def execute(stage, timeout, output_dir, bar=None):
 
 
 def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
-                 skip, ignore_errors, output_dir, executions):
+                 skip, ignore_errors, output_dir, executions, args):
     if timeout is None:
         timeout = pipe_d.get('timeout', "10800s")
     timeout_parsed = pu.parse_timeout(timeout)
@@ -512,12 +514,20 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
             status = run_on_host(project_root, pipe_n, pipe_d, skip_list,
                                  timeout_parsed, output_dir)
         elif env != 'host':
-            status = \
-                run_in_docker(project_root, pipe_n, pipe_d, env,
-                              timeout, skip, ignore_errors, '{}/{}/{}'.
-                              format(output_dir, env.replace('/', '_'),
-                                     number_of_run if env_vars else ""),
-                              env_vars)
+            for idx, arg in enumerate(args):
+                if len(args) == 1:
+                    idx = ""
+                else:
+                    idx = "_" + str(idx)
+                status = \
+                    run_in_docker(project_root, pipe_n, pipe_d, env,
+                                  timeout, skip, ignore_errors, '{}/{}/{}'.
+                                  format(output_dir, env.replace('/', '_'),
+                                         str(number_of_run) + idx
+                                         if env_vars else idx[1:]),
+                                  env_vars, arg)
+                if status == 'FAIL' and not ignore_errors:
+                    break
         else:
             status = \
                 run_on_host(project_root, pipe_n, pipe_d, skip_list,
