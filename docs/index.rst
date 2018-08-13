@@ -30,6 +30,11 @@ experiments.
    sections/cli_features.md
 
 .. toctree::
+   :maxdepth: 2
+
+   sections/ci_features.md
+
+.. toctree::
    :maxdepth: 3
 
    sections/examples.md
