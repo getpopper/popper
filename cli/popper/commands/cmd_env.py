@@ -93,8 +93,11 @@ def cli(ctx, pipeline, add, rm, ls, args):
         elems = rm.split(',')
         if args:
             args = args.split(',')
-            [envs[env]['args'].remove(args)
-             for env in elems if args in envs[env]['args']]
+            for env in elems:
+                if args in envs[env]['args']:
+                    envs[env]['args'].remove(args)
+                else:
+                    pu.warn("Arguments not found in environment {}".format(env))
         else:
             try:
                 [envs.pop(env) for env in elems]

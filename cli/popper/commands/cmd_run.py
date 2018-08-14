@@ -515,17 +515,15 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
                                  timeout_parsed, output_dir)
         elif env != 'host':
             for idx, arg in enumerate(args if args else [""]):
-                if len(args) == 1:
-                    idx = ""
-                else:
-                    idx = "_" + str(idx)
+
+                idx = str(idx) if len(args) > 1 else ""
+                idx = str(number_of_run) + "_" + idx if env_vars else idx
+
                 status = \
                     run_in_docker(project_root, pipe_n, pipe_d, env,
                                   timeout, skip, ignore_errors, '{}/{}/{}'.
                                   format(output_dir, env.replace('/', '_'),
-                                         str(number_of_run) + idx
-                                         if env_vars else idx[1:]),
-                                  env_vars, arg)
+                                         idx), env_vars, arg)
                 if status == 'FAIL' and not ignore_errors:
                     break
         else:
