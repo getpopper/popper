@@ -10,7 +10,7 @@ echo '' > ci/one.sh
 echo '' > ci/two
 echo '' > ci/three
 popper init --existing --stages=one,two,three ci
-cat .popper.yml | grep '\- host'
+cat .popper.yml | grep '\ host'
 cat .popper.yml | grep '\- one'
 cat .popper.yml | grep '\- two'
 cat .popper.yml | grep '\- three'

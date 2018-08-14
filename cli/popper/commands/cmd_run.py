@@ -114,7 +114,11 @@ def run_pipelines(pipelines, project_root, timeout, skip,
                   ignore_errors, output):
     status = 'SUCCESS'
     for pipe_n, pipe_d in pipelines.items():
-        for env in pipe_d.get('envs', ['host']):
+        envs = list(pipe_d.get('envs', ['host']))
+        if 'host' in envs:
+            # Makes sure execution starts with host
+            envs.insert(0, envs.pop(envs.index('host')))
+        for env in envs:
             executions = get_executions_for_pipeline(pipe_d.get('vars'))
             status = run_pipeline(project_root, pipe_n, pipe_d, env,
                                   timeout, skip, ignore_errors, output,
