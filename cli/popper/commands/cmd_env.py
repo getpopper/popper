@@ -97,11 +97,13 @@ def cli(ctx, pipeline, add, rm, ls, args):
                 if args in envs[env]['args']:
                     envs[env]['args'].remove(args)
                 else:
-                    pu.warn("Arguments not found in environment {}".format(env))
+                    pu.warn("Arguments not found in environment {}".
+                            format(env))
         else:
             try:
                 [envs.pop(env) for env in elems]
             except KeyError:
-                pu.warn("Some environments not found in pipeline {} while removing".format(pipeline))
+                pu.warn("Some environments not found in pipeline {} "
+                        "while removing".format(pipeline))
     config['pipelines'][pipeline]['envs'] = envs
     pu.write_config(config)
