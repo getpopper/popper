@@ -74,3 +74,15 @@ popper run
 
 test -f "pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.err"
 test -f "pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.out"
+
+init_test
+
+popper init mypipe --stages=one,two
+popper env mypipe --add alpine-3.4 --args --runtime=runc
+popper env mypipe --add alpine-3.4 --args --runtime=runc,--ipc=host
+
+popper env mypipe | grep 'runtime=runc'
+popper env mypipe | grep 'ipc=host'
+
+popper run
+
