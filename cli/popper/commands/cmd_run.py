@@ -521,7 +521,8 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
             for idx, arg in enumerate(args if args else [""]):
 
                 idx = str(idx) if len(args) > 1 else ""
-                idx = str(number_of_run) + "_" + idx if env_vars else idx
+                conn = "_" if len(args) > 1 else ""
+                idx = str(number_of_run) + conn + idx if env_vars else idx
 
                 status = \
                     run_in_docker(project_root, pipe_n, pipe_d, env,
