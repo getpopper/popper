@@ -393,3 +393,27 @@ def get_repo_name():
         stdout=subprocess.PIPE).stdout.read()
 
     return repo_name.decode("utf-8")[:-1]
+
+
+def get_git_files():
+    """Used to return a list of files that are being tracked by
+    git.
+
+    Returns:
+        files (list) : list of git tracked files
+    """
+
+    proc = subprocess.Popen(
+        "git ls-files",
+        stdout=subprocess.PIPE,
+        shell=True)
+
+    (files, err) = proc.communicate()
+
+    if not err:
+        if not isinstance(files, type("a")):
+            files = files.decode("utf-8")
+
+        files = files.split("\n")[:-1]
+
+    return files

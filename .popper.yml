@@ -26,6 +26,7 @@ pipelines:
     - test-ls
     - test-rm
     - test-run
+    - test-reset
     - test-search
     - test-stages
     - test-workflow
