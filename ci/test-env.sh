@@ -79,10 +79,12 @@ init_test
 
 popper init mypipe --stages=one,two
 popper env mypipe --add alpine-3.4 --args --runtime=runc
+# Adds new set of args to the same environment.
 popper env mypipe --add alpine-3.4 --args --runtime=runc,--ipc=host
 
 popper env mypipe | grep 'runtime=runc'
 popper env mypipe | grep 'ipc=host'
 
 popper run
+
 
