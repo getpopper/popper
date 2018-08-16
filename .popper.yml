@@ -10,6 +10,7 @@ pipelines:
     path: ci
     stages:
     - setup
+    - test-version
     - test-add
     - test-archive
     - test-badge
