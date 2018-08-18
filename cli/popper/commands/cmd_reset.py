@@ -5,7 +5,7 @@ import os
 import sys
 import shutil
 import popper.utils as pu
-
+import popper.template as pt
 from popper.cli import pass_context
 
 
@@ -16,12 +16,15 @@ from popper.cli import pass_context
 def cli(ctx):
     """Resets a popper repository completely, removing all existing
     pipelines and folders, leaving behind a newly created .popper.yml file.
+
+    Note: It only removes those files which are being tracked by git. Untracked files
+    will not be deleted. 
     """
 
     if(not click.confirm("This will remove all the pipeline files in this project,"
         " do you want to continue?", abort=False)):
         sys.exit(0)
-
+    
     git_files = pu.get_git_files()
 
     project_root = pu.get_project_root()
@@ -31,7 +34,10 @@ def cli(ctx):
         try:
             shutil.rmtree(file_path)
         except OSError:
-            os.remove(file_path)
+            try:
+                os.remove(file_path)
+            except OSError:
+                continue
 
     delete_empty_folders(project_root, git_files)
 
@@ -55,6 +61,8 @@ def cli(ctx):
         f.write('popper_logs\n')
         f.write('popper_status\n')
 
+    content = pt.ReadMe()
+    content.init_project()
     pu.info("Reset complete", fg="cyan")
 
 
