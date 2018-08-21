@@ -88,7 +88,6 @@ popper env mypipe --rm alpine-3.4 -arg --runtime=runc -arg --ipc=None
 
 popper env mypipe | grep 'runtime=runc'
 popper env mypipe | grep 'ipc=host'
-popper env mypipe | ! grep 'ipc=None'
 
 popper run
 
