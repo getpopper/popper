@@ -25,12 +25,14 @@ from popper.cli import pass_context
     is_flag=True
 )
 @click.option(
-    '--args',
-    help="Arguments given to Docker through Popper",
-    required=False
+    '--argument',
+    '-arg',
+    help="Argument given to Docker through Popper",
+    required=False,
+    multiple=True
 )
 @pass_context
-def cli(ctx, pipeline, add, rm, ls, args):
+def cli(ctx, pipeline, add, rm, ls, argument):
     """Manipulates the environments that are associated to a pipeline. An
     environment is a docker image where a pipeline runs when 'popper run' is
     executed. The 'host' environment is a special case that corresponds to
@@ -46,6 +48,19 @@ def cli(ctx, pipeline, add, rm, ls, args):
       popper env mypipeline --add ubuntu-xenial,centos-7.2
 
       popper env mypipeline --rm host
+
+    :argument Used to pass an argument to Docker through popper.
+    Can be given multiple times (Ignored for 'host').
+
+    An example of usage is as follows:
+
+    popper env mypipeline --add debian-9 -arg --runtime=runc -arg --ipc=host
+
+    This will add to the environment 'debian-9' the set of arguments runtime=runc and ipc=host.
+    If you need to test for multiple sets of arguments for the same environment just execute the
+    same command with your new set of arguments.
+
+    popper env mypipeline --add debian-9 -arg --runtime=nvidia
     """
     config = pu.read_config()
 
@@ -82,17 +97,15 @@ def cli(ctx, pipeline, add, rm, ls, args):
 
     envs = config['pipelines'][pipeline]['envs']
 
+    args = list(argument)
     if add:
         elems = add.split(',')
         environments = set(elems) - set(envs)
         envs.update({env: {'args': []} for env in environments})
-        if args:
-            for env in elems:
-                envs[env]['args'].append(args.split(','))
+        [envs[env]['args'].append(args) for env in elems if args]
     if rm:
         elems = rm.split(',')
         if args:
-            args = args.split(',')
             for env in elems:
                 if args in envs[env]['args']:
                     envs[env]['args'].remove(args)

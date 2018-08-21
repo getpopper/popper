@@ -78,12 +78,17 @@ test -f "pipelines/mypipe/popper/user_img-with-popper-inside:alpine-3.4/one.sh.o
 init_test
 
 popper init mypipe --stages=one,two
-popper env mypipe --add alpine-3.4 --args --runtime=runc
+popper env mypipe --add alpine-3.4 -arg --runtime=runc
 # Adds new set of args to the same environment.
-popper env mypipe --add alpine-3.4 --args --runtime=runc,--ipc=host
+popper env mypipe --add alpine-3.4 -arg --runtime=runc -arg --ipc=host
+popper env mypipe --add alpine-3.4 -arg --runtime=runc -arg --ipc=None
+
+#Remove set of arguments
+popper env mypipe --rm alpine-3.4 -arg --runtime=runc -arg --ipc=None
 
 popper env mypipe | grep 'runtime=runc'
 popper env mypipe | grep 'ipc=host'
+popper env mypipe | ! grep 'ipc=None'
 
 popper run
 
