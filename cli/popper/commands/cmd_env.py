@@ -56,9 +56,10 @@ def cli(ctx, pipeline, add, rm, ls, argument):
 
     popper env mypipeline --add debian-9 -arg --runtime=runc -arg --ipc=host
 
-    This will add to the environment 'debian-9' the set of arguments runtime=runc and ipc=host.
-    If you need to test for multiple sets of arguments for the same environment just execute the
-    same command with your new set of arguments.
+    This will add to the environment 'debian-9' the set of
+    arguments runtime=runc and ipc=host. If you need to test for multiple sets
+    of arguments for the same environment just execute the same command with
+    your new set of arguments.
 
     popper env mypipeline --add debian-9 -arg --runtime=nvidia
     """
