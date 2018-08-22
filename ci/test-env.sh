@@ -81,10 +81,10 @@ popper init mypipe --stages=one,two
 popper env mypipe --add alpine-3.4 -arg --runtime=runc
 # Adds new set of args to the same environment.
 popper env mypipe --add alpine-3.4 -arg --runtime=runc -arg --ipc=host
-popper env mypipe --add alpine-3.4 -arg --runtime=runc -arg --ipc=None
 
-#Remove set of arguments
-popper env mypipe --rm alpine-3.4 -arg --runtime=runc -arg --ipc=None
+popper env mypipe --add alpine-3.4 -arg --ipc=None
+# Remove argument
+popper env mypipe --rm alpine-3.4 -arg --ipc=None
 
 popper env mypipe | grep 'runtime=runc'
 popper env mypipe | grep 'ipc=host'

@@ -518,19 +518,12 @@ def run_pipeline(project_root, pipe_n, pipe_d, env, timeout,
             status = run_on_host(project_root, pipe_n, pipe_d, skip_list,
                                  timeout_parsed, output_dir)
         elif env != 'host':
-            for idx, arg in enumerate(args if args else [""]):
-
-                idx = str(idx) if len(args) > 1 else ""
-                conn = "_" if len(args) > 1 else ""
-                idx = str(number_of_run) + conn + idx if env_vars else idx
-
-                status = \
-                    run_in_docker(project_root, pipe_n, pipe_d, env,
-                                  timeout, skip, ignore_errors, '{}/{}/{}'.
-                                  format(output_dir, env.replace('/', '_'),
-                                         idx), env_vars, arg)
-                if status == 'FAIL' and not ignore_errors:
-                    break
+            status = \
+                run_in_docker(project_root, pipe_n, pipe_d, env,
+                              timeout, skip, ignore_errors, '{}/{}/{}'.
+                              format(output_dir, env.replace('/', '_'),
+                                     number_of_run if env_vars else ""),
+                              env_vars, args)
         else:
             status = \
                 run_on_host(project_root, pipe_n, pipe_d, skip_list,
