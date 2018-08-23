@@ -23,6 +23,9 @@ On The Popper Convention:
     Robert Ricci. _PopperCI: Automated Reproducibility Validation_, 
     2017 IEEE INFOCOM CNERT Workshop \[[pdf][cnertpdf]\] 
     \[[github][cnertgh]\].
+  * Michael A. Sevilla and Carlos Maltzahn. _Popper Pitfalls: Experiences
+    Following a Reproducibility Convention_, P-RECS 2018. \[[pdf][precs18pdf]\] 
+    \[[github][precs18gh]\].
 
 Articles following the convention:
 
@@ -64,10 +67,12 @@ Articles following the convention:
 [cnertgh]: https://github.com/systemslab/popperci-paper
 [repparpdf]: https://github.com/systemslab/popper-paper/raw/master/paper/paper.pdf
 [reppargh]: https://github.com/systemslab/popper-paper
-[repparbib]: https://scholar.googleusercontent.com/scholar.bib?q=info:ybMbxWy8G5AJ:scholar.google.com/&output=citation&scisig=AAGBfm0AAAAAW14p2clPVP5OPbBVgQ3OWT7yfbaoR3Mo&scisf=4&ct=citation&cd=-1&hl=en
+[repparbib]: {{ site.baseurl }}/pubs/bibtex/popper.bib
 [icpe18pdf]: https://github.com/ivotron/quiho-popper/raw/master/paper/paper.pdf
 [icpe18gh]: https://github.com/ivotron/quiho-popper
 [cudelepdf]: https://github.com/michaelsevilla/cudele-popper/raw/master/paper/paper.pdf
 [cudelegh]: https://github.com/michaelsevilla/cudele-popper
 [ccgrid18pdf]: https://github.com/michaelsevilla/parsplice-ml-popper/raw/master/paper/paper.pdf
 [ccgrid18gh]: https://github.com/michaelsevilla/parsplice-ml-popper
+[precs18pdf]: https://github.com/michaelsevilla/popper-popper/raw/master/paper/sevilla_popper_cameraready_v5.pdf
+[precs18gh]: https://github.com/michaelsevilla/popper-popper

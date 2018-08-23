@@ -57,6 +57,8 @@ Evaluation Practical_. In 2017 IEEE International Parallel and
 Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017. 
 https://doi.org/10.1109/IPDPSW.2017.157.
 
+For BibTeX, click [here]({{ site.baseurl }}/pubs/bibtex/popper.bib).
+
 [popperized]: https://github.com/popperized
 [quick-start]: http://popper.readthedocs.io/en/latest/protocol/getting_started.html
 [docs]: http://popper.readthedocs.io/en/latest/
@@ -64,5 +66,5 @@ https://doi.org/10.1109/IPDPSW.2017.157.
 [from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
 [ci]: http://popper.readthedocs.io/en/latest/ci/popperci.html
 [cli]: https://github.com/systemslab/popper/
-[pubs]: {{ site.baseurl }}/pubs
-[blog]: {{ site.baseurl }}/blog
+[pubs]: {{ site.baseurl }}/pubs/index
+[blog]: https://medium.com/getpopper
