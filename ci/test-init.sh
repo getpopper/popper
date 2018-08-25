@@ -16,8 +16,8 @@ then
 fi
 set -e
 
-cat .popper.yml | grep '\- host'
-cat .popper.yml | grep '\- ubuntu-xenial'
+cat .popper.yml | grep '\ host'
+cat .popper.yml | grep '\ ubuntu-xenial'
 cat .popper.yml | grep '\- one'
 cat .popper.yml | grep '\- two'
 cat .popper.yml | grep '\- three'

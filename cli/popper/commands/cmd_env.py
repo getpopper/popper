@@ -24,8 +24,15 @@ from popper.cli import pass_context
     help="Show a list of available execution environments",
     is_flag=True
 )
+@click.option(
+    '--argument',
+    '-arg',
+    help="Argument given to Docker through Popper",
+    required=False,
+    multiple=True
+)
 @pass_context
-def cli(ctx, pipeline, add, rm, ls):
+def cli(ctx, pipeline, add, rm, ls, argument):
     """Manipulates the environments that are associated to a pipeline. An
     environment is a docker image where a pipeline runs when 'popper run' is
     executed. The 'host' environment is a special case that corresponds to
@@ -41,6 +48,16 @@ def cli(ctx, pipeline, add, rm, ls):
       popper env mypipeline --add ubuntu-xenial,centos-7.2
 
       popper env mypipeline --rm host
+
+    :argument Used to pass an argument to Docker through popper.
+    Can be given multiple times (Ignored for 'host').
+
+    An example of usage is as follows:
+
+    popper env mypipeline --add debian-9 -arg --runtime=runc -arg --ipc=host
+
+    This will add to the environment 'debian-9' the set of
+    arguments runtime=runc and ipc=host.
     """
     config = pu.read_config()
 
@@ -75,11 +92,22 @@ def cli(ctx, pipeline, add, rm, ls):
         pu.print_yaml(config['pipelines'][pipeline]['envs'], fg='yellow')
         sys.exit(0)
 
+    envs = config['pipelines'][pipeline]['envs']
+    args = set(argument)
+
     if add:
-        config['pipelines'][pipeline]['envs'] += add.split(',')
+        elems = add.split(',')
+        environments = set(elems) - set(envs)
+        envs.update({env: {'args': []} for env in environments})
+        for env in elems:
+            envs[env]['args'] = args
 
     if rm:
-        for e in rm.split(','):
-            config['pipelines'][pipeline]['envs'].remove(e)
+        for env in rm.split(','):
+            if env in envs:
+                envs.pop(env)
+            else:
+                pu.warn('Environment {} not found in {}'.format(env, pipeline))
 
+    config['pipelines'][pipeline]['envs'] = envs
     pu.write_config(config)
