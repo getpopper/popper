@@ -57,11 +57,7 @@ def cli(ctx, pipeline, add, rm, ls, argument):
     popper env mypipeline --add debian-9 -arg --runtime=runc -arg --ipc=host
 
     This will add to the environment 'debian-9' the set of
-    arguments runtime=runc and ipc=host. If you need to test for multiple sets
-    of arguments for the same environment just execute the same command with
-    your new set of arguments.
-
-    popper env mypipeline --add debian-9 -arg --runtime=nvidia
+    arguments runtime=runc and ipc=host.
     """
     config = pu.read_config()
 
@@ -98,24 +94,20 @@ def cli(ctx, pipeline, add, rm, ls, argument):
 
     envs = config['pipelines'][pipeline]['envs']
     args = set(argument)
+
     if add:
         elems = add.split(',')
         environments = set(elems) - set(envs)
         envs.update({env: {'args': []} for env in environments})
         for env in elems:
-            envs[env]['args'] = list(set(envs[env]['args']) | args)
+            envs[env]['args'] = args
+
     if rm:
-        elems = rm.split(',')
-        if args:
-            for env in elems:
-                envs[env]['args'] = list(set(envs[env]['args']) -
-                                         args)
-        else:
-            for env in elems:
-                if env in envs:
-                    envs.pop(env)
-                else:
-                    pu.warn('Environment {} not found in {}'.format(env, pipeline))
+        for env in rm.split(','):
+            if env in envs:
+                envs.pop(env)
+            else:
+                pu.warn('Environment {} not found in {}'.format(env, pipeline))
 
     config['pipelines'][pipeline]['envs'] = envs
     pu.write_config(config)
