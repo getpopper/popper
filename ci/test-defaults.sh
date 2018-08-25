@@ -16,7 +16,7 @@ cat .popper.yml | grep 'path: paper'
 test -f paper/build.sh
 
 popper init pipeone
-cat .popper.yml | grep '\- host'
+cat .popper.yml | grep '\ host'
 cat .popper.yml | grep 'path: pipelines/pipeone'
 test -f pipelines/pipeone/setup.sh
 test -f pipelines/pipeone/run.sh

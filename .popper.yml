@@ -6,7 +6,8 @@ metadata:
 pipelines:
   run-tests:
     envs:
-    - host
+      host:
+        args: []
     path: ci
     stages:
     - setup
