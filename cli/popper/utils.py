@@ -257,14 +257,33 @@ def make_gh_request(url, err=True, msg=None):
         Response object: contains a server's response to an HTTP request.
     """
     if not msg:
-        msg = "Unable to connect. Please check your network"
-        "and try again."
+        msg = (
+            "Unable to connect. If your network is working properly, you might"
+            " have reached Github's API request limit. Try adding a Github API"
+            " token to the 'POPPER_GITHUB_API_TOKEN' variable."
+        )
 
     response = requests.get(url, headers=get_gh_headers())
     if err and response.status_code != 200:
         fail(msg)
     else:
         return response
+
+
+def read_config_remote(org, repo, branch='master'):
+    url = "https://raw.githubusercontent.com/{}/{}/{}/.popper.yml".format(
+        org, repo, branch
+    )
+    r = make_gh_request(url, err=False)
+    if r.status_code != 200:
+        return None
+    return yaml.load(r.content.decode("utf-8"))
+
+
+def repos_in_org(org):
+    r = make_gh_request('https://api.github.com/users/{}/repos'.format(org))
+    for repo in r.json():
+        yield repo['name']
 
 
 def read_gh_pipeline(uname, repo, pipeline, branch="master"):

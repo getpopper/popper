@@ -136,7 +136,7 @@ def initialize_repo(project_root):
     pu.write_config(config)
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
-        f.write('.cache\n')
+        f.write('.pipeline_cache\n')
         f.write('popper\n')
 
     pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
