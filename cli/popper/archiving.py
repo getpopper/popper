@@ -23,6 +23,7 @@ class BaseService(object):
     baseurl = ''
     params = None
     deposition = None
+    ignore_untracked = False
 
     def __init__(self):
         """The __init__ method of the base class is responsible for checking
@@ -107,39 +108,59 @@ class BaseService(object):
             "This method is required to be implemented in the base class."
         )
 
-    def publish_snapshot(self):
+    def upload_snapshot(self, ignore_untracked):
         """This method creates a new record if there no previously uploaded
         record exists, or creates a new version if it does. The files and
-        metadata are updated and it is published. The doi is stored in the
-        .popper.yml file.
+        metadata are updated.
+        """
+        raise NotImplementedError(
+            "This method is required to be implemented in the base class."
+        )
+
+    def publish_snapshot(self):
+        """This method publishes an archive and obtains a DOI for it by using
+        the underlying service. The DOI is stored in the .popper.yml file.
         """
         raise NotImplementedError(
             "This method is required to be implemented in the base class."
         )
 
     def create_archive(self):
-        """Creates an archive of the entire repsitory
-        using the git archive command.
+        """Creates an archive of the entire project folder using gzip or zip.
 
         Returns:
             Name of the archive file.
         """
+        cwd = os.getcwd()
         project_root = pu.get_project_root()
         project_name = os.path.basename(project_root)
         os.chdir(project_root)
+
         archive_file = project_name + '.tar.gz'
         command = 'git archive master | gzip > ' + archive_file
         subprocess.call(command, shell=True)
+
+        if not self.ignore_untracked:
+            command = (
+                'git ls-files --others --exclude-standard -z | '
+                'xargs -0 tar rvfz ' + archive_file
+            )
+            subprocess.call(command, shell=True)
+
+        os.chdir(cwd)
+
         return archive_file
 
     def delete_archive(self):
         """Deletes the created archive from the filesystem.
         """
+        cwd = os.getcwd()
         project_root = pu.get_project_root()
         archive_file = os.path.basename(project_root) + '.tar.gz'
         os.chdir(project_root)
         command = 'rm ' + archive_file
         subprocess.call(command, shell=True)
+        os.chdir(cwd)
 
 
 class Zenodo(BaseService):
@@ -361,7 +382,7 @@ class Zenodo(BaseService):
                 .format(r.status_code)
             )
 
-    def publish_snapshot(self):
+    def upload_snapshot(self, ignore_untracked):
         if self.deposition is None:
             self.create_new_deposition()
             self.update_metadata_from_yaml()
@@ -373,6 +394,7 @@ class Zenodo(BaseService):
 
         self.upload_new_file()
 
+    def publish_snapshot(self):
         r = requests.get(self.baseurl, params=self.params)
         config = pu.read_config()
         try:
@@ -619,7 +641,7 @@ class Figshare(BaseService):
                 "try again later.".format(r.status_code)
             )
 
-    def publish_snapshot(self):
+    def upload_snapshot(self):
         if self.deposition is None:
             self.create_new_deposition()
         else:
@@ -629,6 +651,8 @@ class Figshare(BaseService):
 
         self.upload_new_file()
         self.update_metadata()
+
+    def publish_snapshot(self):
 
         url = '{}/{}/publish'.format(
             self.baseurl, self.deposition['id']

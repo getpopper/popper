@@ -15,7 +15,7 @@ except NameError:
 
 @click.command(
     'search',
-    short_help='Search for pipelines matching one or more keywords.')
+    short_help='Search for pipelines on Github matching one or more keywords.')
 @click.argument('keywords', required=False)
 @click.option(
     '--skip-update',
@@ -42,7 +42,7 @@ except NameError:
 )
 @pass_context
 def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
-    """Searches for pipelines on GitHub matching the given keyword(s).
+    """Searches for pipelines on Github matching the given keyword(s).
 
     The list of repositories or organizations scraped for Popper pipelines is
     specified in the 'popperized' list in the .popper.yml file. By default,
@@ -50,6 +50,12 @@ def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
 
     If no keywords are specified, a list of all the pipelines from all
     organizations (in the .popper.yml file) and repositories will be returned.
+
+    This commands makes use of Github's API, which has a limit on the number of
+    requests per hour that an unauthenticated user can make. If you reach this
+    limit, you can provide a Github API token via a POPPER_GITHUB_API_TOKEN
+    environment variable. If defined, this variable is used to obtain the token
+    when executing HTTP requests.
 
     Example:
 

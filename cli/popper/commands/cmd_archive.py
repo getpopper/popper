@@ -10,11 +10,24 @@ from popper.archiving import Zenodo, Figshare
 from popper.cli import pass_context
 
 
-@click.command('archive', short_help='Create a snapshot of the repository.')
+@click.command('archive',
+               short_help='Archive and publish a snapshot of the repository.')
 @click.option(
     '--service',
     help='Name of the archiving service.',
     required=True,
+)
+@click.option(
+    '--publish',
+    help='Publish the archive and obtain a DOI.',
+    default=False,
+    is_flag=True,
+)
+@click.option(
+    '--ignore-untracked',
+    help='Ignore files not tracked by Git.',
+    default=False,
+    is_flag=True,
 )
 @click.option(
     '--key',
@@ -22,10 +35,27 @@ from popper.cli import pass_context
     required=False,
 )
 @pass_context
-def cli(ctx, service, key):
-    """Creates a archive of the repository on the provided service using an
-    access token. Reports an error if archive creation is not successful.
-    Currently supported services are Zenodo and Figshare.
+def cli(ctx, service, publish, ignore_untracked, key):
+    """Creates and uploads a snapshot of the project to an archival
+    service (currently supports Zenodo and Figshare). This command relies on
+    having an account on the underlying service, as well as providing an API
+    token. See http://bit.ly/popper-docs-arx-doi for instructions on how to
+    generate tokens.
+
+    When this command executes, a terminal prompt is shown so you can provide
+    the token for the underlying service. Alternatively, this command looks for
+    a POPPER_<SERVICE>_API_TOKEN environment variable (where <SERVICE> is the
+    name of the service, e.g. POPPER_ZENODO_API_TOKEN) and, if found, it uses
+    it to authenticate without prompting the user for the token.
+
+    All files contained in the project folder are included in the snapshot. The
+    --ignore-untracked causes the command to include only files that are
+    tracked by Git.
+
+    By default, the command only uploads a snapshot of the current folder. If
+    the --publish flag is given, in addition to uploading the snapshot, the
+    archive is published and a DOI is obtained from the underlying service. The
+    DOI as well as the URL to the archive on the service web site are printed.
     """
     services = {
         'zenodo': Zenodo,
@@ -47,7 +77,12 @@ def cli(ctx, service, key):
             key = get_access_token(service)
 
     archive = services[service](key)
-    archive.publish_snapshot()
+
+    archive.ignore_untracked = ignore_untracked
+    archive.upload_snapshot()
+
+    if publish:
+        archive.publish_snapshot()
 
     pu.info("Done..!")
 
