@@ -16,21 +16,21 @@ executed in the order specified by the `--stages` flag of the `init`
 command; the `stages` command; or by manually editing the 
 `.popper.yml` file.
 
-The following is the list of high-level tasks that are executed when 
-running an pipeline:
+The following is the list of high-level tasks that are executed when a 
+pipeline is executed:
 
- 1. If specified, check for environmental requirements. See 
+ 1. If specified, environmental requirements are checked. See 
     [here](cli_features.html#specifying-environment-requirements) for 
     more.
 
- 2. For every pipeline, trigger an execution by sequentially invoking
-    all the scripts for all the defined stages of the pipeline.
+ 2. For every pipeline, sequentially invoke all the scripts for all 
+    the defined stages of the pipeline.
 
  3. After the pipeline finishes, if a `validate.sh` script is defined, 
-    parse its output. This script should print to standard output one 
-    line per validation, denoting whether a validation passed or not. 
-    In general, the form for validation results is `[true|false] 
-    <statement>`, for example:
+    its output gets parsed. The `validate.sh` script should print to 
+    standard output one line per validation, denoting whether a 
+    validation passed or not. In general, the form for validation 
+    results is `[true|false] <statement>`, for example:
 
     ```
     [true]  algorithm A outperforms B
@@ -182,26 +182,26 @@ A Docker environment image is instantiated with the following command:
 docker run --rm \
   --volume /path/to/project:/path/to/project \
   --workdir /path/to/project/path/to/pipeline \
-  <environment-image>
+  <popper-docker-image> \
     popper run <flags> <arg>
 ```
 
-That is, the project folder is shared with the container, and the 
-working directory is the pipeline folder. To specify other flags to 
+Where `<popper-docker-image>` is an image with Popper available inside 
+of it. The project folder is shared with the container and the 
+pipeline folder is the working directory. To specify other flags to 
 the `docker run` command, the `--argument` flag of the `env` command 
 can be used. For usage, type `popper env --help`.
 
 ## Parametrizing pipelines
 
 A pipeline can be parametrized so that it can be executed multiple 
-times, taking distinct parameters each time. Parameters are specified 
-with the `parameters` subcommand. Parameters of a pipeline are given 
-in the form of environment variables. For example, if a pipeline takes 
-parameters `par1` and `par2`, the following can specify these, along 
-with the respective values that each parameter takes:
+times, taking a distinct set of parameters each time. Parameters are 
+specified with the `parameters` subcommand and are given in the form 
+of environment variables. For example, if a pipeline takes parameters 
+`par1` and `par2`, the following can specify these:
 
 ```
-popper parameters my-pipe --add par1=val1 --add par2=val2
+popper parameters my-pipe --add 'par1=val1 par2=val2'
 ```
 
 This will cause the `.popper.yml` to look like the following:
@@ -218,12 +218,12 @@ pipelines:
     - { par1: val1, par2: val2 }
 ```
 
-Each parameterization results in a dictionary of key-value pairs, 
+Each new set of parameters results in a dictionary of key-value pairs, 
 where each item in the dictionary is an environment variable. A 
 subsequent set of parameters can be added:
 
 ```
-popper parameters my-pipe --add par1=val3 --add par2=val4
+popper parameters my-pipe --add 'par1=val3 par2=val4'
 ```
 
 Which will result in the following:
@@ -243,11 +243,11 @@ pipelines:
       par2: val4
 ```
 
-Thus, the above results in executing this same pipeline two times, 
-defining environment variables `par1` and `par2`, with these 2 sets of 
-values. We refer to each execution in a parametrized pipeline as a 
-_Job_. In this example we will have 2 jobs every time the pipeline 
-runs.
+The above results in executing this same pipeline two times, defining 
+environment variables `par1` and `par2`, with these 2 sets of values, 
+every time it runs. We refer to each execution in a parametrized 
+pipeline as a _Job_. In this example we will have 2 jobs every time 
+the pipeline runs.
 
 When a parametrized pipeline is executed, a subfolder for each job is 
 created. For example, the 2-job pipeline specified above results in 
@@ -271,8 +271,10 @@ pipelines/your-popper-pipeline/popper
         └── two.sh.out
 ```
 
-Subfolders are numbered, were each id corresponds to the position in 
-the `parameters` list.
+Subfolders are numbered (starting from 0), where each ID corresponds 
+to the position of the set of parameters in the `parameters` list. So 
+the run 0 above corresponds to `par1=val1,par2=val2` and 1 to 
+`par1=val3,par2=val4`.
 
 ## Matrix Executions
 
@@ -284,6 +286,7 @@ pipelines:
   my-pipe:
     envs:
     - host
+    - debian-9
     stages:
     - one
     - two
@@ -294,7 +297,8 @@ pipelines:
       par2: val4
 ```
 
-results in the following folder structure:
+Results in the following folder structure for the `popper/` logs 
+folder:
 
 ```bash
 $ tree pipelines/your-popper-pipeline/popper
