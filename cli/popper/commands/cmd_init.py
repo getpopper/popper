@@ -127,10 +127,11 @@ def initialize_repo(project_root):
             'publication_type': "article"
         },
         'pipelines': {},
-        'popperized': [
-            "github/popperized"
+        'search_sources': [
+            "popperized"
         ],
         'badge-server-url': 'http://badges.falsifiable.us',
+        'version': 2,
     }
 
     pu.write_config(config)

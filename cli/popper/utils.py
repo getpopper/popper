@@ -5,6 +5,8 @@ import yaml
 import requests
 import subprocess
 
+from collections import defaultdict
+
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
 
@@ -29,6 +31,83 @@ def get_path_to_config():
         return os.getcwd()
 
     return ""
+
+
+def get_search_sources(config):
+    if 'search_sources' not in config and 'popperized' not in config:
+        return []
+    if 'search_sources' in config:
+        return config['search_sources']
+    if 'popperized' in config:
+        return config['popperized']
+
+
+def fetch_pipeline_metadata(skip_update=False):
+    meta = defaultdict(dict)
+    repos = []
+
+    project_root = get_project_root()
+    cache_file = os.path.join(project_root, '.pipeline_cache.yml')
+
+    if not skip_update:
+        config = read_config()
+
+        sources = get_search_sources(config)
+
+        info('Updating pipeline metadata cache\n')
+
+        for s in sources:
+            if '/' in s:
+                repos.append(s)
+            else:
+                for repo in repos_in_org(s):
+                    repos.append(s+'/'+repo)
+
+        with click.progressbar(
+                repos,
+                show_eta=False,
+                bar_template='[%(bar)s] %(info)s | %(label)s',
+                show_percent=True) as bar:
+            for r in bar:
+                bar.label = "Fetching pipeline metadata from '{}'".format(r)
+                fetch_metadata_for_repo(r, meta)
+
+        with open(cache_file, 'w') as f:
+            yaml.dump(dict(meta), f)
+    else:
+        if not os.path.isfile(cache_file):
+            fail("Metadata cache doesn't exist. Ommit '--skip-update'?")
+
+        with open(cache_file, 'r') as f:
+            meta = yaml.load(f)
+
+    return meta
+
+
+def fetch_metadata_for_repo(orgrepo, meta):
+    org, repo = orgrepo.split('/')
+    config = read_config_remote(org, repo)
+
+    if not config or 'pipelines' not in config:
+        return
+
+    meta[org][repo] = config
+
+    fetch_readmes(meta, org, repo)
+
+
+def fetch_readmes(meta, org, repo):
+    pipelines = meta[org][repo]['pipelines']
+    for name, pipe in pipelines.items():
+        url = "https://raw.githubusercontent.com/{}/{}/{}/{}/README.md".format(
+            org, repo, 'master', pipe['path']
+        )
+        r = make_gh_request(url, err=False)
+
+        readme = ''
+        if r.status_code == 200:
+            readme = r.content.decode("utf-8")
+        pipe['readme'] = readme
 
 
 def get_project_root():
@@ -298,33 +377,6 @@ def repos_in_org(org):
     r = make_gh_request('https://api.github.com/users/{}/repos'.format(org))
     for repo in r.json():
         yield repo['name']
-
-
-def read_gh_pipeline(uname, repo, pipeline, branch="master"):
-    """Reads the README.md file of a pipeline and returns its
-    contents.
-
-    Args:
-        uname (str): User/org_name
-        repo (str): Name of the repository
-        pipeline (str): Name of the pipeline
-        branch (str): Name of the branch
-
-    Returns:
-        contents (list): the contents of the README.md file
-    """
-    url = "https://raw.githubusercontent.com"
-    url += "/{}/{}/{}".format(uname, repo, branch)
-    url += "/pipelines/{}/README.md".format(pipeline)
-
-    contents = ""
-    r = make_gh_request(url, err=False)
-    if r.status_code != 200:
-        pass
-    else:
-        contents = r.content.decode("utf-8").split("\n")
-
-    return contents
 
 
 def get_head_commit():

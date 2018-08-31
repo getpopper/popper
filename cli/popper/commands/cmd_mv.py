@@ -5,7 +5,7 @@ import popper.utils as pu
 from popper.cli import pass_context
 
 
-@click.command('mv', short_help='Used to rename or move a pipeline.')
+@click.command('mv', short_help='Rename or move a pipeline.')
 @click.argument('cur', required=True)
 @click.argument('new', required=True)
 @pass_context

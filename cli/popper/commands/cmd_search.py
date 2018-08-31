@@ -1,10 +1,7 @@
 import click
-import os
 import sys
 import popper.utils as pu
-import yaml
 
-from collections import defaultdict
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
 
@@ -84,7 +81,7 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
         raise BadArgumentUsage("Search cannot be combined with other flags.")
 
     config = pu.read_config()
-    sources = config['popperized']
+    sources = pu.get_search_sources(config)
 
     if add:
         if len(add.split('/')) > 2:
@@ -95,7 +92,7 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
 
         sources.append(add)
 
-        config['popperized'] = sources
+        config['search_sources'] = sources
         pu.write_config(config)
         sys.exit(0)
 
@@ -106,67 +103,18 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
 
         sources.remove(rm)
 
-        config['popperized'] = sources
+        config['search_sources'] = sources
         pu.write_config(config)
         sys.exit(0)
 
     if len(sources) == 0:
         pu.fail('No source for popper pipelines defined! Add one first.')
 
-    if skip_update:
-        pipeline_meta = load_pipeline_metadata()
-    else:
-        pipeline_meta = update_pipeline_metadata(sources)
-
+    pipeline_meta = pu.fetch_pipeline_metadata(skip_update)
     result = search_pipelines(pipeline_meta, keywords)
 
     pu.info('Matching pipelines:')
     pu.print_yaml(result)
-
-
-def update_pipeline_metadata(sources):
-    meta = defaultdict(dict)
-    repos = []
-
-    for s in sources:
-        if '/' in s:
-            repos.append(s)
-        else:
-            for repo in pu.repos_in_org(s):
-                repos.append(s+'/'+repo)
-
-    with click.progressbar(
-            repos,
-            show_eta=False,
-            bar_template='[%(bar)s] %(info)s | %(label)s',
-            show_percent=True) as bar:
-        for r in bar:
-            bar.label = "Fetching pipeline metadata from '{}'".format(r)
-            update_metadata_for_repo(r, meta)
-
-    project_root = pu.get_project_root()
-
-    with open(os.path.join(project_root, '.pipeline_cache'), 'w') as f:
-        yaml.dump(dict(meta), f)
-
-    return meta
-
-
-def update_metadata_for_repo(orgrepo, meta):
-    org, repo = orgrepo.split('/')
-    config = pu.read_config_remote(org, repo)
-    if not config or 'pipelines' not in config:
-        return
-    meta[org][repo] = config
-
-
-def load_pipeline_metadata():
-    project_root = pu.get_project_root()
-
-    with open(os.path.join(project_root, '.pipeline_cache'), 'r') as f:
-        meta = yaml.load(f)
-
-    return meta
 
 
 def search_pipelines(meta, keywords):
