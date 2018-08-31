@@ -4,12 +4,11 @@ set -ex
 source common-setup.sh
 
 init_test
-# test matrix execution
 
 popper init mypipe --stages=one,two
 
-popper env-vars mypipe --add key1=val1 --add key2=val2
-popper env-vars mypipe --add key2=new_val_2 --add key3=val3
+popper parameters mypipe --add key1=val1 --add key2=val2
+popper parameters mypipe --add key2=new_val_2 --add key3=val3
 
 popper env mypipe --add alpine-3.4
 

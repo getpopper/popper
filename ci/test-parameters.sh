@@ -8,8 +8,8 @@ init_test
 popper init mypipeone
 
 popper parameters mypipeone --add key1=val1 --add key2=val2
-popper parameters mypipeone | grep -q key1: val1
-popper parameters mypipeone | grep -q key2: val2
+popper parameters mypipeone | grep -q 'key1: val1'
+popper parameters mypipeone | grep -q 'key2: val2'
 
 set +e
 popper parameters mypipeone --rm key1=val1
