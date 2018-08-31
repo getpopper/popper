@@ -2,8 +2,8 @@
 set -ex
 
 source common-setup.sh
-# popper reset
 
+# reset removes files and modifies .popper.yml
 init_test
 popper init myp
 set +e
@@ -14,8 +14,14 @@ then
   exit 1
 fi
 
+# if user selects 'n', we should not do anything
 init_test
 popper init myp
 printf 'n' | popper reset
 set -e
 cat .popper.yml | grep 'myp'
+
+# untracked files should be left intact
+touch pipelines/myp/untracked
+echo -e "yes" | popper reset
+test -f pipelines/myp/untracked

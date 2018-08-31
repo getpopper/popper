@@ -1,10 +1,11 @@
 import os
-from popper import utils
+import popper.utils as pu
+
 
 class ReadMe:
     def __init__(self):
-        self.repo_name = utils.get_repo_name()
-        self.project_root = utils.get_project_root()
+        self.repo_name = pu.get_repo_name()
+        self.project_root = pu.get_project_root()
 
     def write_readme(self, content, path):
         """ Creates a README.md file with the specified content
@@ -20,10 +21,11 @@ class ReadMe:
             f.write(content)
 
     def init_project(self):
-        content = """
-# {0}
+        content = """# {0}
 
-This repository contains [Popper](https://github.com/systemslab/popper) pipelines. To show a list of available pipelines using the [`popper` CLI tool](https://github.com/systemslab/popper):
+This repository contains [Popper](https://github.com/systemslab/popper)
+pipelines. To show a list of available pipelines using the
+[`popper` CLI tool](https://github.com/systemslab/popper):
 
 ```bash
 cd {0}
@@ -36,7 +38,9 @@ to execute one of the pipelines:
 popper run <pipeline-name>
 ```
 
-where `<pipeline-name>` is one of the pipelines in the repository. For more on what other information from this repository is available, you can run:
+where `<pipeline-name>` is one of the pipelines in the repository.
+For more on what other information from this repository is available,
+you can run:
 
 ```bash
 popper --help
@@ -59,66 +63,73 @@ popper --help
         """
 
         pipeline_name = pipeline_path.split('/')[-1]
-        content = """
-# `{}`
+        content = """# `{}`
+
 <!--
-NOTE: replace all the **TODO** marks with your own content.
+NOTE TO AUTHORS: replace all the **TODO** marks with your own content.
 -->
 """
         content = content.format(pipeline_name)
         if (len(stages)) > 0:
             content += """
-**TODO**: insert high-level description of the pipeline. It consists of the following stages:
+**TODO**: insert high-level description of the pipeline.
+
+The pipeline consists of the following stages:
 """
             for i, stage in enumerate(stages.split(',')):
                 content += """
-* [`{0}`](./{0}.sh). **TODO**. Add high-level description of stage `{0}`.
+  * [`{0}`](./{0}.sh). **TODO**: describe `{0}` stage.
 """
                 content = content.format(stage)
 
         content += """
-
 # Obtaining the pipeline
 
-To add this pipeline to  the [`popper` CLI tool](https://github.com/systemslab/popper):
+To add this pipeline to your project using the
+[`popper` CLI tool](https://github.com/systemslab/popper):
 
 ```bash
 cd your-repo
-popper add org/{0}/{1}
+popper add {0}/{1}/{2}
 ```
-
-**TODO**: replace `org` appropriately.
-
+{3}
 # Running the pipeline
 
-To run the pipeline using the [`popper` CLI tool](https://github.com/systemslab/popper):
+To run the pipeline using the
+[`popper` CLI tool](https://github.com/systemslab/popper):
 
 ```bash
-cd {0}
-popper run {1}
+cd {1}
+popper run {2}
 ```
 """
-        content = content.format(self.repo_name, pipeline_name)
+        url = pu.get_remote_url()
+        if url:
+            if 'https://' in url:
+                org = os.path.basename(os.path.dirname(url))
+            else:
+                org = url.split(':')[1]
+            todomark = ''
+        else:
+            org = '<org>'
+            todomark = '**TODO**: replace `org` appropriately.'
+
+        content = content.format(org, self.repo_name, pipeline_name, todomark)
 
         content += """
-The pipeline can be executed on the following environment(s):
-"""
-        for env in envs:
-            content += """
-* `{}`.
-"""
-            content = content.format(env)
+The pipeline is executed on the following environment(s): `{}`. In addition,
+the following environment variables are expected:
 
-        content += """
----
-The pipeline expects the following environment variables:
+  * `<ENV_VAR1>`. Description of variable.
+  * `<ENV_VAR2>`. Another description.
 
-* `<ENV_VAR1>`. Description of environment variable.
-* `<ENV_VAR2>`. Description of environment variable.
+> **TODO**: rename or remove ENV_VAR1 and ENV_VAR2 appropiately.
 
 For example, the following is an execution with all expected
 variables:
 """
+        content = content.format(','.join(envs))
+
         content += """
 ```bash
 export <ENV_VAR1>=value-for-<ENV_VAR_1>
@@ -126,10 +137,11 @@ export <ENV_VAR2>=value-for-<ENV_VAR_2>
 
 popper run {}
 ```
+
+> **TODO**: rename or remove `export` statements above appropriately.
 """
         content = content.format(pipeline_name)
         content += """
-
 # Dependencies
 
 **TODO**: add list of dependencies, for example:
@@ -139,5 +151,4 @@ popper run {}
   * [Docker](https://docker.com) (for generating plots).
   * etc.
 """
-
         self.write_readme(content, pipeline_path)
