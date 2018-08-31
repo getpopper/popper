@@ -34,8 +34,13 @@ except NameError:
     help=('List all the repositories available to search'),
     is_flag=True
 )
+@click.option(
+    '--include-readme',
+    help=('Include readme when searching for matching pipelines.'),
+    is_flag=True
+)
 @pass_context
-def cli(ctx, keywords, skip_update, add, rm, ls):
+def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
     """Searches for pipelines on Github matching the given keyword(s).
 
     The list of repositories or organizations scraped for pipelines is
@@ -111,13 +116,13 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
         pu.fail('No source for popper pipelines defined! Add one first.')
 
     pipeline_meta = pu.fetch_pipeline_metadata(skip_update)
-    result = search_pipelines(pipeline_meta, keywords)
+    result = search_pipelines(pipeline_meta, keywords, include_readme)
 
     pu.info('Matching pipelines:')
     pu.print_yaml(result)
 
 
-def search_pipelines(meta, keywords):
+def search_pipelines(meta, keywords, include_readme):
     result = []
     for pipe in pipeline_name_list(meta):
         if not keywords:
@@ -126,6 +131,11 @@ def search_pipelines(meta, keywords):
             for key in keywords.split(' '):
                 if key in pipe:
                     result.append(pipe)
+                    break
+                if include_readme:
+                    orp = pipe.split('/')
+                    if key in meta[orp[0]][orp[1]][orp[2]]['readme']:
+                        result.append(pipe)
     return result
 
 
