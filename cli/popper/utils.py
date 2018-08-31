@@ -193,7 +193,7 @@ def is_popperized():
     return os.path.isfile(config_filename)
 
 
-def update_config(name, stages='', envs={}, vars=[], reqs={},
+def update_config(name, stages='', envs={}, parameters=[], reqs={},
                   relative_path='', timeout=None):
     """Updates the configuration for a pipeline."""
 
@@ -216,7 +216,7 @@ def update_config(name, stages='', envs={}, vars=[], reqs={},
     config['pipelines'][name] = {
         'stages': stages.split(','),
         'envs': envs,
-        'vars': vars,
+        'parameters': parameters,
         'requirements': reqs,
         'path': relative_path,
     }
