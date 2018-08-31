@@ -385,3 +385,41 @@ def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
         new_pipeline_name = pipeline_name
 
     return new_pipeline_name, path
+
+
+def get_repo_name():
+    """Finds the root folder of a local Github repository and returns it.
+
+    Returns:
+        repo_name (str): the name of the root folder.
+    """
+    repo_name = subprocess.Popen(
+        "basename `git rev-parse --show-toplevel`",
+        shell=True,
+        stdout=subprocess.PIPE).stdout.read()
+
+    return repo_name.decode("utf-8")[:-1]
+
+
+def get_git_files():
+    """Used to return a list of files that are being tracked by
+    git.
+
+    Returns:
+        files (list) : list of git tracked files
+    """
+
+    proc = subprocess.Popen(
+        "git ls-files",
+        stdout=subprocess.PIPE,
+        shell=True)
+
+    (files, err) = proc.communicate()
+
+    if not err:
+        if not isinstance(files, type("a")):
+            files = files.decode("utf-8")
+
+        files = files.split("\n")[:-1]
+
+    return files
