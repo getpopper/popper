@@ -82,6 +82,10 @@ def read_config(name=None):
                      "Consider deleting it and reinitializing the repo. "
                      "See popper init --help for more.")
 
+    if 'version' not in config:
+        warn("No 'version' element found in config file. Assuming 1")
+        config['version'] = 1
+
     if not name:
         return config
     else:
@@ -275,9 +279,19 @@ def read_config_remote(org, repo, branch='master'):
         org, repo, branch
     )
     r = make_gh_request(url, err=False)
+
     if r.status_code != 200:
         return None
-    return yaml.load(r.content.decode("utf-8"))
+
+    config = yaml.load(r.content.decode("utf-8"))
+
+    if type(config) != dict:
+        return None
+
+    if 'version' not in config:
+        config['version'] = 1
+
+    return config
 
 
 def repos_in_org(org):

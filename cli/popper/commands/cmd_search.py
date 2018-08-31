@@ -118,12 +118,10 @@ def cli(ctx, keywords, skip_update, add, rm, ls):
     else:
         pipeline_meta = update_pipeline_metadata(sources)
 
-    if ls:
-        for pipe in pipeline_list(pipeline_meta):
-            pu.info('- {}'.format(pipe))
-        sys.exit(0)
+    result = search_pipelines(pipeline_meta, keywords)
 
-    search_pipelines(pipeline_meta, keywords)
+    pu.info('Matching pipelines:')
+    pu.print_yaml(result)
 
 
 def update_pipeline_metadata(sources):
@@ -157,7 +155,7 @@ def update_pipeline_metadata(sources):
 def update_metadata_for_repo(orgrepo, meta):
     org, repo = orgrepo.split('/')
     config = pu.read_config_remote(org, repo)
-    if not config:
+    if not config or 'pipelines' not in config:
         return
     meta[org][repo] = config
 
@@ -173,56 +171,22 @@ def load_pipeline_metadata():
 
 def search_pipelines(meta, keywords):
     result = []
-    for pipe in pipeline_list(meta):
+    for pipe in pipeline_name_list(meta):
         if not keywords:
             result.append(pipe)
-        elif l_distance(pipe.lower(), keywords.lower()) < 1:
-            result.append(pipe)
-
+        else:
+            for key in keywords.split(' '):
+                if key in pipe:
+                    result.append(pipe)
     return result
 
 
-def pipeline_list(meta):
+def pipeline_name_list(meta):
     for org in meta:
         for repo in meta[org]:
-            pu.info("repo: {}".format(repo))
-            pu.info("pipelines: {}".format(meta[org][repo]['pipelines']))
-            for pipe in meta[org][repo]:
+            if 'pipelines' not in meta[org][repo]:
+                continue
+            for pipe in meta[org][repo]['pipelines']:
+                if pipe == 'paper':
+                    continue
                 yield '{}/{}/{}'.format(org, repo, pipe)
-
-
-def l_distance(a, b):
-    """A modified version of the Levenshtein Distance algorithm to find
-    word level edit distances between two sentences.
-
-    Args:
-        a, b (str): The words between which the Levenshtein distance
-                        is to be calculated.
-    Returns:
-        ldist (int): Levenshtein distance between a and b.
-    """
-
-    arr1 = a.split("-")
-    arr2 = b.split("-")
-
-    l1 = len(arr1)
-    l2 = len(arr2)
-
-    dist = [[0 for j in range(l2 + 1)] for i in range(l1 + 1)]
-
-    dist[0][0] = 0
-
-    for i in range(1, l1 + 1):
-        dist[i][0] = i
-    for i in range(1, l2 + 1):
-        dist[0][i] = i
-
-    for i in range(1, l1 + 1):
-        for j in range(1, l2 + 1):
-            temp = 0 if arr1[i - 1] == arr2[j - 1] else 1
-            dist[i][j] = min(dist[i - 1][j] + 1, dist[i][j - 1] + 1,
-                             dist[i - 1][j - 1] + temp)
-
-    ldist = float(dist[l1][l2]) / max(l1, l2)
-
-    return ldist
