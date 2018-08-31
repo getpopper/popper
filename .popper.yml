@@ -11,6 +11,7 @@ pipelines:
     path: ci
     stages:
     - setup
+    - test-version
     - test-add
     - test-archive
     - test-badge
@@ -28,6 +29,7 @@ pipelines:
     - test-require
     - test-rm
     - test-run
+    - test-reset
     - test-search
     - test-stages
     - test-workflow
