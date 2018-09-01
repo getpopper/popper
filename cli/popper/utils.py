@@ -294,10 +294,16 @@ def get_remote_url():
         string - url of remote origin,
             For example: https://github.com/systemslab/popper
     """
-    args = ['git', 'config', '--get', 'remote.origin.url']
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    cmd = ['git', 'config', '--get', 'remote.origin.url']
+    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output, error = p.communicate()
-    if p.returncode == 0:
+
+    if p.returncode != 0:
+        return ''
+
+    # cleanup the URL so we get in in https form
+    if 'git@' in repo_url:
+        repo_url = 'https://' + repo_url[4:].replace(':', '/')
         # Remove the .git\n from the end of the url returned by Popen
         try:
             return output.decode()[:-5]  # Python 3 returns bytes

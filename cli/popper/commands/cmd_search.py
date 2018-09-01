@@ -133,8 +133,9 @@ def search_pipelines(meta, keywords, include_readme):
                     result.append(pipe)
                     break
                 if include_readme:
-                    orp = pipe.split('/')
-                    if key in meta[orp[0]][orp[1]][orp[2]]['readme']:
+                    p = pipe.split('/')
+                    readme = meta[p[0]][p[1]]['pipelines'][p[2]]['readme']
+                    if key.lower() in readme.lower():
                         result.append(pipe)
     return result
 

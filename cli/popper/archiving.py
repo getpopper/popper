@@ -6,6 +6,7 @@ import os
 import hashlib
 import subprocess
 import popper.utils as pu
+import sys
 
 from datetime import date
 
@@ -34,18 +35,6 @@ class BaseService(object):
         however, is responsible for getting the previous relevant deposition
         from the service url, using the OAuth access token.
         """
-        args = ['git', 'status', '--ignore-submodules', '--porcelain']
-        p = subprocess.Popen(
-            args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        try:
-            output, error = map(lambda x: x.decode(), p.communicate())
-        except AttributeError:
-            output, error = p.communicate()
-
-        if output != '':
-            pu.fail("Please commit all your changes before archiving.")
-
         remote_url = pu.get_remote_url()
         if not remote_url:
             pu.fail("Failed to fetch remote url for git repository.")
@@ -108,7 +97,7 @@ class BaseService(object):
             "This method is required to be implemented in the base class."
         )
 
-    def upload_snapshot(self, ignore_untracked):
+    def upload_snapshot(self):
         """This method creates a new record if there no previously uploaded
         record exists, or creates a new version if it does. The files and
         metadata are updated.
@@ -136,30 +125,36 @@ class BaseService(object):
         project_name = os.path.basename(project_root)
         os.chdir(project_root)
 
-        archive_file = project_name + '.tar.gz'
-        command = 'git archive master | gzip > ' + archive_file
-        subprocess.call(command, shell=True)
+        pu.info('Creating archive file')
+        archive_file = project_name + '.tar'
+        cmd = 'git archive master > ' + archive_file
+        subprocess.check_output(cmd, shell=True)
 
         if not self.ignore_untracked:
-            command = (
+            cmd = (
                 'git ls-files --others --exclude-standard -z | '
-                'xargs -0 tar rvfz ' + archive_file
+                'xargs -0 tar rf ' + archive_file
             )
-            subprocess.call(command, shell=True)
+            subprocess.check_output(cmd, shell=True)
+
+        cmd = 'gzip ' + archive_file
+        subprocess.check_output(cmd, shell=True)
 
         os.chdir(cwd)
 
-        return archive_file
+        return '/tmp/' + archive_file + '.gz'
 
     def delete_archive(self):
         """Deletes the created archive from the filesystem.
         """
         cwd = os.getcwd()
         project_root = pu.get_project_root()
-        archive_file = os.path.basename(project_root) + '.tar.gz'
+        archive_file = '/tmp/' + os.path.basename(project_root) + '.tar'
         os.chdir(project_root)
-        command = 'rm ' + archive_file
-        subprocess.call(command, shell=True)
+        cmd = 'rm ' + archive_file
+        subprocess.call(cmd, shell=True)
+        cmd = 'rm ' + archive_file + '.gz'
+        subprocess.call(cmd, shell=True)
         os.chdir(cwd)
 
 
@@ -172,6 +167,8 @@ class Zenodo(BaseService):
         r = requests.get(self.baseurl, params=self.params)
         try:
             depositions = r.json()
+            pu.info('existing depositions:\n', r.json())
+            sys.exit(0)
             remote_url = pu.get_remote_url()
             for deposition in depositions:
                 metadata = deposition['metadata']
@@ -183,15 +180,9 @@ class Zenodo(BaseService):
                     pass
         except TypeError:
             if r.status_code == 401:
-                pu.fail(
-                    "The access token provided was invalid. "
-                    "Please provide a valid access_token."
-                )
+                pu.fail("The access token provided was invalid.")
             else:
-                pu.fail(
-                    "Status {}: Could not fetch the depositions."
-                    "Try again later.".format(r.status_code)
-                )
+                pu.fail("Error {}: {}".format(r.status_code, r.json()))
 
     def is_last_deposition_published(self):
         if self.deposition is None:
@@ -282,7 +273,7 @@ class Zenodo(BaseService):
 
         data['related_identifiers'] = [{
             "identifier": pu.get_remote_url(),
-            "relation": "hasPart",
+            "relation": "isSupplementTo",
             "scheme": "url"
         }]
 
@@ -290,6 +281,7 @@ class Zenodo(BaseService):
         if config['upload_type'] == 'publication':
             data['publication_type'] = config['publication_type']
 
+        pu.info('Updating metadata.')
         data = {'metadata': data}
         url = '{}/{}'.format(self.baseurl, deposition_id)
         r = requests.put(
@@ -297,9 +289,9 @@ class Zenodo(BaseService):
             headers={'Content-Type': "application/json"}
         )
         if r.status_code != 200:
-            pu.fail(
-                "Status {}: Failed to update metadata.".format(r.status_code)
-            )
+            pu.fail("{} - Failed to update metadata: {}".format(r.status_code,
+                                                                r.json()))
+        pu.info('Successfully updated metadata.')
 
     def update_metadata(self):
         """Reads required metatdata from the previous record and updates it
@@ -368,6 +360,7 @@ class Zenodo(BaseService):
             )
 
     def upload_new_file(self):
+        pu.info('Uploading files.')
         deposition_id = self.deposition['id']
         new_file = self.create_archive()
         project_root = pu.get_project_root()
@@ -382,7 +375,7 @@ class Zenodo(BaseService):
                 .format(r.status_code)
             )
 
-    def upload_snapshot(self, ignore_untracked):
+    def upload_snapshot(self):
         if self.deposition is None:
             self.create_new_deposition()
             self.update_metadata_from_yaml()
