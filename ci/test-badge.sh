@@ -22,7 +22,7 @@ fi
 set -e
 
 popper badge --service popper | grep 'http://badges.falsifiable.us/systemslab/popper'
-popper badge --service popper | grep 'http://popper.rtfd.io/en/latest/sections/badge_server.html'
+popper badge --service popper | grep 'https://popper.rtfd.io/en/latest/sections/cli_features.html#popper-badges'
 
 popper badge --history
 

@@ -6,7 +6,6 @@ import os
 import hashlib
 import subprocess
 import popper.utils as pu
-import sys
 
 from datetime import date
 
@@ -126,7 +125,7 @@ class BaseService(object):
         os.chdir(project_root)
 
         pu.info('Creating archive file')
-        archive_file = project_name + '.tar'
+        archive_file = '/tmp/' + project_name + '.tar'
         cmd = 'git archive master > ' + archive_file
         subprocess.check_output(cmd, shell=True)
 
@@ -142,7 +141,7 @@ class BaseService(object):
 
         os.chdir(cwd)
 
-        return '/tmp/' + archive_file + '.gz'
+        return archive_file + '.gz'
 
     def delete_archive(self):
         """Deletes the created archive from the filesystem.
@@ -167,8 +166,6 @@ class Zenodo(BaseService):
         r = requests.get(self.baseurl, params=self.params)
         try:
             depositions = r.json()
-            pu.info('existing depositions:\n', r.json())
-            sys.exit(0)
             remote_url = pu.get_remote_url()
             for deposition in depositions:
                 metadata = deposition['metadata']
@@ -360,9 +357,9 @@ class Zenodo(BaseService):
             )
 
     def upload_new_file(self):
-        pu.info('Uploading files.')
         deposition_id = self.deposition['id']
         new_file = self.create_archive()
+        pu.info('Uploading files.')
         project_root = pu.get_project_root()
         url = '{}/{}/files'.format(self.baseurl, deposition_id)
         data = {'filename': new_file}

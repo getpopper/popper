@@ -295,22 +295,18 @@ def get_remote_url():
             For example: https://github.com/systemslab/popper
     """
     cmd = ['git', 'config', '--get', 'remote.origin.url']
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, error = p.communicate()
-
-    if p.returncode != 0:
+    try:
+        repo_url = subprocess.check_output(cmd)
+    except subprocess.CalledProcessError:
         return ''
 
-    # cleanup the URL so we get in in https form
+    # cleanup the URL so we get in in https form and without '.git' ending
+    if repo_url.endswith('.git'):
+        repo_url = repo_url[:-4]
     if 'git@' in repo_url:
         repo_url = 'https://' + repo_url[4:].replace(':', '/')
-        # Remove the .git\n from the end of the url returned by Popen
-        try:
-            return output.decode()[:-5]  # Python 3 returns bytes
-        except AttributeError:
-            return output[:-5]
-    else:
-        return ''
+
+    return repo_url
 
 
 def get_gh_headers():
