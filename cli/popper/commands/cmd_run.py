@@ -119,7 +119,7 @@ def run_pipelines(pipelines, project_root, timeout, skip,
             # Makes sure execution starts with host
             envs.insert(0, envs.pop(envs.index('host')))
         for env in envs:
-            executions = get_executions_for_pipeline(pipe_d.get('vars'))
+            executions = get_executions_for_pipeline(pipe_d.get('parameters'))
             status = run_pipeline(project_root, pipe_n, pipe_d, env,
                                   timeout, skip, ignore_errors, output,
                                   executions=executions,
