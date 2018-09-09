@@ -162,7 +162,7 @@ def read_config(name=None):
                      "See popper init --help for more.")
 
     if 'version' not in config:
-        warn("No 'version' element found in config file. Assuming 1")
+        warn("No 'version' element found in .popper.yml file. Assuming 1.")
         config['version'] = 1
 
     if not name:
@@ -296,7 +296,7 @@ def get_remote_url():
     """
     cmd = ['git', 'config', '--get', 'remote.origin.url']
     try:
-        repo_url = subprocess.check_output(cmd)
+        repo_url = subprocess.check_output(cmd).strip()
     except subprocess.CalledProcessError:
         return ''
 

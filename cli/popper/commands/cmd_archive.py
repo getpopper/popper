@@ -5,6 +5,7 @@ import os
 import pyaes
 import hashlib
 import popper.utils as pu
+import sys
 
 from popper.archiving import Zenodo, Figshare
 from popper.cli import pass_context
@@ -34,8 +35,14 @@ from popper.cli import pass_context
     help='Access token for your service.',
     required=False,
 )
+@click.option(
+    '--show-doi',
+    help='Show the DOI, URL for the record and exit.',
+    default=False,
+    is_flag=True,
+)
 @pass_context
-def cli(ctx, service, publish, ignore_untracked, key):
+def cli(ctx, service, publish, ignore_untracked, key, show_doi):
     """Creates and uploads a snapshot of the project to an archival
     service (currently supports Zenodo and Figshare). This command relies on
     having an account on the underlying service, as well as providing an API
@@ -56,6 +63,8 @@ def cli(ctx, service, publish, ignore_untracked, key):
     the --publish flag is given, in addition to uploading the snapshot, the
     archive is published and a DOI is obtained from the underlying service. The
     DOI as well as the URL to the archive on the service web site are printed.
+    If --show-doi is given, the DOI and URL of record is shown. The printed URL
+    will not be functional unless the record has been published.
     """
     services = {
         'zenodo': Zenodo,
@@ -76,15 +85,47 @@ def cli(ctx, service, publish, ignore_untracked, key):
         except KeyError:
             key = get_access_token(service)
 
+    if show_doi and publish:
+        pu.fail("--show-doi can not be given along with --publish")
+
     archive = services[service](key)
 
+    pu.info('Looking for an existing record for the project.')
+    archive.fetch_depositions()
+
+    if show_doi:
+        if archive.record_exists():
+            pu.info('Found record for project: {}'.format(archive.record_id))
+            archive.show_doi()
+        else:
+            pu.info('No record for project exists.')
+        sys.exit(0)
+
+    if not archive.record_exists():
+        pu.info('No record exists yet; creating one for project.')
+        archive.create_new_deposition()
+        pu.info('Record ID: {}'.format(archive.record_id))
+    else:
+        pu.info('Record exists: {}'.format(archive.record_id))
+
+        if archive.is_last_deposition_published():
+            pu.info('A published version exists, creating new version.')
+            archive.create_new_version()
+        else:
+            pu.info('An unpublished version exists, updating it.')
+            archive.delete_previous_file()
+
     archive.ignore_untracked = ignore_untracked
+
+    pu.info('Uploading files.')
     archive.upload_snapshot()
 
     if publish:
+        pu.info('Publishing record and obtaining DOI.')
         archive.publish_snapshot()
+        archive.show_doi()
 
-    pu.info("Done..!")
+    pu.info("Done!")
 
 
 def get_access_token(service):
