@@ -317,7 +317,7 @@ class Zenodo(BaseService):
             pu.fail("Status {}: {}".format(r.status_code, r.json()))
 
     def publish_snapshot(self):
-        url = '{}/{}/actions/publish'.format(self.baseurl, self.archive_id)
+        url = '{}/{}/actions/publish'.format(self.baseurl, self.record_id)
         r = requests.post(url, params=self.params)
         if r.status_code != 202:
             pu.fail("Status {}: {}".format(r.status_code, r.json()))
