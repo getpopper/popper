@@ -2,6 +2,7 @@ import click
 import os
 import glob
 import popper.utils as pu
+import popper.template as pt
 from popper.exceptions import BadArgumentUsage
 from popper.cli import pass_context
 from os.path import isfile, isdir, basename
@@ -66,7 +67,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
             ' Consider renaming it or putting it at the end.')
 
     project_root = pu.get_project_root()
-
+    env_list = envs.split(',')
     # init repo
     if name is None:
         if existing:
@@ -86,8 +87,10 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
         if infer_stages:
             stages = ",".join(map(lambda x: x[:-3],
                                   sorted(glob.glob1(abs_path, '*.sh'))))
+            content = pt.ReadMe()
+            content.init_pipeline(abs_path,stages, env_list)
         else:
-            initialize_existing_pipeline(abs_path, stages, envs)
+            initialize_existing_pipeline(abs_path, stages, env_list)
         name = os.path.basename(name)
     elif name == 'paper':
         # create a paper pipeline
@@ -98,7 +101,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
         # new pipeline
         new_name, relative_path = pu.get_name_and_path_for_new_pipeline(name)
         abs_path = os.path.join(project_root, relative_path)
-        initialize_new_pipeline(abs_path, stages)
+        initialize_new_pipeline(abs_path, stages, env_list)
         name = new_name
 
     pu.update_config(
@@ -109,11 +112,10 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
         timeout=timeout
     )
 
-    pu.info('Initialized pipeline ' + name, fg='blue', bold=True)
-
 
 def initialize_repo(project_root):
     """This function is used for initializing a popper repository."""
+    content = pt.ReadMe()
 
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
@@ -140,11 +142,15 @@ def initialize_repo(project_root):
         f.write('.pipeline_cache\n')
         f.write('popper\n')
 
+    # write README
+    content.init_project()
     pu.info('Popperized repository ' + project_root, fg='blue', bold=True)
 
 
 def initialize_existing_pipeline(pipeline_path, stages, envs):
     """This function is used for initalizing an existing pipeline."""
+    
+    content = pt.ReadMe()
 
     for s in stages.split(','):
         s_filename = os.path.join(pipeline_path, s)
@@ -153,7 +159,8 @@ def initialize_existing_pipeline(pipeline_path, stages, envs):
                 "Unable to find script for stage '" + s + "'. You might need "
                 "to provide values for the --stages flag. See 'init --help'."
             )
-
+    # write README        
+    content.init_pipeline(pipeline_path, stages,envs)
 
 def initialize_paper(paper_path, envs):
     """This function is used for initializing the special paper pipeline."""
@@ -175,8 +182,10 @@ def initialize_paper(paper_path, envs):
         f.write('# ' + basename(paper_path) + '\n')
 
 
-def initialize_new_pipeline(pipeline_path, stages):
+def initialize_new_pipeline(pipeline_path, stages, envs):
     """This function is used for initalizing a new pipeline."""
+
+    content = pt.ReadMe()
 
     # create folders
     if isdir(pipeline_path) or isfile(pipeline_path):
@@ -195,5 +204,4 @@ def initialize_new_pipeline(pipeline_path, stages):
         os.chmod(os.path.join(pipeline_path, s), 0o755)
 
     # write README
-    with open(os.path.join(pipeline_path, 'README.md'), 'w') as f:
-        f.write('# ' + basename(pipeline_path) + '\n')
+    content.init_pipeline(pipeline_path, stages, envs)

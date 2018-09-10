@@ -475,3 +475,26 @@ def exec_cmd(cmd, ignoreerror=False):
     output = output.decode('utf-8')
 
     return output
+  
+
+def get_repo_name():
+    """Finds the root folder of a local Github repository and returns it.
+
+    Returns:
+        repo_name (str): the name of the root folder.
+    """
+    repo_name = exec_cmd("basename `git rev-parse --show-toplevel`")
+
+    return repo_name[:-1]
+
+
+def get_git_files():
+    """Used to return a list of files that are being tracked by
+    git.
+
+    Returns:
+        files (list) : list of git tracked files
+    """
+
+    gitfiles = exec_cmd("git ls-files")
+    return gitfiles.split("\n")
