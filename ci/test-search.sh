@@ -24,4 +24,4 @@ cat .popper.yml | grep 'popperized'
 init_test
 ! popper search --skip-update co2
 
-popper info popperized/popper-readthedocs-examples/vagrant-linux | grep 'exemplifies the use of Popper'
+popper info --update-cache popperized/popper-readthedocs-examples/vagrant-linux | grep 'exemplifies the usage of Popper'

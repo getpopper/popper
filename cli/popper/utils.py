@@ -76,7 +76,7 @@ def fetch_pipeline_metadata(skip_update=False):
             yaml.dump(dict(meta), f)
     else:
         if not os.path.isfile(cache_file):
-            fail("Metadata cache doesn't exist. Ommit '--skip-update'?")
+            fail("Metadata cache doesn't exist. Use --help for more.")
 
         with open(cache_file, 'r') as f:
             meta = yaml.load(f)
