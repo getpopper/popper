@@ -108,12 +108,13 @@ def cli(ctx, service, publish, ignore_untracked, key, show_doi):
     else:
         pu.info('Record exists: {}'.format(archive.record_id))
 
+        archive.delete_previous_file()
+
         if archive.is_last_deposition_published():
             pu.info('A published version exists, creating new version.')
             archive.create_new_version()
         else:
             pu.info('An unpublished version exists, updating it.')
-            archive.delete_previous_file()
 
     archive.ignore_untracked = ignore_untracked
 
