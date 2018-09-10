@@ -9,8 +9,6 @@ init_test
 ls
 test -f .popper.yml
 
-# default values
-
 popper init paper
 cat .popper.yml | grep 'path: paper'
 test -f paper/build.sh

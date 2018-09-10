@@ -16,10 +16,10 @@ popper search --skip-update co2 | grep 'swc-lesson-pipelines/co2-emissions'
 popper search --skip-update --include-readme kernel | grep 'examples/vagrant-linux'
 
 popper search --rm popperized
-! cat .popper.yml | grep '- popperized'
+! cat .popper.yml | grep 'popperized'
 
 popper search --add popperized
-cat .popper.yml | grep '- popperized'
+cat .popper.yml | grep 'popperized'
 
 init_test
 ! popper search --skip-update co2

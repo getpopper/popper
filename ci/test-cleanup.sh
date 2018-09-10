@@ -3,7 +3,6 @@ set -ex
 
 source common-setup.sh
 
-# cleanup command
 init_test
 popper init mypipetwo
 popper init mypipethree

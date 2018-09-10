@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import click
 import os
 import sys
@@ -120,18 +118,12 @@ def get_project_root():
     Returns:
         project_root (str): The fully qualified path to the root of project.
     """
+    base = exec_cmd('git rev-parse --show-toplevel', ignoreerror=True)
 
-    try:
-        base = subprocess.check_output(
-            'git rev-parse --show-toplevel', shell=True
-        )
-    except subprocess.CalledProcessError:
-        fail(
-            "Unable to find the root of your project."
-            "Initialize repository first."
-        )
+    if not base:
+        fail("Unable to find root of project. Initialize repository first.")
 
-    return base.decode('utf-8').strip()
+    return base
 
 
 def read_config(name=None):
@@ -296,11 +288,7 @@ def get_remote_url():
         string - url of remote origin,
             For example: https://github.com/systemslab/popper
     """
-    cmd = ['git', 'config', '--get', 'remote.origin.url']
-    try:
-        repo_url = subprocess.check_output(cmd).strip()
-    except subprocess.CalledProcessError:
-        return ''
+    repo_url = exec_cmd('git config --get remote.origin.url', ignoreerror=True)
 
     # cleanup the URL so we get in in https form and without '.git' ending
     if repo_url.endswith('.git'):
@@ -384,7 +372,7 @@ def repos_in_org(org):
 
 
 def get_head_commit():
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])[:-1]
+    return exec_cmd('git rev-parse HEAD')[:-1]
 
 
 def is_repo_empty():
@@ -474,3 +462,16 @@ def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
         new_pipeline_name = pipeline_name
 
     return new_pipeline_name, path
+
+
+def exec_cmd(cmd, ignoreerror=False):
+    try:
+        output = subprocess.check_output(cmd, shell=True).strip()
+    except subprocess.CalledProcessError as ex:
+        if ignoreerror:
+            return ''
+        fail("Command '{}' failed: {}".format(cmd, ex))
+
+    output = output.decode('utf-8')
+
+    return output
