@@ -15,9 +15,9 @@ popper metadata --add keywords='comma, separated, keywords'
 git remote add origin https://github.com/systemslab/popper-test.git
 git add . && git commit -m "Add metadata"
 cat .popper.yml
-popper archive --service zenodo
+#popper archive --service zenodo
 #popper archive --service zenodo --publish
-popper archive --service zenodo --show-doi
+#popper archive --service zenodo --show-doi
 
 popper metadata --add categories='1656'
 git add . && git commit -m "Modify metadata"
