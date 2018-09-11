@@ -88,7 +88,7 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
             stages = ",".join(map(lambda x: x[:-3],
                                   sorted(glob.glob1(abs_path, '*.sh'))))
             content = pt.ReadMe()
-            content.init_pipeline(abs_path,stages, env_list)
+            content.init_pipeline(abs_path, stages, env_list)
         else:
             initialize_existing_pipeline(abs_path, stages, env_list)
         name = os.path.basename(name)
@@ -121,25 +121,10 @@ def initialize_repo(project_root):
         pu.fail('Repository has already been popperized')
         return
 
-    config = {
-        'metadata': {
-            'access_right': "open",
-            'license': "CC-BY-4.0",
-            'upload_type': "publication",
-            'publication_type': "article"
-        },
-        'pipelines': {},
-        'popperized': [
-            "github/popperized"
-        ],
-        'badge-server-url': 'http://badges.falsifiable.us',
-    }
-
-    pu.write_config(config)
+    pu.write_config(pu.init_config)
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
-        f.write('.cache\n')
-        f.write('popper\n')
+        f.write(pu.gitignore_content)
 
     # write README
     content.init_project()
@@ -148,7 +133,7 @@ def initialize_repo(project_root):
 
 def initialize_existing_pipeline(pipeline_path, stages, envs):
     """This function is used for initalizing an existing pipeline."""
-    
+
     content = pt.ReadMe()
 
     for s in stages.split(','):
@@ -158,8 +143,9 @@ def initialize_existing_pipeline(pipeline_path, stages, envs):
                 "Unable to find script for stage '" + s + "'. You might need "
                 "to provide values for the --stages flag. See 'init --help'."
             )
-    # write README        
-    content.init_pipeline(pipeline_path, stages,envs)
+    # write README
+    content.init_pipeline(pipeline_path, stages, envs)
+
 
 def initialize_paper(paper_path, envs):
     """This function is used for initializing the special paper pipeline."""

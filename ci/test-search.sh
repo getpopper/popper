@@ -5,34 +5,23 @@ source common-setup.sh
 
 sleep 10
 
-# test popper search command
 init_test
-popper search quiho
-popper search data-science --include-readme | grep '>'
-test -d ./.cache
+
+popper search co2 | grep 'swc-lesson-pipelines/co2-emissions'
+test -f ./.pipeline_cache.yml
 
 popper search --ls
-popper search quiho --skip-update
-popper search linux --skip-update
-popper search --rm popperized
+popper search --include-readme 'kernel' | grep 'examples/vagrant-linux'
+popper search --skip-update co2 | grep 'swc-lesson-pipelines/co2-emissions'
+popper search --skip-update --include-readme kernel | grep 'examples/vagrant-linux'
 
-set +e
-cat .popper.yml | grep 'github/popperized'
-if [ $? -eq 0 ];
-then
-  exit 1
-fi
-set -e
+popper search --rm popperized
+! cat .popper.yml | grep 'popperized'
 
 popper search --add popperized
-cat .popper.yml | grep 'github/popperized'
+cat .popper.yml | grep 'popperized'
+
 init_test
+! popper search --skip-update co2
 
-set +e
-popper search quiho --skip-update
-if [ $? -eq 0 ];
-then
-  exit 1
-fi
-set -e
-
+popper info --update-cache popperized/popper-readthedocs-examples/vagrant-linux | grep 'exemplifies the usage of Popper'

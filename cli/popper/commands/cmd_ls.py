@@ -7,7 +7,7 @@ from popper.cli import pass_context
 
 @click.command(
     'ls',
-    short_help='Shows the available pipelines in a repository')
+    short_help='Show list of pipelines in current project.')
 @pass_context
 def cli(ctx):
     """Used to list down the avaliable pipelines

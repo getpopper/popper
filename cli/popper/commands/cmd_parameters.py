@@ -1,12 +1,12 @@
 import click
 import popper.utils as pu
+import sys
 
 from popper.cli import pass_context
 from popper.exceptions import UsageError
 
 
-@click.command('env-vars', short_help='Define or remove executions of a'
-               'pipeline.')
+@click.command('parameters', short_help='Parametrize a pipeline pipeline.')
 @click.argument('pipeline', required=False)
 @click.option(
     '--add',
@@ -38,18 +38,20 @@ def cli(ctx, pipeline, add, rm):
                          "See popper env-vars --help for more information.")
 
     if add:
-        env_vars = pipeline_config.get('vars', [])
+        env_vars = pipeline_config.get('parameters', [])
         vars_add = {}
         for var in add:
             key, val = var.split('=')
             vars_add[key] = val
         env_vars.append(vars_add)
-        pu.update_config(pipeline, vars=env_vars)
+        pu.update_config(pipeline, parameters=env_vars)
+        sys.exit(0)
 
-    elif rm:
-        env_vars = pipeline_config.get('vars', None)
+    if rm:
+        env_vars = pipeline_config.get('parameters', None)
+
         if not env_vars:
-            pu.fail("No environment variables defined for this pipeline.")
+            pu.fail("No parameters defined for this pipeline.")
 
         vars_del = {}
         for var in rm:
@@ -69,18 +71,17 @@ def cli(ctx, pipeline, add, rm):
                     index = env_vars.index(vars)
                     break
 
-        if index != -1:
-            env_vars.pop(index)
-            pu.update_config(pipeline, vars=env_vars)
-        else:
-            pu.fail("The environment variable list does "
-                    "not exist for this pipeline.")
+        if index == -1:
+            pu.fail("Unable to find this parametrization in this pipeline.")
 
-    else:
-        try:
-            env_vars = pipeline_config['vars']
-            if len(env_vars) == 0:
-                raise KeyError
-            pu.print_yaml(env_vars)
-        except KeyError:
-            pu.info("No environment variables defined for this pipeline.")
+        env_vars.pop(index)
+        pu.update_config(pipeline, parameters=env_vars)
+        sys.exit(0)
+
+    try:
+        env_vars = pipeline_config['parameters']
+        if len(env_vars) == 0:
+            raise KeyError
+        pu.print_yaml(env_vars)
+    except KeyError:
+        pu.info("No parameterization defined for this pipeline.")

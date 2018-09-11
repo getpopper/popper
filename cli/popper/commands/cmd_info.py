@@ -1,73 +1,62 @@
 import click
 import popper.utils as pu
+import sys
+
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
 
-"""
-Making the code compatible with both python 2.x and 3.x environments.
-2.x does not have a FileNotFoundError and makes use of IOError to handle
-such exceptions.
-"""
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = IOError
 
-
-@click.command('info', short_help='Show details about a pipeline hosted on '
-               'github.')
+@click.command(
+    'info', short_help='Show details about a pipeline hosted on github.'
+)
 @click.argument('pipeline', required=True)
+@click.option('--full', help=('Show full content of README'), is_flag=True)
+@click.option(
+    '--update-cache',
+    help=('Update the pipeline metadata cache prior to looking for info'),
+    default=False,
+    is_flag=True
+)
 @pass_context
-def cli(ctx, pipeline):
-    """Displays the information related to a pipeline.
-    It gives details about the pipeline name, version,
-    and contents of the pipeline.
+def cli(ctx, pipeline, full, update_cache):
+    """Displays the description of a pipeline hosted on Github. The
+    format for specifying pipelines is <org>/<repo>/<pipeline>. For example:
 
-    Examples:
       popper info popperized/quiho-popper/single-node
+
+    By default, this command searches information from the pipeline metadata
+    cache. To recreate it (fetch from Github), pass the --update-cache flag.
     """
-    pipeline = pipeline.split('/')
-    # checking the validity of the provided arguments
-    if len(pipeline) != 3:
+    orgrepopipe = pipeline.split('/')
+
+    if len(orgrepopipe) != 3:
         raise BadArgumentUsage(
-                "Bad pipeline name. See 'popper info --help' for more info.")
+                "Bad name format. See 'popper info --help' for more info.")
 
-    get_info(pipeline)
+    org, repo, name = orgrepopipe[0:]
 
+    meta = pu.fetch_pipeline_metadata(skip_update=(not update_cache))
 
-def get_info(pipeline):
-    """Prints the information about the specified pipeline.
+    pipe_meta = meta[org][repo]['pipelines'].get(name, None)
 
-    Args:
-        pipeline (list): [org,repo,pipeline_name]
-    """
+    if not pipe_meta:
+        pu.fail('Unable to find metadata for given pipeline')
 
-    # Checking if the popperized repositories are present or not
-    info = {}
-    org = pipeline[0]
-    repo = pipeline[1]
-    pipe = pipeline[2]
+    if not pipe_meta['readme']:
+        pu.info('This pipeline does not have a README file associated with it')
+        sys.exit(0)
 
-    commit_url = 'https://api.github.com/repos'
-    commit_url += '/{}/{}/git/refs/heads/master'.format(org, repo)
+    pu.info('')
 
-    r = pu.make_gh_request(
-        commit_url,
-        msg="Please check if the specified pipeline exists "
-        "and the internet is connected."
-    )
-
-    r = r.json()
-    info['name'] = pipe
-    info['url'] = 'https://github.com/{}/{}'.format(org, repo)
-    info['sha'] = r['object']['sha']
-
-    temp = {}
-    contents = " ".join(pu.read_gh_pipeline(org, repo, pipe)[1:])
-
-    if len(contents) != 0:
-        temp['description'] = contents
-
-    pu.print_yaml(info)
-    if 'description' in temp:
-        pu.print_yaml(temp)
+    if full:
+        pu.info(pipe_meta['readme'])
+    else:
+        readme_lines = pipe_meta['readme'].split('\n')
+        if len(readme_lines) <= 2:
+            pu.info(pipe_meta['readme'])
+        else:
+            for l in readme_lines[2:]:
+                if not l:
+                    break
+                pu.info(l)
+    pu.info('')

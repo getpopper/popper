@@ -119,7 +119,7 @@ def run_pipelines(pipelines, project_root, timeout, skip,
             # Makes sure execution starts with host
             envs.insert(0, envs.pop(envs.index('host')))
         for env in envs:
-            executions = get_executions_for_pipeline(pipe_d.get('vars'))
+            executions = get_executions_for_pipeline(pipe_d.get('parameters'))
             status = run_pipeline(project_root, pipe_n, pipe_d, env,
                                   timeout, skip, ignore_errors, output,
                                   executions=executions,
@@ -249,7 +249,7 @@ def pipelines_from_commit_message(project_pipelines):
     # check for pull requests
     if 'Merge' in msg:
         pu.info("Merge detected. Reading message from merged commit.")
-        commit_id = re.search('Merge (.+?) into', msg).group(1)
+        commit_id = re.search(r'Merge (.+?) into', msg).group(1)
 
         args = ['git', 'show', '-s', '--format=%B', commit_id]
 
@@ -330,8 +330,8 @@ def bin_requirements(bin):
 
     version = str(check_output(binary + " --version", shell=True))
 
-    required_version = re.search('\+?(\d+(?:\.\d+)*)', bin).group(1)
-    version = re.search('(\d+(\.\d+)*\.?)', version).group(1)
+    required_version = re.search(r'\+?(\d+(?:\.\d+)*)', bin).group(1)
+    version = re.search(r'(\d+(\.\d+)*\.?)', version).group(1)
 
     meets_reqs = required_version <= version \
         if '+' in bin else version.startswith(required_version)

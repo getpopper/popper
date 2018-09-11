@@ -3,8 +3,6 @@ set -ex
 
 source common-setup.sh
 
-# test popper ls command
-
 # when pipelines are present
 init_test
 popper init experiment1

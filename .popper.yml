@@ -1,3 +1,4 @@
+version: 1
 metadata:
   access_right: open
   license: CC-BY-4.0
@@ -19,7 +20,7 @@ pipelines:
     - test-cleanup
     - test-defaults
     - test-env
-    - test-env-vars
+    - test-parameters
     - test-existing
     - test-init
     - test-matrix-execution
@@ -34,6 +35,6 @@ pipelines:
     - test-stages
     - test-workflow
     - teardown
-popperized:
-- github/popperized
+search_sources:
+- popperized
 badge-server-url: http://badges.falsifiable.us

@@ -6,6 +6,10 @@ source common-setup.sh
 # reset removes files and modifies .popper.yml
 init_test
 popper init myp
+git add .
+git config user.email "testuser@example.com"
+git config user.name "Test User"
+git commit -m 'adding myp'
 set +e
 echo -e "yes" | popper reset
 cat .popper.yml | grep 'myp'
@@ -17,6 +21,10 @@ fi
 # if user selects 'n', we should not do anything
 init_test
 popper init myp
+git add .
+git config user.email "testuser@example.com"
+git config user.name "Test User"
+git commit -m 'adding myp'
 printf 'n' | popper reset
 set -e
 cat .popper.yml | grep 'myp'

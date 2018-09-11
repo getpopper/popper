@@ -5,8 +5,27 @@ import yaml
 import requests
 import subprocess
 
+from collections import defaultdict
+
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
+
+init_config = {
+    'metadata': {
+        'access_right': "open",
+        'license': "CC-BY-4.0",
+        'upload_type': "publication",
+        'publication_type': "article"
+    },
+    'pipelines': {},
+    'search_sources': [
+        "popperized"
+    ],
+    'badge-server-url': 'http://badges.falsifiable.us',
+    'version': 1,
+}
+
+gitignore_content = ".pipeline_cache\npopper/\n"
 
 
 def get_items(dict_object):
@@ -31,6 +50,83 @@ def get_path_to_config():
     return ""
 
 
+def get_search_sources(config):
+    if 'search_sources' not in config and 'popperized' not in config:
+        return []
+    if 'search_sources' in config:
+        return config['search_sources']
+    if 'popperized' in config:
+        return config['popperized']
+
+
+def fetch_pipeline_metadata(skip_update=False):
+    meta = defaultdict(dict)
+    repos = []
+
+    project_root = get_project_root()
+    cache_file = os.path.join(project_root, '.pipeline_cache.yml')
+
+    if not skip_update:
+        config = read_config()
+
+        sources = get_search_sources(config)
+
+        info('Updating pipeline metadata cache\n')
+
+        for s in sources:
+            if '/' in s:
+                repos.append(s)
+            else:
+                for repo in repos_in_org(s):
+                    repos.append(s+'/'+repo)
+
+        with click.progressbar(
+                repos,
+                show_eta=False,
+                bar_template='[%(bar)s] %(info)s | %(label)s',
+                show_percent=True) as bar:
+            for r in bar:
+                bar.label = "Fetching pipeline metadata from '{}'".format(r)
+                fetch_metadata_for_repo(r, meta)
+
+        with open(cache_file, 'w') as f:
+            yaml.dump(dict(meta), f)
+    else:
+        if not os.path.isfile(cache_file):
+            fail("Metadata cache doesn't exist. Use --help for more.")
+
+        with open(cache_file, 'r') as f:
+            meta = yaml.load(f)
+
+    return meta
+
+
+def fetch_metadata_for_repo(orgrepo, meta):
+    org, repo = orgrepo.split('/')
+    config = read_config_remote(org, repo)
+
+    if not config or 'pipelines' not in config:
+        return
+
+    meta[org][repo] = config
+
+    fetch_readmes(meta, org, repo)
+
+
+def fetch_readmes(meta, org, repo):
+    pipelines = meta[org][repo]['pipelines']
+    for name, pipe in pipelines.items():
+        url = "https://raw.githubusercontent.com/{}/{}/{}/{}/README.md".format(
+            org, repo, 'master', pipe['path']
+        )
+        r = make_gh_request(url, err=False)
+
+        readme = ''
+        if r.status_code == 200:
+            readme = r.content.decode("utf-8")
+        pipe['readme'] = readme
+
+
 def get_project_root():
     """Tries to find the root of the project with the following heuristic:
 
@@ -39,18 +135,12 @@ def get_project_root():
     Returns:
         project_root (str): The fully qualified path to the root of project.
     """
+    base = exec_cmd('git rev-parse --show-toplevel', ignoreerror=True)
 
-    try:
-        base = subprocess.check_output(
-            'git rev-parse --show-toplevel', shell=True
-        )
-    except subprocess.CalledProcessError:
-        fail(
-            "Unable to find the root of your project."
-            "Initialize repository first."
-        )
+    if not base:
+        fail("Unable to find root of project. Initialize repository first.")
 
-    return base.decode('utf-8').strip()
+    return base
 
 
 def read_config(name=None):
@@ -82,6 +172,10 @@ def read_config(name=None):
                      "Consider deleting it and reinitializing the repo. "
                      "See popper init --help for more.")
 
+    if 'version' not in config:
+        warn("No 'version' element found in .popper.yml file. Assuming 1.")
+        config['version'] = 1
+
     if not name:
         return config
     else:
@@ -110,7 +204,7 @@ def is_popperized():
     return os.path.isfile(config_filename)
 
 
-def update_config(name, stages='', envs={}, vars=[], reqs={},
+def update_config(name, stages='', envs={}, parameters=[], reqs={},
                   relative_path='', timeout=None):
     """Updates the configuration for a pipeline."""
 
@@ -133,7 +227,7 @@ def update_config(name, stages='', envs={}, vars=[], reqs={},
     config['pipelines'][name] = {
         'stages': stages.split(','),
         'envs': envs,
-        'vars': vars,
+        'parameters': parameters,
         'requirements': reqs,
         'path': relative_path,
     }
@@ -211,17 +305,15 @@ def get_remote_url():
         string - url of remote origin,
             For example: https://github.com/systemslab/popper
     """
-    args = ['git', 'config', '--get', 'remote.origin.url']
-    p = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output, error = p.communicate()
-    if p.returncode == 0:
-        # Remove the .git\n from the end of the url returned by Popen
-        try:
-            return output.decode()[:-5]  # Python 3 returns bytes
-        except AttributeError:
-            return output[:-5]
-    else:
-        return ''
+    repo_url = exec_cmd('git config --get remote.origin.url', ignoreerror=True)
+
+    # cleanup the URL so we get in in https form and without '.git' ending
+    if repo_url.endswith('.git'):
+        repo_url = repo_url[:-4]
+    if 'git@' in repo_url:
+        repo_url = 'https://' + repo_url[4:].replace(':', '/')
+
+    return repo_url
 
 
 def get_gh_headers():
@@ -257,8 +349,11 @@ def make_gh_request(url, err=True, msg=None):
         Response object: contains a server's response to an HTTP request.
     """
     if not msg:
-        msg = "Unable to connect. Please check your network"
-        "and try again."
+        msg = (
+            "Unable to connect. If your network is working properly, you might"
+            " have reached Github's API request limit. Try adding a Github API"
+            " token to the 'POPPER_GITHUB_API_TOKEN' variable."
+        )
 
     response = requests.get(url, headers=get_gh_headers())
     if err and response.status_code != 200:
@@ -267,35 +362,34 @@ def make_gh_request(url, err=True, msg=None):
         return response
 
 
-def read_gh_pipeline(uname, repo, pipeline, branch="master"):
-    """Reads the README.md file of a pipeline and returns its
-    contents.
-
-    Args:
-        uname (str): User/org_name
-        repo (str): Name of the repository
-        pipeline (str): Name of the pipeline
-        branch (str): Name of the branch
-
-    Returns:
-        contents (list): the contents of the README.md file
-    """
-    url = "https://raw.githubusercontent.com"
-    url += "/{}/{}/{}".format(uname, repo, branch)
-    url += "/pipelines/{}/README.md".format(pipeline)
-
-    contents = ""
+def read_config_remote(org, repo, branch='master'):
+    url = "https://raw.githubusercontent.com/{}/{}/{}/.popper.yml".format(
+        org, repo, branch
+    )
     r = make_gh_request(url, err=False)
-    if r.status_code != 200:
-        pass
-    else:
-        contents = r.content.decode("utf-8").split("\n")
 
-    return contents
+    if r.status_code != 200:
+        return None
+
+    config = yaml.load(r.content.decode("utf-8"))
+
+    if type(config) != dict:
+        return None
+
+    if 'version' not in config:
+        config['version'] = 1
+
+    return config
+
+
+def repos_in_org(org):
+    r = make_gh_request('https://api.github.com/users/{}/repos'.format(org))
+    for repo in r.json():
+        yield repo['name']
 
 
 def get_head_commit():
-    return subprocess.check_output(['git', 'rev-parse', 'HEAD'])[:-1]
+    return exec_cmd('git rev-parse HEAD')[:-1]
 
 
 def is_repo_empty():
@@ -387,18 +481,28 @@ def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
     return new_pipeline_name, path
 
 
-def get_repo_name():
+def exec_cmd(cmd, ignoreerror=False):
+    try:
+        output = subprocess.check_output(cmd, shell=True).strip()
+    except subprocess.CalledProcessError as ex:
+        if ignoreerror:
+            return ''
+        fail("Command '{}' failed: {}".format(cmd, ex))
+
+    output = output.decode('utf-8')
+
+    return output
+
+
+def infer_repo_name_from_root_folder():
     """Finds the root folder of a local Github repository and returns it.
 
     Returns:
         repo_name (str): the name of the root folder.
     """
-    repo_name = subprocess.Popen(
-        "basename `git rev-parse --show-toplevel`",
-        shell=True,
-        stdout=subprocess.PIPE).stdout.read()
-
-    return repo_name.decode("utf-8")[:-1]
+    root_folder = get_project_root()
+    repo_name = os.path.basename(root_folder)
+    return repo_name
 
 
 def get_git_files():
@@ -408,18 +512,5 @@ def get_git_files():
     Returns:
         files (list) : list of git tracked files
     """
-
-    proc = subprocess.Popen(
-        "git ls-files",
-        stdout=subprocess.PIPE,
-        shell=True)
-
-    (files, err) = proc.communicate()
-
-    if not err:
-        if not isinstance(files, type("a")):
-            files = files.decode("utf-8")
-
-        files = files.split("\n")[:-1]
-
-    return files
+    gitfiles = exec_cmd("git ls-files")
+    return gitfiles.split("\n")

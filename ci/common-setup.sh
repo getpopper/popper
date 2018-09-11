@@ -49,4 +49,3 @@ export PATH=$PATH:$PWD/cli/bin
 export PYTHONUNBUFFERED=1
 
 echo Testing with popper binary located at $( which popper )
-
