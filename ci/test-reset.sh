@@ -7,6 +7,8 @@ source common-setup.sh
 init_test
 popper init myp
 git add .
+git config user.email "testuser@example.com"
+git config user.name "Test User"
 git commit -m 'adding myp'
 set +e
 echo -e "yes" | popper reset
@@ -20,6 +22,8 @@ fi
 init_test
 popper init myp
 git add .
+git config user.email "testuser@example.com"
+git config user.name "Test User"
 git commit -m 'adding myp'
 printf 'n' | popper reset
 set -e
