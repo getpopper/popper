@@ -3,7 +3,6 @@
 import click
 import os
 import sys
-import shutil
 import popper.utils as pu
 import popper.template as pt
 from popper.cli import pass_context
@@ -17,70 +16,27 @@ def cli(ctx):
     """Resets a popper repository completely, removing all existing
     pipelines and folders, leaving behind a newly created .popper.yml file.
 
-    Note: It only removes those files which are being tracked by git. Untracked files
-    will not be deleted. 
+    Note: It only removes those files inside a pipeline folder that are also
+    tracked by git. Untracked files will not be deleted.
     """
-
-    if(not click.confirm("This will remove all the pipeline files in this project,"
-        " do you want to continue?", abort=False)):
+    msg = (
+        "This will remove all the pipeline files in this "
+        " project, do you want to continue?"
+    )
+    if(not click.confirm(msg, abort=False)):
         sys.exit(0)
-    
-    git_files = pu.get_git_files()
 
     project_root = pu.get_project_root()
 
-    for file_name in git_files:
-        file_path = os.path.join(project_root, file_name)
-        try:
-            shutil.rmtree(file_path)
-        except OSError:
-            try:
-                os.remove(file_path)
-            except OSError:
-                continue
+    if project_root != os.getcwd():
+        msg = 'This command can only be executed from the project root folder'
+        pu.fail(msg)
 
-    delete_empty_folders(project_root, git_files)
+    config = pu.read_config()
 
-    config = {
-        'metadata': {
-            'access_right': "open",
-            'license': "CC-BY-4.0",
-            'upload_type': "publication",
-            'publication_type': "article"
-        },
-        'pipelines': {},
-        'popperized': [
-            "github/popperized"
-        ]
-    }
-
-    pu.write_config(config)
-
-    with open(os.path.join(project_root, '.gitignore'), 'a') as f:
-        f.write('.cache\n')
-        f.write('popper_logs\n')
-        f.write('popper_status\n')
-
+    for _, p in config['pipelines'].items():
+        pu.exec_cmd('git rm -r {}'.format(p['path']))
+    pu.write_config(pu.init_config)
     content = pt.ReadMe()
     content.init_project()
     pu.info("Reset complete", fg="cyan")
-
-
-def delete_empty_folders(root, files):
-    """Used to delete empty folders after all the git tracked files are
-    deleted.
-
-    Args:
-        root (str): The path of the project root of the repository.
-        files (list): The list of git tracked files.
-    """
-
-    folders = set([])
-    for f in files:
-        f = f.split("/")
-        if "." not in f[0]:
-            folders.add(f[0])
-
-    for folder in folders:
-        folder_path = os.path.join(root, folder)
-        shutil.rmtree(folder_path)

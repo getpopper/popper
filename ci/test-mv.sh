@@ -2,7 +2,6 @@
 set -ex
 
 source common-setup.sh
-# popper mv
 
 init_test
 popper init samples/exp1

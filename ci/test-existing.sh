@@ -3,7 +3,6 @@ set -ex
 
 source common-setup.sh
 
-# existing pipeline
 init_test
 mkdir ci
 echo '' > ci/one.sh

@@ -163,32 +163,33 @@ how to create a new project using the Blue Ocean UI.
 
 ## Automated Artifact Evaluation
 
-A growing number of CS conferences and journals incorporate an 
-artifact evaluation process in which authors of articles submit 
-[artifact descriptions](http://ctuning.org/ae/submission.html) that 
-are tested by a committee, in order to verify that experiments 
-presented in a paper can be re-executed by others. In short, an 
-artifact description is a 2-3 page narrative on how to replicate 
-results, including steps that detail how to install software and how 
-to re-execute experiments and analysis contained in a paper.
+A growing number of Computer Science conferences and journals 
+incorporate an artifact evaluation process in which authors of 
+articles submit [artifact 
+descriptions](http://ctuning.org/ae/submission.html) that are tested 
+by a committee, in order to verify that experiments presented in a 
+paper can be re-executed by others. In short, an artifact description 
+is a 2-3 page narrative on how to replicate results, including steps 
+that detail how to install software and how to re-execute experiments 
+and analysis contained in a paper.
 
-An alternative to the manual creation of an Artifact Description (AD) 
-is to use a continuous integration (CI) service such as GitLab-CI or 
-Jenkins. Authors can make use of a CI service to automate the 
-experimentation pipelines associated to a paper. By doing this, the 
-URL pointing to the project on the CI server that holds execution 
-logs, as well as the repository containing all the automation scripts 
-can serve as the AD. In other words, the repository containing the 
-code for experimentation pipelines, and the associated CI project, 
-serve both as an "executable AD". Thus, instead of requiring ADs, 
-conferences and journals can request that authors submit a link to a 
-code repository (Github, Gitlab, etc.) where automation scripts 
-reside, along with a link to the CI server that executes the 
-pipelines.
+An alternative to the manual creation and verification of an Artifact 
+Description (AD) is to use a continuous integration (CI) service such 
+as GitLab-CI or Jenkins. Authors can make use of a CI service to 
+automate the experimentation pipelines associated to a paper. By doing 
+this, the URL pointing to the project on the CI server that holds 
+execution logs, as well as the repository containing all the 
+automation scripts, can serve as the AD. In other words, the 
+repository containing the code for experimentation pipelines, and the 
+associated CI project, serve both as a "self-verifiable AD". Thus, 
+instead of requiring manually created ADs, conferences and journals 
+can request that authors submit a link to a code repository (Github, 
+Gitlab, etc.) where automation scripts reside, along with a link to 
+the CI server that executes the pipelines.
 
 While automating the execution of a pipeline can be done in many ways, 
 in order for this approach to serve as an alternative to ADs, there 
-are four high-level tasks that pipelines must carry out in every 
+are five high-level tasks that pipelines must carry out in every 
 execution:
 
   * Code and data dependencies. Code must reside on a version control 
@@ -213,6 +214,11 @@ execution:
     allocate nodes (using infrastructure automation tools) on 
     CloudLab, Chameleon, Grid5k, SLURM, Terraform (EC2, GCE, etc.), 
     etc.
+  * Environment capture. Capture information about the runtime 
+    environment. For example, hardware description, OS, system 
+    packages (i.e. software installed by system administrators), 
+    remote services (e.g. a scheduler). Many open-source tools can aid 
+    in aggregating this information such as SOSReport or facter.
   * Validation. Scripts must verify that the output corroborates the 
     claims made on the article. For example, the pipeline might check 
     that the throughput of a system is within an expected confidence 

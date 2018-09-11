@@ -4,8 +4,8 @@ import popper.utils as pu
 
 class ReadMe:
     def __init__(self):
-        self.repo_name = pu.get_repo_name()
         self.project_root = pu.get_project_root()
+        self.repo_name = pu.infer_repo_name_from_root_folder()
 
     def write_readme(self, content, path):
         """ Creates a README.md file with the specified content

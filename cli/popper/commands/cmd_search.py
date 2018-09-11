@@ -1,10 +1,9 @@
 import click
-import os
 import sys
 import popper.utils as pu
+
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
-import json
 
 # For compatibility between python 2.x and 3.x versions
 try:
@@ -15,7 +14,7 @@ except NameError:
 
 @click.command(
     'search',
-    short_help='Search for pipelines matching one or more keywords.')
+    short_help='Search for pipelines on Github matching one or more keywords.')
 @click.argument('keywords', required=False)
 @click.option(
     '--skip-update',
@@ -24,11 +23,11 @@ except NameError:
 )
 @click.option(
     '--add',
-    help=('Add an org/repo to the popperized list in .popper.yml'),
+    help=('Add a pipeline source (format: <org>/<repo> or <org>)'),
 )
 @click.option(
     '--rm',
-    help=('Remove an org/repo from the popperized list in .popper.yml'),
+    help=('Remove a pipeline source (format: <org>/<repo> or <org>)'),
 )
 @click.option(
     '--ls',
@@ -37,287 +36,116 @@ except NameError:
 )
 @click.option(
     '--include-readme',
-    help=("Includes content from a pipeline's readme in the search results"),
+    help=('Include readme when searching for matching pipelines.'),
     is_flag=True
 )
 @pass_context
 def cli(ctx, keywords, skip_update, add, rm, ls, include_readme):
-    """Searches for pipelines on GitHub matching the given keyword(s).
+    """Searches for pipelines on Github matching the given keyword(s).
 
-    The list of repositories or organizations scraped for Popper pipelines is
+    The list of repositories or organizations scraped for pipelines is
     specified in the 'popperized' list in the .popper.yml file. By default,
-    https://github.com/popperized is added to the configuration.
+    https://github.com/popperized is added to the list.
 
     If no keywords are specified, a list of all the pipelines from all
-    organizations (in the .popper.yml file) and repositories will be returned.
+    organizations (in the .popper.yml file) and repositories will be shown.
+
+    This commands makes use of Github's API, which has a limit on the number of
+    requests per hour that an unauthenticated user can make. If you reach this
+    limit, you can provide a Github API token via a POPPER_GITHUB_API_TOKEN
+    environment variable. If defined, this variable is used to obtain the token
+    when executing HTTP requests.
 
     Example:
 
         popper search quiho
 
-    would result in:
+    Would result in:
 
-        popperized/quiho-popper
+        popperized/quiho-popper/single-node
 
-    To add or remove orgs/repos to/from the 'popperized' ,
-    use the --add and --rm flags while searching.
+    The format of search output is <org>/<repo>/<pipeline-name>. To add
+    organizations or repositories to the list of pipeline sources:
 
         popper search --add org/repo
+        popper search --add entireorg
 
-    To remove an organization/person do:
+    To remove one:
 
         popper search --rm org/repo
+        popper search --rm entireorg
 
     To view the list repositories that are available to the search command:
 
         popper search --ls
-
     """
-    if (rm or add or ls) and (keywords):
-        raise BadArgumentUsage(
-                "'add', 'rm' and 'ls' flags cannot be combined with others.")
+    if ((rm and add) or (rm and ls) or (add and ls)):
+        raise BadArgumentUsage("Only one of 'add', 'rm' and 'ls' accepted.")
 
-    project_root = pu.get_project_root()
+    if (rm or add or ls) and keywords:
+        raise BadArgumentUsage("Search cannot be combined with other flags.")
 
     config = pu.read_config()
-    popperized_list = config['popperized']
+    sources = pu.get_search_sources(config)
 
     if add:
-        add = 'github/' + add
-        if add not in popperized_list:
-            popperized_list.append(add)
+        if len(add.split('/')) > 2:
+            pu.fail("Bad source naming format. See 'popper search --help'.")
+        if add in sources:
+            pu.info('{} is already a search source.'.format(add))
+            sys.exist(0)
 
-        config['popperized'] = popperized_list
+        sources.append(add)
+
+        config['search_sources'] = sources
         pu.write_config(config)
         sys.exit(0)
 
     if rm:
-        rm = 'github/' + rm
-        if rm in popperized_list:
-            popperized_list.remove(rm)
+        if rm not in sources:
+            pu.info("'{}' is not a search source.".format(rm))
+            sys.exit(0)
 
-        config['popperized'] = popperized_list
+        sources.remove(rm)
+
+        config['search_sources'] = sources
         pu.write_config(config)
         sys.exit(0)
 
-    result = []  # to store the result of the search query as a list
+    if len(sources) == 0:
+        pu.fail('No source for popper pipelines defined! Add one first.')
 
-    if ls:
-        for p in popperized_list:
-            if p.count('/') == 1:
-                org_name = p.split('/')[1]
-                org_url = ('https://api.github.com/users/{}/repos')
-                org_url = org_url.format(org_name)
+    pipeline_meta = pu.fetch_pipeline_metadata(skip_update)
+    result = search_pipelines(pipeline_meta, keywords, include_readme)
 
-                response = pu.make_gh_request(org_url)
-                repos = response.json()
-                temp = [r["full_name"] for r in repos]
-                result.extend(temp)
-            else:
-                result.extend(p[7:])
+    pu.info('Matching pipelines:')
+    pu.print_yaml(result)
 
-        if len(result) > 0:
-            pu.info("The list of available poppperized repositories are:\n")
-            pu.print_yaml(result)
-            sys.exit()
+
+def search_pipelines(meta, keywords, include_readme):
+    result = []
+    for pipe in pipeline_name_list(meta):
+        if not keywords:
+            result.append(pipe)
         else:
-            fail_msg = "There are no popperized repositores available"
-            "for search. Use the --add flag to add an org/repo."
-
-            pu.fail(fail_msg)
-
-        sys.exit(0)
-
-    search_params = {}
-
-    if not keywords:  # checks if the query is empty or not
-        search_params['empty_query'] = True
-    else:
-        search_params['empty_query'] = False
-
-    cache_dir = os.path.join(project_root, '.cache')
-
-    search_params["keywords"] = keywords
-    search_params["cache_dir"] = cache_dir
-    search_params["skip_update"] = True if skip_update else False
-    search_params["in_readme"] = True if include_readme else False
-
-    if not os.path.exists(cache_dir):
-        os.makedirs(cache_dir)
-
-    for popperized in popperized_list:
-        if popperized.count('/') == 1:
-            # it is an organization
-            org_name = popperized.split('/')[1]
-
-            repos = ""
-
-            if not skip_update:
-                org_url = ('https://api.github.com/users/{}/repos'
-                           .format(org_name))
-
-                response = pu.make_gh_request(org_url)
-
-                with open(os.path.join(cache_dir, org_name + '_repos.json'),
-                          'w') as f:
-                    json.dump(response.json(), f)
-
-            try:
-                with open(os.path.join(cache_dir, org_name + '_repos.json'),
-                          'r') as f:
-                    repos = json.load(f)
-            except FileNotFoundError:
-                pu.fail('No cached metadata has been downloaded')
-
-            with click.progressbar(
-                    repos,
-                    show_eta=False,
-                    label='Searching in ' + org_name,
-                    bar_template='[%(bar)s] %(label)s | %(info)s',
-                    show_percent=True) as bar:
-
-                for r in bar:
-                    if search_params["empty_query"]:
-                        temp = ' {}/{}'\
-                            .format(org_name, r['name'])
-
-                        result.append(temp)
-
-                    elif l_distance(r["name"].lower(),
-                                    keywords.lower()) < 1:
-                        temp = ' {}/{}' \
-                            .format(org_name, r['name'])
-                        result.append(temp)
-
-                    else:
-                        search_params["repo_url"] = r["url"]
-                        search_params["uname"] = org_name
-                        result.extend(
-                            search_pipeline(search_params))
-
-        else:
-            # it is a repository
-            user, repo = popperized.split('/')[1:]
-            repo_url = ('https://api.github.com/repos/{}/{}'
-                        .format(user, repo))
-
-            search_params["repo_url"] = repo_url
-            search_params["uname"] = user
-
-            pu.info("Searching in repository : {}".format(repo))
-            result.extend(
-                search_pipeline(search_params))
-
-    if len(result) != 0:
-        pu.info("\nSearch results:\n", fg="green")
-        for res in result:
-            pu.info("> " + res + "\n")
-
-        if search_params["in_readme"]:
-            pu.info("Use popper info command to view the"
-                    " details of a pipeline. See popper info --"
-                    "help")
-    else:
-        pu.fail("Unable to find any matching pipelines")
+            for key in keywords.split(' '):
+                if key in pipe:
+                    result.append(pipe)
+                    break
+                if include_readme:
+                    p = pipe.split('/')
+                    readme = meta[p[0]][p[1]]['pipelines'][p[2]]['readme']
+                    if key.lower() in readme.lower():
+                        result.append(pipe)
+    return result
 
 
-def search_pipeline(s):
-    """Searches for the pipeline inside a github repository.
-       Word level levenshtein distances are being calculated to find
-       appropriate results for a given query.
-
-    Args:
-        s (dict): A python dictionary that contains all the conditions
-                        specified by a user during popper search.
-    Returns:
-        results (list): List of pipelines
-    """
-
-    repo_name = s["repo_url"].split('/')[-1]
-    results = []
-
-    pipelines = ""
-
-    if not s["skip_update"]:
-        pipelines_url = s["repo_url"] + "/contents/pipelines"
-
-        response = pu.make_gh_request(pipelines_url, err=False)
-        if response.status_code != 200:
-            return results
-
-        else:
-            with open(os.path.join(
-                    s["cache_dir"], repo_name + '.json'), 'w') as f:
-                json.dump(response.json(), f)
-
-    try:
-        with open(os.path.join(s["cache_dir"], repo_name + '.json'), 'r') as f:
-            pipelines = json.load(f)
-    except FileNotFoundError:
-        return results
-
-    for pipeline in pipelines:
-        if s["empty_query"]:
-            temp = "{}/{}/{}".format(s["uname"], repo_name, pipeline['name'])
-            results.append(temp)
-
-        else:
-            if l_distance(s["keywords"].lower(),
-                          pipeline['name'].lower()) < 1:
-
-                temp = "{}/{}/{}" \
-                    .format(s["uname"], repo_name, pipeline['name'])
-
-                if s["in_readme"]:
-                    contents = pu.read_gh_pipeline(
-                        s["uname"],
-                        repo_name,
-                        pipeline["name"]
-                    )
-
-                    if len(contents) != 0:
-                        contents = " ".join(" ".join(
-                            contents[2:4]).split(".")[0:3]
-                        )
-                        temp += "\n" + contents + "\n"
-
-                results.append(temp)
-
-    return results
-
-
-def l_distance(a, b):
-    """A modified version of the Levenshtein Distance algorithm to find
-    word level edit distances between two sentences.
-
-    Args:
-        a, b (str): The words between which the Levenshtein distance
-                        is to be calculated.
-    Returns:
-        ldist (int): Levenshtein distance between a and b.
-    """
-
-    arr1 = a.split("-")
-    arr2 = b.split("-")
-
-    l1 = len(arr1)
-    l2 = len(arr2)
-
-    dist = [[0 for j in range(l2 + 1)] for i in range(l1 + 1)]
-
-    dist[0][0] = 0
-
-    for i in range(1, l1 + 1):
-        dist[i][0] = i
-    for i in range(1, l2 + 1):
-        dist[0][i] = i
-
-    for i in range(1, l1 + 1):
-        for j in range(1, l2 + 1):
-            temp = 0 if arr1[i - 1] == arr2[j - 1] else 1
-            dist[i][j] = min(dist[i - 1][j] + 1, dist[i][j - 1] + 1,
-                             dist[i - 1][j - 1] + temp)
-
-    ldist = float(dist[l1][l2]) / max(l1, l2)
-
-    return ldist
+def pipeline_name_list(meta):
+    for org in meta:
+        for repo in meta[org]:
+            if 'pipelines' not in meta[org][repo]:
+                continue
+            for pipe in meta[org][repo]['pipelines']:
+                if pipe == 'paper':
+                    continue
+                yield '{}/{}/{}'.format(org, repo, pipe)

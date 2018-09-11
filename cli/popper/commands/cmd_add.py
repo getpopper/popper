@@ -33,10 +33,19 @@ from popper.exceptions import BadArgumentUsage
 @pass_context
 def cli(ctx, pipeline, folder, branch):
     """Add a pipeline to your repository from the existing popperized
-    repositories on github. The pipeline argument is provided as owner/repo/
-    pipeline. For example, 'popper add popperized/quiho-popper/single-node'
-    adds the 'single-node' pipeline from the 'quiho-popper' repository from the
-    'popperized' organization.
+    repositories on github. The pipeline argument is provided as
+    <org>/<repo>/<pipeline>. For example:
+
+      popper add popperized/quiho-popper/single-node
+
+    The above adds the 'single-node' pipeline from the 'quiho-popper'
+    repository from the 'popperized' organization.
+
+    This commands makes use of Github's API, which has a limit on the number of
+    requests per hour that an unauthenticated user can make. If you reach this
+    limit, you can provide a Github API token via a POPPER_GITHUB_API_TOKEN
+    environment variable. If defined, this variable is used to obtain the token
+    when executing HTTP requests.
     """
     if len(pipeline.split('/')) != 3:
         raise BadArgumentUsage(

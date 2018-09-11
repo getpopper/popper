@@ -35,9 +35,6 @@ cat .popper.yml | grep 'foo:'
 cat .popper.yml | grep 'path: foo'
 test -f foo/run.sh
 
-# info command
-popper info popperized/popper-readthedocs-examples/docker-data-science | grep 'url'
-
 # popper add --branch
 init_test
 popper add popperized/swc-lesson-pipelines/co2-emissions --branch revert-1-master
