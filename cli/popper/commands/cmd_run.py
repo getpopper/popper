@@ -249,7 +249,7 @@ def pipelines_from_commit_message(project_pipelines):
     # check for pull requests
     if 'Merge' in msg:
         pu.info("Merge detected. Reading message from merged commit.")
-        commit_id = re.search('Merge (.+?) into', msg).group(1)
+        commit_id = re.search(r'Merge (.+?) into', msg).group(1)
 
         args = ['git', 'show', '-s', '--format=%B', commit_id]
 

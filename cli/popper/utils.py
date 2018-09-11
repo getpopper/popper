@@ -10,6 +10,23 @@ from collections import defaultdict
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
 
+init_config = {
+    'metadata': {
+        'access_right': "open",
+        'license': "CC-BY-4.0",
+        'upload_type': "publication",
+        'publication_type': "article"
+    },
+    'pipelines': {},
+    'search_sources': [
+        "popperized"
+    ],
+    'badge-server-url': 'http://badges.falsifiable.us',
+    'version': 1,
+}
+
+gitignore_content = ".pipeline_cache\npopper/\n"
+
 
 def get_items(dict_object):
     """Python 2/3 compatible way of iterating over a dictionary"""
@@ -475,17 +492,17 @@ def exec_cmd(cmd, ignoreerror=False):
     output = output.decode('utf-8')
 
     return output
-  
 
-def get_repo_name():
+
+def infer_repo_name_from_root_folder():
     """Finds the root folder of a local Github repository and returns it.
 
     Returns:
         repo_name (str): the name of the root folder.
     """
-    repo_name = exec_cmd("basename `git rev-parse --show-toplevel`")
-
-    return repo_name[:-1]
+    root_folder = get_project_root()
+    repo_name = os.path.basename(root_folder)
+    return repo_name
 
 
 def get_git_files():
@@ -495,6 +512,5 @@ def get_git_files():
     Returns:
         files (list) : list of git tracked files
     """
-
     gitfiles = exec_cmd("git ls-files")
     return gitfiles.split("\n")
