@@ -23,37 +23,18 @@ our documentation.
 
 Yes, the goal for Popper is to make it a domain-agnostic 
 experimentation protocol. Examples of how to follow Popper on distinct 
-domains: [atmospheric science](), [computational neuroscience](), 
-[genomics]() and [applied math]().
-
+domains: [atmospheric 
+science](https://github.com/popperized/nwp-popper), [computational 
+neuroscience](https://github.com/popperized/open-comp-rsc-popper), 
+[genomics](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/genomics) 
+and [applied 
+math](https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/blis).
 
 ### How to apply the Popper protocol for applications that take large quantities of computer time?
 
 The `popper run` command has a `--skip` argument that can be used to 
-execute a pipeline in multiple steps. So for example, assuming we have 
-a pipeline with the following scripts: `setup`, `run`, `post-run` and 
-`validate`, then, you could run:
-
-```bash
-popper run --skip post-run,validate
-```
-
-which would run the first part (setup and execution). Then, later you 
-either manually check whether your jobs are done or you automate it in 
-the `post-run` script (I know SLURM has a way of querying the status 
-of your jobs) and run:
-
-```bash
-popper run --skip setup.sh,run.sh
-```
-
-and the above will just execute the second half of your pipeline. The 
-`post-run` script could either first check the status of your jobs, or 
-just assume that they’re done and will `scp` the data to your local 
-machine (or move output to a NAS, etc.), and the `validate` will 
-invoke the analysis.
-
------
+execute a pipeline in multiple steps. See 
+[here](ci_features.html#skipping-stages) for more information.
 
 Another practice we have been following is to have a specific set of 
 parameters for the pipeline with the goal of running a smaller scale 
