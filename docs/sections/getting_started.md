@@ -19,9 +19,8 @@ Show which version you installed:
 popper version
 ```
 
-> **NOTE**: this exercise was written using 1.0.0
-
-Create a project repository (if you are not familiar with git, look [here](https://www.learnenough.com/git-tutorial)):
+Create a project repository (if you are not familiar with git, look 
+[here](https://www.learnenough.com/git-tutorial)):
 
 ```bash
 mkdir mypaper

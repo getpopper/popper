@@ -205,13 +205,16 @@ might be a better alternative. For an example of such a pipeline, see
 
 ### CI systems
 
-Continuous Integration (CI) is a development practice that requires 
-developers to integrate code into a shared repository frequently with 
-the purpose of catching errors as early as possible. The pipelines 
-associated with an article can also benefit from CI. If the output of 
-a pipeline can be verified and validated by codifying any expectation, 
-in the form of a unit test (a command returning a boolean value), this 
-can be verified on every change to a pipeline repository.
+[Continuous Integration 
+(CI)](https://en.wikipedia.org/wiki/Continuous_integration) is a 
+development practice where developers integrate and deploy code 
+frequently with the purpose of catching errors as early as possible. 
+The pipelines associated to an article can benefit from using [CI 
+services](https://en.wikipedia.org/wiki/Comparison_of_continuous_integration_software). 
+If the output of a pipeline can be verified and validated by codifying 
+any expectation, in the form of a unit test (a command returning a 
+boolean value), this can be tested on every change to pipeline 
+scripts.
 
 [Travis CI](https://travis-ci.org/) is an open-source, hosted, 
 distributed continuous integration service used to build and test 
@@ -222,20 +225,19 @@ Other self-hosted solutions exist such as
 to specify and automate tests using their own configuration files (or 
 domain specific languages).
 
-Popper can be seen as a service-agnostic way of automating tests that 
-can run on multiple CI services with minimal effort. The `popper ci` 
-command [generates configuration 
-files](examples.html#continuous-validation-ci-setup) that existing CI 
-systems read in order to execute a popper pipeline. Additionally, with 
-most of existing tools and services, users don't have a way of easily 
-checking the integrity of a pipeline locally, whereas Popper can be 
-used easily to [test a pipeline 
-locally](cli_features.html#testing-locally). Lastly, since the concept 
-of a pipeline and validations associated to them is a first-class 
-citizen in Popper, we can not only check that a pipeline can execute 
-correctly (SUCCESS or FAILURE) but we can also verify that the output 
-is the one expected by the original implementers as explained 
-[here](cli_features.html#continously-validating-a-pipeline).
+Popper can be seen as a service-agnostic way of automating the 
+execution of a pipeline on CI services with minimal effort. The 
+`popper ci` command [generates configuration 
+files](other_resources.html#ci-setup) that a CI service reads in order 
+to execute a pipeline. Additionally, Popper can be used to [test a 
+pipeline locally](cli_features.html#testing-locally). Lastly, since 
+the concept of a pipeline and validations associated to them is a 
+first-class citizen in Popper, we can not only check that a pipeline 
+can execute correctly (`SUCCESS` or `FAIL` statuses) but we can also 
+verify that the output is the one expected by the original 
+implementers as explained 
+[here](cli_features.html#continously-validating-a-pipeline) (`GOLD` 
+status).
 
 ### Reprozip / Sciunit
 
