@@ -330,8 +330,8 @@ def bin_requirements(bin):
 
     version = str(check_output(binary + " --version", shell=True))
 
-    required_version = re.search('\+?(\d+(?:\.\d+)*)', bin).group(1)
-    version = re.search('(\d+(\.\d+)*\.?)', version).group(1)
+    required_version = re.search(r'\+?(\d+(?:\.\d+)*)', bin).group(1)
+    version = re.search(r'(\d+(\.\d+)*\.?)', version).group(1)
 
     meets_reqs = required_version <= version \
         if '+' in bin else version.startswith(required_version)
