@@ -111,6 +111,9 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
         relative_path=relative_path,
         timeout=timeout
     )
+    pu.info(
+        "Initialized pipeline '{}' at {}".format(name, relative_path),
+        fg='blue', bold=True)
 
 
 def initialize_repo(project_root):

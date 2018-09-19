@@ -13,3 +13,4 @@ popper_status
 .cache
 popper_logs
 popper_status
+.pipeline_cache.yml
