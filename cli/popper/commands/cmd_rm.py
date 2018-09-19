@@ -14,15 +14,15 @@ def cli(ctx, pipeline):
     """
 
     project_root = pu.get_project_root()
-    pipeline_dir = project_root
-
     pipelines = pu.read_config()['pipelines']
 
     if pipeline in pipelines:
         path = pipelines[pipeline]['path']
         pipeline_dir = os.path.join(
-                pipeline_dir,
+                project_root,
                 path)
+    else:
+        pu.fail("Pipeline '{}' not in this project".format(pipeline))
 
     if os.path.isdir(pipeline_dir):
 
@@ -31,10 +31,10 @@ def cli(ctx, pipeline):
         popper_config = pu.read_config()
         del popper_config['pipelines'][pipeline]
 
-        pu.info("Pipeline {} removed successfully".format(pipeline),
-                fg="green")
+        pu.info("Pipeline '{}' removed successfully".format(pipeline),
+                fg="blue")
 
         pu.write_config(popper_config)
 
     else:
-        pu.fail("Pipeline {} doesn't exists".format(pipeline))
+        pu.fail("Path '{}' is not a folder".format(pipeline))
