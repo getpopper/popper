@@ -10,6 +10,7 @@ from io import BytesIO
 
 from popper.cli import pass_context
 from popper.exceptions import BadArgumentUsage
+from requests.exceptions import ConnectionError
 
 
 @click.command(
@@ -65,14 +66,6 @@ def cli(ctx, pipeline, folder, branch):
 
     pipelines_dir = os.path.join(project_root, folder)
 
-    if not os.path.exists(pipelines_dir):
-        try:
-            os.makedirs(pipelines_dir)
-        except (OSError, IOError) as e:
-            pu.fail("Could not create the necessary path.\n")
-    elif len(os.listdir(pipelines_dir)) != 0:
-        pu.fail("The path already exists and is not empty.")
-
     gh_url = 'https://github.com/{}/{}/'.format(owner, repo)
     gh_url += 'archive/{}.tar.gz'.format(branch)
 
@@ -80,15 +73,26 @@ def cli(ctx, pipeline, folder, branch):
         "Downloading pipeline {} as {}...".format(pipe_name, new_pipe_name)
     )
 
-    r = pu.make_gh_request(
-        gh_url,
-        msg="Unable to fetch the pipeline. Please check if the name"
-        " of the pipeline is correct and the internet is connected"
-    )
+    try:
+        # Downloading and extracting the tarfile
+        r = pu.make_gh_request(
+            gh_url,
+            msg="Unable to fetch the pipeline. Please check if the name"
+            " of the pipeline is correct and the internet is connected"
+        )
+        with tarfile.open(mode='r:gz', fileobj=BytesIO(r.content)) as t:
+            t.extractall()
 
-    # Downloading and extracting the tarfile
-    with tarfile.open(mode='r:gz', fileobj=BytesIO(r.content)) as t:
-        t.extractall()
+        if not os.path.exists(pipelines_dir):
+            try:
+                os.makedirs(pipelines_dir)
+            except (OSError, IOError):
+                pu.fail("Could not create the necessary path.\n")
+        elif len(os.listdir(pipelines_dir)) != 0:
+            pu.fail("The path already exists and is not empty.")
+
+    except ConnectionError:
+        pu.fail("Could not download the pipeline due to Connection Error")
 
     try:
         os.rename('{}-{}/pipelines/{}'.format(
