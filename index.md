@@ -24,7 +24,7 @@ about Popper you can:
       * Continuously validate the status of a pipeline by using 
         [continuous integration][ci].
       * Learn more about how Popper relates to [other existing 
-        software](http://popper.readthedocs.io/en/latest/popper_vs_other_software.html).
+        software](https://popper.readthedocs.io/en/latest/sections/concepts.html#popper-vs-other-software).
 
 We are currently working with researchers in many domains to extend 
 the number of [popperized 
