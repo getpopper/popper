@@ -60,11 +60,11 @@ https://doi.org/10.1109/IPDPSW.2017.157.
 For BibTeX, click [here]({{ site.baseurl }}/pubs/bibtex/popper.bib).
 
 [popperized]: https://github.com/popperized
-[quick-start]: http://popper.readthedocs.io/en/latest/protocol/getting_started.html
+[quick-start]: https://popper.readthedocs.io/en/latest/sections/getting_started.html
 [docs]: http://popper.readthedocs.io/en/latest/
 [overview]: http://popper.readthedocs.io/en/latest/protocol/intro_to_popper.html
 [from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
-[ci]: http://popper.readthedocs.io/en/latest/ci/popperci.html
+[ci]: https://popper.readthedocs.io/en/latest/sections/ci_features.html
 [cli]: https://github.com/systemslab/popper/
 [pubs]: {{ site.baseurl }}/pubs/index
 [blog]: https://medium.com/getpopper
