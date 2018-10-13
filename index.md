@@ -62,7 +62,7 @@ For BibTeX, click [here]({{ site.baseurl }}/pubs/bibtex/popper.bib).
 [popperized]: https://github.com/popperized
 [quick-start]: https://popper.readthedocs.io/en/latest/sections/getting_started.html
 [docs]: http://popper.readthedocs.io/en/latest/
-[overview]: http://popper.readthedocs.io/en/latest/protocol/intro_to_popper.html
+[overview]: https://popper.readthedocs.io/en/latest/sections/concepts.html
 [from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
 [ci]: https://popper.readthedocs.io/en/latest/sections/ci_features.html
 [cli]: https://github.com/systemslab/popper/
