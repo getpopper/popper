@@ -201,7 +201,7 @@ of environment variables. For example, if a pipeline takes parameters
 `par1` and `par2`, the following can specify these:
 
 ```
-popper parameters my-pipe --add 'par1=val1 par2=val2'
+popper parameters my-pipe --add par1=val1 --add par2=val2
 ```
 
 This will cause the `.popper.yml` to look like the following:
@@ -223,7 +223,7 @@ where each item in the dictionary is an environment variable. A
 subsequent set of parameters can be added:
 
 ```
-popper parameters my-pipe --add 'par1=val3 par2=val4'
+popper parameters my-pipe --add par1=val3 --add par2=val4
 ```
 
 Which will result in the following:
