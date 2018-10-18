@@ -371,7 +371,10 @@ def read_config_remote(org, repo, branch='master'):
     if r.status_code != 200:
         return None
 
-    config = yaml.load(r.content.decode("utf-8"))
+    try:
+        config = yaml.load(r.content.decode("utf-8"))
+    except Exception:
+        return None
 
     if type(config) != dict:
         return None
