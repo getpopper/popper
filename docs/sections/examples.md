@@ -26,8 +26,8 @@ contained, and `<pipeline>` is the name of the pipeline.
 ## Infrastructure automation
 
   * [On CloudLab using geni-lib][cloudlab].
-  * [On Chameleon using enos](chameleoncloud).
-  * [On Google Compute Platform using terraform](gcp).
+  * [On Chameleon using enos][chameleon].
+  * [On Google Compute Platform using terraform][gcp].
 
 ## Domain-specific pipelines
 
@@ -77,7 +77,7 @@ Coming soon:
 [data-world]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/data-world
 [envvar-parameters]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/envvar-param
 [cloudlab]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/cloudlab-benchmarking
-[chameleoncloud]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/chameleon-benchmarking
+[chameleon]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/chameleon-benchmarking
 [gcp]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/gce-benchmarking
 [packrat]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/sea-surface-mapping-r
 [blis]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/blis
