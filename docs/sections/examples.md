@@ -58,10 +58,10 @@ Coming soon:
 ## Provenance and automatic dependency resolution
 
   * [Using Sumatra][sumatra]
+  * [Sci-Unit][sciunit]
 
 Coming soon:
 
-  * Sci-Unit
   * ReproZip
 
 [pyv1]: https://github.com/popperized/swc-lesson-pipelines/tree/master/pipelines/sea-surface-mapping
@@ -81,3 +81,4 @@ Coming soon:
 [gcp]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/gce-benchmarking
 [packrat]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/sea-surface-mapping-r
 [blis]: https://github.com/popperized/popper-readthedocs-examples/tree/master/pipelines/blis
+[sciunit]: https://github.com/popperized/sciPopper
