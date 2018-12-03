@@ -1,8 +1,11 @@
-# Popper [![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper) [![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper) [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE) [![Popper Status](http://badges.falsifiable.us/systemslab/popper)](http://popper.rtfd.io/en/latest/sections/badge_server.html)
+# <img src="https://raw.githubusercontent.com/systemslab/popper/57f7a89bed6ff3e4d62ea2a5683ae28e3251931e/docs/figures/popper_logo_just_jug.png" width="64" valign="middle" alt="Popper"/> Popper
 
-<p align="center" style="text-align:center;">
-  <img src="https://github.com/systemslab/popper/raw/master/docs/figures/popper_logo.png" width="200" />
-</p>
+[<img src=https://pypistats.com/badge/popper.png  width="125" height="20" valign="top" alt="PyPi Downloads"/>](https://pypistats.com/package/popper)
+[![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper)
+[![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
+[![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
+[![Popper Status](http://badges.falsifiable.us/systemslab/popper)](http://popper.rtfd.io/en/latest/sections/badge_server.html) 
 
 Popper is a convention and CLI tool for generating reproducible papers. This repository contains:
 
