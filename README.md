@@ -34,7 +34,7 @@ command line help:
 popper --help
 ```
 
-For a quickstart guide on how to use the CLI, look [here](http://popper.readthedocs.io/en/latest/protocol/getting_started.html#quickstart-guide).
+For a quickstart guide on how to use the CLI, look [here](https://popper.readthedocs.io/en/v1.1.2/sections/getting_started.html).
 
 
 ## Contributing
