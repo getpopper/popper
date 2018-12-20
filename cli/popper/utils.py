@@ -25,7 +25,7 @@ init_config = {
     'version': 1,
 }
 
-gitignore_content = ".pipeline_cache\npopper/\n"
+gitignore_content = ".pipeline_cache.yml\npopper/\n"
 
 
 def get_items(dict_object):
