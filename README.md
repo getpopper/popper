@@ -1,6 +1,6 @@
 # <img src="https://raw.githubusercontent.com/systemslab/popper/57f7a89bed6ff3e4d62ea2a5683ae28e3251931e/docs/figures/popper_logo_just_jug.png" width="64" valign="middle" alt="Popper"/> Popper
 
-[<img src=https://pypistats.com/badge/popper.png  width="125" height="20" valign="top" alt="PyPi Downloads"/>](https://pypistats.com/package/popper)
+[![Downloads](https://pepy.tech/badge/popper)](https://pepy.tech/project/popper)
 [![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper)
 [![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
