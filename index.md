@@ -2,7 +2,7 @@
 layout: default
 ---
 
-<center><script src="https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8.js" id="asciicast-xzEYfI3U4H5CWdmjBe0O2CAw8" async></script></center>
+<center><script id="asciicast-227046" src="https://asciinema.org/a/227046.js" async></script></center>
 
 _Popper_ is a convention for conducting scientific explorations and writing 
 academic articles following a 
@@ -24,7 +24,7 @@ about Popper you can:
       * Continuously validate the status of a pipeline by using 
         [continuous integration][ci].
       * Learn more about how Popper relates to [other existing 
-        software](https://popper.readthedocs.io/en/latest/sections/concepts.html#popper-vs-other-software).
+        software][vs-others].
 
 We are currently working with researchers in many domains to extend 
 the number of [popperized 
@@ -40,14 +40,6 @@ the National Science Foundation ([award
 Source Software](http://cross.ucsc.edu) (CROSS), Sandia National 
 Laboratories, and Lawrence Livermore National Laboratory.
 
-### **Contributors**
-
-  * Ivo Jimenez, Sina Hamedian, Pete Wilcox, Michael Sevilla, Noah Watkins and
-    Carlos Maltzahn (_UC Santa Cruz_)
-  * Jay Lofstead (_SNL_)
-  * Kathryn Mohror (_LLNL_)
-  * Remzi Arpaci-Dusseau, Andrea Arpaci-Dusseau (_UW Madison_)
-
 ### How to Cite Popper
 
 Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
@@ -60,11 +52,11 @@ https://doi.org/10.1109/IPDPSW.2017.157.
 For BibTeX, click [here]({{ site.baseurl }}/pubs/bibtex/popper.bib).
 
 [popperized]: https://github.com/popperized
-[quick-start]: https://popper.readthedocs.io/en/latest/sections/getting_started.html
+[quick-start]: https://popper.readthedocs.io/en/v1.1.2/sections/getting_started.html
 [docs]: http://popper.readthedocs.io/en/latest/
-[overview]: https://popper.readthedocs.io/en/latest/sections/concepts.html
-[from-scratch]: http://popper.readthedocs.io/en/latest/tutorial/from_scratch.html
-[ci]: https://popper.readthedocs.io/en/latest/sections/ci_features.html
+[overview]: https://popper.readthedocs.io/en/v1.1.2/sections/concepts.html
+[ci]: https://popper.readthedocs.io/en/v1.1.2/sections/ci_features.html
+[vsothers]: https://popper.readthedocs.io/en/v1.1.2/sections/concepts.html#popper-vs-other-software
 [cli]: https://github.com/systemslab/popper/
 [pubs]: {{ site.baseurl }}/pubs/index
 [blog]: https://medium.com/getpopper
