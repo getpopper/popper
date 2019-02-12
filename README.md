@@ -15,14 +15,13 @@ Popper is a convention and CLI tool for generating reproducible papers. This rep
     convention and the CLI tool.
   * Contents of our [landing page](http://falsifiable.us) ([`gh-pages`](https://github.com/systemslab/popper/tree/gh-pages) branch).
 
-
 Quick links to other resources:
-  * [5-minute screencast demo of the CLI](https://asciinema.org/a/xzEYfI3U4H5CWdmjBe0O2CAw8).
+
+  * [5-minute screencast demo of the CLI](https://asciinema.org/a/227046).
   * [Slidedeck introducing the convention](https://www.slideshare.net/ivotron/the-popper-experimentation-protocol-and-cli-tool-86987253).
-  * [10-min video recording of intro and demo](https://air.mozilla.org/mozilla-open-leaders-round-4-final-demos-open-succulent-project/#@52m0s).
+  * [Recorded webinar presentation](https://youtu.be/tZcaV31FxUM).
   * [Software Carpentry formatted Lesson](https://popperized.github.io/swc-lesson/).
   * [List of repositories that follow the convention](https://github.com/popperized).
-
 
 ## Installation
 

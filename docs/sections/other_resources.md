@@ -89,18 +89,6 @@ More examples are listed [here](examples.html).
 > approach. Our intention is to define, in written form, the criteria 
 > for Automated Artifact Evaluation.
 
-### CI Infrastructure for Automated Artifact Evaluation
-
-We have an instance of Jenkins running at <http://ci.falsifiable.us>, 
-maintained by members of the Systems Research Lab (SRL) at UC Santa 
-Cruz. Detailed instructions on how to create an account on this 
-service and how to use it is available 
-[here](https://popper.readthedocs.io/en/latest/ci/jenkins.html) (also 
-includes instructions on how to self-host it). This service allows 
-researchers and students to automate the execution and validation of 
-experimentation pipelines without happing to deploy infrastructure of 
-their own.
-
 ## Self-paced Tutorial
 
 A hands-on, self-paced tutorial is available 
