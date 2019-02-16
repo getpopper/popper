@@ -49,15 +49,6 @@ from collections import defaultdict
     required=False,
 )
 @click.option(
-    '--requirement-level',
-    type=click.Choice(['warn', 'ignore', 'fail']), default='fail',
-    help='Determines how to handle missing requirements. warn simply'
-         'emits a wanring and continues normally; ignore runs the'
-         'specified pipelines despite missing unfulfilled'
-         'requirements; fail exits with an error on unfilfilled'
-         'requirements.'
-)
-@click.option(
     '--no-badge-update',
     help='Do not update the status of the pipeline against the badge server.',
     is_flag=True,

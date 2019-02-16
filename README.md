@@ -7,10 +7,27 @@
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 [![Popper Status](http://badges.falsifiable.us/systemslab/popper)](http://popper.rtfd.io/en/latest/sections/badge_server.html) 
 
-Popper is a convention and CLI tool for generating reproducible papers. This repository contains:
+Popper is a workflow execution engine based on [Github 
+actions](https://github.com/features/actions) (GHA). Popper workflows 
+are defined in a [HCL](https://github.com/hashicorp/hcl) syntax and 
+behave like GHA workflows. The main difference is that a Popper 
+workflow can execute actions in other runtimes besides Docker. The 
+workflow language is strictly a superset of GHA's workflow language so 
+Popper can run a GHA workflow locally.
 
-  * A [CLI tool](popper/) to help bootstrap research articles that
-    adhere to the convention.
+In addition to running a workflow, the Popper CLI tool provides other 
+useful functionality:
+
+  * Search
+  * Continuous integration
+  * Action scaffolding
+
+As part of this effort, we also maintain a repository of Popper 
+[actions](https://github.com/popperized/library).
+
+This repository contains:
+
+  * A [CLI tool](popper/) to run and implement popper workflows.
   * [Documentation](http://popper.readthedocs.io/en/latest/) about the
     convention and the CLI tool.
   * Contents of our [landing page](http://falsifiable.us) ([`gh-pages`](https://github.com/systemslab/popper/tree/gh-pages) branch).
