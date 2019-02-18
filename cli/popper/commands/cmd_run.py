@@ -81,25 +81,66 @@ def run_stage(wf, stage, workspace, timeout):
         run_action(wf['action'][a], workspace, timeout)
 
 
-def run_action(action, workspace, timeout):
+def determine_runtime(action):
+    action['in_host'] = False
+    action['in_docker'] = False
+    action['in_singularity'] = False
+    action['from_registry'] = False
+    action['from_local'] = False
 
-    # determine which type of action is
-    #
-    # convention:
-    #   - if it starts with ./ is a local action
-    #   - if local action has a Dockerfile, we build the container and then run
-    #   - if starts with 'singularity://'
-    #   - anything else we assume is a docker container
+    # TODO: parse '@' for versioning
 
-    check_secrets(action)
+    if 'docker://' in action['uses']:
+        action['in_docker'] = True
+        action['from_registry'] = True
+        action['img_name'] = action['uses'].strip('docker://')
+        return
 
     if './' in action['uses']:
-        # if os.path.isfile(os.path.join(action['uses'], 'Dockerfile'):
-        #     build_docker(action['uses'])
-        #     run_in_docker(action)
-        run_on_host(action, workspace, timeout)
-    else:
-        run_in_docker(action, workspace, timeout)
+        action['from_local'] = True
+        if os.path.exists(os.path.join(action['uses'], 'Dockerfile')):
+            action['in_docker'] = True
+            action['img_name'] = os.path.basename(action['uses'])
+            action['dockerfile_path'] = os.path.join(os.getcwd(),
+                                                     action['uses'])
+        else:
+            action['in_host'] = True
+            action['path'] = os.path.join(os.getcwd(), action['uses'])
+        return
+
+    if '/' in action['uses']:
+        # TODO: git_clone should look for Dockerfile, Singularityfile, etc. and
+        #       set the values of 'in_docker', 'in_host', etc. accordingly
+        git_clone(action)
+
+    pu.fail("unknown 'uses' method: {}".format(action['uses']))
+
+
+def run_action(action, workspace, timeout):
+    check_secrets(action)
+    determine_runtime(action)
+
+    if action['from_registry']:
+        if action['in_docker']:
+            docker_pull(action)
+            docker_run(action, workspace, timeout)
+    elif action['from_local']:
+        if action['in_docker']:
+            docker_build(action)
+            docker_run(action, workspace, timeout)
+        else:
+            host_run(action, workspace, timeout)
+
+
+def docker_pull(action, img):
+    pu.info('[{}] docker pull {}'.format(action['name'], action['uses']))
+    check_output('docker pull {}'.format(action['uses']), shell=True)
+
+
+def docker_build(action, tag, path):
+    cmd = 'docker build -t {} {}'.format(tag, path)
+    pu.info('[{}] {}'.format(action['name'], cmd))
+    check_output(cmd, shell=True)
 
 
 def check_secrets(action):
@@ -144,9 +185,9 @@ def get_stages(wf):
         current_stage = next_stage
 
 
-def run_in_docker(action, workspace, timeout):
-
+def docker_run(action, img, workspace, timeout):
     env_vars = action.get('env', {})
+
     for s in action.get('secrets', []):
         env_vars.update({s: os.environ[s]})
 
@@ -157,15 +198,15 @@ def run_in_docker(action, workspace, timeout):
     docker_cmd += ''.join(env_flags)
     if action.get('runs', None):
         docker_cmd += ' --entrypoint={} '.format(action['runs'])
-    docker_cmd += ' {}'.format(action['uses'])
+    docker_cmd += ' {}'.format(img)
     docker_cmd += ' {}'.format(action.get('args', ''))
 
-    pu.info('[docker] {}'.format(action['name']))
+    pu.info('[{}] {}'.format(action['name'], docker_cmd))
 
     execute(action['name'], docker_cmd, workspace, timeout)
 
 
-def run_on_host(action, workspace, timeout):
+def host_run(action, workspace, timeout):
 
     # define the input list for subprocess module
     cmd = [os.path.join('./', action.get('runs', 'entrypoint.sh'))]
@@ -176,13 +217,12 @@ def run_on_host(action, workspace, timeout):
 
     os.environ.update(action.get('env', {}))
 
-    sys.stdout.write(
-        '[local]  {}'.format(action['name']))
+    pu.info('[{}]  {}'.format(action['name'], ' '.join(cmd)))
 
     ecode = execute(action['name'], ' '.join(cmd), workspace, timeout)
 
     for i in action.get('env', {}):
-        os.environ.popitem(i)
+        os.environ.pop(i)
 
     os.chdir(cwd)
 
