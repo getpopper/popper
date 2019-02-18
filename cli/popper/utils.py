@@ -249,6 +249,16 @@ def get_filename(abs_path, stage):
         return None
 
 
+def rmdir_content(path):
+    """Removes file contents of folder"""
+    if not os.path.exists(path):
+        return
+    for f in os.listdir(path):
+        fpath = os.path.join(path, f)
+        if os.path.isfile(fpath):
+            os.remove(fpath)
+
+
 def fail(msg):
     """Prints the error message on the terminal."""
     click.secho('ERROR: ' + msg, fg='red', bold=True, err=True)
