@@ -64,7 +64,7 @@ class Workflow(object):
 
     def download_actions(self):
         """Clone actions that reference a repository."""
-        pu.info('[popper] cloning actions from repositories')
+        pu.info('[popper] cloning actions from repositories\n')
         for _, a in self.wf['action'].items():
             a['downloaded'] = False
 
@@ -88,7 +88,6 @@ class Workflow(object):
 
             scm.clone(user, repo, repo_parent_dir, version)
 
-            a['downloaded'] = True
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
 
@@ -117,15 +116,15 @@ class Workflow(object):
             else:
                 a['runner'] = HostRunner(a, self.workspace, self.timeout)
 
-    def run(self, action=None):
+    def run(self, action_name=None):
         """Run the pipeline or a specific action"""
         pu.exec_cmd('rm -rf {}/*'.format(self.workspace))
         os.environ['WORKSPACE'] = self.workspace
 
         self.instantiate_runners()
 
-        if action:
-            self.run_action(action)
+        if action_name:
+            self.wf['action'][action_name]['runner'].run()
         else:
             for s in self.get_stages():
                 self.run_stage(s)
@@ -190,11 +189,10 @@ class ActionRunner(object):
 
                 for i in range(sleep_time):
                     if i % 10 == 0:
-                        sys.stdout.write('.')
-                        sys.stdout.flush()
+                        pu.info('.')
                 time.sleep(sleep_time)
 
-        print('')
+        pu.info('\n')
         return p.poll()
 
 
@@ -235,17 +233,18 @@ class DockerRunner(ActionRunner):
         docker_cmd += ' {}'.format(img)
         docker_cmd += ' {}'.format(self.action.get('args', ''))
 
-        pu.info('[{}] {}'.format(self.action['name'], docker_cmd))
+        pu.info('[{}] docker run {} {}'.format(self.action['name'], img,
+                                               self.action.get('args', '')))
 
         self.execute(docker_cmd, self.action['name'])
 
     def docker_pull(self, img):
-        pu.info('[{}] docker pull {}'.format(self.action['name'], img))
+        pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
         pu.exec_cmd('docker pull {}'.format(img))
 
     def docker_build(self, tag, path):
         cmd = 'docker build -t {} {}'.format(tag, path)
-        pu.info('[{}] {}'.format(self.action['name'], cmd))
+        pu.info('[{}] {}\n'.format(self.action['name'], cmd))
         pu.exec_cmd(cmd)
 
 

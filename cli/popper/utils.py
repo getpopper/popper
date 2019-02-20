@@ -17,12 +17,10 @@ init_config = {
         'upload_type': "publication",
         'publication_type': "article"
     },
-    'pipelines': {},
     'search_sources': [
         "popperized"
     ],
-    'badge-server-url': 'http://badges.falsifiable.us',
-    'version': 1,
+    'version': 2,
 }
 
 gitignore_content = ".pipeline_cache.yml\npopper/\n"
@@ -166,23 +164,23 @@ def read_config(name=None):
         if not config:
             fail(".popper.yml is empty. Consider deleting it and "
                  "reinitializing the repo. See popper init --help for more.")
-        for key in ["metadata", "pipelines"]:
+        for key in ["metadata", "pipelines\n"]:
             if key not in config:
                 fail(".popper.yml doesn't contain expected entries. "
                      "Consider deleting it and reinitializing the repo. "
-                     "See popper init --help for more.")
+                     "See popper init --help for more.\n")
 
     if 'version' not in config:
-        warn("No 'version' element found in .popper.yml file. Assuming 1.")
-        config['version'] = 1
+        fail("No 'version' element found in .popper.yml file.\n")
 
-    if not name:
-        return config
-    else:
-        pipeline_config = config['pipelines'].get(name, None)
-        if not pipeline_config:
-            fail("Pipeline {} does not exist.".format(name))
-        return config, pipeline_config
+    if config['version'] != 2:
+        fail('This version only works with .popper.yml syntax v2. You can:\n'
+             '- Install Popper version 1.x or\n'
+             '- Update your project so it complies with v2 syntax\n'
+             '\n'
+             'More information: https://github.com/systemslab/popper\n')
+
+    return config
 
 
 def write_config(config):
@@ -261,17 +259,17 @@ def rmdir_content(path):
 
 def fail(msg):
     """Prints the error message on the terminal."""
-    click.secho('ERROR: ' + msg, fg='red', bold=True, err=True)
+    click.secho('ERROR: ' + msg, fg='red', bold=True, err=True, nl=False)
     sys.exit(1)
 
 
 def warn(msg):
-    click.secho('WARNING: ' + msg, bold=True, fg='red', err=True)
+    click.secho('WARNING: ' + msg, bold=True, fg='red', err=True, nl=False)
 
 
 def info(msg, **styles):
     """Prints the message on the terminal."""
-    click.secho(msg, **styles)
+    click.secho(msg, nl=False, **styles)
 
 
 def print_yaml(msg, **styles):

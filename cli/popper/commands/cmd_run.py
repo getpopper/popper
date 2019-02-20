@@ -34,7 +34,7 @@ from popper.cli import pass_context
     help='File containing the definition of the workflow.',
     required=False,
     show_default=True,
-    default="./main.workflow"
+    default=".github/main.workflow"
 )
 @pass_context
 def cli(ctx, action, wfile, timeout, workspace):
@@ -46,4 +46,7 @@ def cli(ctx, action, wfile, timeout, workspace):
 
     pipeline.run(action)
 
-    pu.info('Workflow finished running successfully.\n')
+    if action:
+        pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
+    else:
+        pu.info('\nWorkflow finished successfully.\n\n')
