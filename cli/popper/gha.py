@@ -28,7 +28,7 @@ class Workflow(object):
         """normalize the dictionary representation of the workflow"""
         _, wf_block = self.wf['workflow'].popitem()
         if type(wf_block['resolves']) == str:
-                wf_block['resolves'] = [wf_block['resolves']]
+            wf_block['resolves'] = [wf_block['resolves']]
         for _, a_block in self.wf['action'].items():
             if not a_block.get('needs', None):
                 continue
