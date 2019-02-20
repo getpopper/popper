@@ -13,5 +13,3 @@ popper metadata | grep 'the police'
 popper metadata --add year=1979
 popper metadata | grep "year"
 popper metadata | grep "the police"
-
-

@@ -17,6 +17,7 @@ setup(
         'click',
         'requests',
         'lark-parser==0.5.6',
+        'pyhcl'
         'pyyaml',
         'pyaes'
     ],
