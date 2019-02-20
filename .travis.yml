@@ -7,4 +7,4 @@ script:
 - export PATH=$PATH:$PWD/cli/bin
 - bash -c "cd ci/ && popper run --wfile cli.workflow"
 - git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
-- bash -c "cd /tmp/gha-demo && popper run"
+- bash -c "cd /tmp/gha-demo && PHONY_SECRET=phony popper run"

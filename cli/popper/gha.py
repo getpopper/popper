@@ -13,7 +13,7 @@ class Workflow(object):
     """
     def __init__(self, wfile):
         if not os.path.isfile(wfile):
-            pu.fail("File {} does not exist".format(wfile))
+            pu.fail("File {} does not exist.\n".format(wfile))
         with open(wfile, 'r') as fp:
             self.wf = hcl.load(fp)
 
@@ -60,14 +60,12 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    pu.fail('Secret {} not defined'.format(s))
+                    pu.fail('Secret {} not defined\n.'.format(s))
 
     def download_actions(self):
         """Clone actions that reference a repository."""
-        pu.info('[popper] cloning actions from repositories\n')
+        infoed = False
         for _, a in self.wf['action'].items():
-            a['downloaded'] = False
-
             if 'docker://' in a['uses'] or './' in a['uses']:
                 continue
 
@@ -85,6 +83,10 @@ class Workflow(object):
             repo_parent_dir = os.path.join(self.actions_cache_path, user)
             if not os.path.exists(repo_parent_dir):
                 os.makedirs(repo_parent_dir)
+
+            if not infoed:
+                pu.info('[popper] cloning actions from repositories\n')
+                infoed = True
 
             scm.clone(user, repo, repo_parent_dir, version)
 
@@ -166,9 +168,9 @@ class ActionRunner(object):
 
     def execute(self, cmd, log_tag):
         time_limit = time.time() + self.timeout
-        sleep_time = 1
+        sleep_time = 0.25
 
-        log_tag.replace(' ', '_')
+        log_tag = log_tag.replace(' ', '_')
 
         out_fname = os.path.join(os.environ['WORKSPACE'], log_tag + '.out')
         err_fname = os.path.join(os.environ['WORKSPACE'], log_tag + '.err')
@@ -187,7 +189,7 @@ class ActionRunner(object):
                 if sleep_time < 300:
                     sleep_time *= 2
 
-                for i in range(sleep_time):
+                for i in range(int(sleep_time)):
                     if i % 10 == 0:
                         pu.info('.')
                 time.sleep(sleep_time)
@@ -271,4 +273,4 @@ class HostRunner(ActionRunner):
         os.chdir(cwd)
 
         if ecode != 0:
-            pu.fail("\n\nAction '{}' failed.".format(self.action['name']))
+            pu.fail("\n\nAction '{}' failed.\n.".format(self.action['name']))

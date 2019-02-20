@@ -7,7 +7,7 @@ from popper.cli import pass_context
 
 @click.command('init', short_help='Initialize a Popper project.')
 @pass_context
-def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
+def cli(ctx):
     """Initializes a repository by creating the .popper.yml file.
     """
     project_root = pu.get_project_root()
@@ -24,4 +24,4 @@ def cli(ctx, name, stages, envs, existing, infer_stages, timeout):
 
     # write README
     content.init_project()
-    pu.info('Popperized repository {}.\n'.format(project_root))
+    pu.info('Popperized repository {}\n'.format(project_root))

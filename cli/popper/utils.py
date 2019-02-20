@@ -164,7 +164,7 @@ def read_config(name=None):
         if not config:
             fail(".popper.yml is empty. Consider deleting it and "
                  "reinitializing the repo. See popper init --help for more.")
-        for key in ["metadata", "pipelines\n"]:
+        for key in ["metadata"]:
             if key not in config:
                 fail(".popper.yml doesn't contain expected entries. "
                      "Consider deleting it and reinitializing the repo. "
