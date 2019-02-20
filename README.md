@@ -10,22 +10,22 @@
 Popper is a workflow execution engine based on [Github 
 actions](https://github.com/features/actions) (GHA). Popper workflows 
 are defined in a [HCL](https://github.com/hashicorp/hcl) syntax and 
-behave like GHA workflows. The main difference is that a Popper 
-workflow can execute actions in other runtimes besides Docker. The 
-workflow language is strictly a superset of GHA's workflow language so 
-Popper can run a GHA workflow locally.
+behave like GHA workflows. The main difference with respect to GHA 
+workflows is that a Popper workflow can execute actions in other 
+runtimes in addition to Docker. The workflow language is strictly a 
+superset of GHA workflow language so Popper can run a GHA workflow 
+locally as if it was being executed by the GHA platform.
 
-In addition to running a workflow, the Popper CLI tool provides other 
-useful functionality:
+In addition to running a workflow locally, the Popper CLI tool 
+provides other useful functionality:
 
   * Search
   * Continuous integration
   * Action scaffolding
 
-As part of this effort, we also maintain a repository of Popper 
-[actions](https://github.com/popperized/library).
-
-This repository contains:
+As part of this effort, we also maintain a repository of 
+[actions](https://github.com/popperized/library). The contents of this 
+repository are:
 
   * A [CLI tool](popper/) to run and implement popper workflows.
   * [Documentation](http://popper.readthedocs.io/en/latest/) about the
