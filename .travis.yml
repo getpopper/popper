@@ -3,9 +3,7 @@ dist: xenial
 language: python
 python: 3.7
 services: docker
-install:
-- pip install -q -e cli
 script:
+- bash -c "cd ci/ && popper run --wfile cli.workflow"
 - git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
 - bash -c "cd /tmp/gha-demo && popper run"
-- bash -c "cd ci/ && popper run --wfile cli.workflow"
