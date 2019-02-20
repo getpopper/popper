@@ -1,12 +1,10 @@
-
 ---
+dist: xenial
 language: python
-python: 2.7
+python: 3.7
 services: docker
 script:
-  - envs/build_images
-  - export PATH=$PATH:$PWD/cli/bin
-  - popper run
-  - USE_VIRTUALENV=1 popper run --skip=test-archive
-  - docker run --rm -e CI=1 -e POPPER_GITHUB_API_TOKEN="${POPPER_GITHUB_API_TOKEN}" -v `pwd`:/repo -v /var/run/docker.sock:/var/run/docker.sock --workdir=/repo falsifiable/popper:alpine-3.4 run --skip=test-archive,test-env,test-badge,test-matrix-execution
-  - envs/push_images
+- export PATH=$PATH:$PWD/cli/bin
+- bash -c "cd ci/ && popper run --wfile cli.workflow"
+- git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
+- bash -c "cd /tmp/gha-demo && PHONY_SECRET=phony popper run"

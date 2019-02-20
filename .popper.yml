@@ -1,40 +1,8 @@
-version: 1
+version: 2
 metadata:
   access_right: open
   license: CC-BY-4.0
   publication_type: article
   upload_type: publication
-pipelines:
-  run-tests:
-    envs:
-      host:
-        args: []
-    path: ci
-    stages:
-    - setup
-    - test-version
-    - test-add
-    - test-archive
-    - test-badge
-    - test-ci
-    - test-cleanup
-    - test-defaults
-    - test-env
-    - test-parameters
-    - test-existing
-    - test-init
-    - test-matrix-execution
-    - test-metadata
-    - test-mv
-    - test-ls
-    - test-require
-    - test-rm
-    - test-run
-    - test-reset
-    - test-search
-    - test-stages
-    - test-workflow
-    - teardown
 search_sources:
 - popperized
-badge-server-url: http://badges.falsifiable.us
