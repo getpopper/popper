@@ -83,12 +83,14 @@ class Workflow(object):
                 version = None
             action_dir = os.path.join('./', action_dir)
 
-            action_id = '{}/{}/{}/{}'.format(user, repo, action_dir, version)
+            repo_parent_dir = os.path.join(self.actions_cache_path, user)
 
-            if action_id in cloned:
+            a['repo_dir'] = os.path.join(repo_parent_dir, repo)
+            a['action_dir'] = action_dir
+
+            if '{}/{}'.format(user, repo) in cloned:
                 continue
 
-            repo_parent_dir = os.path.join(self.actions_cache_path, user)
             if not os.path.exists(repo_parent_dir):
                 os.makedirs(repo_parent_dir)
 
@@ -98,10 +100,7 @@ class Workflow(object):
 
             scm.clone(user, repo, repo_parent_dir, version)
 
-            a['repo_dir'] = os.path.join(repo_parent_dir, repo)
-            a['action_dir'] = action_dir
-
-            cloned.add(action_id)
+            cloned.add('{}/{}'.format(user, repo))
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
