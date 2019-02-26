@@ -17,7 +17,7 @@ class Workflow(object):
         with open(wfile, 'r') as fp:
             self.wf = hcl.load(fp)
 
-        self.workspace = '/tmp/workspace'
+        self.workspace = os.getcwd()
         self.timeout = 10800
 
         self.check_secrets()
@@ -122,7 +122,6 @@ class Workflow(object):
 
     def run(self, action_name=None):
         """Run the pipeline or a specific action"""
-        pu.exec_cmd('rm -rf {}/*'.format(self.workspace))
         os.environ['WORKSPACE'] = self.workspace
 
         self.instantiate_runners()
@@ -163,6 +162,10 @@ class ActionRunner(object):
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
+        self.log_path = os.path.join(self.workspace, 'popper_logs')
+        if not os.path.exists(self.log_path):
+            os.makedirs(self.log_path)
+
     def run(self):
         raise NotImplementedError(
             "This method is required to be implemented in derived classes."
@@ -174,8 +177,8 @@ class ActionRunner(object):
 
         log_tag = log_tag.replace(' ', '_')
 
-        out_fname = os.path.join(os.environ['WORKSPACE'], log_tag + '.out')
-        err_fname = os.path.join(os.environ['WORKSPACE'], log_tag + '.err')
+        out_fname = os.path.join(self.log_path, log_tag + '.out')
+        err_fname = os.path.join(self.log_path, log_tag + '.err')
 
         with open(out_fname, "w") as outf, open(err_fname, "w") as errf:
             p = subprocess.Popen(cmd, stdout=outf, stderr=errf, shell=True,
@@ -240,7 +243,9 @@ class DockerRunner(ActionRunner):
         pu.info('[{}] docker run {} {}'.format(self.action['name'], img,
                                                self.action.get('args', '')))
 
-        self.execute(docker_cmd, self.action['name'])
+        e = self.execute(docker_cmd, self.action['name'])
+        if e != 0:
+            pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_pull(self, img):
         pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))

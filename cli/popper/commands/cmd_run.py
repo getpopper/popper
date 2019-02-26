@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import click
+import os
 import popper.utils as pu
 
 from popper.gha import Workflow
@@ -24,10 +25,10 @@ from popper.cli import pass_context
 )
 @click.option(
     '--workspace',
-    help='Absolute path to workspace folder.',
+    help='Path to workspace folder.',
     required=False,
     show_default=True,
-    default='/tmp/workspace'
+    default=os.getcwd()
 )
 @click.option(
     '--wfile',
