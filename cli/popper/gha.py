@@ -232,7 +232,9 @@ class DockerRunner(ActionRunner):
 
         env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
 
-        docker_cmd = 'docker run --rm -v {0}:{0}'.format(self.workspace)
+        docker_cmd = 'docker run --rm '
+        docker_cmd += ' -v {0}:{0}'.format(self.workspace)
+        docker_cmd += ' -v {0}:{0}'.format(os.environ['HOME'])
         docker_cmd += ' -v {0}:{0}'.format('/var/run/docker.sock')
         docker_cmd += ' --workdir={} '.format(self.workspace)
         docker_cmd += ''.join(env_flags)
