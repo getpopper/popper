@@ -198,7 +198,7 @@ class ActionRunner(object):
                     sys.stdout.write(' time out!')
                     break
 
-                if sleep_time < 300:
+                if sleep_time < 30:
                     sleep_time *= 2
 
                 for i in range(int(sleep_time)):
