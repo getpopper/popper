@@ -216,7 +216,7 @@ class DockerRunner(ActionRunner):
 
     def run(self):
         if 'docker://' in self.action['uses']:
-            img = self.action['uses'].strip('docker://')
+            img = self.action['uses'].replace('docker://', '')
             self.docker_pull(img)
             self.docker_run(img)
             return
