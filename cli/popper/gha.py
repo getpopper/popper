@@ -66,6 +66,7 @@ class Workflow(object):
 
     def download_actions(self):
         """Clone actions that reference a repository."""
+        cloned = set()
         infoed = False
         for _, a in self.wf['action'].items():
             if 'docker://' in a['uses'] or './' in a['uses']:
@@ -82,6 +83,11 @@ class Workflow(object):
                 version = None
             action_dir = os.path.join('./', action_dir)
 
+            action_id = '{}/{}/{}/{}'.format(user, repo, action_dir, version)
+
+            if action_id in cloned:
+                continue
+
             repo_parent_dir = os.path.join(self.actions_cache_path, user)
             if not os.path.exists(repo_parent_dir):
                 os.makedirs(repo_parent_dir)
@@ -94,6 +100,8 @@ class Workflow(object):
 
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
+
+            cloned.add(action_id)
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
