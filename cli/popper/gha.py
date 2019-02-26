@@ -26,14 +26,16 @@ class Workflow(object):
 
     def normalize(self):
         """normalize the dictionary representation of the workflow"""
-        _, wf_block = self.wf['workflow'].popitem()
-        if type(wf_block['resolves']) == str:
-            wf_block['resolves'] = [wf_block['resolves']]
+        for _, wf_block in self.wf['workflow'].items():
+            if isinstance(wf_block['resolves'], str):
+                wf_block['resolves'] = [wf_block['resolves']]
         for _, a_block in self.wf['action'].items():
-            if not a_block.get('needs', None):
-                continue
-            if type(a_block['needs']) == str:
-                a_block['needs'] = [a_block['needs']]
+            if a_block.get('needs', None):
+                if isinstance(a_block['needs'], str):
+                    a_block['needs'] = [a_block['needs']]
+            if a_block.get('runs', None):
+                if isinstance(a_block['runs'], str):
+                    a_block['runs'] = [a_block['runs']]
 
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
@@ -256,14 +258,14 @@ class HostRunner(ActionRunner):
 
     def run(self):
         cmd = [os.path.join('./', self.action.get('runs', 'entrypoint.sh'))]
-        cmd.extend(self.action.get('args', []))
+        cmd.extend([self.action.get('args', '')])
 
         cwd = os.getcwd()
         os.chdir(os.path.join(cwd, self.action['uses']))
 
         os.environ.update(self.action.get('env', {}))
 
-        pu.info('[{}]  {}'.format(self.action['name'], ' '.join(cmd)))
+        pu.info('[{}] {}'.format(self.action['name'], ' '.join(cmd)))
 
         ecode = self.execute(' '.join(cmd), self.action['name'])
 

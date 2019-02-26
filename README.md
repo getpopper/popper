@@ -19,13 +19,16 @@ runtimes in addition to Docker. The workflow language is strictly a
 superset of GHA workflow language so Popper can run a GHA workflow 
 locally as if it was being executed by the GHA platform.
 
+**TODO**: insert demo
+
 In addition to running a GHA workflow locally, Popper provides other 
 useful functionality:
 
   * [Other runtimes](). Actions can execute locally on the host where 
-    a `popper` command runs (i.e. "outside" a container, thus not 
-    depending on Docker). We are working in adding support for other 
-    runtimes are such as [`rkt`](https://github.com/rkt/rkt), 
+    the `popper` command runs (i.e. "outside" a container, thus not 
+    strictly depending on having Docker installed). We are working in 
+    adding support for other runtimes are such as 
+    [`rkt`](https://github.com/rkt/rkt), 
     [Vagrant](https://www.vagrantup.com/), 
     [Singularity](https://sylabs.io/) and others (see [this project]() 
     for more).
