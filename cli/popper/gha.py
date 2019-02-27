@@ -236,6 +236,8 @@ class DockerRunner(ActionRunner):
 
         for s in self.action.get('secrets', []):
             env_vars.update({s: os.environ[s]})
+        env_vars.update({'POPPER_WORKSPACE': self.workspace})
+        env_vars.update({'GITHUB_WORKSPACE': self.workspace})
         env_vars.update({'HOME': os.environ['HOME']})
 
         env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
