@@ -104,7 +104,7 @@ class Workflow(object):
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
-        self.actions_cache_path = os.path.join(self.workspace, 'actions')
+        self.actions_cache_path = os.path.join('tmp', 'actions')
         self.download_actions()
 
         for _, a in self.wf['action'].items():
