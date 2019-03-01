@@ -287,7 +287,8 @@ class HostRunner(ActionRunner):
         super(HostRunner, self).__init__(action, workspace, timeout)
 
     def run(self):
-        cmd = [os.path.join('./', self.action.get('runs', 'entrypoint.sh'))]
+        cmd = self.action.get('runs', ['entrypoint.sh'])
+        cmd[0] = os.path.join('./', cmd[0])
         cmd.extend([self.action.get('args', '')])
 
         cwd = os.getcwd()
