@@ -12,8 +12,19 @@ class Workflow(object):
     """A GHA workflow.
     """
     def __init__(self, wfile):
+        if not wfile:
+            if os.path.isfile("main.workflow"):
+                wfile = "main.workflow"
+            elif os.path.isfile(".github/main.workflow"):
+                wfile = ".github/main.workflow"
+
+        if not wfile:
+            pu.fail(
+                "File {} an {} not found.\n".format("main.workflow",
+                                                    ".github/main.workflow"))
         if not os.path.isfile(wfile):
-            pu.fail("File {} does not exist.\n".format(wfile))
+            pu.fail("File {} not found.\n".format(wfile))
+
         with open(wfile, 'r') as fp:
             self.wf = hcl.load(fp)
 

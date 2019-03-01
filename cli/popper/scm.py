@@ -16,12 +16,15 @@ def clone(org, repo, repo_parent_dir, version=None):
     if os.path.exists(repo_dir):
         pu.exec_cmd('rm -rf {}'.format(repo_dir))
 
-    cmd = 'git -C {} clone --depth=1 {}{}/{}'.format(repo_parent_dir,
-                                                     get_repo_url(), org, repo)
+    devnull = '&>/dev/null'
+
+    cmd = 'git -C {} clone --depth=1 {}{}/{} {}'.format(repo_parent_dir,
+                                                        get_repo_url(),
+                                                        org, repo, devnull)
 
     pu.exec_cmd(cmd)
 
     if not version:
         return
 
-    pu.exec_cmd('git -C {} checkout {}'.format(repo_dir, version))
+    pu.exec_cmd('git -C {} checkout {} {}'.format(repo_dir, version, devnull))
