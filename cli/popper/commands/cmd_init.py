@@ -1,7 +1,7 @@
 import click
 import os
 import popper.utils as pu
-import popper.template as pt
+import popper.scm as scm
 from popper.cli import pass_context
 
 
@@ -10,8 +10,7 @@ from popper.cli import pass_context
 def cli(ctx):
     """Initializes a repository by creating the .popper.yml file.
     """
-    project_root = pu.get_project_root()
-    content = pt.ReadMe()
+    project_root = scm.get_root_folder()
 
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
@@ -23,5 +22,4 @@ def cli(ctx):
         f.write(pu.gitignore_content)
 
     # write README
-    content.init_project()
     pu.info('Popperized repository {}\n'.format(project_root))
