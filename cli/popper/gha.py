@@ -11,7 +11,7 @@ import sys
 class Workflow(object):
     """A GHA workflow.
     """
-    def __init__(self, wfile):
+    def __init__(self, wfile, workspace):
         if not wfile:
             if os.path.isfile("main.workflow"):
                 wfile = "main.workflow"
@@ -20,26 +20,65 @@ class Workflow(object):
 
         if not wfile:
             pu.fail(
-                "File {} an {} not found.\n".format("main.workflow",
-                                                    ".github/main.workflow"))
+                "Files {} or {} not found.\n".format("./main.workflow",
+                                                     ".github/main.workflow"))
         if not os.path.isfile(wfile):
             pu.fail("File {} not found.\n".format(wfile))
 
         with open(wfile, 'r') as fp:
             self.wf = hcl.load(fp)
 
-        self.workspace = os.getcwd()
+        self.workspace = workspace
         self.timeout = 10800
+
+        self.actions_cache_path = os.path.join('tmp', 'actions')
 
         self.check_secrets()
         self.normalize()
         self.complete_graph()
 
+        self.env = {
+            'GITHUB_WORKSPACE': self.workspace,
+            'GITHUB_WORKFLOW': self.wf['name'],
+            'GITHUB_ACTOR': 'popper',
+            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(),
+                                                scm.get_name()),
+            'GITHUB_EVENT_NAME': self.wf['on'],
+            'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
+                                                 'workflow/event.json'),
+            'GITHUB_SHA': scm.get_sha(),
+            'GITHUB_REF': scm.get_ref(),
+        }
+
+        for e in dict(self.env):
+            self.env.update({e.replace('GITHUB_', 'POPPER_'): self.env[e]})
+
     def normalize(self):
         """normalize the dictionary representation of the workflow"""
-        for _, wf_block in self.wf['workflow'].items():
-            if isinstance(wf_block['resolves'], str):
-                wf_block['resolves'] = [wf_block['resolves']]
+
+        # modify from this:
+        #
+        #   "workflow": {
+        #     "test-and-deploy": {
+        #       "resolves": "deploy"
+        #     }
+        #   }
+        #
+        # to this:
+        #
+        #   "workflow": {
+        #     "name": "test-and-deploy",
+        #     "on": "push",
+        #     "resolves": "deploy"
+        #   }
+        for wf_name, wf_block in dict(self.wf['workflow']).items():
+            self.wf['name'] = wf_name
+            self.wf['on'] = wf_block.get('on', 'push')
+            self.wf['resolves'] = wf_block['resolves']
+
+        # create a list for all attributes that can be either string or list
+        if isinstance(self.wf['resolves'], str):
+            self.wf['resolves'] = [self.wf['resolves']]
         for _, a_block in self.wf['action'].items():
             if a_block.get('needs', None):
                 if isinstance(a_block['needs'], str):
@@ -47,6 +86,9 @@ class Workflow(object):
             if a_block.get('runs', None):
                 if isinstance(a_block['runs'], str):
                     a_block['runs'] = [a_block['runs']]
+            if a_block.get('args', None):
+                if isinstance(a_block['args'], str):
+                    a_block['args'] = a_block['args'].split()
 
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
@@ -115,33 +157,36 @@ class Workflow(object):
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
-        self.actions_cache_path = os.path.join('tmp', 'actions')
-        self.download_actions()
-
         for _, a in self.wf['action'].items():
             if 'docker://' in a['uses']:
-                a['runner'] = DockerRunner(a, self.workspace, self.timeout)
+                a['runner'] = DockerRunner(a, self.workspace,
+                                           self.env, self.timeout)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
-                    a['runner'] = DockerRunner(a, self.workspace, self.timeout)
+                    a['runner'] = DockerRunner(a, self.workspace,
+                                               self.env, self.timeout)
                 else:
-                    a['runner'] = HostRunner(a, self.workspace, self.timeout)
+                    a['runner'] = HostRunner(a, self.workspace,
+                                             self.env, self.timeout)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
                                            'Dockerfile')
 
             if os.path.exists(dockerfile_path):
-                a['runner'] = DockerRunner(a, self.workspace, self.timeout)
+                a['runner'] = DockerRunner(a, self.workspace,
+                                           self.env, self.timeout)
             else:
-                a['runner'] = HostRunner(a, self.workspace, self.timeout)
+                a['runner'] = HostRunner(a, self.workspace,
+                                         self.env, self.timeout)
 
     def run(self, action_name=None):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
 
+        self.download_actions()
         self.instantiate_runners()
 
         if action_name:
@@ -172,9 +217,10 @@ class Workflow(object):
 class ActionRunner(object):
     """An action runner.
     """
-    def __init__(self, action, workspace, timeout):
+    def __init__(self, action, workspace, env, timeout):
         self.action = action
         self.workspace = workspace
+        self.env = env
         self.timeout = timeout
 
         if not os.path.exists(self.workspace):
@@ -222,8 +268,8 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, timeout):
-        super(DockerRunner, self).__init__(action, workspace, timeout)
+    def __init__(self, action, workspace, env, timeout):
+        super(DockerRunner, self).__init__(action, workspace, env, timeout)
 
     def run(self):
         if 'docker://' in self.action['uses']:
@@ -247,8 +293,10 @@ class DockerRunner(ActionRunner):
 
         for s in self.action.get('secrets', []):
             env_vars.update({s: os.environ[s]})
-        env_vars.update({'POPPER_WORKSPACE': self.workspace})
-        env_vars.update({'GITHUB_WORKSPACE': self.workspace})
+
+        for e, v in self.env.items():
+            env_vars.update({e: v})
+
         env_vars.update({'HOME': os.environ['HOME']})
 
         env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
@@ -263,10 +311,11 @@ class DockerRunner(ActionRunner):
         if self.action.get('runs', None):
             docker_cmd += ' --entrypoint={} '.format(self.action['runs'])
         docker_cmd += ' {}'.format(img)
-        docker_cmd += ' {}'.format(self.action.get('args', ''))
+        docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
 
-        pu.info('[{}] docker run {} {}'.format(self.action['name'], img,
-                                               self.action.get('args', '')))
+        pu.info('[{}] docker run {} {}'.format(
+            self.action['name'], img, ' '.join(self.action.get('args', '')))
+        )
 
         e = self.execute(docker_cmd, self.action['name'])
         if e != 0:
@@ -283,13 +332,13 @@ class DockerRunner(ActionRunner):
 
 
 class HostRunner(ActionRunner):
-    def __init__(self, action, workspace, timeout):
-        super(HostRunner, self).__init__(action, workspace, timeout)
+    def __init__(self, action, workspace, env, timeout):
+        super(HostRunner, self).__init__(action, workspace, env, timeout)
 
     def run(self):
         cmd = self.action.get('runs', ['entrypoint.sh'])
         cmd[0] = os.path.join('./', cmd[0])
-        cmd.extend([self.action.get('args', '')])
+        cmd.extend(self.action.get('args', ''))
 
         cwd = os.getcwd()
         os.chdir(os.path.join(cwd, self.action['uses']))

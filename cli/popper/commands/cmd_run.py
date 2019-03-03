@@ -32,8 +32,7 @@ from popper.cli import pass_context
 def cli(ctx, action, wfile, workspace):
     """Executes one or more pipelines and reports on their status.
     """
-    pipeline = Workflow(wfile)
-    pipeline.workspace = workspace
+    pipeline = Workflow(wfile, workspace)
 
     pipeline.run(action)
 
