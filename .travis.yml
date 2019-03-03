@@ -5,6 +5,6 @@ python: 3.7
 services: docker
 script:
 - export PATH=$PATH:$PWD/cli/bin
-- bash -c "cd ci/ && popper run --wfile cli.workflow"
+- bash -c "popper run --wfile ci/cli.workflow"
 - git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
 - bash -c "cd /tmp/gha-demo && PHONY_SECRET=phony popper run"

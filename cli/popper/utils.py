@@ -306,24 +306,6 @@ def parse_timeout(timeout):
     return time_out
 
 
-def get_remote_url():
-    """Python 2/3 comptatible method for getting the remote origin url
-
-    Returns:
-        string - url of remote origin,
-            For example: https://github.com/systemslab/popper
-    """
-    repo_url = exec_cmd('git config --get remote.origin.url', ignoreerror=True)
-
-    # cleanup the URL so we get in in https form and without '.git' ending
-    if repo_url.endswith('.git'):
-        repo_url = repo_url[:-4]
-    if 'git@' in repo_url:
-        repo_url = 'https://' + repo_url[4:].replace(':', '/')
-
-    return repo_url
-
-
 def get_gh_headers():
     """Method for  getting the headers required for making authorized
     GitHub API requests.
@@ -503,17 +485,6 @@ def exec_cmd(cmd, ignoreerror=False):
     output = output.decode('utf-8')
 
     return output
-
-
-def infer_repo_name_from_root_folder():
-    """Finds the root folder of a local Github repository and returns it.
-
-    Returns:
-        repo_name (str): the name of the root folder.
-    """
-    root_folder = get_project_root()
-    repo_name = os.path.basename(root_folder)
-    return repo_name
 
 
 def get_git_files():
