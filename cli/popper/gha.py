@@ -313,7 +313,7 @@ class DockerRunner(ActionRunner):
         docker_cmd += ' {}'.format(img)
         docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
 
-        pu.info('[{}] docker run {} {}'.format(
+        pu.info('[{}] docker run {} {} '.format(
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
