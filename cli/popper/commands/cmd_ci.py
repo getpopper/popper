@@ -8,8 +8,9 @@ ci_files = {
     'travis': {
         './.travis.yml': """
 ---
+dist: xenial
 language: python
-python: 2.7
+python: 3.7
 services: docker
 install:
 - git clone --recursive https://github.com/systemslab/popper /tmp/popper
