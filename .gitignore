@@ -6,6 +6,8 @@ wiki
 .sass-cache/
 docs/_build
 cli/popper.egg-info/
+cli/build
+cli/dist
 .idea/
 .cache
 popper_logs
@@ -14,3 +16,4 @@ popper_status
 popper_logs
 popper_status
 .pipeline_cache.yml
+
