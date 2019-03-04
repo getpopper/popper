@@ -27,14 +27,49 @@ class Workflow(object):
     def normalize(self):
         """normalize the dictionary representation of the workflow"""
         _, wf_block = self.wf['workflow'].popitem()
+        if not wf_block.get('resolves', None):
+            pu.fail('[resolves] attribute must be defined inside a workflow\n')
+        if not wf_block.get('on', None):
+            continue
         if type(wf_block['resolves']) == str:
             wf_block['resolves'] = [wf_block['resolves']]
+        elif not type(wf_block['resolves']) == list:
+            pu.fail('[resolves] attribute should be either a string or a list type\n')
+        if not type(wf_block['on']) == str:
+            pu.fail('[on] attribute must be of string type\n')
         for _, a_block in self.wf['action'].items():
+            if not a_block.get('uses', None):
+                pu.fail('[uses] attribute must be defined in an action\n')
             if not a_block.get('needs', None):
                 continue
+            if not a_block.get('args', None):
+                continue
+            if not a_block.get('runs', None):
+                continue
+            if not a_block.get('env', None):
+                continue
+            if not a_block.get('secrets', None):
+                continue
+            # if the needs , args , runs , env , secrets attributes are present, then validate them
+            if not type(a_block['uses']) == str:
+                pu.fail('[uses] attribute must be of string type\n')
             if type(a_block['needs']) == str:
                 a_block['needs'] = [a_block['needs']]
-
+            elif not type(a_block['needs']) == list:
+                pu.fail('[needs] attribute should be either a string or list type\n')
+            if type(a_block['args']) == str:
+                a_block['args'] = [a_block['args']]
+            elif not type(a_block['args']) == list:
+                pu.fail('[args] attribute should be either a string or a list type\n')
+            if type(a_block['runs']) == str:
+                a_block['runs'] = [a_block['runs']]
+            elif not type(a_block['runs']) == list:
+                pu.fail('[runs] attribute should be either a string or a list type\n')
+            if not type(a_block['env']) == dict:
+                pu.fail('[env] block must be a dict\n')
+            if not type(a_block['secrets']) == list:
+                pu.fail('[secrets] block must be a list\n')
+            
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
         previous nodes they depend on. To make the workflow easier to process,
