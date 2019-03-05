@@ -12,7 +12,7 @@ def get_root_folder():
     base = pu.exec_cmd('git rev-parse --show-toplevel', ignoreerror=True)
 
     if not base:
-        pu.fail("Unable to find root folder. Initialize repository first.")
+        pu.fail("Unable to find root folder. Initialize repository first.\n")
 
     return base
 

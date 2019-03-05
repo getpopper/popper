@@ -1,0 +1,21 @@
+#!/bin/bash
+set -ex
+
+test_repo_path=/tmp/mypaper
+
+function init_test_repo {
+  cd
+  set +e
+  if ! rm -rf $test_repo_path; then
+    # try to remove using docker
+    docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf $test_repo_path
+  fi
+  set -e
+  mkdir $test_repo_path
+  pushd $test_repo_path
+  git init
+  echo 'foo' > README.md
+  git add .
+  git commit -m 'first'
+  popd
+}
