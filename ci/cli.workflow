@@ -4,23 +4,23 @@ workflow "cli tests" {
 }
 
 action "test init" {
-  uses = "./ci/tests"
-  runs = "test-init.sh"
+  uses = "./ci/test"
+  runs = "init"
 }
 
 action "test metadata" {
-  uses = "./ci/tests"
-  runs = "test-metadata.sh"
+  uses = "./ci/test"
+  runs = "metadata"
 }
 
 action "test ci" {
-  uses = "./ci/tests"
-  runs = "test-ci.sh"
+  uses = "./ci/test"
+  runs = "ci"
 }
 
 action "end" {
-  uses = "./ci/tests"
-  runs = "show-version.sh"
+  uses = "./ci/test"
+  runs = "version"
   needs = [
     "test init",
     "test metadata",
