@@ -1,6 +1,11 @@
 #!/bin/bash
 set -ex
 
+rm -rf /tmp/testci
+mkdir /tmp/testci
+cd /tmp/testci
+git init
+
 popper ci --service travis
 test -f .travis.yml
 
