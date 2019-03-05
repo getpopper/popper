@@ -65,7 +65,11 @@ class Workflow(object):
             if not wf_block.get('resolves', None):
                 pu.fail('[resolves] attribute must be present\n')
             else:
-                if not isinstance(wf_block['resolves'], str) and not isinstance(wf_block['resolves'], list):
+                if not isinstance(
+                        wf_block['resolves'],
+                        str) and not isinstance(
+                        wf_block['resolves'],
+                        list):
                     pu.fail('[resolves] block must be a string or list\n')
             if wf_block.get('on', None):
                 if not isinstance(wf_block['on'], str):
