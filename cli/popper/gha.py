@@ -182,7 +182,7 @@ class Workflow(object):
                 a['runner'] = HostRunner(a, self.workspace,
                                          self.env, self.timeout)
 
-    def run(self, action_name=None):
+    def run(self, action_name=None, reuse=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
 
@@ -193,12 +193,11 @@ class Workflow(object):
             self.wf['action'][action_name]['runner'].run()
         else:
             for s in self.get_stages():
-                self.run_stage(s)
+                self.run_stage(s, reuse)
 
-    def run_stage(self, stage):
-        # TODO: parallelize it
+    def run_stage(self, stage, reuse=False):
         for a in stage:
-            self.wf['action'][a]['runner'].run()
+            self.wf['action'][a]['runner'].run(reuse)
 
     def get_stages(self):
         """Generator of stages. A stages is a list of actions that can be
@@ -271,7 +270,7 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, timeout):
         super(DockerRunner, self).__init__(action, workspace, env, timeout)
 
-    def run(self):
+    def run(self, reuse):
         if 'docker://' in self.action['uses']:
             img = self.action['uses'].replace('docker://', '')
             self.docker_pull(img)
@@ -285,10 +284,23 @@ class DockerRunner(ActionRunner):
             tag = '/'.join(self.action['uses'].split('/')[:2])
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
-        self.docker_build(tag, dockerfile_path)
-        self.docker_run(tag)
+        if not reuse:
+            self.docker_build(tag, dockerfile_path)
+            self.docker_create(tag)
 
-    def docker_run(self, img):
+        e = self.docker_start()
+
+        if not reuse:
+            self.docker_rm()
+
+        if e != 0:
+            pu.fail('Action {} failed!\n'.format(self.action['name']))
+
+    def docker_rm(self):
+        container_name = self.action['name'].replace(' ', '_')
+        pu.exec_cmd('docker rm {}'.format(container_name))
+
+    def docker_create(self, img):
         env_vars = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
@@ -301,11 +313,13 @@ class DockerRunner(ActionRunner):
 
         env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
 
-        docker_cmd = 'docker run --rm '
-        docker_cmd += ' -v {0}:{0}'.format(self.workspace)
-        docker_cmd += ' -v {0}:{0}'.format(os.environ['HOME'])
-        docker_cmd += ' -v {0}:{0}'.format('/var/run/docker.sock')
-        docker_cmd += ' --tmpfs /ramdisk'
+        container_name = self.action['name'].replace(' ', '_')
+
+        docker_cmd = 'docker create --rm '
+        docker_cmd += ' --name={}'.format(container_name)
+        docker_cmd += ' --volume {0}:{0}'.format(self.workspace)
+        docker_cmd += ' --volume {0}:{0}'.format(os.environ['HOME'])
+        docker_cmd += ' --volume {0}:{0}'.format('/var/run/docker.sock')
         docker_cmd += ' --workdir={} '.format(self.workspace)
         docker_cmd += ''.join(env_flags)
         if self.action.get('runs', None):
@@ -313,13 +327,18 @@ class DockerRunner(ActionRunner):
         docker_cmd += ' {}'.format(img)
         docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
 
-        pu.info('[{}] docker run {} {} '.format(
+        pu.info('[{}] docker create {} {} '.format(
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        e = self.execute(docker_cmd, self.action['name'])
-        if e != 0:
-            pu.fail('Action {} failed!\n'.format(self.action['name']))
+        pu.execute(docker_cmd)
+
+    def docker_start(self):
+        pu.info('[{}] docker start '.format(self.action['name']))
+
+        container_name = self.action['name'].replace(' ', '_')
+        cmd = 'docker start --attach {}'.format(container_name)
+        return self.execute(cmd, self.action['name'])
 
     def docker_pull(self, img):
         pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))

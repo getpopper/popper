@@ -1,0 +1,20 @@
+#!/bin/bash
+set -ex
+
+cat <<EOF > main.workflow
+workflow "test" {
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+docker ps -a | ! grep 'show_env'
+
+popper run --reuse
+
+docker ps -a | grep 'show_env'

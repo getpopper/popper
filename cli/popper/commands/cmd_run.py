@@ -20,6 +20,13 @@ from popper.cli import pass_context
     default=os.getcwd()
 )
 @click.option(
+    '--reuse',
+    help='Reuse containers between executions (persist container state).',
+    required=False,
+    show_default=True,
+    default=False
+)
+@click.option(
     '--wfile',
     help=(
         'File containing the definition of the workflow. '
@@ -29,12 +36,15 @@ from popper.cli import pass_context
     default=None
 )
 @pass_context
-def cli(ctx, action, wfile, workspace):
+def cli(ctx, action, wfile, workspace, reuse):
     """Executes one or more pipelines and reports on their status.
     """
     pipeline = Workflow(wfile, workspace)
 
-    pipeline.run(action)
+    if reuse:
+        pu.info('\nWARNING: using --reuse ignores changes to action blocks.\n')
+
+    pipeline.run(action, reuse)
 
     if action:
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
