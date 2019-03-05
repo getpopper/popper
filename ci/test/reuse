@@ -1,8 +1,9 @@
 #!/bin/bash
 set -ex
 
-cat <<EOF > main.workflow
+cat <<EOF > /tmp/main.workflow
 workflow "test" {
+  resolves = "show env"
 }
 
 action "show env" {
@@ -11,10 +12,19 @@ action "show env" {
 }
 EOF
 
-popper run
-
-docker ps -a | ! grep 'show_env'
-
-popper run --reuse
+popper run --wfile /tmp/main.workflow
 
 docker ps -a | grep 'show_env'
+
+docker cp /tmp/main.workflow show_env:/
+
+popper run --wfile /tmp/main.workflow --reuse
+
+# the file we copied above should still be there
+docker cp show_env:/main.workflow /tmp/main.workflow
+
+# now we re-run without --reuse so a new container is created
+popper run --wfile /tmp/main.workflow
+
+# so the file shouldn't be there
+! docker cp show_env:/main.workflow /tmp/main.workflow

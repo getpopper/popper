@@ -23,8 +23,7 @@ from popper.cli import pass_context
     '--reuse',
     help='Reuse containers between executions (persist container state).',
     required=False,
-    show_default=True,
-    default=False
+    is_flag=True,
 )
 @click.option(
     '--wfile',

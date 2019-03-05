@@ -8,14 +8,14 @@ action "test init" {
   runs = "init"
 }
 
-action "test metadata" {
-  uses = "./ci/test"
-  runs = "metadata"
-}
-
 action "test ci" {
   uses = "./ci/test"
   runs = "ci"
+}
+
+action "test reuse" {
+  uses = "./ci/test"
+  runs = "reuse"
 }
 
 action "end" {
@@ -23,7 +23,7 @@ action "end" {
   runs = "version"
   needs = [
     "test init",
-    "test metadata",
-    "test ci"
+    "test ci",
+    "test reuse"
   ]
 }

@@ -31,7 +31,7 @@ class Workflow(object):
         self.workspace = workspace
         self.timeout = 10800
 
-        self.actions_cache_path = os.path.join('tmp', 'actions')
+        self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
         self.check_secrets()
         self.normalize()
@@ -229,7 +229,7 @@ class ActionRunner(object):
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
 
-    def run(self):
+    def run(self, reuse=False):
         raise NotImplementedError(
             "This method is required to be implemented in derived classes."
         )
@@ -269,6 +269,7 @@ class ActionRunner(object):
 class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, timeout):
         super(DockerRunner, self).__init__(action, workspace, env, timeout)
+        self.cid = self.action['name'].replace(' ', '_')
 
     def run(self, reuse):
         if 'docker://' in self.action['uses']:
@@ -284,21 +285,32 @@ class DockerRunner(ActionRunner):
             tag = '/'.join(self.action['uses'].split('/')[:2])
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
+        print('name: {}'.format(tag))
         if not reuse:
+            if self.docker_exists():
+                self.docker_rm()
             self.docker_build(tag, dockerfile_path)
             self.docker_create(tag)
+        else:
+            if not self.docker_exists():
+                self.docker_build(tag, dockerfile_path)
+                self.docker_create(tag)
 
         e = self.docker_start()
-
-        if not reuse:
-            self.docker_rm()
 
         if e != 0:
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
+    def docker_exists(self):
+        cmd_out = pu.exec_cmd('docker ps -a')
+
+        if self.cid in cmd_out:
+            return True
+
+        return False
+
     def docker_rm(self):
-        container_name = self.action['name'].replace(' ', '_')
-        pu.exec_cmd('docker rm {}'.format(container_name))
+        pu.exec_cmd('docker rm {}'.format(self.cid), ignoreerror=True)
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -313,10 +325,8 @@ class DockerRunner(ActionRunner):
 
         env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
 
-        container_name = self.action['name'].replace(' ', '_')
-
-        docker_cmd = 'docker create --rm '
-        docker_cmd += ' --name={}'.format(container_name)
+        docker_cmd = 'docker create '
+        docker_cmd += ' --name={}'.format(self.cid)
         docker_cmd += ' --volume {0}:{0}'.format(self.workspace)
         docker_cmd += ' --volume {0}:{0}'.format(os.environ['HOME'])
         docker_cmd += ' --volume {0}:{0}'.format('/var/run/docker.sock')
@@ -331,13 +341,12 @@ class DockerRunner(ActionRunner):
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        pu.execute(docker_cmd)
+        pu.exec_cmd(docker_cmd)
 
     def docker_start(self):
         pu.info('[{}] docker start '.format(self.action['name']))
 
-        container_name = self.action['name'].replace(' ', '_')
-        cmd = 'docker start --attach {}'.format(container_name)
+        cmd = 'docker start --attach {}'.format(self.cid)
         return self.execute(cmd, self.action['name'])
 
     def docker_pull(self, img):
@@ -354,7 +363,7 @@ class HostRunner(ActionRunner):
     def __init__(self, action, workspace, env, timeout):
         super(HostRunner, self).__init__(action, workspace, env, timeout)
 
-    def run(self):
+    def run(self, reuse=False):
         cmd = self.action.get('runs', ['entrypoint.sh'])
         cmd[0] = os.path.join('./', cmd[0])
         cmd.extend(self.action.get('args', ''))
