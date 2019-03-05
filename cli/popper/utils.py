@@ -480,7 +480,7 @@ def exec_cmd(cmd, ignoreerror=False):
     except subprocess.CalledProcessError as ex:
         if ignoreerror:
             return ''
-        fail("Command '{}' failed: {}".format(cmd, ex))
+        fail("Command '{}' failed: {}\n".format(cmd, ex))
 
     output = output.decode('utf-8')
 
