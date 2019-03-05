@@ -41,7 +41,12 @@ def cli(ctx, action, wfile, workspace, reuse):
     pipeline = Workflow(wfile, workspace)
 
     if reuse:
-        pu.info('\nWARNING: using --reuse ignores changes to action blocks.\n')
+        pu.info(
+            "\n  " +
+            "WARNING: using --reuse ignores any changes made to an action" +
+            "\n  " +
+            "or to an action block in the workflow.\n\n"
+        )
 
     pipeline.run(action, reuse)
 

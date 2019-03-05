@@ -190,7 +190,7 @@ class Workflow(object):
         self.instantiate_runners()
 
         if action_name:
-            self.wf['action'][action_name]['runner'].run()
+            self.wf['action'][action_name]['runner'].run(reuse)
         else:
             for s in self.get_stages():
                 self.run_stage(s, reuse)
@@ -272,28 +272,31 @@ class DockerRunner(ActionRunner):
         self.cid = self.action['name'].replace(' ', '_')
 
     def run(self, reuse):
+        build = True
         if 'docker://' in self.action['uses']:
-            img = self.action['uses'].replace('docker://', '')
-            self.docker_pull(img)
-            self.docker_run(img)
-            return
-
-        if './' in self.action['uses']:
+            tag = self.action['uses'].replace('docker://', '')
+            build = False
+        elif './' in self.action['uses']:
             tag = 'action/' + os.path.basename(self.action['uses'])
             dockerfile_path = os.path.join(os.getcwd(), self.action['uses'])
         else:
             tag = '/'.join(self.action['uses'].split('/')[:2])
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
-        print('name: {}'.format(tag))
         if not reuse:
             if self.docker_exists():
                 self.docker_rm()
-            self.docker_build(tag, dockerfile_path)
+            if build:
+                self.docker_build(tag, dockerfile_path)
+            else:
+                self.docker_pull(tag)
             self.docker_create(tag)
         else:
             if not self.docker_exists():
-                self.docker_build(tag, dockerfile_path)
+                if build:
+                    self.docker_build(tag, dockerfile_path)
+                else:
+                    self.docker_pull(tag)
                 self.docker_create(tag)
 
         e = self.docker_start()
@@ -337,7 +340,7 @@ class DockerRunner(ActionRunner):
         docker_cmd += ' {}'.format(img)
         docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
 
-        pu.info('[{}] docker create {} {} '.format(
+        pu.info('[{}] docker create {} {}\n'.format(
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
