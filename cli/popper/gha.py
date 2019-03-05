@@ -11,6 +11,7 @@ import sys
 class Workflow(object):
     """A GHA workflow.
     """
+
     def __init__(self, wfile, workspace):
         if not wfile:
             if os.path.isfile("main.workflow"):
@@ -70,13 +71,25 @@ class Workflow(object):
             if not a_block.get('uses', None):
                 pu.fail('[uses] attribute must be present\n')
             if a_block.get('needs', None):
-                if not isinstance(a_block['needs'], str) and not isinstance(a_block['needs'], list):
+                if not isinstance(
+                        a_block['needs'],
+                        str) and not isinstance(
+                        a_block['needs'],
+                        list):
                     pu.fail('[needs] attribute must be a list or string\n')
             if a_block.get('runs', None):
-                if not isinstance(a_block['runs'], str) and not isinstance(a_block['runs'], list):
+                if not isinstance(
+                        a_block['runs'],
+                        str) and not isinstance(
+                        a_block['runs'],
+                        list):
                     pu.fail('[runs] attribute must be a list or string\n')
             if a_block.get('args', None):
-                if not isinstance(a_block['args'], str) and not isinstance(a_block['args'], list):
+                if not isinstance(
+                        a_block['args'],
+                        str) and not isinstance(
+                        a_block['args'],
+                        list):
                     pu.fail('[args] attribute must be a list or a string\n')
             if a_block.get('env', None):
                 if not isinstance(a_block['env'], dict):
@@ -249,6 +262,7 @@ class Workflow(object):
 class ActionRunner(object):
     """An action runner.
     """
+
     def __init__(self, action, workspace, env, timeout):
         self.action = action
         self.workspace = workspace
