@@ -1,0 +1,37 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+docker ps -a | grep 'show_env'
+
+docker cp ./main.workflow show_env:/
+
+popper run --reuse
+
+# the file we copied above should still be there
+docker cp show_env:/main.workflow main.workflow
+
+# now we re-run without --reuse so a new container is created
+popper run
+
+# so the file shouldn't be there
+! docker cp show_env:/main.workflow /tmp/main.workflow
+
+# lastly, test reuse for a single action
+popper run --reuse 'show env'

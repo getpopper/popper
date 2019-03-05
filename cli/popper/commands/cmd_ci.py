@@ -118,4 +118,4 @@ def cli(ctx, service, skip, requirement_level):
         with open(ci_file, 'w') as f:
             f.write(ci_file_content)
 
-    pu.info('Wrote CI configuration file successfully')
+    pu.info('Wrote CI configuration file successfully\n')
