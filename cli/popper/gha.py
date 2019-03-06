@@ -81,7 +81,7 @@ class Workflow(object):
         # python 2 to 3 compatibility
         try:
             basestring
-        except:
+        except UnboundLocalError:
             basestring = str
 
         # create a list for all attributes that can be either string or list
