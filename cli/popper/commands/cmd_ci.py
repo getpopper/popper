@@ -16,7 +16,7 @@ install:
 - git clone --recursive https://github.com/systemslab/popper /tmp/popper
 - export PATH=$PATH:/tmp/popper/cli/bin
 - export PYTHONUNBUFFERED=1
-script: popper run {runargs}
+script: popper run
 """
     },
     'circle': {
@@ -33,7 +33,7 @@ jobs:
         git clone --recursive https://github.com/systemslab/popper /tmp/popper
         export PATH=$PATH:/tmp/popper/cli/bin
         export PYTHONUNBUFFERED=1
-        popper run {runargs}
+        popper run
 """
     },
     'jenkins': {
@@ -43,7 +43,7 @@ stage ('Popper') {{ node {{
   sh "git clone --recursive https://github.com/systemslab/popper /tmp/popper"
   sh "export PATH=$PATH:/tmp/popper/cli/bin"
   sh "export PYTHONUNBUFFERED=1"
-  sh "popper run {runargs}"
+  sh "popper run
 }}}}
 """
     },
@@ -69,7 +69,7 @@ before_script:
 - export PATH=$PATH:/tmp/popper/cli/bin
 
 popper:
-  script: popper run {runargs}
+  script: popper run
 """
     }
 }
@@ -82,20 +82,8 @@ popper:
     type=click.Choice(['travis', 'circle', 'jenkins', 'gitlab']),
     required=True
 )
-@click.option(
-    '--skip',
-    help='Comma-separated list of pipelines to skip during ci',
-    required=False,
-)
-@click.option('--requirement-level',
-              type=click.Choice(['warn', 'ignore', 'fail']), default='fail',
-              help='Determines how to handle missing requirements. warn simply'
-                   'emits a wanring and continues normally; ignore runs the'
-                   'specified pipelines despite missing unfulfilled'
-                   'requirements; fail exits with an error on unfilfilled'
-                   'requirements')
 @pass_context
-def cli(ctx, service, skip, requirement_level):
+def cli(ctx, service):
     """Generates configuration files for distinct CI services.
     """
     project_root = pu.get_project_root()
@@ -103,12 +91,8 @@ def cli(ctx, service, skip, requirement_level):
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)
 
-    runargs = '--skip={} '.format(skip) if skip else ''
-
-    runargs += '--requirement-level {}'.format(requirement_level)
-
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
-        ci_file_content = ci_file_content.format(runargs=runargs)
+        ci_file_content = ci_file_content
         ci_file = os.path.join(project_root, ci_file)
         # create parent folder
         if not os.path.isdir(os.path.dirname(ci_file)):
