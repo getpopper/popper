@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+from builtins import dict, str
 import hcl
 import os
 import popper.scm as scm
@@ -76,18 +78,24 @@ class Workflow(object):
             self.wf['on'] = wf_block.get('on', 'push')
             self.wf['resolves'] = wf_block['resolves']
 
+        # python 2 to 3 compatibility
+        try:
+            basestring
+        except:
+            basestring = str
+
         # create a list for all attributes that can be either string or list
-        if isinstance(self.wf['resolves'], str):
+        if isinstance(self.wf['resolves'], basestring):
             self.wf['resolves'] = [self.wf['resolves']]
         for _, a_block in self.wf['action'].items():
             if a_block.get('needs', None):
-                if isinstance(a_block['needs'], str):
+                if isinstance(a_block['needs'], basestring):
                     a_block['needs'] = [a_block['needs']]
             if a_block.get('runs', None):
-                if isinstance(a_block['runs'], str):
+                if isinstance(a_block['runs'], basestring):
                     a_block['runs'] = [a_block['runs']]
             if a_block.get('args', None):
-                if isinstance(a_block['args'], str):
+                if isinstance(a_block['args'], basestring):
                     a_block['args'] = a_block['args'].split()
 
     def complete_graph(self):
