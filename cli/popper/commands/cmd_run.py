@@ -49,8 +49,8 @@ def cli(ctx, action, wfile, workspace, reuse, recursive):
         for root, dirs, files in os.walk('.'):
             for file in files:
                 if file.endswith('.workflow'):
-                    wfile=os.path.join(root, file)
-                    wfile=os.path.abspath(wfile)
+                    wfile = os.path.join(root, file)
+                    wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
 
     pipeline = Workflow(wfile, workspace)
@@ -69,4 +69,3 @@ def cli(ctx, action, wfile, workspace, reuse, recursive):
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
     else:
         pu.info('\nWorkflow finished successfully.\n\n')
-
