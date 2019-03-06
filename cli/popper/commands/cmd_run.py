@@ -51,19 +51,25 @@ def cli(ctx, action, wfile, workspace, reuse, recursive):
                     wfile = os.path.join(root, file)
                     wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
-                    pipeline = Workflow(wfile, workspace)
+                    run_pipeline(action, wfile, workspace, reuse)
+    else:
+        run_pipeline(action, wfile, workspace, reuse)
 
-                    if reuse:
-                        pu.info(
-                            "\n  " +
-                            "WARNING: using --reuse ignores any changes made to an action" +
-                            "\n  " +
-                            "or to an action block in the workflow.\n\n"
-                        )
 
-                    pipeline.run(action, reuse)
+def run_pipeline(action, wfile, workspace, reuse):
+    pipeline = Workflow(wfile, workspace)
 
-                    if action:
-                        pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
-                    else:
-                        pu.info('\nWorkflow finished successfully.\n\n')
+    if reuse:
+        pu.info(
+            "\n  " +
+            "WARNING: using --reuse ignores any changes made to an action" +
+            "\n  " +
+            "or to an action block in the workflow.\n\n"
+        )
+
+    pipeline.run(action, reuse)
+
+    if action:
+        pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
+    else:
+        pu.info('\nWorkflow finished successfully.\n\n')
