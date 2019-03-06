@@ -36,6 +36,7 @@ class Workflow(object):
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
+        self.validate()
         self.check_secrets()
         self.normalize()
         self.complete_graph()
@@ -55,6 +56,61 @@ class Workflow(object):
 
         for e in dict(self.env):
             self.env.update({e.replace('GITHUB_', 'POPPER_'): self.env[e]})
+
+    def validate(self):
+        """
+        Validates the .workflow file
+        """
+        if not self.wf.get('workflow', None):
+            pu.fail('Workflow block must be present\n')
+        for _, wf_block in dict(self.wf['workflow']).items():
+            if not wf_block.get('resolves', None):
+                pu.fail('[resolves] attribute must be present\n')
+            else:
+                if not isinstance(
+                        wf_block['resolves'],
+                        str) and not isinstance(
+                        wf_block['resolves'],
+                        list):
+                    pu.fail('[resolves] attribute must be string or list\n')
+            if wf_block.get('on', None):
+                if not isinstance(wf_block['on'], str):
+                    pu.fail('[on] attribute must be a string\n')
+        if not self.wf.get('action', None):
+            pu.fail('Action block must be present\n')
+        for a_name, a_block in self.wf['action'].items():
+            if not a_block.get('uses', None):
+                pu.fail('[uses] attribute must be present\n')
+            else:
+                if not isinstance(a_block['uses'], str):
+                    pu.fail('[uses] block must be a string\n')
+            if a_block.get('needs', None):
+                if not isinstance(
+                        a_block['needs'],
+                        str) and not isinstance(
+                        a_block['needs'],
+                        list):
+                    pu.fail('[needs] attribute must be a list or string\n')
+            if a_block.get('runs', None):
+                if not isinstance(
+                        a_block['runs'],
+                        str) and not isinstance(
+                        a_block['runs'],
+                        list):
+                    pu.fail('[runs] attribute must be a list or string\n')
+            if a_block.get('args', None):
+                if not isinstance(
+                        a_block['args'],
+                        str) and not isinstance(
+                        a_block['args'],
+                        list):
+                    pu.fail('[args] attribute must be a list or a string\n')
+            if a_block.get('env', None):
+                if not isinstance(a_block['env'], dict):
+                    pu.fail('[env] attribute must be a dict\n')
+            if a_block.get('secrets', None):
+                if not isinstance(a_block['secrets'], list):
+                    pu.fail('[secrets] attribute must be a list\n')
 
     def normalize(self):
         """normalize the dictionary representation of the workflow"""
