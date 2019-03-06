@@ -34,10 +34,25 @@ from popper.cli import pass_context
     required=False,
     default=None
 )
+@click.option(
+    '--recursive',
+    help='Run any main.workflow found recursively from current path. ',
+    required=False,
+    is_flag=True
+)
 @pass_context
-def cli(ctx, action, wfile, workspace, reuse):
+def cli(ctx, action, wfile, workspace, reuse, recursive):
     """Executes one or more pipelines and reports on their status.
     """
+
+    if recursive:
+        for root, dirs, files in os.walk('.'):
+            for file in files:
+                if file.endswith('.workflow'):
+                    wfile=os.path.join(root, file)
+                    wfile=os.path.abspath(wfile)
+                    pu.info("Found and running workflow at "+wfile+"\n")
+
     pipeline = Workflow(wfile, workspace)
 
     if reuse:
@@ -54,3 +69,4 @@ def cli(ctx, action, wfile, workspace, reuse):
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
     else:
         pu.info('\nWorkflow finished successfully.\n\n')
+
