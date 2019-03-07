@@ -28,4 +28,23 @@ do
     create_workflow $i
 done
 
-popper run --recursive
+popper run --recursive >> out
+
+files=`grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-`
+
+counter=0
+set +x
+
+for workflow in "${workflows[@]}"
+do
+    for file in $files
+    do
+        if [ $workflow = $file ]
+        then
+            echo "$file was run!"
+            ((counter++))
+        fi
+    done
+done
+
+echo "Ran $counter/5 cases successfully"
