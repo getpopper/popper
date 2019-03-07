@@ -231,19 +231,18 @@ EOF
 
 ! popper run
 
-# ## runs attribute present and correct type
-# cat <<EOF > main.workflow
-# workflow "test" {
-#   resolves = "show env"
-# }
+## runs attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
 
-# action "show env" {
-#   uses = "actions/bin/sh@master"
-#   runs = "actions/bin/sh@master/entrypoint.sh"
-# }
-# EOF
+action "show env" {
+  uses = "actions/bin/sh@master"
+}
+EOF
 
-# popper run
+popper run
 
 # args attribute present but wrong type
 cat <<EOF > main.workflow
