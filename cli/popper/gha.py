@@ -62,7 +62,7 @@ class Workflow(object):
         Validates the .workflow file
         """
         if not self.wf.get('workflow', None):
-            pu.fail('Workflow block must be present\n')
+            pu.fail('A workflow block must be present\n')
         for _, wf_block in dict(self.wf['workflow']).items():
             if not wf_block.get('resolves', None):
                 pu.fail('[resolves] attribute must be present\n')
@@ -77,7 +77,7 @@ class Workflow(object):
                 if not isinstance(wf_block['on'], str):
                     pu.fail('[on] attribute must be a string\n')
         if not self.wf.get('action', None):
-            pu.fail('Action block must be present\n')
+            pu.fail('At least one action block must be present\n')
         for a_name, a_block in self.wf['action'].items():
             if not a_block.get('uses', None):
                 pu.fail('[uses] attribute must be present\n')
