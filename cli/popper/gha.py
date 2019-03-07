@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+from builtins import dict, str
 import hcl
 import os
 import popper.scm as scm
