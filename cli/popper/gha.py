@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-from builtins import dict, str
 import hcl
 import os
 import popper.scm as scm
@@ -352,7 +351,7 @@ class DockerRunner(ActionRunner):
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        pu.exec_cmd(docker_cmd)
+        print('docker id:', pu.exec_cmd(docker_cmd))
 
     def docker_start(self):
         pu.info('[{}] docker start '.format(self.action['name']))
