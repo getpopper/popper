@@ -14,7 +14,7 @@ else:
     yaml_lib = os.path.join(vendordir, 'pyyaml', 'lib3')
 
 sys.path.insert(0, yaml_lib)
-sys.path.insert(0, os.path.join(vendordir, 'python-future'))
+sys.path.insert(0, os.path.join(vendordir, 'python-future', 'src'))
 sys.path.insert(0, os.path.join(vendordir, 'click'))
 sys.path.insert(0, os.path.join(vendordir, 'certifi'))
 sys.path.insert(0, os.path.join(vendordir, 'idna'))
