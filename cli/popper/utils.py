@@ -76,7 +76,7 @@ def fetch_pipeline_metadata(skip_update=False):
                 repos.append(s)
             else:
                 for repo in repos_in_org(s):
-                    repos.append(s+'/'+repo)
+                    repos.append(s + '/' + repo)
 
         with click.progressbar(
                 repos,
@@ -366,7 +366,7 @@ def read_config_remote(org, repo, branch='master'):
     except Exception:
         return None
 
-    if type(config) != dict:
+    if not isinstance(config, dict):
         return None
 
     if 'version' not in config:
@@ -474,9 +474,39 @@ def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
     return new_pipeline_name, path
 
 
-def exec_cmd(cmd, ignoreerror=False):
+def exec_cmd_util(command, verbose=False, log=False, out_file=None, err_file=None):
+    output_str = ""
+    process = subprocess.Popen(
+        command,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        shell=True)
+    while True:
+        output = process.stdout.readline().decode("utf-8")
+        err = process.stderr.readline().decode("utf-8")
+        if len(output) == 0 and process.poll() is not None:
+            break
+        if output:
+            if verbose:
+                print(output.strip())
+            if log and out_file:
+                out_file.write(output.strip() + "\n")
+            output_str += (output.strip() + "\n")
+        if err:
+            if verbose:
+                print(err.strip())
+            if log and err_file:
+                err_file.write(err.strip() + "\n")
+    return (process.poll(), output_str.encode('utf-8'))
+
+
+def exec_cmd(cmd, verbose=False, ignoreerror=False):
+    output = None
     try:
-        output = subprocess.check_output(cmd, shell=True).strip()
+        if verbose:
+            output = exec_cmd_util(cmd, verbose)[1]
+        else:
+            output = subprocess.check_output(cmd, shell=True).strip()
     except subprocess.CalledProcessError as ex:
         if ignoreerror:
             return ''
