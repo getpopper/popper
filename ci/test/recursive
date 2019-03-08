@@ -48,3 +48,4 @@ do
 done
 
 echo "Ran $counter/5 cases successfully"
+test $counter -eq 5 
