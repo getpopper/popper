@@ -1,0 +1,51 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+function create_workflow(){
+    cat > $1 << EOF
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+}
+
+mkdir another
+mkdir another/another
+
+workflows=( "main.workflow" "another/main.workflow" "another/another/main.workflow" "try.workflow" "another/demo.workflow" )
+
+for i in "${workflows[@]}"
+do
+    create_workflow $i
+done
+
+popper run --recursive >> out
+
+files=`grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-`
+
+counter=0
+set +x
+
+for workflow in "${workflows[@]}"
+do
+    for file in $files
+    do
+        if [ $workflow = $file ]
+        then
+            echo "$file was run!"
+            ((counter++))
+        fi
+    done
+done
+
+echo "Ran $counter/5 cases successfully"
+test $counter -eq 5 
