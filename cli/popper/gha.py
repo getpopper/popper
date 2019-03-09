@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from builtins import dict, str
+from concurrent.futures import ThreadPoolExecutor
+import multiprocessing as mp
 import hcl
 import os
 import popper.utils as pu
@@ -291,9 +293,13 @@ class Workflow(object):
             for s in self.get_stages():
                 self.run_stage(s, reuse)
 
+    def stage_exec(self, action, reuse):
+        self.wf['action'][action]['runner'].run(reuse)
+
     def run_stage(self, stage, reuse=False):
-        for a in stage:
-            self.wf['action'][a]['runner'].run(reuse)
+        with ThreadPoolExecutor(max_workers=mp.cpu_count()) as executor:
+            for action in stage:
+                executor.submit(self.stage_exec, action, reuse)
 
     def get_stages(self):
         """Generator of stages. A stages is a list of actions that can be
