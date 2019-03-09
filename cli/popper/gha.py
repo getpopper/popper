@@ -352,7 +352,7 @@ class DockerRunner(ActionRunner):
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        print('docker id:', pu.exec_cmd(docker_cmd))
+        pu.exec_cmd(docker_cmd)
 
     def docker_start(self):
         pu.info('[{}] docker start '.format(self.action['name']))
@@ -395,3 +395,6 @@ class HostRunner(ActionRunner):
 
         if ecode != 0:
             pu.fail("\n\nAction '{}' failed.\n.".format(self.action['name']))
+
+        pu.exec_cmd(
+            'docker rm {}'.format(self.cid), self.verbose, ignoreerror=True)

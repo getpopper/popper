@@ -19,8 +19,12 @@ runtimes in addition to Docker. The workflow language is strictly a
 superset of GHA workflow language so Popper can run a GHA workflow 
 locally as if it was being executed by the GHA platform.
 
+<p align="center">
+  <img src="https://systemslab.github.io/popper/images/demo.svg">
+</p>
+
 In addition to running a GHA workflow locally, Popper provides other 
-useful functionality:
+functionality:
 
   * [Other runtimes](). Actions can execute locally on the host where 
     the `popper` command runs (i.e. "outside" a container, thus not 
@@ -35,12 +39,14 @@ useful functionality:
   * [Continuous integration](). Generate configuration files for 
     distinct CI services that allow workflows to run on these (Travis, 
     Jenkins, Gitlab and Circle supported).
-  * [Action scaffolding]() **(Coming Soon)**. Aid in the 
+  * [Action scaffolding](). Aid in the 
     implementation of new actions or building upon existing ones.
+  * As part of our efforts, we maintain a list of 
+    actions available at <https://github.com/popperized>.
 
-As part of this effort, we also maintain a repository of 
-[actions](https://github.com/popperized/library). The contents of this 
-repository are:
+-----
+
+The contents of this repository are:
 
   * [`cli/`](cli/). The codebase of the CLI tool.
   * [`docs/`](docs/). General 
@@ -55,8 +61,8 @@ Quick links to other resources:
   * [5-minute screencast demo of the CLI](https://asciinema.org/a/227046).
   * [Recorded webinar presentation](https://youtu.be/tZcaV31FxUM).
   * [Software Carpentry formatted Lesson](https://popperized.github.io/swc-lesson/).
-  * [List of repositories that implement Popper 
-    workflows](https://github.com/popperized).
+  * [Github Actions awesome 
+    list](https://github.com/sdras/awesome-actions).
 
 ## Installation
 
