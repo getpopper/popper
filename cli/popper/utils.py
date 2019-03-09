@@ -24,6 +24,26 @@ init_config = {
 
 gitignore_content = ".pipeline_cache.yml\npopper/\n"
 
+main_workflow_content = """
+workflow "example" {
+  on = "push"
+  resolves = "some action"
+}
+
+action "github official action" {
+  uses = "actions/bin/sh@master"
+  args = ["ls"]
+}
+
+action "docker action" {
+  uses = "docker://node:6"
+  runs = "docker version"
+}
+
+action "example action" {
+  uses = "./%s"
+}
+"""
 
 def get_items(dict_object):
     """Python 2/3 compatible way of iterating over a dictionary"""
