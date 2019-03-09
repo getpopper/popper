@@ -21,7 +21,8 @@ setup(
         'lark-parser==0.5.6',
         'pyhcl',
         'pyyaml',
-        'pyaes'
+        'pyaes',
+        'futures; python_version == "2.7"'
     ],
     entry_points='''
         [console_scripts]
