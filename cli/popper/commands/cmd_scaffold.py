@@ -31,15 +31,17 @@ def cli(ctx):
 
     # Generate actions files
     with open(os.path.join(project_root, 'main.workflow'), 'w') as f:
-        f.write(pu.main_workflow_content % os.path.relpath(os.path.join(actions_dir, 'example'), project_root))
+        f.write(pu.main_workflow_content % os.path.relpath(
+            os.path.join(actions_dir, 'example'), project_root)
+        )
 
-    with open(os.path.join(actions_dir, 'example/Dockerfile'), 'w') as dockerfile:
+    with open(os.path.join(actions_dir, 'example/Dockerfile'), 'w') as df:
         pass
     
-    with open(os.path.join(actions_dir, 'example/entrypoint.sh'), 'w') as entryfile:
+    with open(os.path.join(actions_dir, 'example/entrypoint.sh'), 'w') as ef:
         pass
 
-    with open(os.path.join(actions_dir, 'example/README.md'), 'w') as readmefile:
+    with open(os.path.join(actions_dir, 'example/README.md'), 'w') as rf:
         pass
     
     pu.info('Successfully scaffolded. \n')
