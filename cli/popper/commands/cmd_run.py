@@ -57,12 +57,12 @@ def cli(ctx, action, wfile, workspace, reuse, recursive, verbose):
                     wfile = os.path.join(root, file)
                     wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
-                    run_pipeline(action, wfile, workspace, reuse)
+                    run_pipeline(action, wfile, workspace, reuse, verbose)
     else:
-        run_pipeline(action, wfile, workspace, reuse)
+        run_pipeline(action, wfile, workspace, reuse, verbose)
 
 
-def run_pipeline(action, wfile, workspace, reuse):
+def run_pipeline(action, wfile, workspace, reuse, verbose):
     pipeline = Workflow(wfile, workspace)
 
     if reuse:
