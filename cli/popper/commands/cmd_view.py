@@ -59,7 +59,8 @@ def add(parent_action, cur_action, actions, graph):
     # Graph::Easy can't work with '-' in names
     # Graph::Easy separates a single string with n-1 ' ' into n different words
     if cur_action != parent_action:
-        graph += "{} -> {};\n".format(parent_action.replace(' ', '_').replace('-', '_'),
-                                       cur_action.replace(' ', '_').replace('-', '_'))
+        graph += "{} -> {};\n".format(
+            parent_action.replace(' ', '_').replace('-', '_'),
+            cur_action.replace(' ', '_').replace('-', '_'))
 
     return graph
