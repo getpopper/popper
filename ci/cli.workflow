@@ -18,12 +18,18 @@ action "test reuse" {
   runs = "reuse"
 }
 
+action "test actions-demo" {
+  uses = "./ci/test"
+  runs = "actions-demo"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
   needs = [
     "test init",
     "test ci",
-    "test reuse"
+    "test reuse",
+    "test actions-demo"
   ]
 }
