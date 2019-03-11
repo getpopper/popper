@@ -395,6 +395,3 @@ class HostRunner(ActionRunner):
 
         if ecode != 0:
             pu.fail("\n\nAction '{}' failed.\n.".format(self.action['name']))
-
-        pu.exec_cmd(
-            'docker rm {}'.format(self.cid), self.verbose, ignoreerror=True)
