@@ -36,12 +36,12 @@ def cli(ctx):
         )
 
     with open(os.path.join(actions_dir, 'example/Dockerfile'), 'w') as df:
-        pass
+        df.write(pu.dockerfile_content)
     
     with open(os.path.join(actions_dir, 'example/entrypoint.sh'), 'w') as ef:
-        pass
+        ef.write(pu.entrypoint_content)
 
     with open(os.path.join(actions_dir, 'example/README.md'), 'w') as rf:
-        pass
-    
+        rf.write(pu.readme_content)
+            
     pu.info('Successfully scaffolded. \n')
