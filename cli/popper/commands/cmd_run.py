@@ -40,8 +40,14 @@ from popper.cli import pass_context
     required=False,
     is_flag=True
 )
+@click.option(
+    '--verbose',
+    help='Prints output of all commands to stdout. ',
+    required=False,
+    is_flag=True
+)
 @pass_context
-def cli(ctx, action, wfile, workspace, reuse, recursive):
+def cli(ctx, action, wfile, workspace, reuse, recursive, verbose):
     """Executes one or more pipelines and reports on their status.
     """
     if recursive:
@@ -51,12 +57,12 @@ def cli(ctx, action, wfile, workspace, reuse, recursive):
                     wfile = os.path.join(root, file)
                     wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
-                    run_pipeline(action, wfile, workspace, reuse)
+                    run_pipeline(action, wfile, workspace, reuse, verbose)
     else:
-        run_pipeline(action, wfile, workspace, reuse)
+        run_pipeline(action, wfile, workspace, reuse, verbose)
 
 
-def run_pipeline(action, wfile, workspace, reuse):
+def run_pipeline(action, wfile, workspace, reuse, verbose):
     pipeline = Workflow(wfile, workspace)
 
     if reuse:
@@ -67,7 +73,7 @@ def run_pipeline(action, wfile, workspace, reuse):
             "or to an action block in the workflow.\n\n"
         )
 
-    pipeline.run(action, reuse)
+    pipeline.run(action, reuse, verbose)
 
     if action:
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
