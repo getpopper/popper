@@ -23,6 +23,11 @@ action "test actions-demo" {
   runs = "actions-demo"
 }
 
+action "test verbose" {
+  uses = "./ci/test"
+  runs = "verbose"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -30,6 +35,7 @@ action "end" {
     "test init",
     "test ci",
     "test reuse",
-    "test actions-demo"
+    "test actions-demo",
+    "test verbose"
   ]
 }
