@@ -76,7 +76,8 @@ class Workflow(object):
             pu.fail('[uses] attribute must be present\n')
 
     def is_list_of_strings(self, lst):
-        return bool(lst) and isinstance(lst, list) and all(isinstance(elem, basestring) for elem in lst)
+        return bool(lst) and isinstance(lst, list) and all(
+            isinstance(elem, basestring) for elem in lst)
 
     def normalize(self):
         """normalize the dictionary representation of the workflow"""
@@ -121,24 +122,26 @@ class Workflow(object):
                 if isinstance(a_block['needs'], basestring):
                     a_block['needs'] = [a_block['needs']]
                 elif not self.is_list_of_strings(a_block['needs']):
-                    pu.fail('[needs] attribute must be a list of strings or a string\n')
+                    pu.fail(
+                        '[needs] attribute must be a list of strings or a string\n')
             if a_block.get('runs', None):
                 if isinstance(a_block['runs'], basestring):
                     a_block['runs'] = [a_block['runs']]
                 elif not self.is_list_of_strings(a_block['runs']):
-                    pu.fail('[runs] attribute must be a list of strings or a string\n')
+                    pu.fail(
+                        '[runs] attribute must be a list of strings or a string\n')
             if a_block.get('args', None):
                 if isinstance(a_block['args'], basestring):
                     a_block['args'] = a_block['args'].split()
                 elif not self.is_list_of_strings(a_block['args']):
-                    pu.fail('[args] attribute must be a list of strings or a string\n')
+                    pu.fail(
+                        '[args] attribute must be a list of strings or a string\n')
             if a_block.get('env', None):
                 if not isinstance(a_block['env'], dict):
                     pu.fail('[env] attribute must be a dict\n')
             if a_block.get('secrets', None):
                 if not self.is_list_of_strings(a_block['secrets']):
                     pu.fail('[secrets] attribute must be a list of strings\n')
-
 
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
