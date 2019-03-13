@@ -9,10 +9,10 @@ import types
 
 @click.argument(
     'wfile', required=True)
-@click.command('view', short_help='Shows an ascii graph of a workflow')
+@click.command('dot', short_help='Generates a dot file [Used for graphical representations]')
 @pass_context
 def cli(ctx, wfile):
-    """Displays an ascii graph of a workflow"""
+    """Creates a dot file"""
     if not os.path.isfile(wfile):
         pu.fail("File {} not found.\n".format(wfile))
         exit(1)
@@ -20,9 +20,10 @@ def cli(ctx, wfile):
     with open(wfile, 'r') as fp:
         wf = hcl.load(fp)
 
-    graph = "digraph G{\n"
+    graph = "digraph G {\n"
     name = list(wf["workflow"].keys())[0]
-    pu.info("Ascii for %s workflow\n" % name)
+    pu.info("Dot file for %s workflow\n" % name)
+    pu.info("`ascii.dot` created\n\n")
 
     action = wf["workflow"][name]["resolves"]
     parent_action = cur_action = action
@@ -30,16 +31,14 @@ def cli(ctx, wfile):
     if not isinstance(cur_action, str):
         cur_action = cur_action[0]
 
-    graph = add(parent_action, cur_action, wf["action"], graph) + "}"
+    graph = add(parent_action, cur_action, wf["action"], graph) + "}\n"
 
     with open('ascii.dot', 'w') as fp:
         fp.write(graph)
 
     os.system("awk '!seen[$0]++' ascii.dot > out")
-    os.system('cat out | graph-easy --from=dot --as_ascii')
 
-    # Cleanup
-    os.system('rm ascii.dot out')
+    pu.info(graph)
 
 
 # Recursively go through "needs" and add corresponding actions to graph
@@ -59,7 +58,7 @@ def add(parent_action, cur_action, actions, graph):
     # Graph::Easy can't work with '-' in names
     # Graph::Easy separates a single string with n-1 ' ' into n different words
     if cur_action != parent_action:
-        graph += "{} -> {};\n".format(
+        graph += "\t{} -> {};\n".format(
             parent_action.replace(' ', '_').replace('-', '_'),
             cur_action.replace(' ', '_').replace('-', '_'))
 
