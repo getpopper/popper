@@ -7,8 +7,9 @@
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
 > **NOTE**: Popper 2.0 is a revamped version of the Popper project. 
-> Read more in [this announcement](). Previous 1.x releases can be 
-> found in the [`v1.x` 
+> Read more in [this 
+> announcement](https://medium.com/@ivotron/announcing-popper-2-0-a-github-actions-executioner-in-python-cf25620c021e). 
+> Previous 1.x releases can be found in the [`v1.x` 
 > branch](https://github.com/systemslab/popper/tree/v1.x).
 
 Popper is a workflow execution engine based on [Github 

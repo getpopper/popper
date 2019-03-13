@@ -1,7 +1,8 @@
 #!/bin/bash
 set -ex
 
+rm -rf /tmp/gha-demo
 git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
 pushd /tmp/gha-demo
-PHONY_SECRET=phony popper run
+PHONY_SECRET=phony popper run --verbose
 popd
