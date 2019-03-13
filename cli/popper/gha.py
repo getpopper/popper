@@ -185,8 +185,11 @@ class Workflow(object):
             if 'docker://' in a['uses'] or './' in a['uses']:
                 continue
 
-            user = a['uses'].split('/')[0]
-            repo = a['uses'].split('/')[1]
+            url = a['uses'].split('/')[0]
+            user = a['uses'].split('/')[1]
+            repo = a['uses'].split('/')[2]
+            branch = repo.split('@')[1]
+            repo = repo.split('@')[0]
 
             if '@' in a['uses']:
                 action_dir = '/'.join(a['uses'].split('@')[0].split('/')[2:])
@@ -211,7 +214,7 @@ class Workflow(object):
                 pu.info('[popper] cloning actions from repositories\n')
                 infoed = True
 
-            scm.clone(user, repo, repo_parent_dir, version, debug=self.debug)
+            scm.clone(url, user, repo, repo_parent_dir, version, debug=self.debug)
 
             cloned.add('{}/{}'.format(user, repo))
 

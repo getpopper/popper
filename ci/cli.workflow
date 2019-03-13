@@ -39,3 +39,8 @@ action "end" {
     "test validate"
   ]
 }
+
+action "clone" {
+  uses = "gitlab.com/barbaragd/action-test.git@master"
+  runs = "clone"
+}
