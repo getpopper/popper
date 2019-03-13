@@ -75,7 +75,7 @@ class Workflow(object):
                     return
             pu.fail('[uses] attribute must be present\n')
 
-    def is_list_of_strings(lst):
+    def is_list_of_strings(self, lst):
         return bool(lst) and isinstance(lst, list) and all(isinstance(elem, basestring) for elem in lst)
 
     def normalize(self):
