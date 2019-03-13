@@ -76,6 +76,10 @@ class Workflow(object):
             pu.fail('[uses] attribute must be present\n')
 
     def is_list_of_strings(self, lst):
+        try:
+            basestring
+        except UnboundLocalError:
+            basestring = str
         return bool(lst) and isinstance(lst, list) and all(
             isinstance(elem, basestring) for elem in lst)
 
