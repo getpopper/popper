@@ -28,6 +28,11 @@ action "test validate" {
   runs = "validate"
 }
 
+action "test scaffold" {
+  uses = "./ci/test"
+  runs = "scaffold"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -36,6 +41,7 @@ action "end" {
     "test ci",
     "test reuse",
     "test actions-demo",
-    "test validate"
+    "test validate",
+    "test scaffold"
   ]
 }
