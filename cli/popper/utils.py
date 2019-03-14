@@ -180,8 +180,9 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
         if not ignore_error:
             fail("Command '{}' failed: {}\n".format(cmd, ex))
     finally:
-        outf.close()
-        errf.close()
+        if write_logs:
+            outf.close()
+            errf.close()
 
     return output, ecode
 
