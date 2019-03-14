@@ -181,15 +181,26 @@ class Workflow(object):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
-        for _, a in self.wf['action'].items():
+        for key, a in self.wf['action'].items():
             if 'docker://' in a['uses'] or './' in a['uses']:
                 continue
 
-            url = a['uses'].split('/')[0]
-            user = a['uses'].split('/')[1]
-            repo = a['uses'].split('/')[2]
-            branch = repo.split('@')[1]
-            repo = repo.split('@')[0]
+            if a['uses'].startswith('https://'):
+                a['uses'] = a['uses'][8:]
+            elif a['uses'].startswith('http://'):
+                a['uses'] = a['uses'][7:]
+
+            slashes = len(a['uses'].split('/'))
+            if slashes == 3:
+                url = a['uses'].split('/')[0]
+                user = a['uses'].split('/')[1]
+                repo = a['uses'].split('/')[2]
+            elif slashes == 2:
+                url = 'github.com'
+                user = a['uses'].split('/')[0]
+                repo = a['uses'].split('/')[1]
+            else:
+                pu.fail('Invalid uses string for {} action\n.' .format(key))
 
             if '@' in a['uses']:
                 action_dir = '/'.join(a['uses'].split('@')[0].split('/')[2:])

@@ -92,11 +92,14 @@ def clone(url, org, repo, repo_parent_dir, version=None, debug=False):
     if os.path.exists(repo_dir):
         pu.exec_cmd('rm -rf {}'.format(repo_dir))
 
-    cmd = 'git -C {} clone -b {} --depth=1 {}/{}/{} {} {}'.format(repo_parent_dir,
-                                                        branch,
-                                                        'https://' + url,
-                                                        org, repo, devnull)
-
+    cmd = 'git -C {} clone --depth=1 {}/{}/{} {} {}'.format(
+        repo_parent_dir,
+        'https://' + url,
+        org,
+        repo.split('@')[0],
+        repo,
+        devnull
+    )
     pu.exec_cmd(cmd, debug=debug)
 
     if not version:
