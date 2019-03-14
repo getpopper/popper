@@ -6,24 +6,19 @@ def get_scm_service_url():
     return 'https://github.com/'
 
 
-def get_root_folder():
+def get_root_folder(verbose):
     """Tries to find the root folder,
     """
-    base, _ = pu.exec_cmd('git rev-parse --show-toplevel', ignore_error=True)
-
-    if not base:
-        pu.fail("Unable to find root folder. Initialize repository first.\n")
-
-    return base
+    return pu.exec_cmd('git rev-parse --show-toplevel', verbose=verbose)[0]
 
 
-def infer_repo_name_from_root_folder():
+def infer_repo_name_from_root_folder(verbose):
     """Finds the root folder of a local Github repository and returns it.
 
     Returns:
         repo_name (str): the name of the root folder.
     """
-    root_folder = get_root_folder()
+    root_folder = get_root_folder(verbose)
     repo_name = os.path.basename(root_folder)
     return repo_name
 
@@ -62,7 +57,7 @@ def get_user(verbose):
 
 def get_ref(verbose):
     """Returns the Git REF pointed by .git/HEAD"""
-    r = get_root_folder()
+    r = get_root_folder(verbose)
     cmd = "cat {}/.git/HEAD | awk '{{print $2}}'".format(r)
     return pu.exec_cmd(cmd, verbose=verbose)[0]
 

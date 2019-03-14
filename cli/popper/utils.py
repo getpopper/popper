@@ -184,7 +184,7 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
             outf.close()
             errf.close()
 
-    return output, ecode
+    return output.strip(), ecode
 
 
 def get_git_files():
