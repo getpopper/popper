@@ -136,50 +136,52 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
     errf = None
 
     if write_logs:
-        outfile = log_filename + '.out'
-        errfile = log_filename + '.err'
+        outf = open(log_filename + '.out', 'w')
+        errf = open(log_filename + '.err', 'w')
 
     try:
         p = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
             shell=True, preexec_fn=os.setsid)
 
-        with open(outfile, "w") as outf, open(errfile, "w") as errf:
-            while not p.poll():
-                out = p.stdout.readline().decode("utf-8")
-                err = p.stderr.readline().decode("utf-8")
-                if out:
-                    output += out
-                    if verbose:
-                        info(out)
-                    if write_logs:
-                        outf.write(out)
-                if err:
-                    sys.stderr.write(err)
-                    if write_logs:
-                        errf.write(err)
+        while not p.poll():
+            out = p.stdout.readline().decode("utf-8")
+            err = p.stderr.readline().decode("utf-8")
+            if out:
+                output += out
+                if verbose:
+                    info(out)
+                if write_logs:
+                    outf.write(out)
+            if err:
+                sys.stderr.write(err)
+                if write_logs:
+                    errf.write(err)
 
-                if timeout != 0.0 and time.time() > time_limit:
-                    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-                    info(' time out!\n')
-                    break
+            if timeout != 0.0 and time.time() > time_limit:
+                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                info(' time out!\n')
+                break
 
-                if sleep_time < 30 \
-                        and num_times_point_at_current_sleep_time == 5:
-                    sleep_time *= 2
-                    num_times_point_at_current_sleep_time = 0
+            if sleep_time < 30 \
+                    and num_times_point_at_current_sleep_time == 5:
+                sleep_time *= 2
+                num_times_point_at_current_sleep_time = 0
 
-                if not verbose and print_progress_dot:
-                    sys.stdout.write('.')
-                    num_times_point_at_current_sleep_time += 1
+            if not verbose and print_progress_dot:
+                sys.stdout.write('.')
+                num_times_point_at_current_sleep_time += 1
 
-                time.sleep(sleep_time)
+            time.sleep(sleep_time)
 
         ecode = p.poll()
 
     except subprocess.CalledProcessError as ex:
         if not ignore_error:
             fail("Command '{}' failed: {}\n".format(cmd, ex))
+    finally:
+        outf.close()
+        errf.close()
 
     return output, ecode
 
