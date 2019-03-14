@@ -9,7 +9,8 @@ import types
 
 @click.argument(
     'wfile', required=True)
-@click.command('dot', short_help='Generates a dot file [Used for graphical representations]')
+@click.command('dot', short_help='Generates a dot file '
+                                 '[Used for graphical representations]')
 @pass_context
 def cli(ctx, wfile):
     """Creates a dot file"""
