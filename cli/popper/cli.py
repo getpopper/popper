@@ -1,4 +1,5 @@
 import os
+import signal
 import sys
 import click
 import difflib
@@ -67,3 +68,14 @@ class PopperCLI(click.MultiCommand):
 @pass_context
 def cli(ctx):
     """Popper command line interface."""
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+docker_list = list()
+
+def signal_handler(sig, frame):
+    print("Kill all children")
+    print(docker_list)
+    # os.killpg(os.getpid(), signal.SIGTERM)
+    print("Kill all children")
+    sys.exit(0)

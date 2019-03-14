@@ -7,7 +7,11 @@ import os
 import popper.utils as pu
 import popper.scm as scm
 from spython.main import Client
-
+import signal
+import subprocess
+import time
+import sys
+import popper.cli
 
 class Workflow(object):
     """A GHA workflow.
@@ -371,6 +375,7 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
+        popper.cli.docker_list.append(self.cid)
 
     def run(self, reuse):
         build = True
