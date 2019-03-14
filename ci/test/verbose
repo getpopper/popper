@@ -19,9 +19,4 @@ EOF
 a="$(popper run | wc -l)"
 b="$(popper run --verbose | wc -l)"
 
-if [ $a -lt $b ]
-then
-   exit 0
-else
-   exit 1
-fi
+test $a -lt $b

@@ -7,7 +7,7 @@ python:
 services: docker
 script:
 - export PATH=$PATH:$PWD/cli/bin
-- popper run --recursive --verbose
+- popper run --recursive
 - pip install cli/
 - which popper
-- popper run --recursive --verbose
+- popper run --recursive

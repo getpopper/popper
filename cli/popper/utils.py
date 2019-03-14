@@ -3,7 +3,9 @@ import os
 import sys
 import yaml
 import requests
+import signal
 import subprocess
+import time
 
 from collections import defaultdict
 
@@ -133,7 +135,8 @@ def get_project_root():
     Returns:
         project_root (str): The fully qualified path to the root of project.
     """
-    base = exec_cmd('git rev-parse --show-toplevel', ignoreerror=True)
+    base, _ = exec_cmd(
+        'git rev-parse --show-toplevel', verbose=False, ignore_error=True)
 
     if not base:
         fail("Unable to find root of project. Initialize repository first.")
@@ -382,7 +385,7 @@ def repos_in_org(org):
 
 
 def get_head_commit():
-    return exec_cmd('git rev-parse HEAD')[:-1]
+    return exec_cmd('git rev-parse HEAD')[0][:-1]
 
 
 def is_repo_empty():
@@ -474,47 +477,60 @@ def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
     return new_pipeline_name, path
 
 
-def exec_cmd_util(command, verbose=False, log=False, out_file=None, err_file=None):
-    output_str = ""
-    process = subprocess.Popen(
-        command,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        shell=True)
-    while True:
-        output = process.stdout.readline().decode("utf-8")
-        err = process.stderr.readline().decode("utf-8")
-        if len(output) == 0 and process.poll() is not None:
-            break
-        if output:
-            if verbose:
-                print(output.strip())
-            if log and out_file:
-                out_file.write(output.strip() + "\n")
-            output_str += (output.strip() + "\n")
-        if err:
-            if verbose:
-                print(err.strip())
-            if log and err_file:
-                err_file.write(err.strip() + "\n")
-    return (process.poll(), output_str.encode('utf-8'))
+def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
+             write_logs=False, log_filename=None, timeout=10800):
 
+    output = ""
+    ecode = 1
+    time_limit = time.time() + timeout
+    sleep_time = 0.25
+    num_times_point_at_current_sleep_time = 0
+    outf = None
+    errf = None
 
-def exec_cmd(cmd, verbose=False, ignoreerror=False):
-    output = None
+    if write_logs:
+        outf = log_filename + '.out'
+        errf = log_filename + '.err'
+
     try:
-        if verbose:
-            output = exec_cmd_util(cmd, verbose)[1]
-        else:
-            output = subprocess.check_output(cmd, shell=True).strip()
+        p = subprocess.Popen(
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+
+        while not p.poll():
+            out = p.stdout.readline().decode("utf-8")
+            err = p.stderr.readline().decode("utf-8")
+            if out:
+                if verbose:
+                    sys.stdout.write(output)
+                if write_logs:
+                    outf.write(output)
+            if err:
+                sys.stdout.write(err)
+                if write_logs:
+                    errf.write(err)
+
+            if timeout != 0.0 and time.time() > time_limit:
+                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                sys.stdout.write(' time out!')
+                break
+
+            if sleep_time < 30 and num_times_point_at_current_sleep_time == 5:
+                sleep_time *= 2
+                num_times_point_at_current_sleep_time = 0
+
+            if print_progress_dot:
+                sys.stdout.write('.')
+                num_times_point_at_current_sleep_time += 1
+
+            time.sleep(sleep_time)
+
+        ecode = p.poll()
+
     except subprocess.CalledProcessError as ex:
-        if ignoreerror:
-            return ''
-        fail("Command '{}' failed: {}\n".format(cmd, ex))
+        if not ignore_error:
+            fail("Command '{}' failed: {}\n".format(cmd, ex))
 
-    output = output.decode('utf-8')
-
-    return output
+    return output, ecode
 
 
 def get_git_files():
@@ -524,5 +540,5 @@ def get_git_files():
     Returns:
         files (list) : list of git tracked files
     """
-    gitfiles = exec_cmd("git ls-files")
+    gitfiles, _ = exec_cmd("git ls-files")
     return gitfiles.split("\n")

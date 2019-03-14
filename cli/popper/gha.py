@@ -4,10 +4,6 @@ import hcl
 import os
 import popper.scm as scm
 import popper.utils as pu
-import signal
-import subprocess
-import time
-import sys
 
 
 class Workflow(object):
@@ -245,43 +241,6 @@ class ActionRunner(object):
             "This method is required to be implemented in derived classes."
         )
 
-    def execute(self, cmd, log_tag):
-        time_limit = time.time() + self.timeout
-        sleep_time = 0.25
-
-        log_tag = log_tag.replace(' ', '_')
-
-        out_fname = os.path.join(self.log_path, log_tag + '.out')
-        err_fname = os.path.join(self.log_path, log_tag + '.err')
-
-        if self.verbose:
-            with open(out_fname, "a") as outf, open(err_fname, "a") as errf:
-                rc = pu.exec_cmd_util(cmd, True, True, outf, errf)[0]
-            pu.info('\n')
-            return rc
-        else:
-            with open(out_fname, "w") as outf, open(err_fname, "w") as errf:
-                p = subprocess.Popen(cmd, stdout=outf, stderr=errf, shell=True,
-                                     preexec_fn=os.setsid)
-
-                while p.poll() is None:
-
-                    if self.timeout != 0.0 and time.time() > time_limit:
-                        os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-                        sys.stdout.write(' time out!')
-                        break
-
-                    if sleep_time < 30:
-                        sleep_time *= 2
-
-                    for i in range(int(sleep_time)):
-                        if i % 10 == 0:
-                            pu.info('.')
-                    time.sleep(sleep_time)
-
-            pu.info('\n')
-            return p.poll()
-
 
 class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, timeout, verbose):
@@ -323,7 +282,7 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        cmd_out = pu.exec_cmd('docker ps -a', self.verbose)
+        cmd_out, _ = pu.exec_cmd('docker ps -a', verbose=self.verbose)
 
         if self.cid in cmd_out:
             return True
@@ -331,8 +290,7 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
-        pu.exec_cmd('docker rm {}'.format(self.cid), self.verbose,
-                                          ignoreerror=True)
+        pu.exec_cmd('docker rm {}'.format(self.cid), verbose=self.verbose)
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -363,22 +321,27 @@ class DockerRunner(ActionRunner):
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        pu.exec_cmd(docker_cmd, self.verbose)
+        log_file = os.path.join(
+            self.log_path, self.action['name'].replace(' ', '-'))
+
+        pu.exec_cmd(
+            docker_cmd, verbose=self.verbose, ignore_error=False,
+            print_progress_dot=True, write_logs=True, log_filename=log_file)
 
     def docker_start(self):
         pu.info('[{}] docker start '.format(self.action['name']))
 
         cmd = 'docker start --attach {}'.format(self.cid)
-        return self.execute(cmd, self.action['name'])
+        return self.exec_cmd(cmd, verbose=self.verbose)
 
     def docker_pull(self, img):
         pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
-        pu.exec_cmd('docker pull {}'.format(img), self.verbose)
+        pu.exec_cmd('docker pull {}'.format(img), verbose=self.verbose)
 
     def docker_build(self, tag, path):
         cmd = 'docker build -t {} {}'.format(tag, path)
         pu.info('[{}] {}\n'.format(self.action['name'], cmd))
-        pu.exec_cmd(cmd, self.verbose)
+        pu.exec_cmd(cmd, verbose=self.verbose)
 
 
 class HostRunner(ActionRunner):

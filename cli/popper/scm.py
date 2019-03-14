@@ -9,7 +9,8 @@ def get_scm_service_url():
 def get_root_folder():
     """Tries to find the root folder,
     """
-    base = pu.exec_cmd('git rev-parse --show-toplevel', ignoreerror=True)
+    base = pu.exec_cmd('git rev-parse --show-toplevel', verbose=False,
+                       ignore_error=True)
 
     if not base:
         pu.fail("Unable to find root folder. Initialize repository first.\n")
@@ -64,7 +65,7 @@ def get_ref():
     """Runs the ref pointed by .git/HEAD"""
     r = get_root_folder()
     cmd = "cat {}/.git/HEAD | awk '{{print $2}}'".format(r)
-    return pu.exec_cmd(cmd, ignoreerror=True)
+    return pu.exec_cmd(cmd, verbose=False, ignore_error=True)
 
 
 def get_sha():
@@ -75,7 +76,8 @@ def get_sha():
 def get_remote_url():
     """Obtains remote origin URL, if possible. Otherwise it returns empty str.
     """
-    url = pu.exec_cmd('git config --get remote.origin.url', ignoreerror=True)
+    url = pu.exec_cmd('git config --get remote.origin.url', verbose=False,
+                      ignore_error=True)
 
     # cleanup the URL so we get in in https form and without '.git' ending
     if url.endswith('.git'):
@@ -101,7 +103,6 @@ def clone(org, repo, repo_parent_dir, version=None):
     cmd = 'git -C {} clone --depth=1 {}{}/{} {}'.format(repo_parent_dir,
                                                         get_scm_service_url(),
                                                         org, repo, devnull)
-
     pu.exec_cmd(cmd)
 
     if not version:

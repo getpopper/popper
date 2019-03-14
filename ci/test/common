@@ -1,10 +1,9 @@
 #!/bin/bash
-set -ex
+set -e
 
-test_repo_path=/tmp/mypaper
+export test_repo_path=/tmp/mypaper
 
 function init_test_repo {
-  cd
   set +e
   if ! rm -rf $test_repo_path; then
     # try to remove using docker
