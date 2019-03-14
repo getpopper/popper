@@ -5,6 +5,7 @@ import click
 import difflib
 from . import __version__ as popper_version
 from .exceptions import UsageError
+import popper.utils as pu
 
 
 class Context(object):
@@ -74,8 +75,11 @@ def cli(ctx):
 docker_list = list()
 
 def signal_handler(sig, frame):
-    print("Kill all children")
-    print(docker_list)
-    # os.killpg(os.getpid(), signal.SIGTERM)
-    print("Kill all children")
+    for img in docker_list:
+        pu.exec_cmd('docker rm {}'.format(img))
+        pu.info('Deleted {}'.format(img))
+    os.killpg(os.getpid(), signal.SIGTERM)
+
+    # Should never reach here, as parent process is also killed along with child processes
+    print("Kill all processes")
     sys.exit(0)

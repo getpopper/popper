@@ -13,6 +13,7 @@ import time
 import sys
 import popper.cli
 
+
 class Workflow(object):
     """A GHA workflow.
     """
