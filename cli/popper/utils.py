@@ -119,6 +119,15 @@ def parse_timeout(timeout):
 def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
              write_logs=False, log_filename=None, timeout=10800):
 
+    # quick shortcut for just running without verbose, logging and progress dot
+    if not verbose and not write_logs and not print_progress_dot:
+        try:
+            out = subprocess.check_output(cmd, shell=True)
+        except subprocess.CalledProcessError as ex:
+            if not ignore_error:
+                fail("Command '{}' failed: {}\n".format(cmd, ex))
+        return out, 0
+
     output = ""
     ecode = 1
     time_limit = time.time() + timeout
@@ -160,7 +169,7 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
                 sleep_time *= 2
                 num_times_point_at_current_sleep_time = 0
 
-            if print_progress_dot:
+            if not verbose and print_progress_dot:
                 sys.stdout.write('.')
                 num_times_point_at_current_sleep_time += 1
 
