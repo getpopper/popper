@@ -125,7 +125,7 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
         except subprocess.CalledProcessError as ex:
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return out, 0
+        return out.strip(), 0
 
     output = ""
     ecode = 1
@@ -149,10 +149,11 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
                 out = p.stdout.readline().decode("utf-8")
                 err = p.stderr.readline().decode("utf-8")
                 if out:
+                    output += out
                     if verbose:
-                        info(output)
+                        info(out)
                     if write_logs:
-                        outf.write(output)
+                        outf.write(out)
                 if err:
                     sys.stderr.write(err)
                     if write_logs:
