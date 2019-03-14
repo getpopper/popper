@@ -40,13 +40,13 @@ class Workflow(object):
             'GITHUB_WORKSPACE': self.workspace,
             'GITHUB_WORKFLOW': self.wf['name'],
             'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(),
-                                                scm.get_name()),
+            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(self.verbose),
+                                                scm.get_name(self.verbose)),
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(),
-            'GITHUB_REF': scm.get_ref(),
+            'GITHUB_SHA': scm.get_sha(self.verbose),
+            'GITHUB_REF': scm.get_ref(self.verbose),
         }
 
         for e in dict(self.env):

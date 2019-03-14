@@ -29,12 +29,12 @@ def infer_repo_name_from_root_folder():
     return repo_name
 
 
-def get_name():
+def get_name(verbose):
     """Assuming $PWD is part of a Git repository, it tries to find the name of
     the repository by looking at the 'origin' git remote. If no 'origin' remote
     is defined, it returns the name of the parent folder.
     """
-    url = get_remote_url()
+    url = get_remote_url(verbose)
 
     if not url:
         return infer_repo_name_from_root_folder()
@@ -45,13 +45,13 @@ def get_name():
     return os.path.basename(url)
 
 
-def get_user():
+def get_user(verbose):
     """Assuming $PWD is part of a Git repository, it tries to find the user (or
     org) of the repository, as specified in the 'origin' git remote
     information. If the repository has not been pushed to a remote repo or if
     'origin' is not the name of any remote repository, returns None.
     """
-    url = get_remote_url()
+    url = get_remote_url(verbose)
     if url:
         if 'https://' in url:
             return os.path.basename(os.path.dirname(url))
@@ -61,22 +61,22 @@ def get_user():
     return None
 
 
-def get_ref():
+def get_ref(verbose):
     """Runs the ref pointed by .git/HEAD"""
     r = get_root_folder()
     cmd = "cat {}/.git/HEAD | awk '{{print $2}}'".format(r)
-    return pu.exec_cmd(cmd, verbose=False, ignore_error=True)
+    return pu.exec_cmd(cmd, verbose=verbose, ignore_error=True)
 
 
-def get_sha():
+def get_sha(verbose):
     """Runs git rev-parse --short HEAD and returns result"""
-    return pu.exec_cmd('git rev-parse --short HEAD')
+    return pu.exec_cmd('git rev-parse --short HEAD', verbose=verbose)
 
 
-def get_remote_url():
+def get_remote_url(verbose=False):
     """Obtains remote origin URL, if possible. Otherwise it returns empty str.
     """
-    url = pu.exec_cmd('git config --get remote.origin.url', verbose=False,
+    url = pu.exec_cmd('git config --get remote.origin.url', verbose=verbose,
                       ignore_error=True)
 
     # cleanup the URL so we get in in https form and without '.git' ending

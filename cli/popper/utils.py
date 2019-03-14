@@ -1,13 +1,10 @@
 import click
 import os
-import sys
-import yaml
-import requests
 import signal
 import subprocess
+import sys
 import time
-
-from collections import defaultdict
+import yaml
 
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
@@ -34,99 +31,6 @@ def get_items(dict_object):
         yield key, dict_object[key]
 
 
-def get_path_to_config():
-    """Obtains the path to the config file.
-
-    Returns:
-        path (str): string containing path to where config file is stored.
-    """
-
-    project_root = get_project_root()
-    config_path = os.path.join(project_root, '.popper.yml')
-
-    if os.path.isfile(config_path):
-        return os.getcwd()
-
-    return ""
-
-
-def get_search_sources(config):
-    if 'search_sources' not in config and 'popperized' not in config:
-        return []
-    if 'search_sources' in config:
-        return config['search_sources']
-    if 'popperized' in config:
-        return config['popperized']
-
-
-def fetch_pipeline_metadata(skip_update=False):
-    meta = defaultdict(dict)
-    repos = []
-
-    project_root = get_project_root()
-    cache_file = os.path.join(project_root, '.pipeline_cache.yml')
-
-    if not skip_update:
-        config = read_config()
-
-        sources = get_search_sources(config)
-
-        info('Updating pipeline metadata cache\n')
-
-        for s in sources:
-            if '/' in s:
-                repos.append(s)
-            else:
-                for repo in repos_in_org(s):
-                    repos.append(s + '/' + repo)
-
-        with click.progressbar(
-                repos,
-                show_eta=False,
-                bar_template='[%(bar)s] %(info)s | %(label)s',
-                show_percent=True) as bar:
-            for r in bar:
-                bar.label = "Fetching pipeline metadata from '{}'".format(r)
-                fetch_metadata_for_repo(r, meta)
-
-        with open(cache_file, 'w') as f:
-            yaml.dump(dict(meta), f)
-    else:
-        if not os.path.isfile(cache_file):
-            fail("Metadata cache doesn't exist. Use --help for more.")
-
-        with open(cache_file, 'r') as f:
-            meta = yaml.load(f)
-
-    return meta
-
-
-def fetch_metadata_for_repo(orgrepo, meta):
-    org, repo = orgrepo.split('/')
-    config = read_config_remote(org, repo)
-
-    if not config or 'pipelines' not in config:
-        return
-
-    meta[org][repo] = config
-
-    fetch_readmes(meta, org, repo)
-
-
-def fetch_readmes(meta, org, repo):
-    pipelines = meta[org][repo]['pipelines']
-    for name, pipe in pipelines.items():
-        url = "https://raw.githubusercontent.com/{}/{}/{}/{}/README.md".format(
-            org, repo, 'master', pipe['path']
-        )
-        r = make_gh_request(url, err=False)
-
-        readme = ''
-        if r.status_code == 200:
-            readme = r.content.decode("utf-8")
-        pipe['readme'] = readme
-
-
 def get_project_root():
     """Tries to find the root of the project with the following heuristic:
 
@@ -142,48 +46,6 @@ def get_project_root():
         fail("Unable to find root of project. Initialize repository first.")
 
     return base
-
-
-def read_config(name=None):
-    """Reads config from .popper.yml file.
-
-    Args:
-        name (default=None): Name of a pipeline, whose config is to be returned
-
-    Returns:
-        If name is not provided:
-            config (dict): dictionary representing the YAML file contents.
-        If name is provided:
-            Two-tuple consisting of config (dict) and pipeline_config (dict) :
-            dictionary representing the pipeline configuration
-    """
-    config_filename = os.path.join(get_project_root(), '.popper.yml')
-
-    if not os.path.isfile(config_filename):
-        fail(".popper.yml file doesn't exist. See 'popper init --help'.")
-
-    with open(config_filename, 'r') as f:
-        config = yaml.load(f.read())
-        if not config:
-            fail(".popper.yml is empty. Consider deleting it and "
-                 "reinitializing the repo. See popper init --help for more.")
-        for key in ["metadata"]:
-            if key not in config:
-                fail(".popper.yml doesn't contain expected entries. "
-                     "Consider deleting it and reinitializing the repo. "
-                     "See popper init --help for more.\n")
-
-    if 'version' not in config:
-        fail("No 'version' element found in .popper.yml file.\n")
-
-    if config['version'] != 2:
-        fail('This version only works with .popper.yml syntax v2. You can:\n'
-             '- Install Popper version 1.x or\n'
-             '- Update your project so it complies with v2 syntax\n'
-             '\n'
-             'More information: https://github.com/systemslab/popper\n')
-
-    return config
 
 
 def write_config(config):
@@ -203,61 +65,6 @@ def is_popperized():
     """
     config_filename = os.path.join(get_project_root(), '.popper.yml')
     return os.path.isfile(config_filename)
-
-
-def update_config(name, stages='', envs={}, parameters=[], reqs={},
-                  relative_path='', timeout=None):
-    """Updates the configuration for a pipeline."""
-
-    config = read_config()
-    if config['pipelines'].get(name, None):
-        if not stages:
-            stages = ','.join(config['pipelines'][name]['stages'])
-        if not envs:
-            envs = config['pipelines'][name].get('envs', {})
-        if not relative_path:
-            relative_path = config['pipelines'][name]['path']
-        if not reqs:
-            reqs = config['pipelines'][name].get('requirements', {})
-        if timeout is None:
-            timeout = config['pipelines'][name].get('timeout')
-
-    if name == 'paper':
-        stages = 'build'
-
-    config['pipelines'][name] = {
-        'stages': stages.split(','),
-        'envs': envs,
-        'parameters': parameters,
-        'requirements': reqs,
-        'path': relative_path,
-    }
-
-    if timeout is not None:
-        config['pipelines'][name]['timeout'] = timeout
-
-    write_config(config)
-
-
-def get_filename(abs_path, stage):
-    """Returns filename for a stage"""
-    os.chdir(abs_path)
-    if os.path.isfile(stage):
-        return stage
-    elif os.path.isfile(stage + '.sh'):
-        return stage + '.sh'
-    else:
-        return None
-
-
-def rmdir_content(path):
-    """Removes file contents of folder"""
-    if not os.path.exists(path):
-        return
-    for f in os.listdir(path):
-        fpath = os.path.join(path, f)
-        if os.path.isfile(fpath):
-            os.remove(fpath)
 
 
 def fail(msg):
@@ -309,174 +116,6 @@ def parse_timeout(timeout):
     return time_out
 
 
-def get_gh_headers():
-    """Method for  getting the headers required for making authorized
-    GitHub API requests.
-
-    Returns:
-        headers (dict): a dictionary representing HTTP-headers and their
-        values.
-    """
-
-    gh_token = os.environ.get('POPPER_GITHUB_API_TOKEN', None)
-
-    headers = {}
-
-    if gh_token:
-        headers = {
-            'Authorization': 'token ' + gh_token
-        }
-
-    return headers
-
-
-def make_gh_request(url, err=True, msg=None):
-    """Method for making GET requests to GitHub API
-
-    Args:
-        url (str): URL on which the API request is to be made.
-        err (bool): Checks if an error message needs to be printed or not.
-        msg (str): Error message to be printed for a failed request.
-
-    Returns:
-        Response object: contains a server's response to an HTTP request.
-    """
-    if not msg:
-        msg = (
-            "Unable to connect. If your network is working properly, you might"
-            " have reached Github's API request limit. Try adding a Github API"
-            " token to the 'POPPER_GITHUB_API_TOKEN' variable."
-        )
-
-    response = requests.get(url, headers=get_gh_headers())
-    if err and response.status_code != 200:
-        fail(msg)
-    else:
-        return response
-
-
-def read_config_remote(org, repo, branch='master'):
-    url = "https://raw.githubusercontent.com/{}/{}/{}/.popper.yml".format(
-        org, repo, branch
-    )
-    r = make_gh_request(url, err=False)
-
-    if r.status_code != 200:
-        return None
-
-    try:
-        config = yaml.load(r.content.decode("utf-8"))
-    except Exception:
-        return None
-
-    if not isinstance(config, dict):
-        return None
-
-    if 'version' not in config:
-        config['version'] = 1
-
-    return config
-
-
-def repos_in_org(org):
-    r = make_gh_request('https://api.github.com/users/{}/repos'.format(org))
-    for repo in r.json():
-        yield repo['name']
-
-
-def get_head_commit():
-    return exec_cmd('git rev-parse HEAD')[0][:-1]
-
-
-def is_repo_empty():
-
-    p = subprocess.Popen(['git', 'rev-parse', 'HEAD'],
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    p.communicate()
-    if p.returncode != 0:
-        return True
-    return False
-
-
-def in_pipeline(name=False):
-    """Checks if the current working directory is a pipeline
-    or not.
-
-    Args:
-        name (bool): Set as True if the user wants the name of the pipeline.
-
-    Returns:
-        pipeline_name (str): The name of the current pipeline. Returned iff
-        the argument `name` is set to True.
-
-        True/False (bool): True if the user is inside a pipeline. False
-        otherwise. Returned iff the argument `name` is set to False.
-    """
-
-    cwd = os.getcwd()
-    pipeline_name = os.path.basename(cwd)
-    pipelines = read_config()['pipelines']
-
-    if pipeline_name in pipelines:
-        pipeline = pipelines[pipeline_name]
-        rel_path = os.path.relpath(cwd, get_project_root())
-
-        if rel_path == pipeline['path']:
-            if name:
-                return pipeline_name
-            else:
-                return True
-
-    if name:
-        return None
-    else:
-        return False
-
-
-def get_name_and_path_for_new_pipeline(folder, pipeline_name=''):
-    """Returns name and path when a new pipeline is added or initialized
-
-    When a new pipeline is added the name and path is decided from the
-    argument provided. When a / is in the name, we treat the string as a path.
-    If <name> is a string without /, then put it in the pipelines/ folder. If
-    it does contains a /, then treat it as a path, where the last component of
-    the path (i.e. the basename of the string) is the name of the pipeline and
-    the preceding substring is the folder.
-
-    Arguments:
-        folder (string) -- Path/name of new pipeline provided as argument to
-            popper init or popper add commands
-
-    Keyword Arguments:
-        pipeline_name (string) -- In case path is None, name of the new
-        pipeline needs to be provided, which is the same as that of the added
-        pipline for popper add. Not applicable for popper init (default: {''})
-
-    Returns:
-        pipeline_name (string) -- New pipeline name
-
-        path (string) -- New pipeline path, relative to the project root
-    """
-    if folder:
-        path, basename = os.path.split(folder)
-        if not basename:  # Only true when trailing slash is present
-            path, basename = os.path.split(path)
-        new_pipeline_name = basename
-
-        if '/' in folder:
-            path = folder
-            if folder[-1] == '/':  # Remove the traoling slash if present
-                path = folder[:-1]
-        else:
-            path = os.path.join('pipelines', basename)
-
-    else:  # If no path is provided, use the original pipeline name
-        path = os.path.join('pipelines', pipeline_name)
-        new_pipeline_name = pipeline_name
-
-    return new_pipeline_name, path
-
-
 def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
              write_logs=False, log_filename=None, timeout=10800):
 
@@ -493,6 +132,9 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
         errf = log_filename + '.err'
 
     try:
+        if verbose:
+            info('Executing command: {}\n'.format(cmd))
+
         p = subprocess.Popen(
             cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
 
@@ -501,17 +143,17 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
             err = p.stderr.readline().decode("utf-8")
             if out:
                 if verbose:
-                    sys.stdout.write(output)
+                    info(output)
                 if write_logs:
                     outf.write(output)
             if err:
-                sys.stdout.write(err)
+                sys.stderr.write(err)
                 if write_logs:
                     errf.write(err)
 
             if timeout != 0.0 and time.time() > time_limit:
                 os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-                sys.stdout.write(' time out!')
+                info(' time out!\n')
                 break
 
             if sleep_time < 30 and num_times_point_at_current_sleep_time == 5:
@@ -522,7 +164,13 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
                 sys.stdout.write('.')
                 num_times_point_at_current_sleep_time += 1
 
+            if verbose:
+                info('Sleeping for {}\n'.format(sleep_time))
+
             time.sleep(sleep_time)
+
+        if verbose:
+            info('Command finished: {}\n'.format(cmd))
 
         ecode = p.poll()
 
