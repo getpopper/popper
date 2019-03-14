@@ -9,8 +9,7 @@ def get_scm_service_url():
 def get_root_folder():
     """Tries to find the root folder,
     """
-    base, _ = pu.exec_cmd('git rev-parse --show-toplevel', verbose=False,
-                          ignore_error=True)
+    base, _ = pu.exec_cmd('git rev-parse --show-toplevel', ignore_error=True)
 
     if not base:
         pu.fail("Unable to find root folder. Initialize repository first.\n")

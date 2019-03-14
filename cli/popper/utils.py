@@ -39,8 +39,7 @@ def get_project_root():
     Returns:
         project_root (str): The fully qualified path to the root of project.
     """
-    base, _ = exec_cmd(
-        'git rev-parse --show-toplevel', verbose=False, ignore_error=True)
+    base, _ = exec_cmd('git rev-parse --show-toplevel', ignore_error=True)
 
     if not base:
         fail("Unable to find root of project. Initialize repository first.")
@@ -137,49 +136,43 @@ def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
     errf = None
 
     if write_logs:
-        outf = log_filename + '.out'
-        errf = log_filename + '.err'
+        outfile = log_filename + '.out'
+        errfile = log_filename + '.err'
 
     try:
-        if verbose:
-            info('Executing command: {}\n'.format(cmd))
-
         p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            shell=True, preexec_fn=os.setsid)
 
-        while not p.poll():
-            out = p.stdout.readline().decode("utf-8")
-            err = p.stderr.readline().decode("utf-8")
-            if out:
-                if verbose:
-                    info(output)
-                if write_logs:
-                    outf.write(output)
-            if err:
-                sys.stderr.write(err)
-                if write_logs:
-                    errf.write(err)
+        with open(outfile, "w") as outf, open(errfile, "w") as errf:
+            while not p.poll():
+                out = p.stdout.readline().decode("utf-8")
+                err = p.stderr.readline().decode("utf-8")
+                if out:
+                    if verbose:
+                        info(output)
+                    if write_logs:
+                        outf.write(output)
+                if err:
+                    sys.stderr.write(err)
+                    if write_logs:
+                        errf.write(err)
 
-            if timeout != 0.0 and time.time() > time_limit:
-                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-                info(' time out!\n')
-                break
+                if timeout != 0.0 and time.time() > time_limit:
+                    os.killpg(os.getpgid(p.pid), signal.SIGTERM)
+                    info(' time out!\n')
+                    break
 
-            if sleep_time < 30 and num_times_point_at_current_sleep_time == 5:
-                sleep_time *= 2
-                num_times_point_at_current_sleep_time = 0
+                if sleep_time < 30 \
+                        and num_times_point_at_current_sleep_time == 5:
+                    sleep_time *= 2
+                    num_times_point_at_current_sleep_time = 0
 
-            if not verbose and print_progress_dot:
-                sys.stdout.write('.')
-                num_times_point_at_current_sleep_time += 1
+                if not verbose and print_progress_dot:
+                    sys.stdout.write('.')
+                    num_times_point_at_current_sleep_time += 1
 
-            if verbose:
-                info('Sleeping for {}\n'.format(sleep_time))
-
-            time.sleep(sleep_time)
-
-        if verbose:
-            info('Command finished: {}\n'.format(cmd))
+                time.sleep(sleep_time)
 
         ecode = p.poll()
 
