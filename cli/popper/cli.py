@@ -86,6 +86,7 @@ def signal_handler(sig, frame):
     pu.info("\n")
     os.killpg(os.getpid(), signal.SIGTERM)
 
-    # Should never reach here, as parent process is also killed along with child processes
+    # Should never reach here,
+    # as parent process is also killed along with child processes
     print("Kill all processes")
     sys.exit(0)
