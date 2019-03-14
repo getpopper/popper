@@ -10,7 +10,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace):
+    def __init__(self, wfile, workspace, verbose):
         if not wfile:
             if os.path.isfile("main.workflow"):
                 wfile = "main.workflow"
@@ -29,6 +29,7 @@ class Workflow(object):
 
         self.workspace = workspace
         self.timeout = 10800
+        self.verbose = verbose
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
@@ -187,12 +188,12 @@ class Workflow(object):
                 a['runner'] = HostRunner(a, self.workspace,
                                          self.env, self.timeout, verbose)
 
-    def run(self, action_name=None, reuse=False, verbose=False):
+    def run(self, action_name=None, reuse=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
 
         self.download_actions()
-        self.instantiate_runners(verbose)
+        self.instantiate_runners(self.verbose)
 
         if action_name:
             self.wf['action'][action_name]['runner'].run(reuse)

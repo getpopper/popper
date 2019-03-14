@@ -63,7 +63,7 @@ def cli(ctx, action, wfile, workspace, reuse, recursive, verbose):
 
 
 def run_pipeline(action, wfile, workspace, reuse, verbose):
-    pipeline = Workflow(wfile, workspace)
+    pipeline = Workflow(wfile, workspace, verbose)
 
     if reuse:
         pu.info(
@@ -73,7 +73,7 @@ def run_pipeline(action, wfile, workspace, reuse, verbose):
             "or to an action block in the workflow.\n\n"
         )
 
-    pipeline.run(action, reuse, verbose)
+    pipeline.run(action, reuse)
 
     if action:
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
