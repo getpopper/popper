@@ -9,8 +9,8 @@ def get_scm_service_url():
 def get_root_folder():
     """Tries to find the root folder,
     """
-    base = pu.exec_cmd('git rev-parse --show-toplevel', verbose=False,
-                       ignore_error=True)
+    base, _ = pu.exec_cmd('git rev-parse --show-toplevel', verbose=False,
+                          ignore_error=True)
 
     if not base:
         pu.fail("Unable to find root folder. Initialize repository first.\n")
@@ -62,22 +62,22 @@ def get_user(verbose):
 
 
 def get_ref(verbose):
-    """Runs the ref pointed by .git/HEAD"""
+    """Returns the Git REF pointed by .git/HEAD"""
     r = get_root_folder()
     cmd = "cat {}/.git/HEAD | awk '{{print $2}}'".format(r)
-    return pu.exec_cmd(cmd, verbose=verbose, ignore_error=True)
+    return pu.exec_cmd(cmd, verbose=verbose)[0]
 
 
 def get_sha(verbose):
     """Runs git rev-parse --short HEAD and returns result"""
-    return pu.exec_cmd('git rev-parse --short HEAD', verbose=verbose)
+    return pu.exec_cmd('git rev-parse --short HEAD', verbose=verbose)[0]
 
 
 def get_remote_url(verbose=False):
     """Obtains remote origin URL, if possible. Otherwise it returns empty str.
     """
-    url = pu.exec_cmd('git config --get remote.origin.url', verbose=verbose,
-                      ignore_error=True)
+    url, _ = pu.exec_cmd('git config --get remote.origin.url', verbose=verbose,
+                         ignore_error=True)
 
     # cleanup the URL so we get in in https form and without '.git' ending
     if url.endswith('.git'):
@@ -98,14 +98,12 @@ def clone(org, repo, repo_parent_dir, version=None):
     if os.path.exists(repo_dir):
         pu.exec_cmd('rm -rf {}'.format(repo_dir))
 
-    devnull = '&>/dev/null'
-
     cmd = 'git -C {} clone --depth=1 {}{}/{} {}'.format(repo_parent_dir,
                                                         get_scm_service_url(),
-                                                        org, repo, devnull)
+                                                        org, repo)
     pu.exec_cmd(cmd)
 
     if not version:
         return
 
-    pu.exec_cmd('git -C {} checkout {} {}'.format(repo_dir, version, devnull))
+    pu.exec_cmd('git -C {} checkout {} {}'.format(repo_dir, version))
