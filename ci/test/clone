@@ -1,0 +1,24 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+cat <<EOF > main.workflow
+workflow "clone" {
+  resolves = "test clone git@"
+}
+
+action "test clone https" {
+  uses = "https://gitlab.com/barbaragd/action-test.git@master"
+}
+
+action "test clone git@"{
+  uses = "git@gitlab.com:barbaragd/action-test.git@master"
+  needs = "test clone https"
+}
+
+EOF
+
+popper run

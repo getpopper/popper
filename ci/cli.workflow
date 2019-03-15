@@ -28,6 +28,11 @@ action "test validate" {
   runs = "validate"
 }
 
+action "test clone" {
+  uses = "./ci/test"
+  runs = "clone"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -36,11 +41,7 @@ action "end" {
     "test ci",
     "test reuse",
     "test actions-demo",
-    "test validate"
+    "test validate",
+    "test clone"
   ]
-}
-
-action "clone" {
-  uses = "gitlab.com/barbaragd/action-test.git@master"
-  runs = "clone"
 }

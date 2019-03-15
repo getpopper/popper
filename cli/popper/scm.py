@@ -2,10 +2,6 @@ import os
 import popper.utils as pu
 
 
-def get_scm_service_url():
-    return 'https://github.com/'
-
-
 def get_root_folder(debug=False):
     """Tries to find the root folder,
     """
@@ -90,15 +86,19 @@ def clone(url, org, repo, repo_parent_dir, version=None, debug=False):
     """
     repo_dir = os.path.join(repo_parent_dir, repo)
     if os.path.exists(repo_dir):
-        pu.exec_cmd('rm -rf {}'.format(repo_dir))
+        pu.exec_cmd('rm -rf {}'.format(repo_dir), debug=debug)
 
-    cmd = 'git -C {} clone --depth=1 {}/{}/{} {} {}'.format(
+    if '@' in url:
+        url += ':'
+    else:
+        url += '/'
+
+    cmd = 'git -C {} clone --depth=1 {}{}/{} {}'.format(
         repo_parent_dir,
-        'https://' + url,
+        url,
         org,
         repo.split('@')[0],
         repo,
-        devnull
     )
     pu.exec_cmd(cmd, debug=debug)
 
