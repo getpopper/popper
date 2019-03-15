@@ -1,10 +1,10 @@
 import click
 import os
-import signal
-import subprocess
 import sys
 import time
 import yaml
+
+from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
 noalias_dumper = yaml.dumper.SafeDumper
 noalias_dumper.ignore_aliases = lambda self, data: True
@@ -86,105 +86,106 @@ def print_yaml(msg, **styles):
     click.secho(yaml.safe_dump(msg, default_flow_style=False), **styles)
 
 
-def parse_timeout(timeout):
-    """Takes timeout as string and parses it to obtain the number of seconds.
-    Generates valid error if proper format is not used.
+def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
+             log_file=None):
 
-    Returns:
-        Value of timeout in seconds (float).
-    """
-    time_out = 0
-    to_seconds = {"s": 1, "m": 60, "h": 3600}
-    try:
-        time_out = float(timeout)
-    except ValueError:
-        literals = timeout.split()
-        for literal in literals:
-            unit = literal[-1].lower()
-            try:
-                value = float(literal[:-1])
-            except ValueError:
-                fail("invalid timeout format used. "
-                     "See popper run --help for more.")
-            try:
-                time_out += value * to_seconds[unit]
-            except KeyError:
-                fail("invalid timeout format used. "
-                     "See popper run --help for more.")
+    # the main logic is the following:
+    #
+    # 1) verbose=False and log_file=None
+    #      ==> don't write anything to stdout/log
+    # 2) verbose=True and log_file=None
+    #      ==> combine stdout/stderr in the same stream and print it to stdout
+    # 3) verbose=False and log_file not None
+    #      ==> write two files, one .out and one .err
+    # 4) verbose=True and log_file not None
+    #      ==> combine stdout/stderr, write to stdout and to a SINGLE log file
 
-    return time_out
-
-
-def exec_cmd(cmd, verbose=False, ignore_error=False, print_progress_dot=False,
-             write_logs=False, log_filename=None, timeout=10800):
-
-    # quick shortcut for just running without verbose, logging and progress dot
-    if not verbose and not write_logs and not print_progress_dot:
+    # quick shortcut for 1) above
+    if not verbose and not log_file:
+        out = ""
+        if debug:
+            info('DEBUG: Using subprocess.check_output() for {}\n'.format(cmd))
         try:
-            out = subprocess.check_output(cmd, shell=True)
-        except subprocess.CalledProcessError as ex:
+            out = check_output(cmd, shell=True, stderr=PIPE)
+        except CalledProcessError as ex:
+            if debug:
+                info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return out.strip(), 0
+        return out.decode('utf-8').strip(), 0
 
-    output = ""
-    ecode = 1
-    time_limit = time.time() + timeout
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
+    ecode = None
     outf = None
     errf = None
 
-    if write_logs:
-        outf = open(log_filename + '.out', 'w')
-        errf = open(log_filename + '.err', 'w')
+    if log_file:
+        if verbose:
+            if debug:
+                info('\nDEBUG: Creating file for combined stdout/stderr\n')
+            outf = open(log_file + '.log', 'w')
+        else:
+            if debug:
+                info('\nDEBUG: Creating separate files for stdout/stderr\n')
+            outf = open(log_file + '.out', 'w')
+            errf = open(log_file + '.err', 'w')
 
     try:
-        p = subprocess.Popen(
-            cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            shell=True, preexec_fn=os.setsid)
+        if verbose:
+            if debug:
+                info('DEBUG: subprocess.Popen() with combined stdout/stderr\n')
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True)
+        else:
+            if debug:
+                info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
+            p = Popen(cmd, stdout=outf, stderr=errf, shell=True)
 
-        while not p.poll():
-            out = p.stdout.readline().decode("utf-8")
-            err = p.stderr.readline().decode("utf-8")
-            if out:
-                output += out
-                if verbose:
-                    info(out)
-                if write_logs:
-                    outf.write(out)
-            if err:
-                sys.stderr.write(err)
-                if write_logs:
-                    errf.write(err)
+        if debug:
+            info('DEBUG: Reading process output\n')
 
-            if timeout != 0.0 and time.time() > time_limit:
-                os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-                info(' time out!\n')
-                break
+        while ecode is None:
 
-            if sleep_time < 30 \
-                    and num_times_point_at_current_sleep_time == 5:
-                sleep_time *= 2
-                num_times_point_at_current_sleep_time = 0
+            if verbose:
+                # read until end of file (when process stops)
+                for line in iter(p.stdout.readline, b''):
+                    line_utf = line.decode('utf-8')
+                    info(line_utf)
+                    if log_file:
+                        outf.write(line)
+            else:
+                # when we are not writing output to stdout, print dot progress
+                if sleep_time < 30 \
+                        and num_times_point_at_current_sleep_time == 5:
+                    sleep_time *= 2
+                    num_times_point_at_current_sleep_time = 0
 
-            if not verbose and print_progress_dot:
-                sys.stdout.write('.')
                 num_times_point_at_current_sleep_time += 1
 
-            time.sleep(sleep_time)
+                if debug:
+                    info('DEBUG: sleeping for {}\n'.format(sleep_time))
+                else:
+                    info('.')
 
-        ecode = p.poll()
+                time.sleep(sleep_time)
 
-    except subprocess.CalledProcessError as ex:
+            ecode = p.poll()
+            if debug:
+                info('DEBUG: Code returned by process: {}\n'.format(ecode))
+
+    except CalledProcessError as ex:
+        msg = "Command '{}' failed: {}\n".format(cmd, ex)
         if not ignore_error:
-            fail("Command '{}' failed: {}\n".format(cmd, ex))
+            fail(msg)
+        info(msg)
     finally:
-        if write_logs:
+        info('\n')
+        if outf:
             outf.close()
+        if errf:
             errf.close()
 
-    return output.strip(), ecode
+    return "", ecode
 
 
 def get_git_files():
