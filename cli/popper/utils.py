@@ -106,13 +106,14 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         if debug:
             info('DEBUG: Using subprocess.check_output() for {}\n'.format(cmd))
         try:
-            out = check_output(cmd, shell=True, stderr=PIPE)
+            out = check_output(cmd, shell=True, stderr=PIPE,
+                               universal_newlines=True)
         except CalledProcessError as ex:
             if debug:
                 info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return out.decode('utf-8').strip(), 0
+        return out.strip(), 0
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
@@ -124,22 +125,24 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         if verbose:
             if debug:
                 info('\nDEBUG: Creating file for combined stdout/stderr\n')
-            outf = open(log_file + '.log', 'wb')
+            outf = open(log_file + '.log', 'w')
         else:
             if debug:
                 info('\nDEBUG: Creating separate files for stdout/stderr\n')
-            outf = open(log_file + '.out', 'wb')
-            errf = open(log_file + '.err', 'wb')
+            outf = open(log_file + '.out', 'w')
+            errf = open(log_file + '.err', 'w')
 
     try:
         if verbose:
             if debug:
                 info('DEBUG: subprocess.Popen() with combined stdout/stderr\n')
-            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True)
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
+                      universal_newlines=True)
         else:
             if debug:
                 info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
-            p = Popen(cmd, stdout=outf, stderr=errf, shell=True)
+            p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
+                      universal_newlines=True)
 
         if debug:
             info('DEBUG: Reading process output\n')
@@ -148,9 +151,8 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
             if verbose:
                 # read until end of file (when process stops)
-                for line in iter(p.stdout.readline, b''):
-                    line_utf = line.decode('utf-8')
-                    info(line_utf)
+                for line in iter(p.stdout.readline, ''):
+                    info(line)
                     if log_file:
                         outf.write(line)
             else:
