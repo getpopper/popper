@@ -1,16 +1,19 @@
 #!/bin/bash
-set -ex
+set -e
 
-test_repo_path=/tmp/mypaper
+export test_repo_path=/tmp/mypaper
 
-function init_test_repo {
-  cd
+function delete_dir {
   set +e
-  if ! rm -rf $test_repo_path; then
+  if ! rm -rf $1; then
     # try to remove using docker
-    docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf $test_repo_path
+    docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf $1
   fi
   set -e
+}
+
+function init_test_repo {
+  delete_dir $test_repo_path
   mkdir $test_repo_path
   pushd $test_repo_path
   git init
@@ -19,3 +22,4 @@ function init_test_repo {
   git commit -m 'first'
   popd
 }
+
