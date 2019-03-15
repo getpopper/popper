@@ -47,7 +47,7 @@ action "end" {
     "test reuse",
     "test actions-demo",
     "test validate",
-    "test clone"
+    "test clone",
     "test scaffold"
   ]
 }
