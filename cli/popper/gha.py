@@ -127,19 +127,22 @@ class Workflow(object):
                     a_block['needs'] = [a_block['needs']]
                 elif not self.is_list_of_strings(a_block['needs']):
                     pu.fail(
-                        '[needs] attribute must be a list of strings or a string\n')
+                        '[needs] attribute must be a list of strings \
+                        or a string\n')
             if a_block.get('runs', None):
                 if isinstance(a_block['runs'], basestring):
                     a_block['runs'] = [a_block['runs']]
                 elif not self.is_list_of_strings(a_block['runs']):
                     pu.fail(
-                        '[runs] attribute must be a list of strings or a string\n')
+                        '[runs] attribute must be a list of strings \
+                        or a string\n')
             if a_block.get('args', None):
                 if isinstance(a_block['args'], basestring):
                     a_block['args'] = a_block['args'].split()
                 elif not self.is_list_of_strings(a_block['args']):
                     pu.fail(
-                        '[args] attribute must be a list of strings or a string\n')
+                        '[args] attribute must be a list of strings \
+                        or a string\n')
             if a_block.get('env', None):
                 if not isinstance(a_block['env'], dict):
                     pu.fail('[env] attribute must be a dict\n')
