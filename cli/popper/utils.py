@@ -124,12 +124,12 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         if verbose:
             if debug:
                 info('\nDEBUG: Creating file for combined stdout/stderr\n')
-            outf = open(log_file + '.log', 'w')
+            outf = open(log_file + '.log', 'wb')
         else:
             if debug:
                 info('\nDEBUG: Creating separate files for stdout/stderr\n')
-            outf = open(log_file + '.out', 'w')
-            errf = open(log_file + '.err', 'w')
+            outf = open(log_file + '.out', 'wb')
+            errf = open(log_file + '.err', 'wb')
 
     try:
         if verbose:
