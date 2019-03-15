@@ -1,0 +1,346 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+#----------------------#
+# Workflow block tests #
+#----------------------#
+
+## workflow block not present
+cat <<EOF > main.workflow
+weeeorkflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## workflow block present
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+## resolves attribute not present
+cat <<EOF > main.workflow
+workflow "test" {
+  foo = "bar"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## resolves attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = 1
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## resolves attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+## on attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+  on = ["push", "pull"]
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## on attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+  on = "push"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+#----------------------#
+# Action block tests   #
+#----------------------#
+
+## action block not present
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+acccction "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## action block present
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+## uses attribute not present
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## uses attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = 123
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## uses attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+## needs present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  needs = 12
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## needs attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+
+action "show env again" {
+  uses = "actions/bin/sh@master"
+  needs = ["show env"]
+  args = "ls"
+}
+EOF
+
+popper run
+
+## runs attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  runs = 123
+}
+EOF
+
+! popper run
+
+## runs attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+}
+EOF
+
+popper run
+
+# args attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = {
+    FIRST_NAME  = "Mona"
+    MIDDLE_NAME = "Lisa"
+    LAST_NAME   = "Octocat"
+  }
+}
+EOF
+
+! popper run
+
+## args attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run
+
+## env attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  env = [1, 2]
+}
+EOF
+
+! popper run
+
+## env attribute present and correct type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  env = {
+    F_NAME = "F_NAME",
+    L_NAME = "L_NAME"
+  }
+}
+EOF
+
+popper run
+
+## secrets attribute present but wrong type
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  secrets = "123"
+}
+EOF
+
+! popper run
+
+## secrets attribute present and correct type
+export F_NAME=F_NAME
+export L_NAME=L_NAME
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  env = {
+    F_NAME = "F_NAME",
+    L_NAME = "L_NAME"
+  }
+  secrets = ["F_NAME", "L_NAME"]
+}
+EOF
+
+popper run

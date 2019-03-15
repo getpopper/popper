@@ -36,6 +36,7 @@ class Workflow(object):
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
+        self.validate_syntax()
         self.check_secrets()
         self.normalize()
         self.complete_graph()
@@ -55,6 +56,32 @@ class Workflow(object):
 
         for e in dict(self.env):
             self.env.update({e.replace('GITHUB_', 'POPPER_'): self.env[e]})
+
+    def validate_syntax(self):
+        """ Validates the .workflow file.
+        """
+        if not self.wf.get('workflow', None):
+            pu.fail('A workflow block must be present\n')
+        else:
+            for _, wf_block in dict(self.wf['workflow']).items():
+                if wf_block.get('resolves', None):
+                    return
+            pu.fail('[resolves] attribute must be present\n')
+        if not self.wf.get('action', None):
+            pu.fail('Atleast one action block must be present\n')
+        else:
+            for _, a_block in dict(self.wf['action']).items():
+                if a_block.get('uses', None):
+                    return
+            pu.fail('[uses] attribute must be present\n')
+
+    def is_list_of_strings(self, lst):
+        try:
+            basestring
+        except UnboundLocalError:
+            basestring = str
+        return bool(lst) and isinstance(lst, list) and all(
+            isinstance(elem, basestring) for elem in lst)
 
     def normalize(self):
         """normalize the dictionary representation of the workflow"""
@@ -88,16 +115,40 @@ class Workflow(object):
         # create a list for all attributes that can be either string or list
         if isinstance(self.wf['resolves'], basestring):
             self.wf['resolves'] = [self.wf['resolves']]
+        elif not self.is_list_of_strings(self.wf['resolves']):
+            pu.fail('[resolves] must be a list of strings or a string\n')
+        if not isinstance(self.wf['on'], basestring):
+            pu.fail('[on] attribute must be a string\n')
         for _, a_block in self.wf['action'].items():
+            if not isinstance(a_block['uses'], basestring):
+                pu.fail('[uses] attribute must be a string\n')
             if a_block.get('needs', None):
                 if isinstance(a_block['needs'], basestring):
                     a_block['needs'] = [a_block['needs']]
+                elif not self.is_list_of_strings(a_block['needs']):
+                    pu.fail(
+                        '[needs] attribute must be a list of strings \
+                        or a string\n')
             if a_block.get('runs', None):
                 if isinstance(a_block['runs'], basestring):
                     a_block['runs'] = [a_block['runs']]
+                elif not self.is_list_of_strings(a_block['runs']):
+                    pu.fail(
+                        '[runs] attribute must be a list of strings \
+                        or a string\n')
             if a_block.get('args', None):
                 if isinstance(a_block['args'], basestring):
                     a_block['args'] = a_block['args'].split()
+                elif not self.is_list_of_strings(a_block['args']):
+                    pu.fail(
+                        '[args] attribute must be a list of strings \
+                        or a string\n')
+            if a_block.get('env', None):
+                if not isinstance(a_block['env'], dict):
+                    pu.fail('[env] attribute must be a dict\n')
+            if a_block.get('secrets', None):
+                if not self.is_list_of_strings(a_block['secrets']):
+                    pu.fail('[secrets] attribute must be a list of strings\n')
 
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
