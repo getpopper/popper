@@ -1,0 +1,35 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+popper init
+
+popper scaffold
+
+test -f $test_repo_path/main.workflow
+test -f $test_repo_path/actions/example/Dockerfile
+test -f $test_repo_path/actions/example/entrypoint.sh
+test -f $test_repo_path/actions/example/README.md
+
+popper run
+
+rm main.workflow
+
+mkdir pipelines
+cd pipelines
+mkdir mypipe
+cd mypipe
+
+popper scaffold
+
+cd ../..
+
+test -f $test_repo_path/main.workflow
+test -f $test_repo_path/pipelines/mypipe/actions/example/Dockerfile
+test -f $test_repo_path/pipelines/mypipe/actions/example/entrypoint.sh
+test -f $test_repo_path/pipelines/mypipe/actions/example/README.md
+
+popper run
