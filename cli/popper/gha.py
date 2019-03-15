@@ -7,9 +7,6 @@ import os
 import popper.utils as pu
 import popper.scm as scm
 from spython.main import Client
-import signal
-import subprocess
-import time
 import sys
 import popper.cli
 
