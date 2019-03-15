@@ -60,9 +60,15 @@ from popper.cli import pass_context
     required=False,
     is_flag=True
 )
+@click.option(
+    '--serial',
+    help='Executes actions in stages serially',
+    required=False,
+    is_flag=True
+)
 @pass_context
 def cli(ctx, action, wfile, workspace, reuse,
-        recursive, quiet, debug, dry_run):
+        recursive, quiet, debug, dry_run, serial):
     """Executes one or more pipelines and reports on their status.
     """
     if recursive:
@@ -73,12 +79,12 @@ def cli(ctx, action, wfile, workspace, reuse,
                     wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
                     run_pipeline(
-                        action, wfile, workspace, reuse, quiet, debug, dry_run)
+                        action, wfile, workspace, reuse, quiet, debug, dry_run, serial)
     else:
-        run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run)
+        run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, serial)
 
 
-def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run):
+def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, serial):
     pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
 
     if reuse:
@@ -89,7 +95,7 @@ def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run):
             "or to an action block in the workflow.\n\n"
         )
 
-    pipeline.run(action, reuse)
+    pipeline.run(action, reuse, serial)
 
     if action:
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))

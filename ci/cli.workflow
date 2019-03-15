@@ -60,6 +60,7 @@ action "end" {
     "test scaffold",
     "test clone",
     "test recursive",
-    "test dry-run"
+    "test dry-run",
+    "test scaffold"
   ]
 }

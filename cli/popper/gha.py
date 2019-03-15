@@ -280,7 +280,7 @@ class Workflow(object):
                     a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
 
-    def run(self, action_name=None, reuse=False):
+    def run(self, action_name=None, reuse=False, serial=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
 
@@ -291,15 +291,19 @@ class Workflow(object):
             self.wf['action'][action_name]['runner'].run(reuse)
         else:
             for s in self.get_stages():
-                self.run_stage(s, reuse)
+                self.run_stage(s, reuse, serial)
 
     def stage_exec(self, action, reuse):
         self.wf['action'][action]['runner'].run(reuse)
 
-    def run_stage(self, stage, reuse=False):
-        with ThreadPoolExecutor(max_workers=mp.cpu_count()) as executor:
+    def run_stage(self, stage, reuse=False, serial=False):
+        if serial:
             for action in stage:
-                executor.submit(self.stage_exec, action, reuse)
+                self.wf['action'][action]['runner'].run(reuse)
+        else:
+            with ThreadPoolExecutor(max_workers=mp.cpu_count()) as executor:
+                for action in stage:
+                    executor.submit(self.stage_exec, action, reuse)
 
     def get_stages(self):
         """Generator of stages. A stages is a list of actions that can be
