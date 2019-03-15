@@ -60,20 +60,24 @@ class Workflow(object):
     def validate_syntax(self):
         """ Validates the .workflow file.
         """
+        resolves_present = False
+        uses_present = False
         if not self.wf.get('workflow', None):
             pu.fail('A workflow block must be present\n')
         else:
             for _, wf_block in dict(self.wf['workflow']).items():
                 if wf_block.get('resolves', None):
-                    return
-            pu.fail('[resolves] attribute must be present\n')
+                    resolves_present = True
+            if not resolves_present:
+                pu.fail('[resolves] attribute must be present\n')
         if not self.wf.get('action', None):
             pu.fail('Atleast one action block must be present\n')
         else:
-            for _, a_block in dict(self.wf['action']).items():
+            for _, a_block in self.wf['action'].items():
                 if a_block.get('uses', None):
-                    return
-            pu.fail('[uses] attribute must be present\n')
+                    uses_present = True
+            if not uses_present:
+                pu.fail('[uses] attribute must be present\n')
 
     def is_list_of_strings(self, lst):
         try:
