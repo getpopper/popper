@@ -24,6 +24,58 @@ init_config = {
 
 gitignore_content = ".pipeline_cache.yml\npopper/\n"
 
+main_workflow_content = """
+workflow "example" {
+  on = "push"
+  resolves = "example action"
+}
+
+action "github official action" {
+  uses = "actions/bin/sh@master"
+  args = ["ls"]
+}
+
+action "docker action" {
+  uses = "docker://node:6"
+  args = ["node --version"]
+}
+
+action "example action" {
+  uses = "./%s"
+  args = ["github.com"]
+}
+"""
+
+dockerfile_content = """
+FROM debian:stable-slim
+
+LABEL "name"="curl"
+LABEL "maintainer"="GitHub Actions <support+actions@github.com>"
+LABEL "version"="1.0.0"
+
+LABEL "com.github.actions.name"="cURL for GitHub Actions"
+LABEL "com.github.actions.description"="Runs cURL in an Action"
+LABEL "com.github.actions.icon"="upload-cloud"
+LABEL "com.github.actions.color"="green"
+
+
+COPY entrypoint.sh /entrypoint.sh
+
+RUN apt-get update && \
+    apt-get install curl -y && \
+    apt-get clean -y
+
+ENTRYPOINT ["sh", "/entrypoint.sh"]
+"""
+
+entrypoint_content = """
+#!/bin/sh
+set -e
+
+sh -c "curl $*"
+"""
+
+readme_content = "Executes cURL with arguments listed in the Action's args."
 
 def get_items(dict_object):
     """Python 2/3 compatible way of iterating over a dictionary"""
