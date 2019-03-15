@@ -100,6 +100,12 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     # 4) verbose=True and log_file not None
     #      ==> combine stdout/stderr, write to stdout and to a SINGLE log file
 
+    # internal nested function to make treatment of stdout 2 and 3 compatible
+    def b(t):
+        if isinstance(t, bytes):
+            return t.decode('utf-8')
+        return t
+
     # quick shortcut for 1) above
     if not verbose and not log_file:
         out = ""
@@ -113,7 +119,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
                 info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return out.strip(), 0
+        return b(out).strip(), 0
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
@@ -152,7 +158,8 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             if verbose:
                 # read until end of file (when process stops)
                 for line in iter(p.stdout.readline, ''):
-                    info(line)
+                    line_decoded = b(line)
+                    info(line_decoded)
                     if log_file:
                         outf.write(line)
             else:
