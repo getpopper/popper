@@ -25,6 +25,8 @@ cd mypipe
 
 popper scaffold
 
+cd ../..
+
 test -f $test_repo_path/main.workflow
 test -f $test_repo_path/pipelines/mypipe/actions/example/Dockerfile
 test -f $test_repo_path/pipelines/mypipe/actions/example/entrypoint.sh
