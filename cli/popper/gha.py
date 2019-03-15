@@ -4,17 +4,13 @@ import hcl
 import os
 import popper.scm as scm
 import popper.utils as pu
-import signal
-import subprocess
-import time
-import sys
 
 
 class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace):
+    def __init__(self, wfile, workspace, quiet, debug):
         if not wfile:
             if os.path.isfile("main.workflow"):
                 wfile = "main.workflow"
@@ -32,7 +28,11 @@ class Workflow(object):
             self.wf = hcl.load(fp)
 
         self.workspace = workspace
-        self.timeout = 10800
+        self.debug = debug
+        if debug:
+            self.quiet = False
+        else:
+            self.quiet = quiet
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
@@ -44,13 +44,13 @@ class Workflow(object):
             'GITHUB_WORKSPACE': self.workspace,
             'GITHUB_WORKFLOW': self.wf['name'],
             'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(),
-                                                scm.get_name()),
+            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(self.debug),
+                                                scm.get_name(self.debug)),
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(),
-            'GITHUB_REF': scm.get_ref(),
+            'GITHUB_SHA': scm.get_sha(self.debug),
+            'GITHUB_REF': scm.get_ref(self.debug),
         }
 
         for e in dict(self.env):
@@ -160,43 +160,43 @@ class Workflow(object):
                 pu.info('[popper] cloning actions from repositories\n')
                 infoed = True
 
-            scm.clone(user, repo, repo_parent_dir, version)
+            scm.clone(user, repo, repo_parent_dir, version, debug=self.debug)
 
             cloned.add('{}/{}'.format(user, repo))
 
-    def instantiate_runners(self, verbose=False):
+    def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
         for _, a in self.wf['action'].items():
             if 'docker://' in a['uses']:
-                a['runner'] = DockerRunner(a, self.workspace,
-                                           self.env, self.timeout, verbose)
+                a['runner'] = DockerRunner(
+                    a, self.workspace, self.env, self.quiet, self.debug)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
-                    a['runner'] = DockerRunner(a, self.workspace,
-                                               self.env, self.timeout, verbose)
+                    a['runner'] = DockerRunner(
+                        a, self.workspace, self.env, self.quiet, self.debug)
                 else:
-                    a['runner'] = HostRunner(a, self.workspace,
-                                             self.env, self.timeout, verbose)
+                    a['runner'] = HostRunner(
+                        a, self.workspace, self.env, self.quiet, self.debug)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
                                            'Dockerfile')
 
             if os.path.exists(dockerfile_path):
-                a['runner'] = DockerRunner(a, self.workspace,
-                                           self.env, self.timeout, verbose)
+                a['runner'] = DockerRunner(
+                    a, self.workspace, self.env, self.quiet, self.debug)
             else:
-                a['runner'] = HostRunner(a, self.workspace,
-                                         self.env, self.timeout, verbose)
+                a['runner'] = HostRunner(
+                    a, self.workspace, self.env, self.quiet, self.debug)
 
-    def run(self, action_name=None, reuse=False, verbose=False):
+    def run(self, action_name=None, reuse=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
 
         self.download_actions()
-        self.instantiate_runners(verbose)
+        self.instantiate_runners()
 
         if action_name:
             self.wf['action'][action_name]['runner'].run(reuse)
@@ -226,12 +226,12 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, timeout, verbose):
+    def __init__(self, action, workspace, env, quiet, debug):
         self.action = action
         self.workspace = workspace
         self.env = env
-        self.timeout = timeout
-        self.verbose = verbose
+        self.quiet = quiet
+        self.debug = debug
 
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
@@ -239,54 +239,18 @@ class ActionRunner(object):
         self.log_path = os.path.join(self.workspace, 'popper_logs')
         if not os.path.exists(self.log_path):
             os.makedirs(self.log_path)
+        self.log_filename = os.path.join(
+            self.log_path, self.action['name'].replace(' ', '-'))
 
     def run(self, reuse=False):
         raise NotImplementedError(
             "This method is required to be implemented in derived classes."
         )
 
-    def execute(self, cmd, log_tag):
-        time_limit = time.time() + self.timeout
-        sleep_time = 0.25
-
-        log_tag = log_tag.replace(' ', '_')
-
-        out_fname = os.path.join(self.log_path, log_tag + '.out')
-        err_fname = os.path.join(self.log_path, log_tag + '.err')
-
-        if self.verbose:
-            with open(out_fname, "a") as outf, open(err_fname, "a") as errf:
-                rc = pu.exec_cmd_util(cmd, True, True, outf, errf)[0]
-            pu.info('\n')
-            return rc
-        else:
-            with open(out_fname, "w") as outf, open(err_fname, "w") as errf:
-                p = subprocess.Popen(cmd, stdout=outf, stderr=errf, shell=True,
-                                     preexec_fn=os.setsid)
-
-                while p.poll() is None:
-
-                    if self.timeout != 0.0 and time.time() > time_limit:
-                        os.killpg(os.getpgid(p.pid), signal.SIGTERM)
-                        sys.stdout.write(' time out!')
-                        break
-
-                    if sleep_time < 30:
-                        sleep_time *= 2
-
-                    for i in range(int(sleep_time)):
-                        if i % 10 == 0:
-                            pu.info('.')
-                    time.sleep(sleep_time)
-
-            pu.info('\n')
-            return p.poll()
-
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, timeout, verbose):
-        super(DockerRunner, self).__init__(action, workspace, env,
-                                           timeout, verbose)
+    def __init__(self, action, workspace, env, q, d):
+        super(DockerRunner, self).__init__(action, workspace, env, q, d)
         self.cid = self.action['name'].replace(' ', '_')
 
     def run(self, reuse):
@@ -323,7 +287,7 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        cmd_out = pu.exec_cmd('docker ps -a', self.verbose)
+        cmd_out, _ = pu.exec_cmd('docker ps -a', debug=self.debug)
 
         if self.cid in cmd_out:
             return True
@@ -331,8 +295,7 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
-        pu.exec_cmd('docker rm {}'.format(self.cid), self.verbose,
-                                          ignoreerror=True)
+        pu.exec_cmd('docker rm {}'.format(self.cid), debug=self.debug)
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -363,28 +326,30 @@ class DockerRunner(ActionRunner):
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        pu.exec_cmd(docker_cmd, self.verbose)
+        pu.exec_cmd(docker_cmd, debug=self.debug)
 
     def docker_start(self):
-        pu.info('[{}] docker start '.format(self.action['name']))
+        pu.info('[{}] docker start \n'.format(self.action['name']))
 
         cmd = 'docker start --attach {}'.format(self.cid)
-        return self.execute(cmd, self.action['name'])
+        _, ecode = pu.exec_cmd(
+            cmd, verbose=(not self.quiet), debug=self.debug,
+            log_file=self.log_filename)
+        return ecode
 
     def docker_pull(self, img):
         pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
-        pu.exec_cmd('docker pull {}'.format(img), self.verbose)
+        pu.exec_cmd('docker pull {}'.format(img), debug=self.debug)
 
     def docker_build(self, tag, path):
         cmd = 'docker build -t {} {}'.format(tag, path)
         pu.info('[{}] {}\n'.format(self.action['name'], cmd))
-        pu.exec_cmd(cmd, self.verbose)
+        pu.exec_cmd(cmd, debug=self.debug)
 
 
 class HostRunner(ActionRunner):
-    def __init__(self, action, workspace, env, timeout, verbose):
-        super(HostRunner, self).__init__(action, workspace, env,
-                                         timeout, verbose)
+    def __init__(self, action, workspace, env, q, d):
+        super(HostRunner, self).__init__(action, workspace, env, q, d)
 
     def run(self, reuse=False):
         cmd = self.action.get('runs', ['entrypoint.sh'])
@@ -396,9 +361,11 @@ class HostRunner(ActionRunner):
 
         os.environ.update(self.action.get('env', {}))
 
-        pu.info('[{}] {}'.format(self.action['name'], ' '.join(cmd)))
+        pu.info('[{}] {}\n'.format(self.action['name'], ' '.join(cmd)))
 
-        ecode = self.execute(' '.join(cmd), self.action['name'])
+        _, ecode = pu.exec_cmd(
+            ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,
+            ignore_error=True, log_file=self.log_filename)
 
         for i in self.action.get('env', {}):
             os.environ.pop(i)
