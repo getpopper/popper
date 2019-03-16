@@ -37,3 +37,6 @@
 [submodule "cli/bin/vendor/pythonfutures"]
 	path = cli/bin/vendor/pythonfutures
 	url = https://github.com/agronholm/pythonfutures.git
+[submodule "cli/bin/vendor/singularity-cli"]
+	path = cli/bin/vendor/singularity-cli
+	url = https://github.com/singularityhub/singularity-cli
