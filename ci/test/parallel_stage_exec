@@ -1,0 +1,152 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["ls cmds", "curl urls"]
+}
+
+action "ls" {
+  uses = "actions/bin/sh@master"
+  args = ["ls"]
+}
+
+action "ls al" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -al"]
+}
+
+action "ls ltr" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -ltr"]
+}
+
+action "ls line count" {
+  uses = "actions/bin/sh@master"
+  args = ["ls | wc -l"]
+}
+
+action "ls d" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -d"]
+}
+
+action "ls r" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -r"]
+}
+
+action "ls R" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -R"]
+}
+
+action "ls s" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -s"]
+}
+
+action "ls t" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -t"]
+}
+
+action "ls S" {
+  uses = "actions/bin/sh@master"
+  args = ["ls -S"]
+}
+
+action "ls X" {
+    uses = "actions/bin/sh@master"
+    args = ["ls -X"]
+}
+
+action "ls cmds" {
+  uses = "actions/bin/sh@master"
+  needs = [
+    "ls",
+    "ls al",
+    "ls ltr",
+    "ls line count",
+    "ls d",
+    "ls r",
+    "ls R",
+    "ls s",
+    "ls t",
+    "ls S",
+    "ls X"
+  ]
+}
+
+
+action "curl github" {
+  uses = "actions/bin/curl@master"
+  args = ["github.com"]
+}
+
+action "curl google" {
+  uses = "actions/bin/curl@master"
+  args = ["google.com"]
+}
+
+action "curl facebook" {
+  uses = "actions/bin/curl@master"
+  args = ["facebook.com"]
+}
+
+action "curl gitlab" {
+  uses = "actions/bin/curl@master"
+  args = ["gitlab.com"]
+}
+
+action "curl bitbucket" {
+  uses = "actions/bin/curl@master"
+  args = ["bitbucket.org"]
+}
+
+action "curl medium" {
+  uses = "actions/bin/curl@master"
+  args = ["medium.com"]
+}
+
+action "curl twitter" {
+  uses = "actions/bin/curl@master"
+  args = ["twitter.com"]
+}
+
+action "curl youtube" {
+  uses = "actions/bin/curl@master"
+  args = ["youtube.com"]
+}
+action "curl codechef" {
+  uses = "actions/bin/curl@master"
+  args = ["codechef.com"]
+}
+
+action "curl do" {
+  uses = "actions/bin/curl@master"
+  args = ["digitalocean.com"]
+}
+
+action "curl urls" {
+    uses = "actions/bin/curl@master"
+    needs = [
+        "curl google",
+        "curl facebook",
+        "curl gitlab",
+        "curl bitbucket",
+        "curl medium",
+        "curl codechef",
+        "curl youtube",
+        "curl do",
+        "curl twitter",
+        "curl github"
+    ]
+}
+EOF
+
+popper run
