@@ -13,18 +13,7 @@ class Workflow(object):
     """
 
     def __init__(self, wfile, workspace, quiet, debug, dry_run):
-        if not wfile:
-            if os.path.isfile("main.workflow"):
-                wfile = "main.workflow"
-            elif os.path.isfile(".github/main.workflow"):
-                wfile = ".github/main.workflow"
-
-        if not wfile:
-            pu.fail(
-                "Files {} or {} not found.\n".format("./main.workflow",
-                                                     ".github/main.workflow"))
-        if not os.path.isfile(wfile):
-            pu.fail("File {} not found.\n".format(wfile))
+        wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
             self.wf = hcl.load(fp)
