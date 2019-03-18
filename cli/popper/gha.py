@@ -10,7 +10,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run):
         if not wfile:
             if os.path.isfile("main.workflow"):
                 wfile = "main.workflow"
@@ -33,6 +33,7 @@ class Workflow(object):
             self.quiet = False
         else:
             self.quiet = quiet
+        self.dry_run = dry_run
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
@@ -236,30 +237,34 @@ class Workflow(object):
             if not os.path.exists(repo_parent_dir):
                 os.makedirs(repo_parent_dir)
 
-            if not infoed:
-                pu.info('[popper] cloning actions from repositories\n')
-                infoed = True
+            if not self.dry_run:
+                if not infoed:
+                    pu.info('[popper] cloning actions from repositories\n')
+                    infoed = True
 
-            scm.clone(url, user, repo, repo_parent_dir, version,
+                scm.clone(url, user, repo, repo_parent_dir, version,
                       debug=self.debug)
 
-            cloned.add('{}/{}'.format(user, repo))
+                cloned.add('{}/{}'.format(user, repo))
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
         for _, a in self.wf['action'].items():
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env, self.quiet, self.debug)
+                    a, self.workspace, self.env,
+                    self.quiet, self.debug, self.dry_run)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
-                        a, self.workspace, self.env, self.quiet, self.debug)
+                        a, self.workspace, self.env,
+                        self.quiet, self.debug, self.dry_run)
                 else:
                     a['runner'] = HostRunner(
-                        a, self.workspace, self.env, self.quiet, self.debug)
+                        a, self.workspace, self.env,
+                        self.quiet, self.debug, self.dry_run)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -267,10 +272,12 @@ class Workflow(object):
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env, self.quiet, self.debug)
+                    a, self.workspace, self.env,
+                    self.quiet, self.debug, self.dry_run)
             else:
                 a['runner'] = HostRunner(
-                    a, self.workspace, self.env, self.quiet, self.debug)
+                    a, self.workspace, self.env,
+                    self.quiet, self.debug, self.dry_run)
 
     def run(self, action_name=None, reuse=False):
         """Run the pipeline or a specific action"""
@@ -307,12 +314,14 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, quiet, debug):
+    def __init__(self, action, workspace, env, quiet, debug, dry_run):
         self.action = action
         self.workspace = workspace
         self.env = env
         self.quiet = quiet
         self.debug = debug
+        self.dry_run = dry_run
+        self.msg_prefix = "DRYRUN: " if dry_run else ""
 
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
@@ -330,8 +339,8 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d):
-        super(DockerRunner, self).__init__(action, workspace, env, q, d)
+    def __init__(self, action, workspace, env, q, d, dry):
+        super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
 
     def run(self, reuse):
@@ -368,7 +377,7 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        cmd_out, _ = pu.exec_cmd('docker ps -a', debug=self.debug)
+        cmd_out, _ = pu.exec_cmd('docker ps -a', debug=self.debug, dry_run=self.dry_run)
 
         if self.cid in cmd_out:
             return True
@@ -376,7 +385,7 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
-        pu.exec_cmd('docker rm {}'.format(self.cid), debug=self.debug)
+        pu.exec_cmd('docker rm {}'.format(self.cid), debug=self.debug, dry_run=self.dry_run)
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -403,34 +412,34 @@ class DockerRunner(ActionRunner):
         docker_cmd += ' {}'.format(img)
         docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
 
-        pu.info('[{}] docker create {} {}\n'.format(
+        pu.info('{}[{}] docker create {} {}\n'.format(self.msg_prefix,
             self.action['name'], img, ' '.join(self.action.get('args', '')))
         )
 
-        pu.exec_cmd(docker_cmd, debug=self.debug)
+        pu.exec_cmd(docker_cmd, debug=self.debug, dry_run=self.dry_run)
 
     def docker_start(self):
-        pu.info('[{}] docker start \n'.format(self.action['name']))
+        pu.info('{}[{}] docker start \n'.format(self.msg_prefix, self.action['name']))
 
         cmd = 'docker start --attach {}'.format(self.cid)
         _, ecode = pu.exec_cmd(
             cmd, verbose=(not self.quiet), debug=self.debug,
-            log_file=self.log_filename)
+            log_file=self.log_filename, dry_run=self.dry_run)
         return ecode
 
     def docker_pull(self, img):
-        pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
-        pu.exec_cmd('docker pull {}'.format(img), debug=self.debug)
+        pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix, self.action['name'], img))
+        pu.exec_cmd('docker pull {}'.format(img), debug=self.debug, dry_run=self.dry_run)
 
     def docker_build(self, tag, path):
         cmd = 'docker build -t {} {}'.format(tag, path)
-        pu.info('[{}] {}\n'.format(self.action['name'], cmd))
-        pu.exec_cmd(cmd, debug=self.debug)
+        pu.info('{}[{}] {}\n'.format(self.msg_prefix, self.action['name'], cmd))
+        pu.exec_cmd(cmd, debug=self.debug, dry_run=self.dry_run)
 
 
 class HostRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d):
-        super(HostRunner, self).__init__(action, workspace, env, q, d)
+    def __init__(self, action, workspace, env, q, d, dry):
+        super(HostRunner, self).__init__(action, workspace, env, q, d, dry)
 
     def run(self, reuse=False):
         cmd = self.action.get('runs', ['entrypoint.sh'])
@@ -438,18 +447,19 @@ class HostRunner(ActionRunner):
         cmd.extend(self.action.get('args', ''))
 
         cwd = os.getcwd()
-        if 'repo_dir' in self.action:
-            os.chdir(self.action['repo_dir'])
-        else:
-            os.chdir(os.path.join(cwd, self.action['uses']))
+        if not self.dry_run:
+            if 'repo_dir' in self.action:
+                os.chdir(self.action['repo_dir'])
+            else:
+                os.chdir(os.path.join(cwd, self.action['uses']))
 
         os.environ.update(self.action.get('env', {}))
 
-        pu.info('[{}] {}\n'.format(self.action['name'], ' '.join(cmd)))
+        pu.info('{}[{}] {}\n'.format(self.msg_prefix, self.action['name'], ' '.join(cmd)))
 
         _, ecode = pu.exec_cmd(
             ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,
-            ignore_error=True, log_file=self.log_filename)
+            ignore_error=True, log_file=self.log_filename, dry_run=self.dry_run)
 
         for i in self.action.get('env', {}):
             os.environ.pop(i)
