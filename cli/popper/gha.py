@@ -377,7 +377,8 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        cmd_out, _ = pu.exec_cmd('docker ps -a', debug=self.debug, dry_run=self.dry_run)
+        cmd_out, _ = pu.exec_cmd('docker ps -a',
+                                 debug=self.debug, dry_run=self.dry_run)
 
         if self.cid in cmd_out:
             return True
@@ -385,7 +386,8 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
-        pu.exec_cmd('docker rm {}'.format(self.cid), debug=self.debug, dry_run=self.dry_run)
+        pu.exec_cmd('docker rm {}'.format(self.cid),
+                    debug=self.debug, dry_run=self.dry_run)
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -419,7 +421,8 @@ class DockerRunner(ActionRunner):
         pu.exec_cmd(docker_cmd, debug=self.debug, dry_run=self.dry_run)
 
     def docker_start(self):
-        pu.info('{}[{}] docker start \n'.format(self.msg_prefix, self.action['name']))
+        pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
+                                                self.action['name']))
 
         cmd = 'docker start --attach {}'.format(self.cid)
         _, ecode = pu.exec_cmd(
@@ -428,12 +431,15 @@ class DockerRunner(ActionRunner):
         return ecode
 
     def docker_pull(self, img):
-        pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix, self.action['name'], img))
-        pu.exec_cmd('docker pull {}'.format(img), debug=self.debug, dry_run=self.dry_run)
+        pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix,
+                                                 self.action['name'], img))
+        pu.exec_cmd('docker pull {}'.format(img),
+                    debug=self.debug, dry_run=self.dry_run)
 
     def docker_build(self, tag, path):
         cmd = 'docker build -t {} {}'.format(tag, path)
-        pu.info('{}[{}] {}\n'.format(self.msg_prefix, self.action['name'], cmd))
+        pu.info('{}[{}] {}\n'.format(self.msg_prefix,
+                                     self.action['name'], cmd))
         pu.exec_cmd(cmd, debug=self.debug, dry_run=self.dry_run)
 
 
@@ -455,11 +461,13 @@ class HostRunner(ActionRunner):
 
         os.environ.update(self.action.get('env', {}))
 
-        pu.info('{}[{}] {}\n'.format(self.msg_prefix, self.action['name'], ' '.join(cmd)))
+        pu.info('{}[{}] {}\n'.format(self.msg_prefix, self.action['name'],
+                                     ' '.join(cmd)))
 
         _, ecode = pu.exec_cmd(
             ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,
-            ignore_error=True, log_file=self.log_filename, dry_run=self.dry_run)
+            ignore_error=True, log_file=self.log_filename,
+            dry_run=self.dry_run)
 
         for i in self.action.get('env', {}):
             os.environ.pop(i)
