@@ -2,8 +2,9 @@ from __future__ import unicode_literals
 from builtins import dict, str
 import hcl
 import os
-import popper.scm as scm
 import popper.utils as pu
+import popper.scm as scm
+import git
 
 
 class Workflow(object):
@@ -35,7 +36,7 @@ class Workflow(object):
             self.quiet = quiet
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
-
+        self.repo = git.Repo(search_parent_directories=True)
         self.validate_syntax()
         self.check_secrets()
         self.normalize()
@@ -45,13 +46,16 @@ class Workflow(object):
             'GITHUB_WORKSPACE': self.workspace,
             'GITHUB_WORKFLOW': self.wf['name'],
             'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(self.debug),
-                                                scm.get_name(self.debug)),
+            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(self.repo),
+                                                scm.get_name(self.repo)),
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(self.debug),
-            'GITHUB_REF': scm.get_ref(self.debug),
+            'GITHUB_SHA': self.repo.git.rev_parse(
+                self.repo.head.object.hexsha, short=True),
+            'GITHUB_REF': ("" 
+                           if self.repo.head.is_detached 
+                           else self.repo.head.ref.path)
         }
 
         for e in dict(self.env):

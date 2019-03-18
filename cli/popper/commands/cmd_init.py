@@ -1,7 +1,7 @@
 import click
 import os
+import git
 import popper.utils as pu
-import popper.scm as scm
 from popper.cli import pass_context
 
 
@@ -10,7 +10,12 @@ from popper.cli import pass_context
 def cli(ctx):
     """Initializes a repository by creating the .popper.yml file.
     """
-    project_root = scm.get_root_folder()
+    try:
+        repo = git.Repo(search_parent_directories=True)
+    except git.exc.InvalidGitRepositoryError:
+        pu.fail('Must be a git repository ! \n')
+
+    project_root = repo.git.rev_parse('--show-toplevel')
 
     if pu.is_popperized():
         pu.fail('Repository has already been popperized')
