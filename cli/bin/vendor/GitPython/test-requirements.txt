@@ -1,0 +1,6 @@
+-r requirements.txt
+
+coverage
+flake8
+nose
+mock; python_version=='2.7'
