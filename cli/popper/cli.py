@@ -73,6 +73,7 @@ def cli(ctx):
 
 
 docker_list = list()
+process_list = list()
 
 
 def signal_handler(sig, frame):
@@ -85,8 +86,8 @@ def signal_handler(sig, frame):
     for img in set(docker_list).intersection(cmd_out):
         pu.exec_cmd('docker rm -f {}'.format(img))
         pu.info('\nDeleted {}'.format(img))
-    # os.killpg(os.getpid(), signal.SIGTERM)
 
-    # Should never reach here,
-    # as parent process is also killed along with child processes
+
+    for pid in process_list:
+        os.kill(pid, signal.SIGTERM)
     sys.exit(0)
