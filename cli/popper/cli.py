@@ -78,15 +78,15 @@ docker_list = list()
 def signal_handler(sig, frame):
 
     pu.info("\n")
-    cmd_out = pu.exec_cmd('docker ps -a')
-    for img in docker_list:
-        if img in cmd_out:
-            pu.exec_cmd('docker rm -f {}'.format(img))
-            pu.info('\nDeleted {}'.format(img))
-    pu.info("\n")
-    os.killpg(os.getpid(), signal.SIGTERM)
+    cmd_out = pu.exec_cmd('docker ps -a --format "{{.Names}}"')
+    cmd_out = cmd_out[0].splitlines()
+    cmd_out = set(cmd_out)
+
+    for img in set(docker_list).intersection(cmd_out):
+        pu.exec_cmd('docker rm -f {}'.format(img))
+        pu.info('\nDeleted {}'.format(img))
+    # os.killpg(os.getpid(), signal.SIGTERM)
 
     # Should never reach here,
     # as parent process is also killed along with child processes
-    print("Kill all processes")
     sys.exit(0)
