@@ -16,29 +16,40 @@ import types
     required=False,
     default=None
 )
+@click.option(
+    '--recursive',
+    help='Run any .workflow file found recursively from current path. ',
+    required=False,
+    is_flag=True
+)
 @click.command('dot', short_help='Generates a dot file '
                                  '[Used for graphical representations]')
 @pass_context
-def cli(ctx, wfile):
+def cli(ctx, wfile, recursive):
     """Creates a dot file"""
-    wfile = pu.find_default_wfile(wfile)
+    wfile_list = list()
+    if recursive:
+        wfile_list = pu.find_recursive_wfile()
+    else:
+        wfile_list.append(pu.find_default_wfile(wfile))
 
-    with open(wfile, 'r') as fp:
-        wf = hcl.load(fp)
+    for wfile in wfile_list:
+        with open(wfile, 'r') as fp:
+            wf = hcl.load(fp)
 
-    name = list(wf["workflow"].keys())[0]
+        name = list(wf["workflow"].keys())[0]
 
-    action = wf["workflow"][name]["resolves"]
-    parent_action = cur_action = action
+        action = wf["workflow"][name]["resolves"]
+        parent_action = cur_action = action
 
-    if not isinstance(cur_action, str):
-        cur_action = cur_action[0]
+        if not isinstance(cur_action, str):
+            cur_action = cur_action[0]
 
-    graph = list()
-    graph = add(parent_action, cur_action, wf["action"], graph)
-    graph = ''.join(list(set(graph)))
-    graph = "digraph G {\n" + graph + "}\n"
-    pu.info(graph)
+        graph = list()
+        graph = add(parent_action, cur_action, wf["action"], graph)
+        graph = ''.join(list(set(graph)))
+        graph = "digraph G {\n" + graph + "}\n"
+        pu.info(graph)
 
 
 # Recursively go through "needs" and add corresponding actions to graph

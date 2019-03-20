@@ -316,3 +316,21 @@ def find_default_wfile(wfile):
         exit(1)
 
     return wfile
+
+
+def find_recursive_wfile():
+    """
+    Used to search for `.workflow` files in $PWD and
+    then recursively in sub directories
+
+    Returns:
+        list of path of workflow files
+    """
+    wfile_list = list()
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.workflow'):
+                wfile = os.path.join(root, file)
+                wfile = os.path.abspath(wfile)
+                wfile_list.append(wfile)
+    return wfile_list
