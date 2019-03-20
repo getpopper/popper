@@ -22,11 +22,14 @@ import types
     required=False,
     is_flag=True
 )
-@click.command('dot', short_help='Generates a dot file '
-                                 '[Used for graphical representations]')
+@click.command('dot', short_help='Generates a .dot format for a given workflow'
+               '\n[.dot is a format for graphical representation]')
 @pass_context
 def cli(ctx, wfile, recursive):
-    """Creates a dot file"""
+    """
+    Analyzes a workflow file and then creates a dot representation for the same
+    .dot represents the order in which actions in the workflow must be executed
+    """
     wfile_list = list()
     if recursive:
         wfile_list = pu.find_recursive_wfile()
