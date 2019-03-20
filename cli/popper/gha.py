@@ -5,6 +5,8 @@ import multiprocessing as mp
 import hcl
 import os
 import shutil
+import docker
+import popper.scm as scm
 import popper.utils as pu
 import popper.scm as scm
 from spython.main import Client
@@ -400,9 +402,10 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d, dry):
+    def __init__(self, docker_client, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
+        ## self.docker_client = docker_client
 
     def run(self, reuse):
         popper.cli.docker_list.append(self.cid)
@@ -454,9 +457,8 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        cmd_out, _ = pu.exec_cmd('docker ps -a',
-                                 debug=self.debug, dry_run=self.dry_run)
-
+        #cmd_out, _ = pu.exec_cmd('docker ps -a', debug=self.debug)
+        self.docker_client.list()
         if self.cid in cmd_out:
             return True
 
