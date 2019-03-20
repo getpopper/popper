@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import yaml
+import git
 
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
@@ -91,12 +92,12 @@ def get_project_root():
     Returns:
         project_root (str): The fully qualified path to the root of project.
     """
-    base, _ = exec_cmd('git rev-parse --show-toplevel', ignore_error=True)
-
-    if not base:
+    try:
+        repo = git.Repo(search_parent_directories=True)
+    except git.exc.InvalidGitRepositoryError:
         fail("Unable to find root of project. Initialize repository first.")
 
-    return base
+    return os.path.dirname(repo.git_dir)
 
 
 def write_config(config):

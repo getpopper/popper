@@ -1,8 +1,8 @@
 import os
 import click
 import popper.utils as pu
+import popper.scm as scm
 from popper.cli import pass_context
-import git
 
 
 @click.command('scaffold', short_help='Scaffolds a workflow folder.')
@@ -14,12 +14,7 @@ def cli(ctx):
         pu.fail('Repository has not been popperized')
         return
 
-    try:
-        repo = git.Repo(search_parent_directories=True)
-    except git.exc.InvalidGitRepositoryError:
-        pu.fail('Must be a git repository ! \n')
-
-    project_root = repo.git.rev_parse('--show-toplevel')
+    project_root = scm.get_root_folder()
 
     curr_dir = os.getcwd()
     actions_dir = os.path.join(curr_dir, 'actions')
