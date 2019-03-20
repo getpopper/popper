@@ -18,7 +18,8 @@ import types
 )
 @click.option(
     '--recursive',
-    help='Run any .workflow file found recursively from current path. ',
+    help='Generate .dot file for any.workflow file '
+         'found recursively from current path.',
     required=False,
     is_flag=True
 )
