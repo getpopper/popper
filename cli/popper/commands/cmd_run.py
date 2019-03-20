@@ -61,14 +61,14 @@ from popper.cli import pass_context
     is_flag=True
 )
 @click.option(
-    '--serial',
-    help='Executes actions in stages serially',
+    '--parallel',
+    help='Executes actions in stages in parallel',
     required=False,
     is_flag=True
 )
 @pass_context
 def cli(ctx, action, wfile, workspace, reuse,
-        recursive, quiet, debug, dry_run, serial):
+        recursive, quiet, debug, dry_run, parallel):
     """Executes one or more pipelines and reports on their status.
     """
     if recursive:
@@ -79,12 +79,12 @@ def cli(ctx, action, wfile, workspace, reuse,
                     wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
                     run_pipeline(
-                        action, wfile, workspace, reuse, quiet, debug, dry_run, serial)
+                        action, wfile, workspace, reuse, quiet, debug, dry_run, parallel)
     else:
-        run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, serial)
+        run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, parallel)
 
 
-def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, serial):
+def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, parallel):
     pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
 
     if reuse:
@@ -94,8 +94,16 @@ def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, serial)
             "\n  " +
             "or to an action block in the workflow.\n\n"
         )
+    
+    if parallel:
+        pu.info(
+            "\n  " +
+            "WARNING: using --parallel is likely to result in interleaved ouput." +
+            "\n  " +
+            "You may use --quiet flag to avoid confusion.\n\n"
+        )
 
-    pipeline.run(action, reuse, serial)
+    pipeline.run(action, reuse, parallel)
 
     if action:
         pu.info('\nAction "{}" finished successfully.\n\n'.format(action))

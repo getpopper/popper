@@ -149,4 +149,4 @@ action "curl urls" {
 }
 EOF
 
-popper run
+popper run --parallel
