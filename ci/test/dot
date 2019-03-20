@@ -5,6 +5,16 @@ source ./common
 init_test_repo
 cd $test_repo_path
 
+#####
+# Logic
+# The actual output is compared to expected output
+# The actual output is presorted
+# The expected output is sorted
+# Sorting is done as output is sometimes unpredictable
+#####
+
+# From https://raw.githubusercontent.com/cplee/github-actions-demo/master/.github/main.workflow
+
 cat <<EOF > main.workflow
 workflow "test-and-deploy" {
   on = "push"
@@ -47,8 +57,140 @@ EOF
 popper dot > out
 actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
 
-expected_output="test -> install;
+expected_output="branch_filter -> lint;
 branch_filter -> test;
-lint -> install;
 deploy -> branch_filter;
-branch_filter -> lint;"
+lint -> install;
+test -> install;"
+
+if [ "$actual_output" = "$expected_output" ]
+then
+  echo "success" >> success
+fi
+
+
+# From https://raw.githubusercontent.com/actions/example-aws/master/.github/main.workflow
+
+cat <<EOF > aws.workflow
+workflow "Build and Deploy" {
+  on = "push"
+  resolves = ["List Public IP"]
+}
+
+# Build
+
+action "Build Docker image" {
+  uses = "actions/docker/cli@master"
+  args = ["build", "-t", "aws-example", "."]
+}
+
+# Deploy Filter
+action "Deploy branch filter" {
+  needs = ["Push image to ECR"]
+  uses = "actions/bin/filter@master"
+  args = "branch master"
+}
+
+# AWS
+
+action "Login to ECR" {
+  uses = "actions/aws/cli@master"
+  secrets = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+  env = {
+    AWS_DEFAULT_REGION = "us-west-2"
+  }
+  args = "ecr get-login --no-include-email --region $AWS_DEFAULT_REGION | sh"
+}
+
+action "Tag image for ECR" {
+  needs = ["Build Docker image"]
+  uses = "actions/docker/tag@master"
+  env = {
+    CONTAINER_REGISTRY_PATH = "377117578606.dkr.ecr.us-west-2.amazonaws.com"
+    IMAGE_NAME = "aws-example"
+  }
+  args = ["$IMAGE_NAME", "$CONTAINER_REGISTRY_PATH/$IMAGE_NAME"]
+}
+
+action "Push image to ECR" {
+  needs = ["Login to ECR", "Tag image for ECR"]
+  uses = "actions/docker/cli@master"
+  env = {
+    CONTAINER_REGISTRY_PATH = "377117578606.dkr.ecr.us-west-2.amazonaws.com"
+    IMAGE_NAME = "aws-example"
+  }
+  args = ["push", "$CONTAINER_REGISTRY_PATH/$IMAGE_NAME"]
+}
+
+action "Store Kube Credentials" {
+  needs = ["Push image to ECR"]
+  uses = "actions/aws/kubectl@master"
+  secrets = ["KUBE_CONFIG_DATA"]
+}
+
+action "Configure Kube Credentials" {
+  needs = ["Login to ECR"]
+  uses = "actions/aws/cli@master"
+  env = {
+    CLUSTER_NAME = "devel2"
+    AWS_DEFAULT_REGION = "us-west-2"
+  }
+  secrets = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+  args = "eks update-kubeconfig --name $CLUSTER_NAME --region $AWS_DEFAULT_REGION"
+}
+
+# Example Local Action to use `aws-iam-authenticator`
+action "Deploy to EKS" {
+  needs = ["Store Kube Credentials", "Deploy branch filter"]
+  # ["Configure Kube Credentials"]
+  uses = "./.github/actions/eks-kubectl"
+  runs = "sh -l -c"
+  args = ["SHORT_REF=$(echo $GITHUB_SHA | head -c7) && cat $GITHUB_WORKSPACE/config.yml | sed 's/TAG/'\"$SHORT_REF\"'/' | kubectl apply -f - "]
+  secrets = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+}
+
+action "Verify EKS deployment" {
+  needs = [
+    "Push image to ECR",
+    "Deploy to EKS",
+  ]
+  # :point_down: use this for self-contained kubectl config credentials
+  #uses = "docker://gcr.io/cloud-builders/kubectl"
+  uses = "./.github/actions/eks-kubectl"
+  args = ["rollout status deployment/aws-example-octodex"]
+  secrets = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+}
+
+action "List Public IP" {
+  needs = "Verify EKS deployment"
+  uses = "./.github/actions/eks-kubectl"
+  args = ["get services -o wide"]
+  secrets = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+}
+EOF
+
+popper dot --wfile aws.workflow > out
+actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
+
+expected_output="Deploy_branch_filter -> Push_image_to_ECR;
+Deploy_to_EKS -> Deploy_branch_filter;
+Deploy_to_EKS -> Store_Kube_Credentials;
+List_Public_IP -> Verify_EKS_deployment;
+Push_image_to_ECR -> Login_to_ECR;
+Push_image_to_ECR -> Tag_image_for_ECR;
+Store_Kube_Credentials -> Push_image_to_ECR;
+Tag_image_for_ECR -> Build_Docker_image;
+Verify_EKS_deployment -> Deploy_to_EKS;
+Verify_EKS_deployment -> List_Public_IP;
+Verify_EKS_deployment -> Push_image_to_ECR;"
+
+if [ "$actual_output" = "$expected_output" ]
+then
+  echo "success" >> success
+fi
+
+
+counter=`cat success | wc -l`
+
+echo "Ran $counter/2 cases successfully"
+test $counter -eq 2

@@ -53,6 +53,11 @@ action "test parallel stage exec" {
   runs = "parallel_stage_exec"
 }
 
+action "test dot" {
+  uses = "./ci/test"
+  runs = "dot"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -67,6 +72,7 @@ action "end" {
     "test recursive",
     "test dry-run",
     "test scaffold",
-    "test parallel stage exec"
+    "test parallel stage exec",
+    "test dot"
   ]
 }
