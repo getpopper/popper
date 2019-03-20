@@ -8,7 +8,6 @@ import shutil
 import docker
 import popper.scm as scm
 import popper.utils as pu
-import popper.scm as scm
 from spython.main import Client
 import sys
 import popper.cli
@@ -468,12 +467,7 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
-<<<<<<< HEAD
-        pu.exec_cmd('docker rm {}'.format(self.cid),
-                    debug=self.debug, dry_run=self.dry_run)
-=======
         self.container.remove(force=True)
->>>>>>> add dockerpy
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -496,30 +490,31 @@ class DockerRunner(ActionRunner):
             self.action['name'], img, ' '.join(self.action.get('args', ''))
         ))
 
-<<<<<<< HEAD
-        pu.exec_cmd(docker_cmd, debug=self.debug, dry_run=self.dry_run)
-
     def docker_start(self):
-        pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
-                                                self.action['name']))
-
-        cmd = 'docker start --attach {}'.format(self.cid)
-        _, ecode = pu.exec_cmd(
-            cmd, verbose=(not self.quiet), debug=self.debug,
-            log_file=self.log_filename, dry_run=self.dry_run)
-        return ecode
+        pu.info('[{}] docker start \n'.format(self.action['name']))
+        self.container.start()
+        eout = self.container.logs(stream=True, stdout=True)
+        err = self.container.logs(stream=True, stderr=True)
+        outf = open(self.log_filename + '.out', 'wb')
+        errf = open(self.log_filename + '.err', 'wb')
+        for line in eout:
+            outf.write(line)
+        outf.close()
+        for line in err:
+            errf.write(line)
+        errf.close()
+        statuscode = self.container.wait()
+        return statuscode['StatusCode']
 
     def docker_pull(self, img):
-        pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix,
-                                                 self.action['name'], img))
-        pu.exec_cmd('docker pull {}'.format(img),
-                    debug=self.debug, dry_run=self.dry_run)
+        pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
+        self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
-        cmd = 'docker build -t {} {}'.format(tag, path)
-        pu.info('{}[{}] {}\n'.format(self.msg_prefix,
-                                     self.action['name'], cmd))
-        pu.exec_cmd(cmd, debug=self.debug, dry_run=self.dry_run)
+        pu.info('[{}] Building docker image\n'.format(self.action['name']))
+        # if self.docker_client.images.get(tag):
+        #     self.docker_client.images.remove(image=tag, force=True)
+        self.docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
 
 
 class SingularityRunner(ActionRunner):
@@ -620,33 +615,6 @@ class SingularityRunner(ActionRunner):
                        return_result=True)
         return e['return_code']
 
-=======
-    def docker_start(self):
-        pu.info('[{}] docker start \n'.format(self.action['name']))
-        self.container.start()
-        eout = self.container.logs(stream=True, stdout=True)
-        err = self.container.logs(stream=True, stderr=True)
-        outf = open(self.log_filename + '.out', 'wb')
-        errf = open(self.log_filename + '.err', 'wb')
-        for line in eout:
-            outf.write(line)
-        outf.close()
-        for line in err:
-            errf.write(line)
-        errf.close()
-        statuscode = self.container.wait()
-        return statuscode['StatusCode']
-
-    def docker_pull(self, img):
-        pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
-        self.docker_client.images.pull(repository=img)
-
-    def docker_build(self, tag, path):
-        pu.info('[{}] Building docker image\n'.format(self.action['name']))
-        # if self.docker_client.images.get(tag):
-        #     self.docker_client.images.remove(image=tag, force=True)
-        self.docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
->>>>>>> add dockerpy
 
 class HostRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
