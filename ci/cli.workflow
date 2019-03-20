@@ -38,6 +38,11 @@ action "test scaffold" {
   runs = "scaffold"
 }
 
+action "test recursive" {
+  uses = "./ci/test"
+  runs = "recursive"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -47,7 +52,8 @@ action "end" {
     "test reuse",
     "test actions-demo",
     "test validate",
+    "test scaffold",
     "test clone",
-    "test scaffold"
+    "test recursive"
   ]
 }
