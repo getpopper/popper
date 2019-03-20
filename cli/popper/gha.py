@@ -185,16 +185,42 @@ class Workflow(object):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
-        for _, a in self.wf['action'].items():
+        for key, a in self.wf['action'].items():
             if 'docker://' in a['uses'] or './' in a['uses']:
                 continue
 
-            user = a['uses'].split('/')[0]
-            repo = a['uses'].split('/')[1]
+            action = None
 
-            if '@' in a['uses']:
-                action_dir = '/'.join(a['uses'].split('@')[0].split('/')[2:])
-                version = a['uses'].split('@')[1]
+            if a['uses'].startswith('https://'):
+                a['uses'] = a['uses'][8:]
+                parts = a['uses'].split('/')
+                url = 'https://' + parts[0]
+                user = parts[1]
+                repo = parts[2]
+            elif a['uses'].startswith('http://'):
+                a['uses'] = a['uses'][7:]
+                parts = a['uses'].split('/')
+                url = 'http://' + parts[0]
+                user = parts[1]
+                repo = parts[2]
+            elif a['uses'].startswith('git@'):
+                url, rest = a['uses'].split(':')
+                user, repo = rest.split('/')
+            elif a['uses'].startswith('ssh://'):
+                pu.fail("The ssh protocol is not supported yet.")
+            else:
+                url = 'https://github.com'
+                parts = a['uses'].split('/')
+                user = a['uses'].split('/')[0]
+                repo = a['uses'].split('/')[1]
+                action = '/'.join(a['uses'].split('/')[1:])
+
+            if '@' in repo:
+                action_dir = '/'.join(a['uses'].split('@')[-2].split('/')[-1:])
+                version = a['uses'].split('@')[-1]
+            elif '@' in action:
+                action_dir = '/'.join(action.split('@')[-2].split('/')[-1:])
+                version = action.split('@')[-1]
             else:
                 action_dir = '/'.join(a['uses'].split('/')[2:])
                 version = None
@@ -204,7 +230,6 @@ class Workflow(object):
 
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
-
             if '{}/{}'.format(user, repo) in cloned:
                 continue
 
@@ -215,7 +240,8 @@ class Workflow(object):
                 pu.info('[popper] cloning actions from repositories\n')
                 infoed = True
 
-            scm.clone(user, repo, repo_parent_dir, version, debug=self.debug)
+            scm.clone(url, user, repo, repo_parent_dir, version,
+                      debug=self.debug)
 
             cloned.add('{}/{}'.format(user, repo))
 
@@ -412,7 +438,10 @@ class HostRunner(ActionRunner):
         cmd.extend(self.action.get('args', ''))
 
         cwd = os.getcwd()
-        os.chdir(os.path.join(cwd, self.action['uses']))
+        if 'repo_dir' in self.action:
+            os.chdir(self.action['repo_dir'])
+        else:
+            os.chdir(os.path.join(cwd, self.action['uses']))
 
         os.environ.update(self.action.get('env', {}))
 
