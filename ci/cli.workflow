@@ -43,6 +43,11 @@ action "test recursive" {
   runs = "recursive"
 }
 
+action "test dry-run" {
+  uses = "./ci/test"
+  runs = "dry-run"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -54,6 +59,7 @@ action "end" {
     "test validate",
     "test scaffold",
     "test clone",
-    "test recursive"
+    "test recursive",
+    "test dry-run"
   ]
 }
