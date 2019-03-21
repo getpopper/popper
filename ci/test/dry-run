@@ -31,6 +31,10 @@ DRYRUN: [deploy] docker start
 Workflow finished successfully.
 " > expected
 
-cat expected | trim | tr -s '\n' '\n' | sort > a
-cat actual | trim | tr -s '\n' '\n' | sort > b
+# Using xargs to remove trailing whitespaces
+# Even tr -s '\n' '\n' is for the same purpose
+# Using sort so as to get some appearance of order
+
+cat expected | tr -s '\n' '\n' | sort | xargs > a
+cat actual | tr -s '\n' '\n' | sort | xargs> b
 diff a b
