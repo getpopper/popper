@@ -69,7 +69,14 @@ def get_ref():
 
 def get_sha():
     """Runs git rev-parse --short HEAD and returns result"""
-    return repo.git.rev_parse(repo.head.object.hexsha, short=True)
+    try:
+        return repo.git.rev_parse(repo.head.object.hexsha, short=True)
+    except ValueError:
+        click.secho(
+            'ERROR: Needed a single revision',
+            fg='red', bold=True, err=True, nl=False
+        )
+        sys.exit(1)
 
 
 def get_remote_url():
