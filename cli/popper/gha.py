@@ -239,7 +239,7 @@ class Workflow(object):
                     infoed = True
 
                 scm.clone(url, user, repo, repo_parent_dir, version,
-                      debug=self.debug)
+                          debug=self.debug)
 
                 cloned.add('{}/{}'.format(user, repo))
 
@@ -251,21 +251,21 @@ class Workflow(object):
                     a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
                 continue
-            
+
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
-                    a, self.workspace, self.env, 
+                    a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
-                        a, self.workspace, self.env, 
+                        a, self.workspace, self.env,
                         self.quiet, self.debug, self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'], 'singularity.def')):
                     a['runner'] = SingularityRunner(
-                        a, self.workspace, self.env, 
+                        a, self.workspace, self.env,
                         self.quiet, self.debug, self.dry_run)
                 else:
                     a['runner'] = HostRunner(
@@ -276,15 +276,15 @@ class Workflow(object):
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
                                            'Dockerfile')
             singularityfile_path = os.path.join(a['repo_dir'], a['action_dir'],
-                                           'singularity.def')
+                                                'singularity.def')
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env, 
+                    a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
-                    a, self.workspace, self.env, 
+                    a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
             else:
                 a['runner'] = HostRunner(
@@ -440,9 +440,10 @@ class DockerRunner(ActionRunner):
         docker_cmd += ' {}'.format(img)
         docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
 
-        pu.info('{}[{}] docker create {} {}\n'.format(self.msg_prefix,
-            self.action['name'], img, ' '.join(self.action.get('args', '')))
-        )
+        pu.info('{}[{}] docker create {} {}\n'.format(
+            self.msg_prefix,
+            self.action['name'], img, ' '.join(self.action.get('args', ''))
+        ))
 
         pu.exec_cmd(docker_cmd, debug=self.debug, dry_run=self.dry_run)
 
@@ -472,8 +473,10 @@ class DockerRunner(ActionRunner):
 class SingularityRunner(ActionRunner):
     """Singularity Action Runner Class
     """
+
     def __init__(self, action, workspace, env, q, d, dry):
-        super(SingularityRunner, self).__init__(action, workspace, env, q, d, dry)
+        super(SingularityRunner, self).__init__(action, workspace, env,
+                                                q, d, dry)
         self.pid = self.action['name'].replace(' ', '_')
 
     def run(self, reuse=False):
@@ -485,12 +488,13 @@ class SingularityRunner(ActionRunner):
             build = False
         elif './' in self.action['uses']:
             image = 'action/' + os.path.basename(self.action['uses'])
-            singularityfile_path = os.path.join(os.getcwd(), self.action['uses'])
+            singularityfile_path = os.path.join(
+                os.getcwd(), self.action['uses'])
         else:
             image = '/'.join(self.action['uses'].split('/')[:2])
             singularityfile_path = os.path.join(self.action['repo_dir'],
-                                           self.action['action_dir'])
-        
+                                                self.action['action_dir'])
+
         if not reuse:
             if self.singularity_exists():
                 self.singularity_rm()
@@ -504,7 +508,7 @@ class SingularityRunner(ActionRunner):
                     self.singularity_build(singularityfile_path, image)
                 else:
                     self.singularity_pull(image)
-        
+
         e = self.singularity_start(image)
 
         if e != 0:
@@ -518,7 +522,7 @@ class SingularityRunner(ActionRunner):
     def generate_image_name(self, image):
         """Generates the image name from the image url.
         """
-        return image.replace('shub://', '').replace('/','-') + '.simg'
+        return image.replace('shub://', '').replace('/', '-') + '.simg'
 
     def singularity_exists(self):
         """Check whether an instance exists or not.
@@ -528,7 +532,7 @@ class SingularityRunner(ActionRunner):
             if self.pid in instance.name:
                 return True
         return False
-    
+
     def singularity_rm(self):
         """Stops and removes an instance.
         """
@@ -553,20 +557,20 @@ class SingularityRunner(ActionRunner):
         env_vars = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
-            env_vars.update({'SINGULARITYENV_{}'.format(s): os.environ[s]})
+            env_vars.update({s: os.environ[s]})
 
         for e, v in self.env.items():
-            env_vars.update({'SINGULARITYENV_{}'.format(e): v})
+            env_vars.update({e: v})
 
-        env_vars.update({'SINGULARITYENV_HOME': os.environ['HOME']})
-        env_vars.update({'SINGULARITY_WORKDIR': self.workspace})
+        env_vars.update({'HOME': os.environ['HOME']})
 
+        # sets the env variables
         for k, v in env_vars.items():
             Client.setenv(k, v)
 
         e = Client.run(image=self.generate_image_name(image),
                        args=' '.join(self.action.get('args', '')),
-                       return_result=True)   
+                       return_result=True)
         return e['return_code']
 
 
