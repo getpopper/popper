@@ -6,7 +6,7 @@ import os
 import hashlib
 import subprocess
 import popper.utils as pu
-
+import popper.scm as scm
 from datetime import date
 
 
@@ -130,7 +130,7 @@ class BaseService(object):
             Name of the archive file.
         """
         cwd = os.getcwd()
-        project_root = pu.get_project_root()
+        project_root = scm.get_root_folder()
         project_name = os.path.basename(project_root)
         os.chdir(project_root)
 
@@ -156,7 +156,7 @@ class BaseService(object):
         """Deletes the created archive from the filesystem.
         """
         cwd = os.getcwd()
-        project_root = pu.get_project_root()
+        project_root = scm.get_root_folder()
         archive_file = '/tmp/' + os.path.basename(project_root) + '.tar.gz'
         os.chdir(project_root)
         subprocess.call('rm ' + archive_file, shell=True)
@@ -307,7 +307,7 @@ class Zenodo(BaseService):
         self.update_metadata()
         deposition_id = self.deposition['id']
         new_file = self.create_archive()
-        project_root = pu.get_project_root()
+        project_root = scm.get_root_folder()
         url = '{}/{}/files'.format(self.baseurl, deposition_id)
         data = {'filename': new_file}
         files = {'file': open(os.path.join(project_root, new_file), 'rb')}
@@ -467,7 +467,7 @@ class Figshare(BaseService):
     def upload_snapshot(self):
         self.update_metadata()
         new_file = self.create_archive()
-        project_root = pu.get_project_root()
+        project_root = scm.get_root_folder()
         file_name = os.path.join(project_root, new_file)
         CHUNK_SIZE = 1048576
         # Initiate file upload

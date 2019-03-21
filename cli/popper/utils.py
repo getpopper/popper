@@ -4,7 +4,7 @@ import sys
 import time
 import yaml
 import git
-
+import popper.scm as scm
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
 noalias_dumper = yaml.dumper.SafeDumper
@@ -84,25 +84,9 @@ def get_items(dict_object):
         yield key, dict_object[key]
 
 
-def get_project_root():
-    """Tries to find the root of the project with the following heuristic:
-
-      - Find the .git folder in cwd
-
-    Returns:
-        project_root (str): The fully qualified path to the root of project.
-    """
-    try:
-        repo = git.Repo(search_parent_directories=True)
-    except git.exc.InvalidGitRepositoryError:
-        fail("Unable to find root of project. Initialize repository first.")
-
-    return os.path.dirname(repo.git_dir)
-
-
 def write_config(config):
     """Writes config to .popper.yml file."""
-    config_filename = os.path.join(get_project_root(), '.popper.yml')
+    config_filename = os.path.join(scm.get_root_folder(), '.popper.yml')
 
     with open(config_filename, 'w') as f:
         yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
@@ -115,7 +99,7 @@ def is_popperized():
     Returns:
        True if the '.popper.yml' exists, False otherwise.
     """
-    config_filename = os.path.join(get_project_root(), '.popper.yml')
+    config_filename = os.path.join(scm.get_root_folder(), '.popper.yml')
     return os.path.isfile(config_filename)
 
 

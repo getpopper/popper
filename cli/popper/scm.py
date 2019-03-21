@@ -1,12 +1,17 @@
 import os
-import popper.utils as pu
 import git
 import shutil
+import click
+import sys
 
 try:
     repo = git.Repo(search_parent_directories=True)
 except git.exc.InvalidGitRepositoryError:
-    pass
+    click.secho(
+        'ERROR: Unable to find root of project. Initialize repository first.',
+        fg='red', bold=True, err=True, nl=False
+    )
+    sys.exit(1)
 
 
 def get_root_folder():
