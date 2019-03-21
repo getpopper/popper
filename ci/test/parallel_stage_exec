@@ -11,62 +11,62 @@ workflow "test" {
 }
 
 action "ls" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls"]
 }
 
 action "ls al" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -al"]
 }
 
 action "ls ltr" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -ltr"]
 }
 
 action "ls line count" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls | wc -l"]
 }
 
 action "ls d" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -d"]
 }
 
 action "ls r" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -r"]
 }
 
 action "ls R" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -R"]
 }
 
 action "ls s" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -s"]
 }
 
 action "ls t" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -t"]
 }
 
 action "ls S" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   args = ["ls -S"]
 }
 
 action "ls X" {
-    uses = "actions/bin/sh@master"
+    uses = "docker://busybox"
     args = ["ls -X"]
 }
 
 action "ls cmds" {
-  uses = "actions/bin/sh@master"
+  uses = "docker://busybox"
   needs = [
     "ls",
     "ls al",
@@ -122,10 +122,6 @@ action "curl youtube" {
   uses = "actions/bin/curl@master"
   args = ["youtube.com"]
 }
-action "curl codechef" {
-  uses = "actions/bin/curl@master"
-  args = ["codechef.com"]
-}
 
 action "curl do" {
   uses = "actions/bin/curl@master"
@@ -140,7 +136,6 @@ action "curl urls" {
         "curl gitlab",
         "curl bitbucket",
         "curl medium",
-        "curl codechef",
         "curl youtube",
         "curl do",
         "curl twitter",
