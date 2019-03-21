@@ -10,11 +10,6 @@ workflow "test" {
   resolves = ["ls cmds", "curl urls"]
 }
 
-action "ls" {
-  uses = "docker://busybox"
-  args = ["ls"]
-}
-
 action "ls al" {
   uses = "docker://busybox"
   args = ["ls -al"]
@@ -68,7 +63,6 @@ action "ls X" {
 action "ls cmds" {
   uses = "docker://busybox"
   needs = [
-    "ls",
     "ls al",
     "ls ltr",
     "ls line count",
@@ -130,6 +124,7 @@ action "curl do" {
 
 action "curl urls" {
     uses = "actions/bin/curl@master"
+    args = ["devfolio.co"]
     needs = [
         "curl google",
         "curl facebook",
