@@ -77,14 +77,17 @@ def cli(ctx, action, wfile, workspace, reuse,
                 if file.endswith('.workflow'):
                     wfile = os.path.join(root, file)
                     wfile = os.path.abspath(wfile)
-                    pu.info("Found and running workflow at "+wfile+"\n")
+                    pu.info("Found and running workflow at " + wfile + "\n")
                     run_pipeline(
-                        action, wfile, workspace, reuse, quiet, debug, dry_run, parallel)
+                        action, wfile, workspace, reuse, quiet,
+                        debug, dry_run, parallel)
     else:
-        run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, parallel)
+        run_pipeline(action, wfile, workspace, reuse, quiet,
+                     debug, dry_run, parallel)
 
 
-def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, parallel):
+def run_pipeline(action, wfile, workspace, reuse,
+                 quiet, debug, dry_run, parallel):
     pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
 
     if reuse:
@@ -94,11 +97,11 @@ def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run, paralle
             "\n  " +
             "or to an action block in the workflow.\n\n"
         )
-    
+
     if parallel:
         pu.info(
             "\n  " +
-            "WARNING: using --parallel is likely to result in interleaved ouput." +
+            "WARNING: using --parallel may result in interleaved ouput." +
             "\n  " +
             "You may use --quiet flag to avoid confusion.\n\n"
         )
