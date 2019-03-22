@@ -307,6 +307,7 @@ class Workflow(object):
                 for future in as_completed(flist):
                     try:
                         future.result()
+                        pu.info('Action ran successfully !\n')
                     except Exception:
                         sys.exit(1)
         else:

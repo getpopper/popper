@@ -139,4 +139,6 @@ action "curl urls" {
 }
 EOF
 
-popper run --parallel
+popper run --parallel |& tee out
+counter="$(grep 'Action ran successfully !' out | wc -l)"
+test $counter -eq 21
