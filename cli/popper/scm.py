@@ -112,3 +112,13 @@ def clone(url, org, repo, repo_parent_dir, version=None, debug=False):
         return
 
     cloned_repo.git.checkout(version)
+
+
+def get_git_files():
+    """Used to return a list of files that are being tracked by
+    git.
+
+    Returns:
+        files (list) : list of git tracked files
+    """
+    return repo.git.ls_files().split("\n")

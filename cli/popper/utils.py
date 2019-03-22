@@ -76,6 +76,7 @@ sh -c "curl $*"
 
 readme_content = "Executes cURL with arguments listed in the Action's args."
 
+
 def get_items(dict_object):
     """Python 2/3 compatible way of iterating over a dictionary"""
     for key in dict_object:
@@ -230,14 +231,3 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             errf.close()
 
     return "", ecode
-
-
-def get_git_files():
-    """Used to return a list of files that are being tracked by
-    git.
-
-    Returns:
-        files (list) : list of git tracked files
-    """
-    gitfiles, _ = exec_cmd("git ls-files")
-    return gitfiles.split("\n")
