@@ -3,8 +3,6 @@ import os
 import sys
 import time
 import yaml
-import git
-import popper.scm as scm
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
 noalias_dumper = yaml.dumper.SafeDumper
@@ -86,6 +84,7 @@ def get_items(dict_object):
 
 def write_config(config):
     """Writes config to .popper.yml file."""
+    import popper.scm as scm
     config_filename = os.path.join(scm.get_root_folder(), '.popper.yml')
 
     with open(config_filename, 'w') as f:
@@ -99,6 +98,7 @@ def is_popperized():
     Returns:
        True if the '.popper.yml' exists, False otherwise.
     """
+    import popper.scm as scm
     config_filename = os.path.join(scm.get_root_folder(), '.popper.yml')
     return os.path.isfile(config_filename)
 

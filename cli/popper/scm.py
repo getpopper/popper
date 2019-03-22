@@ -4,14 +4,12 @@ import shutil
 import click
 import sys
 
+
 try:
     repo = git.Repo(search_parent_directories=True)
 except git.exc.InvalidGitRepositoryError:
-    click.secho(
-        'ERROR: Unable to find root of project. Initialize repository first.',
-        fg='red', bold=True, err=True, nl=False
-    )
-    sys.exit(1)
+    import popper.utils as pu
+    pu.fail('Unable to find root of project. Initialize repository first.')
 
 
 def get_root_folder():
@@ -72,11 +70,8 @@ def get_sha():
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
     except ValueError:
-        click.secho(
-            'ERROR: Needed a single revision',
-            fg='red', bold=True, err=True, nl=False
-        )
-        sys.exit(1)
+        import popper.utils as pu
+        pu.fail('Needed a single revision.')
 
 
 def get_remote_url():
