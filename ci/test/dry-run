@@ -1,0 +1,40 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+git clone https://github.com/cplee/github-actions-demo.git
+
+cd github-actions-demo
+export PHONY_SECRET=foo
+
+popper run --dry-run > actual
+
+echo "DRYRUN: [install] docker pull node:11.6.0
+DRYRUN: [install] docker create node:11.6.0 npm install
+DRYRUN: [install] docker start
+DRYRUN: [test] docker pull node:11.6.0
+DRYRUN: [test] docker create node:11.6.0 npm test
+DRYRUN: [test] docker start
+DRYRUN: [lint] docker build -t action/jshint $PWD/./.github/actions/jshint
+DRYRUN: [lint] docker create action/jshint
+DRYRUN: [lint] docker start
+DRYRUN: [branch-filter] docker build -t actions/bin /tmp/actions/actions/bin/./filter
+DRYRUN: [branch-filter] docker create actions/bin branch master
+DRYRUN: [branch-filter] docker start
+DRYRUN: [deploy] docker build -t actions/bin /tmp/actions/actions/bin/./sh
+DRYRUN: [deploy] docker create actions/bin env
+DRYRUN: [deploy] docker start
+
+Workflow finished successfully.
+" > expected
+
+# Using xargs to remove trailing whitespaces
+# Even tr -s '\n' '\n' is for the same purpose
+# Using sort so as to get some appearance of order
+
+cat expected | tr -s '\n' '\n' | sort | xargs > a
+cat actual | tr -s '\n' '\n' | sort | xargs> b
+diff a b
