@@ -139,7 +139,13 @@ def print_yaml(msg, **styles):
 
 
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
-             log_file=None):
+             log_file=None, dry_run=False):
+
+    # If dry_run is True, I don't want the command to be executed
+    # just an empty return
+
+    if dry_run:
+        return "", 0    # No error occurred
 
     # the main logic is the following:
     #

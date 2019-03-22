@@ -54,8 +54,15 @@ from popper.cli import pass_context
     required=False,
     is_flag=True
 )
+@click.option(
+    '--dry-run',
+    help='A dry run for a workflow',
+    required=False,
+    is_flag=True
+)
 @pass_context
-def cli(ctx, action, wfile, workspace, reuse, recursive, quiet, debug):
+def cli(ctx, action, wfile, workspace, reuse,
+        recursive, quiet, debug, dry_run):
     """Executes one or more pipelines and reports on their status.
     """
     if recursive:
@@ -66,13 +73,13 @@ def cli(ctx, action, wfile, workspace, reuse, recursive, quiet, debug):
                     wfile = os.path.abspath(wfile)
                     pu.info("Found and running workflow at "+wfile+"\n")
                     run_pipeline(
-                        action, wfile, workspace, reuse, quiet, debug)
+                        action, wfile, workspace, reuse, quiet, debug, dry_run)
     else:
-        run_pipeline(action, wfile, workspace, reuse, quiet, debug)
+        run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run)
 
 
-def run_pipeline(action, wfile, workspace, reuse, quiet, debug):
-    pipeline = Workflow(wfile, workspace, quiet, debug)
+def run_pipeline(action, wfile, workspace, reuse, quiet, debug, dry_run):
+    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
 
     if reuse:
         pu.info(
