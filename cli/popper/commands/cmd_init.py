@@ -11,7 +11,7 @@ def cli(ctx):
     """Initializes a repository by creating the .popper.yml file.
     """
     project_root = scm.get_root_folder()
-    
+
     if pu.is_popperized(project_root):
         pu.fail('Repository has already been popperized')
         return

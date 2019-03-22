@@ -11,7 +11,7 @@ def cli(ctx):
     """Scaffolds a workflow.
     """
     project_root = scm.get_root_folder()
-    
+
     if not pu.is_popperized(project_root):
         pu.fail('Repository has not been popperized')
         return
