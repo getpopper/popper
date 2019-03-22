@@ -3,12 +3,11 @@ import git
 import shutil
 import click
 import sys
-
+import popper.utils as pu
 
 try:
     repo = git.Repo(search_parent_directories=True)
 except git.exc.InvalidGitRepositoryError:
-    import popper.utils as pu
     pu.fail('Unable to find root of project. Initialize repository first.')
 
 
@@ -70,7 +69,6 @@ def get_sha():
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
     except ValueError:
-        import popper.utils as pu
         pu.fail('Needed a single revision.')
 
 

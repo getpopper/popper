@@ -10,13 +10,13 @@ from popper.cli import pass_context
 def cli(ctx):
     """Initializes a repository by creating the .popper.yml file.
     """
-    if pu.is_popperized():
+    project_root = scm.get_root_folder()
+    
+    if pu.is_popperized(project_root):
         pu.fail('Repository has already been popperized')
         return
 
-    project_root = scm.get_root_folder()
-
-    pu.write_config(pu.init_config)
+    pu.write_config(project_root, pu.init_config)
 
     with open(os.path.join(project_root, '.gitignore'), 'a') as f:
         f.write(pu.gitignore_content)

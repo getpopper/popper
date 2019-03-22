@@ -82,24 +82,22 @@ def get_items(dict_object):
         yield key, dict_object[key]
 
 
-def write_config(config):
+def write_config(rootfolder, config):
     """Writes config to .popper.yml file."""
-    import popper.scm as scm
-    config_filename = os.path.join(scm.get_root_folder(), '.popper.yml')
+    config_filename = os.path.join(rootfolder, '.popper.yml')
 
     with open(config_filename, 'w') as f:
         yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
 
 
-def is_popperized():
+def is_popperized(rootfolder):
     """Determines if the current repo has already been popperized by checking
     whether the '.popper.yml' file on the root of the project exits.
 
     Returns:
        True if the '.popper.yml' exists, False otherwise.
     """
-    import popper.scm as scm
-    config_filename = os.path.join(scm.get_root_folder(), '.popper.yml')
+    config_filename = os.path.join(rootfolder, '.popper.yml')
     return os.path.isfile(config_filename)
 
 
