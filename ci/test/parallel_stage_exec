@@ -142,3 +142,140 @@ EOF
 popper run --parallel |& tee out
 counter="$(grep 'Action ran successfully !' out | wc -l)"
 test $counter -eq 21
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["ls cmds", "curl urls"]
+}
+
+action "ls al" {
+  uses = "docker://busybox"
+  args = ["ls -al"]
+}
+
+action "ls ltr" {
+  uses = "docker://busybox"
+  args = ["ls -ltr"]
+}
+
+action "ls line count" {
+  uses = "docker://busybox"
+  args = ["ls | wc -l"]
+}
+
+action "ls d" {
+  uses = "docker://busybox"
+  args = ["ls -dhdd"]
+}
+
+action "ls r" {
+  uses = "docker://busybox"
+  args = ["ls -tyygfsr"]
+}
+
+action "ls R" {
+  uses = "docker://busybox"
+  args = ["ls -R"]
+}
+
+action "ls s" {
+  uses = "docker://busybox"
+  args = ["ls -s"]
+}
+
+action "ls t" {
+  uses = "docker://busybox"
+  args = ["ls -gdtdt"]
+}
+
+action "ls S" {
+  uses = "docker://busybox"
+  args = ["ls -S"]
+}
+
+action "ls X" {
+    uses = "docker://busybox"
+    args = ["ls -X"]
+}
+
+action "ls cmds" {
+  uses = "docker://busybox"
+  needs = [
+    "ls al",
+    "ls ltr",
+    "ls line count",
+    "ls d",
+    "ls r",
+    "ls R",
+    "ls s",
+    "ls t",
+    "ls S",
+    "ls X"
+  ]
+}
+
+
+action "curl github" {
+  uses = "actions/bin/curl@master"
+  args = ["git77hub.com"]
+}
+
+action "curl google" {
+  uses = "actions/bin/curl@master"
+  args = ["google.com"]
+}
+
+action "curl facebook" {
+  uses = "actions/bin/curl@master"
+  args = ["facebook.com"]
+}
+
+action "curl gitlab" {
+  uses = "actions/bin/curl@master"
+  args = ["gitlab.com"]
+}
+
+action "curl bitbucket" {
+  uses = "actions/bin/curl@master"
+  args = ["bitbucket.org"]
+}
+
+action "curl medium" {
+  uses = "actions/bin/curl@master"
+  args = ["medyu67dfium.com"]
+}
+
+action "curl twitter" {
+  uses = "actions/bin/curl@master"
+  args = ["twitter.com"]
+}
+
+action "curl youtube" {
+  uses = "actions/bin/curl@master"
+  args = ["youtube.com"]
+}
+
+action "curl do" {
+  uses = "actions/bin/curl@master"
+  args = ["digitalocean.com"]
+}
+
+action "curl urls" {
+    uses = "actions/bin/curl@master"
+    args = ["devfolio.co"]
+    needs = [
+        "curl google",
+        "curl facebook",
+        "curl gitlab",
+        "curl bitbucket",
+        "curl medium",
+        "curl youtube",
+        "curl do",
+        "curl twitter",
+        "curl github"
+    ]
+}
+EOF
+
+! popper run --parallel
+echo "Some actions failed as expected !"
