@@ -197,21 +197,25 @@ class Workflow(object):
                 a['uses'] = a['uses'][8:]
                 parts = a['uses'].split('/')
                 url = 'https://' + parts[0]
+                service = parts[0]
                 user = parts[1]
                 repo = parts[2]
             elif a['uses'].startswith('http://'):
                 a['uses'] = a['uses'][7:]
                 parts = a['uses'].split('/')
                 url = 'http://' + parts[0]
+                service = parts[0]
                 user = parts[1]
                 repo = parts[2]
             elif a['uses'].startswith('git@'):
                 url, rest = a['uses'].split(':')
                 user, repo = rest.split('/')
+                service = url[4:]
             elif a['uses'].startswith('ssh://'):
                 pu.fail("The ssh protocol is not supported yet.")
             else:
                 url = 'https://github.com'
+                service = 'github.com'
                 parts = a['uses'].split('/')
                 user = a['uses'].split('/')[0]
                 repo = a['uses'].split('/')[1]
@@ -228,8 +232,7 @@ class Workflow(object):
                 version = None
             action_dir = os.path.join('./', action_dir)
 
-            repo_parent_dir = os.path.join(self.actions_cache_path, user)
-
+            repo_parent_dir = os.path.join(self.actions_cache_path, service, user)
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
             if '{}/{}'.format(user, repo) in cloned:
