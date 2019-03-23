@@ -2,8 +2,8 @@ from __future__ import unicode_literals
 from builtins import dict, str
 import hcl
 import os
-import popper.scm as scm
 import popper.utils as pu
+import popper.scm as scm
 
 
 class Workflow(object):
@@ -36,7 +36,6 @@ class Workflow(object):
         self.dry_run = dry_run
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
-
         self.validate_syntax()
         self.check_secrets()
         self.normalize()
@@ -46,13 +45,13 @@ class Workflow(object):
             'GITHUB_WORKSPACE': self.workspace,
             'GITHUB_WORKFLOW': self.wf['name'],
             'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(self.debug),
-                                                scm.get_name(self.debug)),
+            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(),
+                                                scm.get_name()),
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(self.debug),
-            'GITHUB_REF': scm.get_ref(self.debug),
+            'GITHUB_SHA': scm.get_sha(),
+            'GITHUB_REF': scm.get_ref()
         }
 
         for e in dict(self.env):
