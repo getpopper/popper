@@ -1,7 +1,7 @@
 import click
 import os
 import popper.utils as pu
-
+import popper.scm as scm
 from popper.cli import pass_context
 
 ci_files = {
@@ -86,7 +86,7 @@ popper:
 def cli(ctx, service):
     """Generates configuration files for distinct CI services.
     """
-    project_root = pu.get_project_root()
+    project_root = scm.get_root_folder()
 
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)

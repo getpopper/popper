@@ -10,11 +10,12 @@ from popper.cli import pass_context
 def cli(ctx):
     """Scaffolds a workflow.
     """
-    if not pu.is_popperized():
+    project_root = scm.get_root_folder()
+
+    if not pu.is_popperized(project_root):
         pu.fail('Repository has not been popperized')
         return
 
-    project_root = scm.get_root_folder()
     curr_dir = os.getcwd()
     actions_dir = os.path.join(curr_dir, 'actions')
 

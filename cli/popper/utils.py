@@ -3,7 +3,6 @@ import os
 import sys
 import time
 import yaml
-
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
 noalias_dumper = yaml.dumper.SafeDumper
@@ -77,44 +76,29 @@ sh -c "curl $*"
 
 readme_content = "Executes cURL with arguments listed in the Action's args."
 
+
 def get_items(dict_object):
     """Python 2/3 compatible way of iterating over a dictionary"""
     for key in dict_object:
         yield key, dict_object[key]
 
 
-def get_project_root():
-    """Tries to find the root of the project with the following heuristic:
-
-      - Find the .git folder in cwd
-
-    Returns:
-        project_root (str): The fully qualified path to the root of project.
-    """
-    base, _ = exec_cmd('git rev-parse --show-toplevel', ignore_error=True)
-
-    if not base:
-        fail("Unable to find root of project. Initialize repository first.")
-
-    return base
-
-
-def write_config(config):
+def write_config(rootfolder, config):
     """Writes config to .popper.yml file."""
-    config_filename = os.path.join(get_project_root(), '.popper.yml')
+    config_filename = os.path.join(rootfolder, '.popper.yml')
 
     with open(config_filename, 'w') as f:
         yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
 
 
-def is_popperized():
+def is_popperized(rootfolder):
     """Determines if the current repo has already been popperized by checking
     whether the '.popper.yml' file on the root of the project exits.
 
     Returns:
        True if the '.popper.yml' exists, False otherwise.
     """
-    config_filename = os.path.join(get_project_root(), '.popper.yml')
+    config_filename = os.path.join(rootfolder, '.popper.yml')
     return os.path.isfile(config_filename)
 
 
@@ -253,14 +237,3 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             errf.close()
 
     return "", ecode
-
-
-def get_git_files():
-    """Used to return a list of files that are being tracked by
-    git.
-
-    Returns:
-        files (list) : list of git tracked files
-    """
-    gitfiles, _ = exec_cmd("git ls-files")
-    return gitfiles.split("\n")

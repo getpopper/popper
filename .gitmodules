@@ -1,3 +1,6 @@
+[submodule "cli/bin/vendor/GitPython"]
+	path = cli/bin/vendor/GitPython
+	url = https://github.com/gitpython-developers/GitPython.git
 [submodule "cli/bin/vendor/click"]
 	path = cli/bin/vendor/click
 	url = https://github.com/pallets/click/
