@@ -293,17 +293,12 @@ class Workflow(object):
             for s in self.get_stages():
                 self.run_stage(s, reuse, parallel)
 
-    def stage_exec(self, action, reuse):
-        self.wf['action'][action]['runner'].run(reuse)
-
     def run_stage(self, stage, reuse=False, parallel=False):
         if parallel:
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
-                    ex.submit(
-                        self.stage_exec,
-                        a,
-                        reuse): a for a in stage}
+                    ex.submit(self.wf['action'][a]['runner'].run, reuse): a for a in stage
+                }
                 for future in as_completed(flist):
                     try:
                         future.result()
