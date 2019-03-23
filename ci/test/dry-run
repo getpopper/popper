@@ -78,12 +78,11 @@ check_count=`cat check | wc -m`
 
 if [ $count1 -eq $check_count ]; then
 diff 1 check
-fi
-
-if [ $count2 -eq $check_count ]; then
+elif [ $count2 -eq $check_count ]; then
 diff 2 check
-fi
-
-if [ $count3 -eq $check_count ]; then
+elif [ $count3 -eq $check_count ]; then
 diff 3 check
+else
+echo ""> empty
+diff empty check  #Fail scenarrio
 fi
