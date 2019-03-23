@@ -232,7 +232,9 @@ class Workflow(object):
                 version = None
             action_dir = os.path.join('./', action_dir)
 
-            repo_parent_dir = os.path.join(self.actions_cache_path, service, user)
+            repo_parent_dir = os.path.join(
+                self.actions_cache_path, service, user
+            )
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
             if '{}/{}'.format(user, repo) in cloned:
