@@ -297,7 +297,8 @@ class Workflow(object):
         if parallel:
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
-                    ex.submit(self.wf['action'][a]['runner'].run, reuse): a for a in stage
+                    ex.submit(self.wf['action'][a]['runner'].run, reuse):
+                    a for a in stage
                 }
                 for future in as_completed(flist):
                     try:
