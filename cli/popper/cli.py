@@ -89,5 +89,9 @@ def signal_handler(sig, frame):
 
 
     for pid in process_list:
-        os.kill(pid, signal.SIGTERM)
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            # Process was probably already killed, so exit silenty
+            pass
     sys.exit(0)
