@@ -63,3 +63,8 @@ action "end" {
     "test dry-run"
   ]
 }
+
+action "Shellcheck" {
+  uses = "./ci/test"
+  args = "*.sh"
+}
