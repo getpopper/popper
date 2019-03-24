@@ -54,6 +54,8 @@ action "deploy" {
 }
 EOF
 
+export PHONY_SECRET=foo
+
 popper dot > out
 actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
 
@@ -168,6 +170,11 @@ action "List Public IP" {
   secrets = ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
 }
 EOF
+
+export KUBE_CONFIG_DATA=foo
+export AWS_ACCESS_KEY_ID=foo
+export AWS_SECRET_ACCESS_KEY=foo
+
 
 popper dot --wfile aws.workflow > out
 actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
