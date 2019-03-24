@@ -76,7 +76,7 @@ def cli(ctx, action, wfile, workspace, reuse,
         for wfile in wfile_list:
             pu.info("Found and running workflow at "+wfile+"\n")
             run_pipeline(
-                action, wfile, workspace, reuse, quiet, debug)
+                action, wfile, workspace, reuse, quiet, debug, dry_run)
     else:
         run_pipeline(action, wfile, workspace, reuse, quiet,
                      debug, dry_run, parallel)
