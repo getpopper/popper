@@ -65,6 +65,6 @@ action "end" {
 }
 
 action "Shellcheck" {
-  uses = "./ci/test"
+  uses = "./ci/test/shellcheck@master"
   args = "*.sh"
 }
