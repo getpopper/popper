@@ -178,7 +178,9 @@ class Workflow(object):
         cloned = set()
         infoed = False
         for _, a in self.wf['action'].items():
-            if 'docker://' in a['uses'] or 'shub://' in a['uses'] or './' in a['uses']:
+            if 'docker://' in a['uses'] or
+            'shub://' in a['uses'] or
+            './' in a['uses']:
                 continue
 
             action = None
@@ -263,7 +265,8 @@ class Workflow(object):
                     a['runner'] = DockerRunner(
                         a, self.workspace, self.env,
                         self.quiet, self.debug, self.dry_run)
-                elif os.path.exists(os.path.join(a['uses'], 'singularity.def')):
+                elif os.path.exists(os.path.join(a['uses'],
+                                                 'singularity.def')):
                     a['runner'] = SingularityRunner(
                         a, self.workspace, self.env,
                         self.quiet, self.debug, self.dry_run)
