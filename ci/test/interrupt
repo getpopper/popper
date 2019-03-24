@@ -1,0 +1,35 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+git clone https://github.com/cplee/github-actions-demo.git
+
+cd github-actions-demo
+export PHONY_SECRET=foo
+popper run & pid=$!
+echo $!
+#Give popper run some time to creater dockers 
+sleep 5
+
+# -2 is for SIGINT or Ctrl-C
+kill -2 $pid
+
+#Give popper run some time to remove dockers and then check
+sleep 5
+check="deploy branch-filter test lint install"
+actual=`docker ps -a --format "{{.Names}}"`
+for a in $actual
+do 
+  for b in $check
+  do 
+    if [ $a = $b ] 
+    then echo "fail" >> fail
+    fi
+  done
+done
+
+counter=`cat fail|wc -l`
+test $counter -eq 0

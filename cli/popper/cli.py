@@ -84,6 +84,7 @@ def signal_handler(sig, frame):
     cmd_out = set(cmd_out)
 
     for img in set(docker_list).intersection(cmd_out):
+        pu.exec_cmd('docker stop {}'.format(img))
         pu.exec_cmd('docker rm -f {}'.format(img))
         pu.info('\nDeleted {}'.format(img))
 
