@@ -4,7 +4,8 @@ import click
 import hcl
 import popper.utils as pu
 from ..cli import pass_context
-import types
+from popper.gha import Workflow
+
 
 
 @click.option(
@@ -38,19 +39,16 @@ def cli(ctx, wfile, recursive):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        with open(wfile, 'r') as fp:
-            wf = hcl.load(fp)
+        pipeline = Workflow(wfile, False, False, False, False)
 
-        name = list(wf["workflow"].keys())[0]
+        wf = pipeline.wf
+        name = list(wf['workflow'].keys())[0]
 
-        action = wf["workflow"][name]["resolves"]
+        action = wf['resolves'][0]
         parent_action = cur_action = action
 
-        if not isinstance(cur_action, str):
-            cur_action = cur_action[0]
-
         graph = list()
-        graph = add(parent_action, cur_action, wf["action"], graph)
+        graph = add(parent_action, cur_action, wf['action'], graph)
         graph = ''.join(list(set(graph)))
         graph = "digraph G {\n" + graph + "}\n"
         pu.info(graph)
@@ -61,13 +59,8 @@ def add(parent_action, cur_action, actions, graph):
 
     if 'needs' in actions[cur_action]:
         action_list = actions[cur_action]['needs']
-
-        if isinstance(action_list, str):
-            parent_action = action_list
-            graph = add(cur_action, parent_action, actions, graph)
-        else:
-            for act in action_list:
-                graph = add(cur_action, act, actions, graph)
+        for act in action_list:
+            graph = add(cur_action, act, actions, graph)
 
     # Adds edges to the graph
     if cur_action != parent_action:
