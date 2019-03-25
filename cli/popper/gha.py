@@ -178,9 +178,9 @@ class Workflow(object):
         cloned = set()
         infoed = False
         for _, a in self.wf['action'].items():
-            if 'docker://' in a['uses'] or
+            if ('docker://' in a['uses'] or
             'shub://' in a['uses'] or
-            './' in a['uses']:
+            './' in a['uses']):
                 continue
 
             action = None
