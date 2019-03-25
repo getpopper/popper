@@ -179,8 +179,8 @@ class Workflow(object):
         infoed = False
         for _, a in self.wf['action'].items():
             if ('docker://' in a['uses'] or
-            'shub://' in a['uses'] or
-            './' in a['uses']):
+                'shub://' in a['uses'] or
+                    './' in a['uses']):
                 continue
 
             action = None
