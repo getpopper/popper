@@ -72,15 +72,11 @@ def cli(ctx, action, wfile, workspace, reuse,
     """Executes one or more pipelines and reports on their status.
     """
     if recursive:
-        for root, dirs, files in os.walk('.'):
-            for file in files:
-                if file.endswith('.workflow'):
-                    wfile = os.path.join(root, file)
-                    wfile = os.path.abspath(wfile)
-                    pu.info("Found and running workflow at " + wfile + "\n")
-                    run_pipeline(
-                        action, wfile, workspace, reuse, quiet,
-                        debug, dry_run, parallel)
+        wfile_list = pu.find_recursive_wfile()
+        for wfile in wfile_list:
+            pu.info("Found and running workflow at "+wfile+"\n")
+            run_pipeline(action, wfile, workspace, reuse, quiet,
+                         debug, dry_run, parallel)
     else:
         run_pipeline(action, wfile, workspace, reuse, quiet,
                      debug, dry_run, parallel)

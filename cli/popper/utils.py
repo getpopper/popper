@@ -292,3 +292,45 @@ def threadsafe_generator(f):
         else:
             return threadsafe_iter_3(f(*args, **kwargs))
     return g
+
+def find_default_wfile(wfile):
+    """
+    Used to find `main.workflow` in $PWD or in `.github`
+    And returns error if not found
+
+    Returns:
+        path of wfile
+    """
+    if not wfile:
+        if os.path.isfile("main.workflow"):
+            wfile = "main.workflow"
+        elif os.path.isfile(".github/main.workflow"):
+            wfile = ".github/main.workflow"
+
+    if not wfile:
+        fail(
+            "Files {} or {} not found.\n".format("./main.workflow",
+                                                 ".github/main.workflow"))
+    if not os.path.isfile(wfile):
+        fail("File {} not found.\n".format(wfile))
+        exit(1)
+
+    return wfile
+
+
+def find_recursive_wfile():
+    """
+    Used to search for `.workflow` files in $PWD and
+    then recursively in sub directories
+
+    Returns:
+        list of path of workflow files
+    """
+    wfile_list = list()
+    for root, dirs, files in os.walk('.'):
+        for file in files:
+            if file.endswith('.workflow'):
+                wfile = os.path.join(root, file)
+                wfile = os.path.abspath(wfile)
+                wfile_list.append(wfile)
+    return wfile_list

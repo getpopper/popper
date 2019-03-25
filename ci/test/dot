@@ -1,0 +1,90 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+#####
+# Logic
+# The actual output is compared to expected output
+# The actual output is presorted
+# The expected output is sorted
+# Sorting is done as output is sometimes unpredictable
+#####
+
+
+## Testing default file feature
+git clone https://github.com/cplee/github-actions-demo.git
+cd github-actions-demo
+
+export PHONY_SECRET=foo
+
+popper dot > out
+actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
+
+#The expected output stored in a pre-sorted format (for ease of comparision purposes)
+sorted_output="branch_filter -> deploy;
+install -> lint;
+install -> test;
+lint -> branch_filter;
+test_and_deploy -> install;
+test -> branch_filter;"
+
+if [ "$actual_output" = "$sorted_output" ]
+then
+  cd $test_repo_path
+  echo "success" >> success
+fi
+
+
+cd $test_repo_path
+git clone https://github.com/actions/example-aws.git
+cd example-aws/
+
+export KUBE_CONFIG_DATA=foo
+export AWS_ACCESS_KEY_ID=foo
+export AWS_SECRET_ACCESS_KEY=foo
+
+## Testing --recursive feature
+# Move main.workflow to somewhere else to test --recursive flag
+mkdir dummy
+mv .github/main.workflow dummy/.
+popper dot --recursive > out
+actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
+
+#The expected output stored in a pre-sorted format (for ease of comparision purposes)
+sorted_output="Build_and_Deploy -> Build_Docker_image;
+Build_and_Deploy -> Login_to_ECR;
+Build_Docker_image -> Tag_image_for_ECR;
+Deploy_branch_filter -> Deploy_to_EKS;
+Deploy_to_EKS -> Verify_EKS_deployment;
+Login_to_ECR -> Push_image_to_ECR;
+Push_image_to_ECR -> Deploy_branch_filter;
+Push_image_to_ECR -> Store_Kube_Credentials;
+Push_image_to_ECR -> Verify_EKS_deployment;
+Store_Kube_Credentials -> Deploy_to_EKS;
+Tag_image_for_ECR -> Push_image_to_ECR;
+Verify_EKS_deployment -> List_Public_IP;"
+
+if [ "$actual_output" = "$sorted_output" ]
+then
+  cd $test_repo_path
+  echo "success" >> success
+fi
+
+
+## Testing --wfile feature
+cd $test_repo_path
+#From test_repo_path
+popper dot --wfile example-aws/dummy/main.workflow > out
+actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
+if [ "$actual_output" = "$sorted_output" ]
+then
+  echo "success" >> success
+fi
+
+counter=`cat success | wc -l`
+
+echo "Ran $counter/3 cases successfully"
+test $counter -eq 3
