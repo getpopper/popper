@@ -75,8 +75,8 @@ def cli(ctx, action, wfile, workspace, reuse,
         wfile_list = pu.find_recursive_wfile()
         for wfile in wfile_list:
             pu.info("Found and running workflow at "+wfile+"\n")
-            run_pipeline(
-                action, wfile, workspace, reuse, quiet, debug, dry_run)
+            run_pipeline(action, wfile, workspace, reuse, quiet,
+                         debug, dry_run, parallel)
     else:
         run_pipeline(action, wfile, workspace, reuse, quiet,
                      debug, dry_run, parallel)
