@@ -24,14 +24,18 @@ EOF
 
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = ["custom"]
+  resolves = ["custom action"]
 }
 
-action "busybox" {
+action "shub action" {
   uses = "shub://singularityhub/centos"
 }
 
-action "custom" {
+action "public action" {
+  uses = "JayjeetAtGithub/actions/wget@master"
+}
+
+action "custom action" {
   uses = "./actions/example"
   args = ["ls -a"]
   secrets = ["SECRET_KEY"]
@@ -40,7 +44,8 @@ action "custom" {
     L_NAME = "last_name"
   }
   needs = [
-    "busybox"
+    "shub action",
+    "public action"
   ]
 }
 EOF
