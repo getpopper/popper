@@ -51,3 +51,4 @@ action "custom action" {
 EOF
 
 popper run
+popper run --quiet
