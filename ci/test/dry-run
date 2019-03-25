@@ -21,10 +21,10 @@ DRYRUN: [test] docker start
 DRYRUN: [lint] docker build -t action/jshint $PWD/./.github/actions/jshint
 DRYRUN: [lint] docker create action/jshint
 DRYRUN: [lint] docker start
-DRYRUN: [branch-filter] docker build -t actions/bin /tmp/actions/actions/bin/./filter
+DRYRUN: [branch-filter] docker build -t actions/bin /tmp/actions/github.com/actions/bin/./filter
 DRYRUN: [branch-filter] docker create actions/bin branch master
 DRYRUN: [branch-filter] docker start
-DRYRUN: [deploy] docker build -t actions/bin /tmp/actions/actions/bin/./sh
+DRYRUN: [deploy] docker build -t actions/bin /tmp/actions/github.com/actions/bin/./sh
 DRYRUN: [deploy] docker create actions/bin env
 DRYRUN: [deploy] docker start
 
