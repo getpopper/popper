@@ -24,13 +24,11 @@ from popper.gha import Workflow
     required=False,
     is_flag=True
 )
-@click.command('dot', short_help='Generates a .dot format for a given workflow'
-               '\n[.dot is a format for graphical representation]')
+@click.command('dot', short_help='Generate a graph in the .dot format')
 @pass_context
 def cli(ctx, wfile, recursive):
     """
-    Analyzes a workflow file and then creates a dot representation for the same
-    .dot represents the order in which actions in the workflow must be executed
+    Creates a graph in the .dot format representing the workflow
     """
     wfile_list = list()
     if recursive:
@@ -41,13 +39,20 @@ def cli(ctx, wfile, recursive):
     for wfile in wfile_list:
         pipeline = Workflow(wfile, False, False, False, False)
 
+        graph = list()
+
         wf = pipeline.wf
-        name = list(wf['workflow'].keys())[0]
+        workflow_name = list(wf['workflow'].keys())[0]
 
         action = wf['resolves'][0]
-        parent_action = cur_action = action
+        last_action = get_first_action(wf)
 
-        graph = list()
+        for act in last_action:
+            graph.append("\t{} -> {};\n".format(
+                workflow_name.replace(' ', '_').replace('-', '_'),
+                act.replace(' ', '_').replace('-', '_')))
+
+        parent_action = cur_action = action
         graph = add(parent_action, cur_action, wf['action'], graph)
         graph = ''.join(list(set(graph)))
         graph = "digraph G {\n" + graph + "}\n"
@@ -65,7 +70,16 @@ def add(parent_action, cur_action, actions, graph):
     # Adds edges to the graph
     if cur_action != parent_action:
         graph.append("\t{} -> {};\n".format(
-            parent_action.replace(' ', '_').replace('-', '_'),
-            cur_action.replace(' ', '_').replace('-', '_')))
+            cur_action.replace(' ', '_').replace('-', '_'),
+            parent_action.replace(' ', '_').replace('-', '_')))
 
     return graph
+
+
+def get_first_action(wf):
+    actions = list()
+    for act in wf['action']:
+        if act in wf['action']:
+            if 'needs' not in wf['action'][act]:
+                actions.append(act)
+    return actions

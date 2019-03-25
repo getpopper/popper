@@ -23,13 +23,15 @@ export PHONY_SECRET=foo
 popper dot > out
 actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
 
-expected_output="branch_filter -> lint;
-branch_filter -> test;
-deploy -> branch_filter;
-lint -> install;
-test -> install;"
+#The expected output stored in a pre-sorted format (for ease of comparision purposes)
+sorted_output="branch_filter -> deploy;
+install -> lint;
+install -> test;
+lint -> branch_filter;
+test_and_deploy -> install;
+test -> branch_filter;"
 
-if [ "$actual_output" = "$expected_output" ]
+if [ "$actual_output" = "$sorted_output" ]
 then
   cd $test_repo_path
   echo "success" >> success
@@ -51,18 +53,21 @@ mv .github/main.workflow dummy/.
 popper dot --recursive > out
 actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
 
-expected_output="Deploy_branch_filter -> Push_image_to_ECR;
-Deploy_to_EKS -> Deploy_branch_filter;
-Deploy_to_EKS -> Store_Kube_Credentials;
-List_Public_IP -> Verify_EKS_deployment;
-Push_image_to_ECR -> Login_to_ECR;
-Push_image_to_ECR -> Tag_image_for_ECR;
-Store_Kube_Credentials -> Push_image_to_ECR;
-Tag_image_for_ECR -> Build_Docker_image;
-Verify_EKS_deployment -> Deploy_to_EKS;
-Verify_EKS_deployment -> Push_image_to_ECR;"
+#The expected output stored in a pre-sorted format (for ease of comparision purposes)
+sorted_output="Build_and_Deploy -> Build_Docker_image;
+Build_and_Deploy -> Login_to_ECR;
+Build_Docker_image -> Tag_image_for_ECR;
+Deploy_branch_filter -> Deploy_to_EKS;
+Deploy_to_EKS -> Verify_EKS_deployment;
+Login_to_ECR -> Push_image_to_ECR;
+Push_image_to_ECR -> Deploy_branch_filter;
+Push_image_to_ECR -> Store_Kube_Credentials;
+Push_image_to_ECR -> Verify_EKS_deployment;
+Store_Kube_Credentials -> Deploy_to_EKS;
+Tag_image_for_ECR -> Push_image_to_ECR;
+Verify_EKS_deployment -> List_Public_IP;"
 
-if [ "$actual_output" = "$expected_output" ]
+if [ "$actual_output" = "$sorted_output" ]
 then
   cd $test_repo_path
   echo "success" >> success
@@ -74,7 +79,7 @@ cd $test_repo_path
 #From test_repo_path
 popper dot --wfile example-aws/dummy/main.workflow > out
 actual_output=`tail -n+2 out | head -n-1 | cut -f2 | sort`
-if [ "$actual_output" = "$expected_output" ]
+if [ "$actual_output" = "$sorted_output" ]
 then
   echo "success" >> success
 fi
