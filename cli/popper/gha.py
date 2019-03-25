@@ -481,6 +481,7 @@ class SingularityRunner(ActionRunner):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 q, d, dry)
         self.pid = self.action['name'].replace(' ', '_')
+        Client.quiet=True
 
     def run(self, reuse=False):
         """Runs the singularity action
