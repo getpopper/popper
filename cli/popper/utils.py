@@ -3,6 +3,7 @@ import os
 import sys
 import time
 import yaml
+import threading
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
 noalias_dumper = yaml.dumper.SafeDumper
@@ -237,3 +238,57 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             errf.close()
 
     return "", ecode
+
+
+def get_git_files():
+    """Used to return a list of files that are being tracked by
+    git.
+
+    Returns:
+        files (list) : list of git tracked files
+    """
+    gitfiles, _ = exec_cmd("git ls-files")
+    return gitfiles.split("\n")
+
+
+class threadsafe_iter_3:
+    """Takes an iterator/generator and makes it thread-safe by
+    serializing call to the `next` method of given iterator/generator.
+    """
+    def __init__(self, it):
+        self.it = it
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        with self.lock:
+            return self.it.__next__()
+
+
+class threadsafe_iter_2:
+    """Takes an iterator/generator and makes it thread-safe by
+    serializing call to the `next` method of given iterator/generator.
+    """
+    def __init__(self, it):
+        self.it = it
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        with self.lock:
+            return self.it.next()
+
+
+def threadsafe_generator(f):
+    """A decorator that takes a generator function and makes it thread-safe.
+    """
+    def g(*args, **kwargs):
+        if sys.version_info[0] < 3:
+            return threadsafe_iter_2(f(*args, **kwargs))
+        else:
+            return threadsafe_iter_3(f(*args, **kwargs))
+    return g

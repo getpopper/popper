@@ -1,5 +1,7 @@
 from __future__ import unicode_literals
 from builtins import dict, str
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import multiprocessing as mp
 import hcl
 import os
 import popper.utils as pu
@@ -278,7 +280,7 @@ class Workflow(object):
                     a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
 
-    def run(self, action_name=None, reuse=False):
+    def run(self, action_name=None, reuse=False, parallel=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
 
@@ -289,12 +291,26 @@ class Workflow(object):
             self.wf['action'][action_name]['runner'].run(reuse)
         else:
             for s in self.get_stages():
-                self.run_stage(s, reuse)
+                self.run_stage(s, reuse, parallel)
 
-    def run_stage(self, stage, reuse=False):
-        for a in stage:
-            self.wf['action'][a]['runner'].run(reuse)
+    def run_stage(self, stage, reuse=False, parallel=False):
+        if parallel:
+            with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
+                flist = {
+                    ex.submit(self.wf['action'][a]['runner'].run, reuse):
+                    a for a in stage
+                }
+                for future in as_completed(flist):
+                    try:
+                        future.result()
+                        pu.info('Action ran successfully !\n')
+                    except Exception:
+                        sys.exit(1)
+        else:
+            for action in stage:
+                self.wf['action'][action]['runner'].run(reuse)
 
+    @pu.threadsafe_generator
     def get_stages(self):
         """Generator of stages. A stages is a list of actions that can be
         executed in parallel.
