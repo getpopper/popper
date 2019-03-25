@@ -66,5 +66,5 @@ action "end" {
 
 action "Shellcheck" {
   uses = "actions/bin/shellcheck@master"
-  args = ".ci/test/*"
+  args = "./ci/test/*"
 }
