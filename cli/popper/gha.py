@@ -15,7 +15,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run, reuse):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -28,6 +28,7 @@ class Workflow(object):
         else:
             self.quiet = quiet
         self.dry_run = dry_run
+        self.reuse = reuse
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.validate_syntax()

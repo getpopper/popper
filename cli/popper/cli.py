@@ -74,6 +74,7 @@ def cli(ctx):
 
 docker_list = list()
 process_list = list()
+interrupt_params = None
 
 
 def signal_handler(sig, frame):
@@ -85,14 +86,19 @@ def signal_handler(sig, frame):
 
     for img in set(docker_list).intersection(cmd_out):
         pu.exec_cmd('docker stop {}'.format(img))
-        pu.exec_cmd('docker rm -f {}'.format(img))
-        pu.info('\nDeleted {}'.format(img))
-
+        if interrupt_params.reuse:
+            pu.info('--reuse flag is set. Retaining containers')
+            msg = '\nStopping {}'.format(img)
+        else:
+            msg = '\nDeleting {}'.format(img)
+            pu.exec_cmd('docker rm -f {}'.format(img))
+        pu.info(msg)
+    pu.info('\n')
 
     for pid in process_list:
         try:
             os.kill(pid, signal.SIGTERM)
         except ProcessLookupError:
-            # Process was probably already killed, so exit silenty
+            # Process was probably already killed, so exit silently
             pass
     sys.exit(0)
