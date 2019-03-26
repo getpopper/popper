@@ -231,7 +231,7 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env,
+                    docker.from_env(), a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
                 continue
 
@@ -244,7 +244,7 @@ class Workflow(object):
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
-                        a, self.workspace, self.env,
+                        docker.from_env(), a, self.workspace, self.env,
                         self.quiet, self.debug, self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'singularity.def')):
@@ -264,7 +264,7 @@ class Workflow(object):
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env,
+		    docker.from_env(), a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
@@ -405,7 +405,7 @@ class DockerRunner(ActionRunner):
     def __init__(self, docker_client, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
-        ## self.docker_client = docker_client
+        self.docker_client = docker_client
 
     def run(self, reuse):
         popper.cli.docker_list.append(self.cid)
@@ -457,16 +457,23 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        #cmd_out, _ = pu.exec_cmd('docker ps -a', debug=self.debug)
-        self.docker_client.list()
-        if self.cid in cmd_out:
+        container = self.docker_client.containers.list(
+            all=True, filters={'name': self.cid})
+
+        container = [c for c in container if c.name == self.cid]
+        if container:
+            self.container = container[0]
             return True
 
         return False
 
     def docker_rm(self):
+<<<<<<< HEAD
         pu.exec_cmd('docker rm {}'.format(self.cid),
                     debug=self.debug, dry_run=self.dry_run)
+=======
+        self.container.remove(force=True)
+>>>>>>> add dockerpy
 
     def docker_create(self, img):
         env_vars = self.action.get('env', {})
@@ -476,28 +483,20 @@ class DockerRunner(ActionRunner):
 
         for e, v in self.env.items():
             env_vars.update({e: v})
-
         env_vars.update({'HOME': os.environ['HOME']})
-
-        env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
-
-        docker_cmd = 'docker create '
-        docker_cmd += ' --name={}'.format(self.cid)
-        docker_cmd += ' --volume {0}:{0}'.format(self.workspace)
-        docker_cmd += ' --volume {0}:{0}'.format(os.environ['HOME'])
-        docker_cmd += ' --volume {0}:{0}'.format('/var/run/docker.sock')
-        docker_cmd += ' --workdir={} '.format(self.workspace)
-        docker_cmd += ''.join(env_flags)
-        if self.action.get('runs', None):
-            docker_cmd += ' --entrypoint={} '.format(self.action['runs'])
-        docker_cmd += ' {}'.format(img)
-        docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
+        volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
+        self.container = self.docker_client.containers.create(
+            image=img, command=self.action.get('args', None),
+            name=self.cid, volumes={v: {'bind': v} for v in volumes},
+            working_dir=self.workspace, environment=env_vars,
+            entrypoint=self.action.get('runs', None))
 
         pu.info('{}[{}] docker create {} {}\n'.format(
             self.msg_prefix,
             self.action['name'], img, ' '.join(self.action.get('args', ''))
         ))
 
+<<<<<<< HEAD
         pu.exec_cmd(docker_cmd, debug=self.debug, dry_run=self.dry_run)
 
     def docker_start(self):
@@ -621,6 +620,33 @@ class SingularityRunner(ActionRunner):
                        return_result=True)
         return e['return_code']
 
+=======
+    def docker_start(self):
+        pu.info('[{}] docker start \n'.format(self.action['name']))
+        self.container.start()
+        eout = self.container.logs(stream=True, stdout=True)
+        err = self.container.logs(stream=True, stderr=True)
+        outf = open(self.log_filename + '.out', 'wb')
+        errf = open(self.log_filename + '.err', 'wb')
+        for line in eout:
+            outf.write(line)
+        outf.close()
+        for line in err:
+            errf.write(line)
+        errf.close()
+        statuscode = self.container.wait()
+        return statuscode['StatusCode']
+
+    def docker_pull(self, img):
+        pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
+        self.docker_client.images.pull(repository=img)
+
+    def docker_build(self, tag, path):
+        pu.info('[{}] Building docker image\n'.format(self.action['name']))
+        # if self.docker_client.images.get(tag):
+        #     self.docker_client.images.remove(image=tag, force=True)
+        self.docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
+>>>>>>> add dockerpy
 
 class HostRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
