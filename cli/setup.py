@@ -16,6 +16,7 @@ setup(
     install_requires=[
         'GitPython',
         'future; python_version == "2.7"',
+        'spython',
         'click',
         'requests',
         'lark-parser==0.5.6',

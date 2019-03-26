@@ -27,6 +27,7 @@ sys.path.insert(0, os.path.join(vendordir, 'requests'))
 sys.path.insert(0, os.path.join(vendordir, 'ply'))
 sys.path.insert(0, os.path.join(vendordir, 'pyhcl', 'src'))
 sys.path.insert(0, os.path.join(vendordir, 'pyaes'))
+sys.path.insert(0, os.path.join(vendordir, 'singularity-cli'))
 sys.path.insert(0, os.path.join(parentdir))
 
 import popper.cli
