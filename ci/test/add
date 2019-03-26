@@ -1,0 +1,25 @@
+#!/bin/bash
+set -ex
+
+source ./common
+init_test_repo
+cd $test_repo_path
+
+popper init
+
+popper add cplee/github-actions-demo
+test -f /tmp/mypaper/workflows/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/workflows/.github/main.workflow
+rm -rf workflows
+
+popper add cplee/github-actions-demo/.github/
+test -f /tmp/mypaper/workflows/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/workflows/.github/main.workflow
+rm -rf workflows
+
+popper add cplee/github-actions-demo/.github/main.workflow
+test -f /tmp/mypaper/workflows/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/workflows/.github/main.workflow
+rm -rf workflows
+
+echo "Popper add command ran successfully !"
