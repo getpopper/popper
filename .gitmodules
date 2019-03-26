@@ -43,3 +43,6 @@
 [submodule "cli/bin/vendor/docker-py"]
 	path = cli/bin/vendor/docker-py
 	url = https://github.com/docker/docker-py.git
+[submodule "cli/bin/vendor/websocket-client"]
+	path = cli/bin/vendor/websocket-client
+	url = https://github.com/websocket-client/websocket-client.git
