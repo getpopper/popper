@@ -23,7 +23,8 @@ setup(
         'pyhcl',
         'pyyaml',
         'pyaes',
-        'futures; python_version == "2.7"'
+        'futures; python_version == "2.7"',
+        'docker-py'
     ],
     entry_points='''
         [console_scripts]

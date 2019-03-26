@@ -40,3 +40,6 @@
 [submodule "cli/bin/vendor/singularity-cli"]
 	path = cli/bin/vendor/singularity-cli
 	url = https://github.com/singularityhub/singularity-cli
+[submodule "cli/bin/vendor/docker-py"]
+	path = cli/bin/vendor/docker-py
+	url = https://github.com/docker/docker-py.git
