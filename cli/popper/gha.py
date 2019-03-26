@@ -518,10 +518,6 @@ class SingularityRunner(ActionRunner):
         if e != 0:
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
-    def find_def_file(self, path):
-        for file in os.listdir(path):
-            if file.endswith('.def'):
-                return file
 
     def generate_image_name(self, image):
         """Generates the image name from the image url.
@@ -551,8 +547,7 @@ class SingularityRunner(ActionRunner):
         """Builds an image from a recipefile.
         """
         Client.build(os.path.join(
-            path,
-            self.find_def_file(path)
+            path, 'singularity.def'
         ), self.generate_image_name(image))
 
     def singularity_start(self, image):
