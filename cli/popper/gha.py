@@ -518,7 +518,6 @@ class SingularityRunner(ActionRunner):
         if e != 0:
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
-
     def generate_image_name(self, image):
         """Generates the image name from the image url.
         """
