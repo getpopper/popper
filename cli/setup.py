@@ -25,7 +25,8 @@ setup(
         'pyaes',
         'futures; python_version == "2.7"',
         'docker-py',
-        'websocket-client'
+        'websocket-client',
+        'dockerpy-creds'
     ],
     entry_points='''
         [console_scripts]

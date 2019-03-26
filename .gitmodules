@@ -46,3 +46,6 @@
 [submodule "cli/bin/vendor/websocket-client"]
 	path = cli/bin/vendor/websocket-client
 	url = https://github.com/websocket-client/websocket-client.git
+[submodule "cli/bin/vendor/dockerpy-creds"]
+	path = cli/bin/vendor/dockerpy-creds
+	url = https://github.com/shin-/dockerpy-creds.git

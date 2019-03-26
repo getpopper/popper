@@ -19,6 +19,7 @@ if sys.version_info[0] < 3:
     sys.path.insert(0, os.path.join(vendordir, 'pythonfutures'))
 sys.path.insert(0, os.path.join(vendordir, 'GitPython'))
 sys.path.insert(0, os.path.join(vendordir, 'docker-py'))
+sys.path.insert(0, os.path.join(vendordir, 'dockerpy-creds'))
 sys.path.insert(0, os.path.join(vendordir, 'websocket-client'))
 sys.path.insert(0, os.path.join(vendordir, 'click'))
 sys.path.insert(0, os.path.join(vendordir, 'certifi'))
