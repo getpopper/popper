@@ -58,6 +58,11 @@ action "test dot" {
   runs = "dot"
 }
 
+action "test singularity" {
+  uses = "./ci/test"
+  runs = "singularity"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -73,6 +78,7 @@ action "end" {
     "test dry-run",
     "test scaffold",
     "test parallel stage exec",
-    "test dot"
+    "test dot",
+    "test singularity"
   ]
 }
