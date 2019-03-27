@@ -35,7 +35,7 @@ counter=`cat fail|wc -l`
 #A test for --parallel run
 popper run & pid=$!
 #Give popper run some time to create dockers
-sleep 10
+sleep 8
 
 # -2 is for SIGINT or Ctrl-C
 kill -2 $pid
