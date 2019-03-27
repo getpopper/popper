@@ -6,6 +6,7 @@ import hcl
 import os
 import shutil
 import docker
+import sys
 import popper.scm as scm
 import popper.utils as pu
 from spython.main import Client
@@ -296,11 +297,8 @@ class Workflow(object):
                 }
                 popper.cli.flist = flist
                 for future in as_completed(flist):
-                    try:
-                        future.result()
-                        pu.info('Action ran successfully !\n')
-                    except Exception:
-                        sys.exit(1)
+                    future.result()
+                    pu.info('Action ran successfully !\n')
         else:
             for action in stage:
                 self.wf['action'][action]['runner'].run(reuse)
@@ -434,6 +432,7 @@ class DockerRunner(ActionRunner):
             tag = '/'.join(self.action['uses'].split('/')[:2])
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
+
         if not reuse:
             if self.docker_exists():
                 self.docker_rm()
@@ -456,6 +455,8 @@ class DockerRunner(ActionRunner):
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
+        if self.dry_run:
+            return True
         container = self.docker_client.containers.list(
             all=True, filters={'name': self.cid})
 
@@ -467,9 +468,17 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
+        if self.dry_run:
+            return
         self.container.remove(force=True)
 
     def docker_create(self, img):
+        pu.info('{}[{}] docker create {} {}\n'.format(
+            self.msg_prefix,
+            self.action['name'], img, ' '.join(self.action.get('args', ''))
+        ))
+        if self.dry_run:
+            return
         env_vars = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
@@ -485,13 +494,12 @@ class DockerRunner(ActionRunner):
             working_dir=self.workspace, environment=env_vars,
             entrypoint=self.action.get('runs', None))
 
-        pu.info('{}[{}] docker create {} {}\n'.format(
-            self.msg_prefix,
-            self.action['name'], img, ' '.join(self.action.get('args', ''))
-        ))
 
     def docker_start(self):
-        pu.info('[{}] docker start \n'.format(self.action['name']))
+        pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
+                                                self.action['name']))
+        if self.dry_run:
+            return 0
         self.container.start()
         eout = self.container.logs(stream=True, stdout=True)
         err = self.container.logs(stream=True, stderr=True)
@@ -507,13 +515,17 @@ class DockerRunner(ActionRunner):
         return statuscode['StatusCode']
 
     def docker_pull(self, img):
-        pu.info('[{}] docker pull {}\n'.format(self.action['name'], img))
+        pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix,
+                                                 self.action['name'], img))
+        if self.dry_run:
+            return
         self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
-        pu.info('[{}] Building docker image\n'.format(self.action['name']))
-        # if self.docker_client.images.get(tag):
-        #     self.docker_client.images.remove(image=tag, force=True)
+        pu.info('{}[{}] docker build -t {} {}\n'.format(
+            self.msg_prefix, self.action['name'], tag, path))
+        if self.dry_run:
+            return
         self.docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
 
 
