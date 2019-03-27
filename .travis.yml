@@ -6,10 +6,10 @@ python:
 - "3.7"
 services: docker
 before_install:
-- sudo wget -O- http://neuro.debian.net/lists/xenial.us-ca.full | sudo tee /etc/apt/sources.list.d/neurodebian.sources.list
-- sudo apt-key adv --recv-keys --keyserver hkp://pool.sks-keyservers.net:80 0xA5D32F012649A5A9 
 - sudo apt-get update
-- sudo apt-get install -y singularity-container
+- sudo apt-get install neurodebian-popularity-contest
+- wget http://neurodeb.pirsquared.org/pool/main/s/singularity-container/singularity-container_2.6.1-2~nd16.04+1_amd64.deb
+- sudo apt install ./singularity-container_2.6.1-2~nd16.04+1_amd64.deb
 script:
 - export PATH=$PATH:$PWD/cli/bin
 - popper run --recursive
