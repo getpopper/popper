@@ -10,8 +10,7 @@ git clone https://github.com/cplee/github-actions-demo.git
 cd github-actions-demo
 export PHONY_SECRET=foo
 popper run & pid=$!
-echo $!
-#Give popper run some time to creater dockers 
+#Give popper run some time to create dockers
 sleep 5
 
 # -2 is for SIGINT or Ctrl-C
@@ -26,6 +25,30 @@ do
   for b in $check
   do 
     if [ $a = $b ] 
+    then echo "fail" >> fail
+    fi
+  done
+done
+
+counter=`cat fail|wc -l`
+
+#A test for --parallel run
+popper run & pid=$!
+#Give popper run some time to create dockers
+sleep 10
+
+# -2 is for SIGINT or Ctrl-C
+kill -2 $pid
+
+#Give popper run some time to remove dockers and then check
+sleep 5
+
+actual=`docker ps -a --format "{{.Names}}"`
+for a in $actual
+do
+  for b in $check
+  do
+    if [ $a = $b ]
     then echo "fail" >> fail
     fi
   done
