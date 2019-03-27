@@ -264,7 +264,7 @@ class Workflow(object):
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
-		    docker.from_env(), a, self.workspace, self.env,
+                    docker.from_env(), a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
