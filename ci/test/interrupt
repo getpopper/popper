@@ -86,7 +86,7 @@ sleep 80
 kill -2 $pid
 
 #Give popper run some time to remove dockers and then check
-sleep 20
+sleep 200
 check="sleep_20 sleep_30 sleep_50 sleep_100 sleep_200 sleep"
 actual=`docker ps -a --format "{{.Names}}"`
 
