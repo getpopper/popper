@@ -84,6 +84,7 @@ def signal_handler(sig, frame):
     if interrupt_params.parallel:
         for future in flist:
             future.cancel()     # Try to safely exit threads
+        time.sleep(50)      # Wait for some time
 
     # This will kill everything
     for pid in process_list:
