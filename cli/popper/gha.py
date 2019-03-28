@@ -15,7 +15,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run, reuse):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run, reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -29,6 +29,7 @@ class Workflow(object):
             self.quiet = quiet
         self.dry_run = dry_run
         self.reuse = reuse
+        self.parallel = parallel
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.validate_syntax()
@@ -317,6 +318,7 @@ class Workflow(object):
                     ex.submit(self.wf['action'][a]['runner'].run, reuse):
                     a for a in stage
                 }
+                popper.cli.flist = flist
                 for future in as_completed(flist):
                     try:
                         future.result()

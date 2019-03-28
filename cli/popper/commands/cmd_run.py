@@ -85,7 +85,8 @@ def cli(ctx, action, wfile, workspace, reuse,
 
 def run_pipeline(action, wfile, workspace, reuse,
                  quiet, debug, dry_run, parallel):
-    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run, reuse)
+    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run,
+                        reuse, parallel)
 
     # Saving workflow instance for signal handling
     popper.cli.interrupt_params = pipeline

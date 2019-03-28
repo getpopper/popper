@@ -1,6 +1,8 @@
 import os
 import signal
 import sys
+import time
+
 import click
 import difflib
 from . import __version__ as popper_version
@@ -75,9 +77,21 @@ def cli(ctx):
 docker_list = list()
 process_list = list()
 interrupt_params = None
+flist = None
 
 
 def signal_handler(sig, frame):
+    if interrupt_params.parallel:
+        for future in flist:
+            future.cancel()     # Try to safely exit threads
+
+    # This will kill everything
+    for pid in process_list:
+        try:
+            os.kill(pid, signal.SIGTERM)
+        except ProcessLookupError:
+            # Process was probably already killed, so exit silently
+            pass
 
     pu.info("\n")
     cmd_out = pu.exec_cmd('docker ps -a --format "{{.Names}}"')
@@ -95,10 +109,5 @@ def signal_handler(sig, frame):
         pu.info(msg)
     pu.info('\n')
 
-    for pid in process_list:
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            # Process was probably already killed, so exit silently
-            pass
+
     sys.exit(0)

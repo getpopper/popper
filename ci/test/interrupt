@@ -20,30 +20,8 @@ kill -2 $pid
 sleep 5
 check="deploy branch-filter test lint install"
 actual=`docker ps -a --format "{{.Names}}"`
-for a in $actual
-do 
-  for b in $check
-  do 
-    if [ $a = $b ] 
-    then echo "fail" >> fail
-    fi
-  done
-done
 
-counter=`cat fail|wc -l`
-
-#A test for --parallel run
-popper run & pid=$!
-#Give popper run some time to create dockers
-sleep 8
-
-# -2 is for SIGINT or Ctrl-C
-kill -2 $pid
-
-#Give popper run some time to remove dockers and then check
-sleep 5
-
-actual=`docker ps -a --format "{{.Names}}"`
+cd ..
 for a in $actual
 do
   for b in $check
@@ -54,5 +32,82 @@ do
   done
 done
 
+
+#A test for --parallel run
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["sleep"]
+}
+
+action "sleep_20" {
+  uses = "docker://busybox"
+  args = ["sleep 20; echo 'slept for 20s'"]
+}
+
+action "sleep_30" {
+  uses = "docker://busybox"
+  args = ["sleep 30; echo 'slept for 30s'"]
+}
+
+action "sleep_50" {
+  uses = "docker://busybox"
+  args = ["sleep 50; echo 'slept for 50s'"]
+}
+
+action "sleep_100" {
+  uses = "docker://busybox"
+  args = ["sleep 100;", "echo 'slept for 100s'"]
+}
+
+action "sleep_200" {
+  uses = "docker://busybox"
+  args = ["sleep 200;", "echo 'slept for 200s'"]
+}
+
+action "sleep" {
+  uses = "docker://busybox"
+  needs = [
+    "sleep_20",
+    "sleep_30",
+    "sleep_50",
+    "sleep_100",
+    "sleep_200"
+  ]
+}
+
+EOF
+
+popper run --parallel & pid=$!
+#Give popper run some time to create dockers
+sleep 80
+
+# -2 is for SIGINT or Ctrl-C
+kill -2 $pid
+
+#Give popper run some time to remove dockers and then check
+sleep 20
+check="sleep_20 sleep_30 sleep_50 sleep_100 sleep_200 sleep"
+actual=`docker ps -a --format "{{.Names}}"`
+
+
+
+if [ -z $actual ]
+then
+  echo "Empty"
+else
+  for a in $actual
+    do
+      for b in $check
+      do
+        if [ $a = $b ]
+        then
+          echo "fail" >> fail
+        fi
+      done
+    done
+fi
+
+
 counter=`cat fail|wc -l`
-test $counter -eq 0
+test 0 -eq $counter
