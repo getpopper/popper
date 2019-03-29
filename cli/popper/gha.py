@@ -13,7 +13,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run, no_prompt):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run, no_prompt=False):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
