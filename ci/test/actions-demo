@@ -1,6 +1,6 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 
 delete_dir /tmp/gha-demo

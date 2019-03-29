@@ -2,7 +2,10 @@ workflow "cli tests" {
   on = "push"
   resolves = "end"
 }
-
+action "Shellcheck" {
+  uses = "actions/bin/shellcheck@master"
+  args = "-x ./ci/test/*"
+}
 action "test init" {
   uses = "./ci/test"
   runs = "init"
@@ -67,6 +70,7 @@ action "end" {
   uses = "./ci/test"
   runs = "version"
   needs = [
+    "Shellcheck",
     "test init",
     "test ci",
     "test reuse",

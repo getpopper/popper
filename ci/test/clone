@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 cat <<EOF > main.workflow
 workflow "clone" {

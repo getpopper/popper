@@ -1,12 +1,12 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 function create_workflow(){
-    cat > $1 << EOF
+    cat > "$1" << EOF
 workflow "test" {
   resolves = "show env"
 }
@@ -25,20 +25,20 @@ workflows=( "main.workflow" "another/main.workflow" "another/another/main.workfl
 
 for i in "${workflows[@]}"
 do
-    create_workflow $i
+    create_workflow "$i"
 done
 
 popper run --recursive >> out
 
-files=`grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-`
+files=$(grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-)
 
 counter=0
 
 for workflow in "${workflows[@]}"
 do
-    for file in ${files[@]}
+    for file in "${files[@]}"
     do
-        if [ $workflow = $file ]
+        if [ "$workflow" = "$file" ]
         then
             echo "$file was run!"
             echo "success" >> success
@@ -46,7 +46,7 @@ do
     done
 done
 
-counter=`cat success | wc -l`
+counter=$(> success wc -l)
 
 echo "Ran $counter/5 cases successfully"
-test $counter -eq 5 
+test "$counter" -eq 5

@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 git clone https://github.com/cplee/github-actions-demo.git
 
@@ -66,21 +66,21 @@ Workflow finished successfully.
 # Even tr -s '\n' '\n' is for the same purpose
 # Using sort so as to get some appearance of order
 
-cat expected_1 | tr -s '\n' '\n' | sort | xargs > 1
-cat expected_2 | tr -s '\n' '\n' | sort | xargs > 2
-cat expected_3 | tr -s '\n' '\n' | sort | xargs > 3
-cat actual | tr -s '\n' '\n' | sort | xargs> check
+< expected_1 tr -s '\n' '\n' | sort | xargs >&1
+< expected_2 tr -s '\n' '\n' | sort | xargs >&2
+< expected_3 tr -s '\n' '\n' | sort | xargs >&3
+< actual tr -s '\n' '\n' | sort | xargs> check
 
-count1=`cat 1 | wc -m`
-count2=`cat 2 | wc -m`
-count3=`cat 3 | wc -m`
-check_count=`cat check | wc -m`
+count1=$(>&1 wc -m)
+count2=$(>&2 wc -m)
+count3=$(>&3 wc -m)
+check_count=$(> check wc -m)
 
-if [ $count1 -eq $check_count ]; then
+if [ "$count1" -eq "$check_count" ]; then
 diff 1 check
-elif [ $count2 -eq $check_count ]; then
+elif [ "$count2" -eq "$check_count" ]; then
 diff 2 check
-elif [ $count3 -eq $check_count ]; then
+elif [ "$count3" -eq "$check_count" ]; then
 diff 3 check
 else
 echo ""> empty
