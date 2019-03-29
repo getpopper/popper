@@ -13,7 +13,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run,no_prompt):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run, no_prompt):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -184,7 +184,7 @@ class Workflow(object):
         infoed = False
         for _, a in self.wf['action'].items():
             if ('docker://' in a['uses'] or
-                'shub://' in a['uses'] or
+                    'shub://' in a['uses'] or
                     './' in a['uses']):
                 continue
 
@@ -317,7 +317,7 @@ class Workflow(object):
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(self.wf['action'][a]['runner'].run, reuse):
-                    a for a in stage
+                        a for a in stage
                 }
                 for future in as_completed(flist):
                     try:
