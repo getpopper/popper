@@ -13,7 +13,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run,no_prompt):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -21,6 +21,7 @@ class Workflow(object):
 
         self.workspace = workspace
         self.debug = debug
+        self.no_prompt = no_prompt
         if debug:
             self.quiet = False
         else:
@@ -171,7 +172,11 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    pu.fail('Secret {} not defined\n.'.format(s))
+                    if self.no_prompt:
+                        pu.fail('Secret {} not defined\n.'.format(s))
+                    else:
+                        val = raw_input("Enter the value for {0}:\n".format(s))
+                        os.environ[s] = val
 
     def download_actions(self):
         """Clone actions that reference a repository."""

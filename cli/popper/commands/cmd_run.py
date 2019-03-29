@@ -66,9 +66,15 @@ from popper.cli import pass_context
     required=False,
     is_flag=True
 )
+@click.option(
+    '--no-prompt',
+    help='Do not prompt to enter the values if secret is not defined.If this flag not given, prompt is given.',
+    required=False,
+    is_flag=True,
+)
 @pass_context
 def cli(ctx, action, wfile, workspace, reuse,
-        recursive, quiet, debug, dry_run, parallel):
+        recursive, quiet, debug, dry_run, parallel,no_prompt):
     """Executes one or more pipelines and reports on their status.
     """
     if recursive:
@@ -76,15 +82,15 @@ def cli(ctx, action, wfile, workspace, reuse,
         for wfile in wfile_list:
             pu.info("Found and running workflow at "+wfile+"\n")
             run_pipeline(action, wfile, workspace, reuse, quiet,
-                         debug, dry_run, parallel)
+                         debug, dry_run, parallel,no_prompt)
     else:
         run_pipeline(action, wfile, workspace, reuse, quiet,
-                     debug, dry_run, parallel)
+                     debug, dry_run, parallel,no_prompt)
 
 
 def run_pipeline(action, wfile, workspace, reuse,
-                 quiet, debug, dry_run, parallel):
-    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
+                 quiet, debug, dry_run, parallel,no_prompt):
+    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run,no_prompt)
 
     if reuse:
         pu.info(
