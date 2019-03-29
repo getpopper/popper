@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from builtins import dict, str
+from builtins import dict, str, input
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing as mp
 import hcl
@@ -175,7 +175,7 @@ class Workflow(object):
                     if self.no_prompt:
                         pu.fail('Secret {} not defined\n.'.format(s))
                     else:
-                        val = raw_input("Enter the value for {0}:\n".format(s))
+                        val = input("Enter the value for {0}:\n".format(s))
                         os.environ[s] = val
 
     def download_actions(self):
