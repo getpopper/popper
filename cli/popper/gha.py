@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from builtins import dict, str
+from builtins import dict, str, input
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing as mp
 import hcl
@@ -15,7 +15,8 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run, reuse, parallel):
+    def __init__(self, wfile, workspace, quiet, debug,
+                 dry_run, reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -175,7 +176,11 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    pu.fail('Secret {} not defined\n.'.format(s))
+                    if os.environ.get("CI") == "true":
+                        pu.fail('Secret {} not defined\n.'.format(s))
+                    else:
+                        val = input("Enter the value for {0}:\n".format(s))
+                        os.environ[s] = val
 
     def download_actions(self):
         """Clone actions that reference a repository."""
