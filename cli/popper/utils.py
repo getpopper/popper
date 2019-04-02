@@ -247,16 +247,6 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     return "", ecode
 
 
-def get_git_files():
-    """Used to return a list of files that are being tracked by
-    git.
-
-    Returns:
-        files (list) : list of git tracked files
-    """
-    gitfiles, _ = exec_cmd("git ls-files")
-    return gitfiles.split("\n")
-
 
 class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by

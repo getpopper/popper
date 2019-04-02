@@ -5,8 +5,13 @@ source ./common
 init_test_repo
 cd $test_repo_path
 
-#################
-# serial test for dockerrunner
+# Fetch the version of python
+PY_VERSION=$( (python --version) 2>&1)
+
+
+##############################
+# DockerRunner - Serial
+##############################
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -22,7 +27,7 @@ popper run &
 pid=$!
 
 # give popper some time to create containers
-sleep 15
+sleep 5
 
 # -2 is for SIGINT or Ctrl-C
 kill -2 $pid
@@ -33,12 +38,10 @@ sleep 5
 # ensure no containers are running
 test -z "$(docker ps -aq --filter 'status=running')"
 
-#################
-# parallel for dockerrunner
 
-# TODO: remove conditional to reproduce #588
-# {
-PY_VERSION=$( (python --version) 2>&1)
+##############################
+#DockerRunner - Parallel
+##############################
 
 if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
@@ -88,23 +91,20 @@ EOF
 popper run --parallel &
 pid=$!
 
-# give popper some time to create containers
-sleep 20
+sleep 5
 
-# -2 is for SIGINT or Ctrl-C
 kill -2 $pid
 
-# give popper some time to remove containers
 sleep 30
 
 test -z "$(docker ps -aq --filter 'status=running')"
 
-# }
 fi
 
-#################
-# hostrunner actions
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+
+#########################
+# HostRunner - Serial
+#########################
 
 mkdir -p actions/sleep
 
@@ -129,10 +129,8 @@ EOF
 popper run &
 pid=$!
 
-# give popper some time to start processes
 sleep 5
 
-# -2 is for SIGINT or Ctrl-C
 kill -2 $pid
 
 sleep 5
@@ -141,10 +139,20 @@ ps aux > running_procs
 test $(cat running_procs | grep sleep | wc -l) -eq 0
 rm running_procs
 
-#################
-# --parallel run on hostrunner
+
+##############################
+# HostRunner - Parallel
+##############################
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 mkdir -p actions/sleep
+
+cat <<EOF > actions/sleep/entrypoint.sh
+#!/bin/bash
+sleep \$@
+EOF
+
+chmod +x actions/sleep/entrypoint.sh
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -192,10 +200,8 @@ EOF
 popper run --parallel &
 pid=$!
 
-# give popper some time to start processes
 sleep 15
 
-# -2 is for SIGINT or Ctrl-C
 kill -2 $pid
 
 sleep 5
@@ -204,5 +210,117 @@ ps aux > running_procs
 test $(cat running_procs | grep sleep | wc -l) -eq 0
 rm running_procs
 
-# }
+fi
+
+###############################
+# SingularityRunner - Serial
+###############################
+
+mkdir -p actions/example
+
+export SECRET_KEY=1234
+
+cat <<EOF > actions/example/singularity.def
+Bootstrap: docker
+From: ubuntu:14.04
+
+%runscript
+echo 'Entered runscript'
+echo \$F_NAME
+echo \$L_NAME
+echo \$SECRET_KEY
+sh -c \$@
+EOF
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["custom action"]
+}
+
+action "shub action" {
+  uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
+}
+
+action "public action" {
+  uses = "JayjeetAtGithub/actions/wget@master"
+  args = ["github.com"]
+}
+
+action "custom action" {
+  uses = "./actions/example"
+  args = ["ls", "-al"]
+  secrets = ["SECRET_KEY"]
+  env = {
+    F_NAME = "first_name",
+    L_NAME = "last_name"
+  }
+  needs = [
+    "shub action",
+    "public action"
+  ]
+}
+EOF
+
+popper run &
+pid=$!
+
+sleep 5
+
+kill -2 $pid
+
+sleep 5
+
+###############################
+# SingularityRunner - Parallel
+###############################
+
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["sleep"]
+}
+
+action "sleep1" {
+  uses = "shub://singularityhub/centos"
+}
+
+action "sleep2" {
+  uses = "shub://singularityhub/centos"
+}
+
+action "sleep3" {
+  uses = "shub://singularityhub/centos"
+}
+
+action "sleep4" {
+  uses = "shub://singularityhub/centos"
+}
+
+action "sleep5" {
+  uses = "shub://singularityhub/centos"
+}
+
+action "sleep" {
+  uses = "shub://singularityhub/centos"
+  needs = [
+    "sleep1",
+    "sleep2",
+    "sleep3",
+    "sleep4",
+    "sleep5"
+  ]
+}
+EOF
+
+popper run --parallel &
+pid=$!
+
+sleep 5
+
+kill -2 $pid
+
+sleep 5
+
 fi

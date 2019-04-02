@@ -56,7 +56,7 @@ class PopperCLI(click.MultiCommand):
             message = ""
             if len(most_similar_commands) != 0:
                 message = "\n\nThe most similar commands are: " \
-                        + most_similar_commands
+                    + most_similar_commands
             raise UsageError(
                 "Command '" + name + "' doesn't exist. " +
                 "\nType 'popper --help' for more."
@@ -73,9 +73,11 @@ def cli(ctx):
 
 
 docker_list = list()
+singularity_list = list()
 process_list = list()
 interrupt_params = None
 flist = None
+
 
 def signal_handler(sig, frame):
 
@@ -95,5 +97,10 @@ def signal_handler(sig, frame):
     for container in docker_list:
         pu.info("Stopping container '{}'\n".format(container.name))
         container.remove(force=True)
+    
+    for img in set(singularity_list):
+        if os.path.isfile(img):
+            pu.info('Removing {}\n'.format(img))
+            os.remove(img)
 
     sys.exit(0)
