@@ -4,6 +4,7 @@ import sys
 import time
 import yaml
 import threading
+import popper.cli
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 
 noalias_dumper = yaml.dumper.SafeDumper
@@ -192,6 +193,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
                 info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
             p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
                       universal_newlines=True)
+        popper.cli.process_list.append(p.pid)
 
         if debug:
             info('DEBUG: Reading process output\n')

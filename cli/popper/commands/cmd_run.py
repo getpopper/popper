@@ -6,6 +6,7 @@ import popper.utils as pu
 
 from popper.gha import Workflow
 from popper.cli import pass_context
+import popper.cli
 
 
 @click.command(
@@ -84,7 +85,11 @@ def cli(ctx, action, wfile, workspace, reuse,
 
 def run_pipeline(action, wfile, workspace, reuse,
                  quiet, debug, dry_run, parallel):
-    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
+    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run,
+                        reuse, parallel)
+
+    # Saving workflow instance for signal handling
+    popper.cli.interrupt_params = pipeline
 
     if reuse:
         pu.info(
