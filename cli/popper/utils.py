@@ -158,12 +158,14 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         try:
             out = check_output(cmd, shell=True, stderr=PIPE,
                                universal_newlines=True)
+            returncode = 0
         except CalledProcessError as ex:
+            returncode = ex.returncode
             if debug:
                 info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return b(out).strip(), 0
+        return b(out).strip(), returncode
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
@@ -257,6 +259,7 @@ class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -273,6 +276,7 @@ class threadsafe_iter_2:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -294,6 +298,7 @@ def threadsafe_generator(f):
         else:
             return threadsafe_iter_3(f(*args, **kwargs))
     return g
+
 
 def find_default_wfile(wfile):
     """
