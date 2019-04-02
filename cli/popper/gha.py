@@ -172,7 +172,7 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    if self.no_prompt:
+                    if os.environ["CI"] == "true":  # self.no_prompt:
                         pu.fail('Secret {} not defined\n.'.format(s))
                     else:
                         val = input("Enter the value for {0}:\n".format(s))
