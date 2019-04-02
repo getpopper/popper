@@ -7,13 +7,15 @@ import os
 import popper.utils as pu
 import popper.scm as scm
 from spython.main import Client
+import sys
+import popper.cli
 
 
 class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run, reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -26,6 +28,8 @@ class Workflow(object):
         else:
             self.quiet = quiet
         self.dry_run = dry_run
+        self.reuse = reuse
+        self.parallel = parallel
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.validate_syntax()
@@ -314,6 +318,7 @@ class Workflow(object):
                     ex.submit(self.wf['action'][a]['runner'].run, reuse):
                     a for a in stage
                 }
+                popper.cli.flist = flist
                 for future in as_completed(flist):
                     try:
                         future.result()
@@ -371,6 +376,7 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
+        popper.cli.docker_list.append(self.cid)
 
     def run(self, reuse):
         build = True
