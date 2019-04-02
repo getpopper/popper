@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-from builtins import dict, str, input
+from builtins import dict, str
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing as mp
 import hcl
@@ -7,14 +7,15 @@ import os
 import popper.utils as pu
 import popper.scm as scm
 from spython.main import Client
+import sys
+import popper.cli
 
 
 class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run,
-                 no_prompt=False):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run, reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -22,12 +23,13 @@ class Workflow(object):
 
         self.workspace = workspace
         self.debug = debug
-        self.no_prompt = no_prompt
         if debug:
             self.quiet = False
         else:
             self.quiet = quiet
         self.dry_run = dry_run
+        self.reuse = reuse
+        self.parallel = parallel
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.validate_syntax()
@@ -173,11 +175,7 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    if os.environ["CI"] == "true":  # self.no_prompt:
-                        pu.fail('Secret {} not defined\n.'.format(s))
-                    else:
-                        val = input("Enter the value for {0}:\n".format(s))
-                        os.environ[s] = val
+                    pu.fail('Secret {} not defined\n.'.format(s))
 
     def download_actions(self):
         """Clone actions that reference a repository."""
@@ -185,7 +183,7 @@ class Workflow(object):
         infoed = False
         for _, a in self.wf['action'].items():
             if ('docker://' in a['uses'] or
-                    'shub://' in a['uses'] or
+                'shub://' in a['uses'] or
                     './' in a['uses']):
                 continue
 
@@ -318,8 +316,9 @@ class Workflow(object):
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(self.wf['action'][a]['runner'].run, reuse):
-                        a for a in stage
+                    a for a in stage
                 }
+                popper.cli.flist = flist
                 for future in as_completed(flist):
                     try:
                         future.result()
@@ -377,6 +376,7 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
+        popper.cli.docker_list.append(self.cid)
 
     def run(self, reuse):
         build = True
