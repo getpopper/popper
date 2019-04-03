@@ -231,6 +231,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
     except CalledProcessError as ex:
         msg = "Command '{}' failed: {}\n".format(cmd, ex)
+        ecode = ex.returncode
         if not ignore_error:
             fail(msg)
         info(msg)
