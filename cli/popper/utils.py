@@ -150,6 +150,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             return t.decode('utf-8')
         return t
 
+    ecode = None
     # quick shortcut for 1) above
     if not verbose and not log_file:
         out = ""
@@ -158,18 +159,17 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         try:
             out = check_output(cmd, shell=True, stderr=PIPE,
                                universal_newlines=True)
-            returncode = 0
+            ecode = 0
         except CalledProcessError as ex:
-            returncode = ex.returncode
+            ecode = ex.returncode
             if debug:
                 info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return b(out).strip(), returncode
+        return b(out).strip(), ecode
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
-    ecode = None
     outf = None
     errf = None
 
