@@ -8,6 +8,7 @@ import popper.scm as scm
 from popper.cli import pass_context
 from distutils.dir_util import copy_tree
 
+
 @click.command('add', short_help='Import workflow from remote repo.')
 @click.argument('path', required=True)
 @click.option(
@@ -34,7 +35,7 @@ def cli(ctx, path, branch):
 
     org = parts[0]
     repo = parts[1]
-    
+
     cloned_project_dir = os.path.join("/tmp", org, repo)
     scm.clone('https://github.com', org, repo, os.path.dirname(
         cloned_project_dir)
@@ -61,7 +62,7 @@ def cli(ctx, path, branch):
 
     with open(path_to_workflow, 'r') as fp:
         wf = hcl.load(fp)
-    
+
     action_paths = list()
     if wf.get('action', None):
         for _, a_block in wf['action'].items():
@@ -70,6 +71,7 @@ def cli(ctx, path, branch):
 
     action_paths = set([a.split("/")[1] for a in action_paths])
     for a in action_paths:
-        copy_tree(os.path.join(cloned_project_dir, a), os.path.join(project_root, a))
-        pu.info("Copied {} to {}...\n".format(os.path.join(cloned_project_dir, a), project_root))
-
+        copy_tree(os.path.join(cloned_project_dir, a),
+                  os.path.join(project_root, a))
+        pu.info("Copied {} to {}...\n".format(os.path.join(
+            cloned_project_dir, a), project_root))
