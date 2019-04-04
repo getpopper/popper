@@ -42,12 +42,12 @@ def cli(ctx, path, branch):
     )
 
     if len(parts) == 2:
-        ptw1 = os.path.join(cloned_project_dir, "main.workflow")
-        ptw2 = os.path.join(cloned_project_dir, ".github/main.workflow")
-        if os.path.isfile(ptw1):
-            path_to_workflow = ptw1
-        elif os.path.isfile(ptw2):
-            path_to_workflow = ptw2
+        ptw_one = os.path.join(cloned_project_dir, "main.workflow")
+        ptw_two = os.path.join(cloned_project_dir, ".github/main.workflow")
+        if os.path.isfile(ptw_one):
+            path_to_workflow = ptw_one
+        elif os.path.isfile(ptw_two):
+            path_to_workflow = ptw_two
         else:
             pu.fail("Unable to find a .workflow file")
     elif len(parts) >= 3:
