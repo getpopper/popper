@@ -69,7 +69,7 @@ def get_sha():
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
     except ValueError:
-        pu.fail('Needed a single revision.')
+        pu.fail('Repository needs at least one commit\n')
 
 
 def get_remote_url():
