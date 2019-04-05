@@ -173,12 +173,12 @@ class Workflow(object):
         self.wf['root'] = root_nodes
 
     def check_secrets(self):
+        if self.dry_run:
+            return
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    if self.dry_run:
-                        os.environ[s] = ""
-                    elif os.environ.get('CI') == "true":
+                    if os.environ.get('CI') == "true":
                         pu.fail('Secret {} not defined\n.'.format(s))
                     else:
                         val = input("Enter the value for {0}:\n".format(s))
@@ -435,7 +435,8 @@ class DockerRunner(ActionRunner):
         env_vars = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
-            env_vars.update({s: os.environ[s]})
+            if not self.dry_run:
+                env_vars.update({s: os.environ[s]})
 
         for e, v in self.env.items():
             env_vars.update({e: v})
