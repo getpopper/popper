@@ -150,6 +150,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             return t.decode('utf-8')
         return t
 
+    ecode = None
     # quick shortcut for 1) above
     if not verbose and not log_file:
         out = ""
@@ -158,16 +159,17 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         try:
             out = check_output(cmd, shell=True, stderr=PIPE,
                                universal_newlines=True)
+            ecode = 0
         except CalledProcessError as ex:
+            ecode = ex.returncode
             if debug:
                 info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return b(out).strip(), 0
+        return b(out).strip(), ecode
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
-    ecode = None
     outf = None
     errf = None
 
@@ -229,6 +231,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
     except CalledProcessError as ex:
         msg = "Command '{}' failed: {}\n".format(cmd, ex)
+        ecode = ex.returncode
         if not ignore_error:
             fail(msg)
         info(msg)
@@ -257,6 +260,7 @@ class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -273,6 +277,7 @@ class threadsafe_iter_2:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -294,6 +299,7 @@ def threadsafe_generator(f):
         else:
             return threadsafe_iter_3(f(*args, **kwargs))
     return g
+
 
 def find_default_wfile(wfile):
     """
