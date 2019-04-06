@@ -1,7 +1,6 @@
 import click
 import os
 import hcl
-import errno
 import shutil
 import popper.utils as pu
 import popper.scm as scm
