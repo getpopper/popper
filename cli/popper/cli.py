@@ -109,6 +109,4 @@ def signal_handler(sig, frame):
             pu.exec_cmd('docker rm -f {}'.format(img))
         pu.info(msg)
     pu.info('\n')
-
-
     sys.exit(0)
