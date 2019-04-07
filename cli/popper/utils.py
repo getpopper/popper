@@ -344,3 +344,38 @@ def find_recursive_wfile():
                 wfile = os.path.abspath(wfile)
                 wfile_list.append(wfile)
     return wfile_list
+
+def parse(url):
+    service_url = None
+    service = None
+    user = None
+    repo = None
+    action = None
+    if url.startswith('https://'):
+        url = url[8:]
+        parts = url.split('/')
+        service_url = 'https://' + parts[0]
+        service = parts[0]
+        user = parts[1]
+        repo = parts[2]
+    elif url.startswith('http://'):
+        url = url[7:]
+        parts = url.split('/')
+        service_url = 'http://' + parts[0]
+        service = parts[0]
+        user = parts[1]
+        repo = parts[2]
+    elif url.startswith('git@'):
+        service_url, rest = url.split(':')
+        user, repo = rest.split('/')
+        service = service_url[4:]
+    elif url.startswith('ssh://'):
+        pu.fail("The ssh protocol is not supported yet.")
+    else:
+        service_url = 'https://github.com'
+        service = 'github.com'
+        parts = url.split('/')
+        user = url.split('/')[0]
+        repo = url.split('/')[1]
+        action = '/'.join(url.split('/')[1:])
+    return (service_url, service, user, repo, action)

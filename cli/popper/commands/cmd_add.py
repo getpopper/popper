@@ -10,17 +10,10 @@ from distutils.dir_util import copy_tree
 
 @click.command('add', short_help='Import workflow from remote repo.')
 @click.argument('path', required=True)
-@click.option(
-    '--branch',
-    help='Specifies the branch to download from.',
-    required=False,
-    default='master'
-)
 @pass_context
-def cli(ctx, path, branch):
+def cli(ctx, path):
     """Imports a workflow from a remote project to the current project
-    directory. For now it can import workflows only from repos hosted at
-    github.com
+    directory.
     """
     project_root = scm.get_root_folder()
     if not pu.is_popperized(project_root):
@@ -29,18 +22,22 @@ def cli(ctx, path, branch):
 
     parts = path.split('/')
     parts = list(filter(None, parts))
-    if len(parts) < 2:
-        pu.fail('Remote url format should be  <repo>[/folder[/wf.workflow]]')
+    if len(parts) < 3:
+        pu.fail(
+            'Remote url format should be <url>/<user>/<repo>[/folder[/wf.workflow]]')
 
-    org = parts[0]
-    repo = parts[1]
+    url, service, user, repo, _ = pu.parse('https://{}'.format(path))
+    if '@' in path:
+        branch = path.split('@')[-1]
+    else:
+        branch = 'master'
 
-    cloned_project_dir = os.path.join("/tmp", org, repo)
-    scm.clone('https://github.com', org, repo, os.path.dirname(
-        cloned_project_dir)
+    cloned_project_dir = os.path.join("/tmp", service, user, repo)
+    scm.clone(url, user, repo, os.path.dirname(
+        cloned_project_dir), branch
     )
 
-    if len(parts) == 2:
+    if len(parts) == 3:
         ptw_one = os.path.join(cloned_project_dir, "main.workflow")
         ptw_two = os.path.join(cloned_project_dir, ".github/main.workflow")
         if os.path.isfile(ptw_one):
@@ -49,8 +46,8 @@ def cli(ctx, path, branch):
             path_to_workflow = ptw_two
         else:
             pu.fail("Unable to find a .workflow file")
-    elif len(parts) >= 3:
-        path_to_workflow = os.path.join('/tmp', org, repo, '/'.join(parts[2:]))
+    elif len(parts) >= 4:
+        path_to_workflow = os.path.join(cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
         if not os.path.basename(path_to_workflow).endswith('.workflow'):
             path_to_workflow = os.path.join(path_to_workflow, 'main.workflow')
         if not os.path.isfile(path_to_workflow):

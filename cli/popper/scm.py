@@ -105,14 +105,9 @@ def clone(url, org, repo, repo_parent_dir, version=None, debug=False):
     cloned_repo = git.Repo.clone_from(
         '{}{}/{}'.format(url, org, repo.split('@')[0]),
         os.path.join(repo_parent_dir, repo),
-        depth=1
+        depth=1,
+        branch=version
     )
-
-    if not version:
-        return
-
-    cloned_repo.git.checkout(version)
-
 
 def get_git_files():
     """Used to return a list of files that are being tracked by

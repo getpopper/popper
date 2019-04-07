@@ -15,8 +15,8 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug,
-                 dry_run, reuse, parallel):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run,
+                 reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -194,35 +194,7 @@ class Workflow(object):
                     './' in a['uses']):
                 continue
 
-            action = None
-
-            if a['uses'].startswith('https://'):
-                a['uses'] = a['uses'][8:]
-                parts = a['uses'].split('/')
-                url = 'https://' + parts[0]
-                service = parts[0]
-                user = parts[1]
-                repo = parts[2]
-            elif a['uses'].startswith('http://'):
-                a['uses'] = a['uses'][7:]
-                parts = a['uses'].split('/')
-                url = 'http://' + parts[0]
-                service = parts[0]
-                user = parts[1]
-                repo = parts[2]
-            elif a['uses'].startswith('git@'):
-                url, rest = a['uses'].split(':')
-                user, repo = rest.split('/')
-                service = url[4:]
-            elif a['uses'].startswith('ssh://'):
-                pu.fail("The ssh protocol is not supported yet.")
-            else:
-                url = 'https://github.com'
-                service = 'github.com'
-                parts = a['uses'].split('/')
-                user = a['uses'].split('/')[0]
-                repo = a['uses'].split('/')[1]
-                action = '/'.join(a['uses'].split('/')[1:])
+            url, service, user, repo, action = pu.parse(a['uses'])
 
             if '@' in repo:
                 action_dir = '/'.join(a['uses'].split('@')[-2].split('/')[-1:])
