@@ -399,6 +399,7 @@ def parse(url):
 
     return (service_url, service, user, repo, action, action_dir, version)
 
+
 def get_parts(url):
     if url.startswith('https://'):
         parts = url[8:].split('/')

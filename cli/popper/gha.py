@@ -194,7 +194,8 @@ class Workflow(object):
                     './' in a['uses']):
                 continue
 
-            url, service, user, repo, action, action_dir, version = pu.parse(a['uses'])
+            url, service, user, repo, action, action_dir, version = pu.parse(
+                a['uses'])
 
             repo_parent_dir = os.path.join(
                 self.actions_cache_path, service, user
