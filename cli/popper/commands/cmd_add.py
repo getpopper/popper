@@ -24,7 +24,7 @@ def cli(ctx, path):
     parts = list(filter(None, parts))
     if len(parts) < 3:
         pu.fail(
-            'Remote url format should be <url>/<user>/<repo>[/folder[/wf.workflow]]')
+            'Required url format <url>/<user>/<repo>[/folder[/wf.workflow]]')
 
     url, service, user, repo, _ = pu.parse('https://{}'.format(path))
     if '@' in path:
