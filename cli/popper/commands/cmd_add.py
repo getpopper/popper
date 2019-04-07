@@ -47,7 +47,8 @@ def cli(ctx, path):
         else:
             pu.fail("Unable to find a .workflow file")
     elif len(parts) >= 4:
-        path_to_workflow = os.path.join(cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
+        path_to_workflow = os.path.join(
+            cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
         if not os.path.basename(path_to_workflow).endswith('.workflow'):
             path_to_workflow = os.path.join(path_to_workflow, 'main.workflow')
         if not os.path.isfile(path_to_workflow):
