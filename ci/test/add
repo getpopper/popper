@@ -19,6 +19,18 @@ popper add github.com/cplee/github-actions-demo/.github/main.workflow
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
+popper add gitlab.com/JayjeetAtGithub/github-actions-demo
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github/
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
 popper add github.com/JayjeetAtGithub/github-actions-demo@develop
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
@@ -31,5 +43,16 @@ popper add github.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
+popper add gitlab.com/JayjeetAtGithub/github-actions-demo@develop
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github@develop
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
 
 echo "Popper add command ran successfully !"
