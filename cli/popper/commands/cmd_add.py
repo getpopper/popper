@@ -20,21 +20,16 @@ def cli(ctx, path):
         pu.fail('Repository has not been popperized.')
         return
 
-    parts = path.split('/')
-    parts = list(filter(None, parts))
+    parts = pu.get_parts(path)
     if len(parts) < 3:
         pu.fail(
             'Required url format <url>/<user>/<repo>[/folder[/wf.workflow]]')
 
-    url, service, user, repo, _ = pu.parse('https://{}'.format(path))
-    if '@' in path:
-        branch = path.split('@')[-1]
-    else:
-        branch = 'master'
+    url, service, user, repo, _, _, version = pu.parse(path)
 
     cloned_project_dir = os.path.join("/tmp", service, user, repo)
     scm.clone(url, user, repo, os.path.dirname(
-        cloned_project_dir), branch
+        cloned_project_dir), version
     )
 
     if len(parts) == 3:

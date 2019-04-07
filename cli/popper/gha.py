@@ -194,18 +194,7 @@ class Workflow(object):
                     './' in a['uses']):
                 continue
 
-            url, service, user, repo, action = pu.parse(a['uses'])
-
-            if '@' in repo:
-                action_dir = '/'.join(a['uses'].split('@')[-2].split('/')[-1:])
-                version = a['uses'].split('@')[-1]
-            elif '@' in action:
-                action_dir = '/'.join(action.split('@')[-2].split('/')[-1:])
-                version = action.split('@')[-1]
-            else:
-                action_dir = '/'.join(a['uses'].split('/')[2:])
-                version = None
-            action_dir = os.path.join('./', action_dir)
+            url, service, user, repo, action, action_dir, version = pu.parse(a['uses'])
 
             repo_parent_dir = os.path.join(
                 self.actions_cache_path, service, user

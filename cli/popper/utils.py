@@ -359,6 +359,7 @@ def parse(url):
         service = parts[0]
         user = parts[1]
         repo = parts[2]
+        tail = '/'.join(parts[2:])
     elif url.startswith('http://'):
         url = url[7:]
         parts = url.split('/')
@@ -366,9 +367,13 @@ def parse(url):
         service = parts[0]
         user = parts[1]
         repo = parts[2]
+        tail = '/'.join(parts[2:])
     elif url.startswith('git@'):
         service_url, rest = url.split(':')
-        user, repo = rest.split('/')
+        parts = rest.split('/')
+        user = parts[0]
+        repo = parts[1]
+        tail = '/'.join(parts[1:])
         service = service_url[4:]
     elif url.startswith('ssh://'):
         pu.fail("The ssh protocol is not supported yet.")
@@ -376,7 +381,34 @@ def parse(url):
         service_url = 'https://github.com'
         service = 'github.com'
         parts = url.split('/')
-        user = url.split('/')[0]
-        repo = url.split('/')[1]
+        user = parts[0]
+        repo = parts[1]
+        tail = '/'.join(parts[1:])
         action = '/'.join(url.split('/')[1:])
-    return (service_url, service, user, repo, action)
+
+    if '@' in tail:
+        action_dir = '/'.join(url.split('@')[-2].split('/')[-1:])
+        version = url.split('@')[-1]
+    elif '@' in action:
+        action_dir = '/'.join(action.split('@')[-2].split('/')[-1:])
+        version = action.split('@')[-1]
+    else:
+        action_dir = '/'.join(url.split('/')[2:])
+        version = None
+    action_dir = os.path.join('./', action_dir)
+
+    return (service_url, service, user, repo, action, action_dir, version)
+
+def get_parts(url):
+    if url.startswith('https://'):
+        parts = url[8:].split('/')
+    elif url.startswith('http://'):
+        parts = url[7:].split('/')
+    elif url.startswith('git@'):
+        service_url, rest = url.split(':')
+        parts = ['github.com'] + rest.split('/')
+    elif url.startswith('ssh://'):
+        pu.fail('The ssh protocol is not supported yet.')
+    else:
+        parts = ['github.com'] + url.split('/')
+    return parts

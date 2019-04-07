@@ -7,51 +7,64 @@ cd $test_repo_path
 
 popper init
 
-popper add github.com/cplee/github-actions-demo
+popper add cplee/github-actions-demo@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add github.com/cplee/github-actions-demo/.github/
+popper add cplee/github-actions-demo@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add github.com/cplee/github-actions-demo/.github/main.workflow
+popper add cplee/github-actions-demo@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add gitlab.com/JayjeetAtGithub/github-actions-demo
+
+popper add https://github.com/cplee/github-actions-demo@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github/
+popper add https://github.com/cplee/github-actions-demo/.github@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow
+popper add https://github.com/cplee/github-actions-demo/.github/main.workflow@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add github.com/JayjeetAtGithub/github-actions-demo@develop
+popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add github.com/JayjeetAtGithub/github-actions-demo/.github@develop
+popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add github.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
+popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add gitlab.com/JayjeetAtGithub/github-actions-demo@develop
+popper add https://github.com/JayjeetAtGithub/github-actions-demo@develop
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github@develop
+popper add https://github.com/JayjeetAtGithub/github-actions-demo/.github@develop
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
-popper add gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
+popper add https://github.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo@develop
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github@develop
+test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
+test -f /tmp/mypaper/main.workflow
+
+popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 
