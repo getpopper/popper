@@ -69,7 +69,7 @@ def get_sha():
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
     except ValueError:
-        pu.fail('Needed a single revision.')
+        pu.fail('Could not obtain revision of repository located at {}'.format(get_root_folder()))
 
 
 def get_remote_url():
