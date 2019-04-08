@@ -319,7 +319,9 @@ class Workflow(object):
         parts = pu.get_parts(path)
         if len(parts) < 3:
             pu.fail(
-                'Required url format <url>/<user>/<repo>[/folder[/wf.workflow]]')
+                'Required url format: \
+                 <url>/<user>/<repo>[/folder[/wf.workflow]]'
+            )
 
         url, service, user, repo, _, _, version = pu.parse(path)
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
