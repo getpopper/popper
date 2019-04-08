@@ -17,5 +17,7 @@ def cli(ctx, path):
     if not pu.is_popperized(project_root):
         pu.fail('Repository has not been popperized.')
         return
-
-    Workflow.import_from_repo(path, project_root)
+    try:
+        Workflow.import_from_repo(path, project_root)
+    except Exception as e:
+        pu.fail('Failed to import from {} !'.format(path))

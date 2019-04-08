@@ -348,7 +348,7 @@ class Workflow(object):
                 pu.fail("Unable to find a .workflow file")
 
         shutil.copy(path_to_workflow, project_root)
-        pu.info("Successfully imported workflow\n".format(path_to_workflow))
+        pu.info("Successfully imported from {}\n".format(path_to_workflow))
 
         with open(path_to_workflow, 'r') as fp:
             wf = hcl.load(fp)
