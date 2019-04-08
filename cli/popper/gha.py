@@ -323,7 +323,7 @@ class Workflow(object):
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(self.wf['action'][a]['runner'].run, reuse):
-                    a for a in stage
+                        a for a in stage
                 }
                 popper.cli.flist = flist
                 for future in as_completed(flist):

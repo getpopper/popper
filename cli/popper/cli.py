@@ -1,7 +1,6 @@
 import os
 import signal
 import sys
-import time
 
 import click
 import difflib
@@ -83,10 +82,8 @@ flist = None
 def signal_handler(sig, frame):
     if interrupt_params.parallel:
         for future in flist:
-            future.cancel()     # Try to safely exit threads
-        time.sleep(50)      # Wait for some time
+            future.cancel()
 
-    # This will kill everything
     for pid in process_list:
         try:
             os.kill(pid, signal.SIGTERM)
@@ -94,19 +91,7 @@ def signal_handler(sig, frame):
             # Process was probably already killed, so exit silently
             pass
 
-    pu.info("\n")
-    cmd_out = pu.exec_cmd('docker ps -a --format "{{.Names}}"')
-    cmd_out = cmd_out[0].splitlines()
-    cmd_out = set(cmd_out)
-
-    for img in set(docker_list).intersection(cmd_out):
+    for img in docker_list:
         pu.exec_cmd('docker stop {}'.format(img))
-        if interrupt_params.reuse:
-            pu.info('--reuse flag is set. Retaining containers')
-            msg = '\nStopping {}'.format(img)
-        else:
-            msg = '\nDeleting {}'.format(img)
-            pu.exec_cmd('docker rm -f {}'.format(img))
-        pu.info(msg)
-    pu.info('\n')
+
     sys.exit(0)
