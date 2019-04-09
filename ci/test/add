@@ -25,13 +25,13 @@ test -f /tmp/mypaper/main.workflow
 rm -rf /tmp/mypaper/.github
 rm /tmp/mypaper/main.workflow
 
-popper add cplee/github-actions-demo@master
+popper add cplee/github-actions-demo/.github@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 rm -rf /tmp/mypaper/.github
 rm /tmp/mypaper/main.workflow
 
-popper add cplee/github-actions-demo@master
+popper add cplee/github-actions-demo/.github/main.workflow@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
 rm -rf /tmp/mypaper/.github
