@@ -68,6 +68,11 @@ action "test interrupt" {
   runs = "interrupt"
 }
 
+action "test add" {
+  uses = "./ci/test"
+  runs = "add"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -85,6 +90,7 @@ action "end" {
     "test parallel",
     "test dot",
     "test singularity",
-    "test interrupt"
+    "test interrupt",
+    "test add"
   ]
 }

@@ -4,19 +4,21 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing as mp
 import hcl
 import os
+import shutil
 import popper.utils as pu
 import popper.scm as scm
 from spython.main import Client
 import sys
 import popper.cli
+from distutils.dir_util import copy_tree
 
 
 class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug,
-                 dry_run, reuse, parallel):
+    def __init__(self, wfile, workspace, quiet, debug, dry_run,
+                 reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -194,46 +196,8 @@ class Workflow(object):
                     './' in a['uses']):
                 continue
 
-            action = None
-
-            if a['uses'].startswith('https://'):
-                a['uses'] = a['uses'][8:]
-                parts = a['uses'].split('/')
-                url = 'https://' + parts[0]
-                service = parts[0]
-                user = parts[1]
-                repo = parts[2]
-            elif a['uses'].startswith('http://'):
-                a['uses'] = a['uses'][7:]
-                parts = a['uses'].split('/')
-                url = 'http://' + parts[0]
-                service = parts[0]
-                user = parts[1]
-                repo = parts[2]
-            elif a['uses'].startswith('git@'):
-                url, rest = a['uses'].split(':')
-                user, repo = rest.split('/')
-                service = url[4:]
-            elif a['uses'].startswith('ssh://'):
-                pu.fail("The ssh protocol is not supported yet.")
-            else:
-                url = 'https://github.com'
-                service = 'github.com'
-                parts = a['uses'].split('/')
-                user = a['uses'].split('/')[0]
-                repo = a['uses'].split('/')[1]
-                action = '/'.join(a['uses'].split('/')[1:])
-
-            if '@' in repo:
-                action_dir = '/'.join(a['uses'].split('@')[-2].split('/')[-1:])
-                version = a['uses'].split('@')[-1]
-            elif '@' in action:
-                action_dir = '/'.join(action.split('@')[-2].split('/')[-1:])
-                version = action.split('@')[-1]
-            else:
-                action_dir = '/'.join(a['uses'].split('/')[2:])
-                version = None
-            action_dir = os.path.join('./', action_dir)
+            url, service, user, repo, action, action_dir, version = pu.parse(
+                a['uses'])
 
             repo_parent_dir = os.path.join(
                 self.actions_cache_path, service, user
@@ -349,6 +313,58 @@ class Workflow(object):
             for n in current_stage:
                 next_stage.update(self.wf['action'][n].get('next', set()))
             current_stage = next_stage
+
+    @staticmethod
+    def import_from_repo(path, project_root):
+        parts = pu.get_parts(path)
+        if len(parts) < 3:
+            pu.fail(
+                'Required url format: \
+                 <url>/<user>/<repo>[/folder[/wf.workflow]]'
+            )
+
+        url, service, user, repo, _, _, version = pu.parse(path)
+        cloned_project_dir = os.path.join("/tmp", service, user, repo)
+        scm.clone(url, user, repo, os.path.dirname(
+            cloned_project_dir), version
+        )
+
+        if len(parts) == 3:
+            ptw_one = os.path.join(cloned_project_dir, "main.workflow")
+            ptw_two = os.path.join(cloned_project_dir, ".github/main.workflow")
+            if os.path.isfile(ptw_one):
+                path_to_workflow = ptw_one
+            elif os.path.isfile(ptw_two):
+                path_to_workflow = ptw_two
+            else:
+                pu.fail("Unable to find a .workflow file")
+        elif len(parts) >= 4:
+            path_to_workflow = os.path.join(
+                cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
+            if not os.path.basename(path_to_workflow).endswith('.workflow'):
+                path_to_workflow = os.path.join(
+                    path_to_workflow, 'main.workflow')
+            if not os.path.isfile(path_to_workflow):
+                pu.fail("Unable to find a .workflow file")
+
+        shutil.copy(path_to_workflow, project_root)
+        pu.info("Successfully imported from {}\n".format(path_to_workflow))
+
+        with open(path_to_workflow, 'r') as fp:
+            wf = hcl.load(fp)
+
+        action_paths = list()
+        if wf.get('action', None):
+            for _, a_block in wf['action'].items():
+                if a_block['uses'].startswith("./"):
+                    action_paths.append(a_block['uses'])
+
+        action_paths = set([a.split("/")[1] for a in action_paths])
+        for a in action_paths:
+            copy_tree(os.path.join(cloned_project_dir, a),
+                      os.path.join(project_root, a))
+            pu.info("Copied {} to {}...\n".format(os.path.join(
+                cloned_project_dir, a), project_root))
 
 
 class ActionRunner(object):
