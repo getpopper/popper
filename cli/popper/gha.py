@@ -610,6 +610,7 @@ class HostRunner(ActionRunner):
         cmd[0] = os.path.join('./', cmd[0])
         cmd.extend(self.action.get('args', ''))
 
+        # cwd = scm.get_root_folder()
         cwd = os.getcwd()
         if not self.dry_run:
             if 'repo_dir' in self.action:
