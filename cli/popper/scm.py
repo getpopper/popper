@@ -68,8 +68,8 @@ def get_sha():
     """Runs git rev-parse --short HEAD and returns result"""
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
-    except ValueError:
-        pu.fail('Repository needs at least one commit\n')
+    except ValueError as e:
+        pu.fail(str(e)+"\n")
 
 
 def get_remote_url():
