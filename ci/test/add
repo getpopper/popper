@@ -7,6 +7,18 @@ cd $test_repo_path
 
 popper init
 
+popper add https://github.com/actions/bin@master
+test -f /tmp/mypaper/main.workflow
+rm /tmp/mypaper/main.workflow
+
+popper add https://github.com/actions/bin/.github@master
+test -f /tmp/mypaper/main.workflow
+rm /tmp/mypaper/main.workflow
+
+popper add https://github.com/actions/bin/.github/main.workflow@master
+test -f /tmp/mypaper/main.workflow
+rm /tmp/mypaper/main.workflow
+
 popper add cplee/github-actions-demo@master
 test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
 test -f /tmp/mypaper/main.workflow
