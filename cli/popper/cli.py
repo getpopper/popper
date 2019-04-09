@@ -80,18 +80,23 @@ flist = None
 
 
 def signal_handler(sig, frame):
+
+    pu.info('Caught Ctrl-C signal! Stopping running actions.\n')
+
     if interrupt_params.parallel:
         for future in flist:
             future.cancel()
 
     for pid in process_list:
+        pu.info("Stopping process '{}'\n".format(pid))
         try:
             os.kill(pid, signal.SIGTERM)
         except OSError:
             # Process was probably already killed, so exit silently
             pass
 
-    for img in docker_list:
-        pu.exec_cmd('docker stop {}'.format(img))
+    for cid in docker_list:
+        pu.info("Stopping container '{}'\n".format(cid))
+        pu.exec_cmd('docker stop -t 1 {}'.format(cid))
 
     sys.exit(0)

@@ -383,9 +383,9 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
-        popper.cli.docker_list.append(self.cid)
 
     def run(self, reuse):
+        popper.cli.docker_list.append(self.cid)
         build = True
         if 'docker://' in self.action['uses']:
             tag = self.action['uses'].replace('docker://', '')
@@ -609,7 +609,7 @@ class HostRunner(ActionRunner):
         _, ecode = pu.exec_cmd(
             ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,
             ignore_error=True, log_file=self.log_filename,
-            dry_run=self.dry_run)
+            dry_run=self.dry_run, add_to_process_list=True)
 
         for i in self.action.get('env', {}):
             os.environ.pop(i)
