@@ -5,109 +5,204 @@ source ./common
 init_test_repo
 cd $test_repo_path
 
-git clone https://github.com/cplee/github-actions-demo.git
+#################
+# serial test for dockerrunner
 
-cd github-actions-demo
-export PHONY_SECRET=foo
-popper run & pid=$!
-#Give popper run some time to create dockers
-sleep 5
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["sleep"]
+}
+action "sleep" {
+  uses = "docker://busybox"
+  args = "sleep 360"
+}
+EOF
+
+popper run &
+pid=$!
+
+# give popper some time to create containers
+sleep 15
 
 # -2 is for SIGINT or Ctrl-C
 kill -2 $pid
 
-#Give popper run some time to remove dockers and then check
+# give popper some time to remove containers
 sleep 5
-check="deploy branch-filter test lint install"
-actual=`docker ps -a --format "{{.Names}}"`
 
-cd ..
-for a in $actual
-do
-  for b in $check
-  do
-    if [ $a = $b ]
-    then echo "fail" >> fail
-    fi
-  done
-done
+# ensure no containers are running
+test -z "$(docker ps -aq --filter 'status=running')"
 
+#################
+# parallel for dockerrunner
 
-#A test for --parallel run
+# TODO: remove conditional to reproduce #588
+# {
+PY_VERSION=$( (python --version) 2>&1)
+
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 cat <<EOF > main.workflow
 workflow "test" {
   resolves = ["sleep"]
 }
 
-action "sleep_20" {
+action "sleep1" {
   uses = "docker://busybox"
-  args = ["sleep 20; echo 'slept for 20s'"]
+  args = ["sleep 360"]
 }
 
-action "sleep_30" {
+action "sleep2" {
   uses = "docker://busybox"
-  args = ["sleep 30; echo 'slept for 30s'"]
+  args = ["sleep 360"]
 }
 
-action "sleep_50" {
+action "sleep3" {
   uses = "docker://busybox"
-  args = ["sleep 50; echo 'slept for 50s'"]
+  args = ["sleep 360"]
 }
 
-action "sleep_100" {
+action "sleep4" {
   uses = "docker://busybox"
-  args = ["sleep 100;", "echo 'slept for 100s'"]
+  args = ["sleep 360"]
 }
 
-action "sleep_200" {
+action "sleep5" {
   uses = "docker://busybox"
-  args = ["sleep 200;", "echo 'slept for 200s'"]
+  args = ["sleep 360"]
 }
 
 action "sleep" {
   uses = "docker://busybox"
+  args = ["sleep 360"]
   needs = [
-    "sleep_20",
-    "sleep_30",
-    "sleep_50",
-    "sleep_100",
-    "sleep_200"
+    "sleep1",
+    "sleep2",
+    "sleep3",
+    "sleep4",
+    "sleep5"
   ]
 }
-
 EOF
 
-popper run --parallel & pid=$!
-#Give popper run some time to create dockers
-sleep 80
+popper run --parallel &
+pid=$!
+
+# give popper some time to create containers
+sleep 20
 
 # -2 is for SIGINT or Ctrl-C
 kill -2 $pid
 
-#Give popper run some time to remove dockers and then check
-sleep 200
-check="sleep_20 sleep_30 sleep_50 sleep_100 sleep_200 sleep"
-actual=`docker ps -a --format "{{.Names}}"`
+# give popper some time to remove containers
+sleep 30
 
+test -z "$(docker ps -aq --filter 'status=running')"
 
-
-if [ -z $actual ]
-then
-  echo "Empty"
-else
-  for a in $actual
-    do
-      for b in $check
-      do
-        if [ $a = $b ]
-        then
-          echo "fail" >> fail
-        fi
-      done
-    done
+# }
 fi
 
+#################
+# hostrunner actions
 
-counter=`cat fail|wc -l`
-test 0 -eq $counter
+mkdir -p actions/sleep
+
+cat <<EOF > actions/sleep/entrypoint.sh
+#!/bin/bash
+sleep \$@
+EOF
+
+chmod +x actions/sleep/entrypoint.sh
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["sleep"]
+}
+
+action "sleep" {
+  uses = "./actions/sleep"
+  args = "360"
+}
+EOF
+
+popper run &
+pid=$!
+
+# give popper some time to start processes
+sleep 5
+
+# -2 is for SIGINT or Ctrl-C
+kill -2 $pid
+
+sleep 5
+
+ps aux > running_procs
+! cat running_procs | grep sleep
+rm running_procs
+
+#################
+# --parallel run on hostrunner
+
+# TODO: uncomment to reproduce #587 and #588
+# {
+#
+#mkdir -p actions/sleep
+#
+#cat <<EOF > main.workflow
+#workflow "test" {
+#  resolves = ["sleep"]
+#}
+#
+#action "sleep1" {
+#  uses = "./actions/sleep"
+#  args = "360"
+#}
+#
+#action "sleep2" {
+#  uses = "./actions/sleep"
+#  args = "360"
+#}
+#
+#action "sleep3" {
+#  uses = "./actions/sleep"
+#  args = "360"
+#}
+#
+#action "sleep4" {
+#  uses = "./actions/sleep"
+#  args = "360"
+#}
+#
+#action "sleep5" {
+#  uses = "./actions/sleep"
+#  args = "360"
+#}
+#
+#action "sleep" {
+#  uses = "./actions/sleep"
+#  args = "360"
+#  needs = [
+#    "sleep1",
+#    "sleep2",
+#    "sleep3",
+#    "sleep4",
+#    "sleep5"
+#  ]
+#}
+#EOF
+#
+#popper run --parallel &
+#pid=$!
+#
+## give popper some time to start processes
+#sleep 15
+#
+## -2 is for SIGINT or Ctrl-C
+#kill -2 $pid
+#
+#sleep 5
+#
+#ps aux > running_procs
+#! cat running_procs | grep sleep
+#rm running_procs
+# }

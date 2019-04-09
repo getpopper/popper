@@ -125,7 +125,7 @@ def print_yaml(msg, **styles):
 
 
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
-             log_file=None, dry_run=False):
+             log_file=None, dry_run=False, add_to_process_list=False):
 
     # If dry_run is True, I don't want the command to be executed
     # just an empty return
@@ -195,7 +195,9 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
                 info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
             p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
                       universal_newlines=True)
-        popper.cli.process_list.append(p.pid)
+
+        if add_to_process_list:
+            popper.cli.process_list.append(p.pid)
 
         if debug:
             info('DEBUG: Reading process output\n')
