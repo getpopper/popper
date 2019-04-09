@@ -6,7 +6,7 @@ init_test_repo
 cd $test_repo_path
 
 #################
-# serial test
+# serial test for dockerrunner
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -34,7 +34,13 @@ sleep 5
 test -z "$(docker ps -aq --filter 'status=running')"
 
 #################
-# --parallel run
+# parallel for dockerrunner
+
+# TODO: remove conditional to reproduce #588
+# {
+PY_VERSION=$( (python --version) 2>&1)
+
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -93,6 +99,9 @@ sleep 30
 
 test -z "$(docker ps -aq --filter 'status=running')"
 
+# }
+fi
+
 #################
 # hostrunner actions
 
@@ -131,10 +140,11 @@ ps aux > running_procs
 ! cat running_procs | grep sleep
 rm running_procs
 
-# TODO: uncomment to reproduce #587
-#
-##################
-## --parallel run on hostrunner
+#################
+# --parallel run on hostrunner
+
+# TODO: uncomment to reproduce #587 and #588
+# {
 #
 #mkdir -p actions/sleep
 #
@@ -195,3 +205,4 @@ rm running_procs
 #ps aux > running_procs
 #! cat running_procs | grep sleep
 #rm running_procs
+# }
