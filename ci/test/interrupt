@@ -89,7 +89,7 @@ sleep 20
 kill -2 $pid
 
 # give popper some time to remove containers
-sleep 10
+sleep 30
 
 test -z "$(docker ps -aq --filter 'status=running')"
 
@@ -131,7 +131,7 @@ ps aux > running_procs
 ! cat running_procs | grep sleep
 rm running_procs
 
-# TODO: uncomment this to reproduce issue#586
+# TODO: uncomment to reproduce #587
 #
 ##################
 ## --parallel run on hostrunner
