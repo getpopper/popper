@@ -1,7 +1,6 @@
 import os
 import signal
 import sys
-
 import click
 import difflib
 from . import __version__ as popper_version
@@ -78,6 +77,12 @@ process_list = list()
 interrupt_params = None
 flist = None
 
+def kill(pid):
+    try:
+        pgrp = os.getpgid(pid)
+        os.killpg(pgrp, signal.SIGINT)
+    except OSError:
+        pass
 
 def signal_handler(sig, frame):
 
@@ -89,11 +94,7 @@ def signal_handler(sig, frame):
 
     for pid in process_list:
         pu.info("Stopping process '{}'\n".format(pid))
-        try:
-            os.kill(pid, signal.SIGTERM)
-        except OSError:
-            # Process was probably already killed, so exit silently
-            pass
+        kill(pid)
 
     for cid in docker_list:
         pu.info("Stopping container '{}'\n".format(cid))

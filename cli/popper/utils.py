@@ -189,12 +189,12 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             if debug:
                 info('DEBUG: subprocess.Popen() with combined stdout/stderr\n')
             p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
-                      universal_newlines=True)
+                      universal_newlines=True, preexec_fn=os.setsid)
         else:
             if debug:
                 info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
             p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
-                      universal_newlines=True)
+                      universal_newlines=True, preexec_fn=os.setsid)
 
         if add_to_process_list:
             popper.cli.process_list.append(p.pid)

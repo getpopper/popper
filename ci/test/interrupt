@@ -137,72 +137,68 @@ kill -2 $pid
 sleep 5
 
 ps aux > running_procs
-! cat running_procs | grep sleep
+test $(cat running_procs | grep sleep | wc -l) -eq 0
 rm running_procs
 
 #################
 # --parallel run on hostrunner
 
-# TODO: uncomment to reproduce #587 and #588
-# {
-#
-#mkdir -p actions/sleep
-#
-#cat <<EOF > main.workflow
-#workflow "test" {
-#  resolves = ["sleep"]
-#}
-#
-#action "sleep1" {
-#  uses = "./actions/sleep"
-#  args = "360"
-#}
-#
-#action "sleep2" {
-#  uses = "./actions/sleep"
-#  args = "360"
-#}
-#
-#action "sleep3" {
-#  uses = "./actions/sleep"
-#  args = "360"
-#}
-#
-#action "sleep4" {
-#  uses = "./actions/sleep"
-#  args = "360"
-#}
-#
-#action "sleep5" {
-#  uses = "./actions/sleep"
-#  args = "360"
-#}
-#
-#action "sleep" {
-#  uses = "./actions/sleep"
-#  args = "360"
-#  needs = [
-#    "sleep1",
-#    "sleep2",
-#    "sleep3",
-#    "sleep4",
-#    "sleep5"
-#  ]
-#}
-#EOF
-#
-#popper run --parallel &
-#pid=$!
-#
-## give popper some time to start processes
-#sleep 15
-#
-## -2 is for SIGINT or Ctrl-C
-#kill -2 $pid
-#
-#sleep 5
-#
-#ps aux > running_procs
-#! cat running_procs | grep sleep
-#rm running_procs
-# }
+mkdir -p actions/sleep
+
+cat <<EOF > main.workflow
+workflow "test" {
+ resolves = ["sleep"]
+}
+
+action "sleep1" {
+ uses = "./actions/sleep"
+ args = "360"
+}
+
+action "sleep2" {
+ uses = "./actions/sleep"
+ args = "360"
+}
+
+action "sleep3" {
+ uses = "./actions/sleep"
+ args = "360"
+}
+
+action "sleep4" {
+ uses = "./actions/sleep"
+ args = "360"
+}
+
+action "sleep5" {
+ uses = "./actions/sleep"
+ args = "360"
+}
+
+action "sleep" {
+ uses = "./actions/sleep"
+ args = "360"
+ needs = [
+   "sleep1",
+   "sleep2",
+   "sleep3",
+   "sleep4",
+   "sleep5"
+ ]
+}
+EOF
+
+popper run --parallel &
+pid=$!
+
+# give popper some time to start processes
+sleep 15
+
+# -2 is for SIGINT or Ctrl-C
+kill -2 $pid
+
+sleep 5
+
+ps aux > running_procs
+test $(cat running_procs | grep sleep | wc -l) -eq 0
+rm running_procs
