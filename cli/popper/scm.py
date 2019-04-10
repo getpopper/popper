@@ -4,6 +4,7 @@ import shutil
 import click
 import sys
 import popper.utils as pu
+import traceback
 
 try:
     repo = git.Repo(search_parent_directories=True)
@@ -64,12 +65,16 @@ def get_ref():
     return "" if repo.head.is_detached else repo.head.ref.path
 
 
-def get_sha():
+def get_sha(debug):
     """Runs git rev-parse --short HEAD and returns result"""
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
-    except ValueError:
-        pu.fail('Needed a single revision.')
+    except ValueError as e:
+        if debug:
+            traceback.print_exc()
+        pu.fail('Could not obtain revision of repository located at {}\n'
+                .format(get_root_folder()))
+
 
 
 def get_remote_url():
