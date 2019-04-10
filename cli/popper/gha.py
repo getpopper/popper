@@ -49,7 +49,7 @@ class Workflow(object):
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(),
+            'GITHUB_SHA': scm.get_sha(debug),
             'GITHUB_REF': scm.get_ref()
         }
 
