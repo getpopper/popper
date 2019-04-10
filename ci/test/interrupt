@@ -38,9 +38,9 @@ test -z "$(docker ps -aq --filter 'status=running')"
 
 # TODO: remove conditional to reproduce #588
 # {
-PY_VERSION=$( (python --version) 2>&1)
+# PY_VERSION=$( (python --version) 2>&1)
 
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+# if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -99,8 +99,8 @@ sleep 30
 
 test -z "$(docker ps -aq --filter 'status=running')"
 
-# }
-fi
+# # }
+# fi
 
 #################
 # hostrunner actions
