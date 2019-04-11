@@ -3,7 +3,7 @@
 import click
 import os
 import popper.utils as pu
-
+import sys
 from popper.gha import Workflow
 from popper.cli import pass_context
 import popper.cli
@@ -75,7 +75,7 @@ def cli(ctx, action, wfile, workspace, reuse,
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         for wfile in wfile_list:
-            pu.info("Found and running workflow at "+wfile+"\n")
+            pu.info("Found and running workflow at " + wfile + "\n")
             run_pipeline(action, wfile, workspace, reuse, quiet,
                          debug, dry_run, parallel)
     else:
@@ -100,6 +100,9 @@ def run_pipeline(action, wfile, workspace, reuse,
         )
 
     if parallel:
+        if sys.version_info[0] < 3:
+            pu.fail('--parallel is only supported on Python3')
+
         pu.info(
             "\n  " +
             "WARNING: using --parallel may result in interleaved ouput." +

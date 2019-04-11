@@ -5,6 +5,11 @@ source ./common
 init_test_repo
 cd $test_repo_path
 
+PY_VERSION=$( (python --version) 2>&1)
+
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+
+
 cat <<EOF > main.workflow
 workflow "test" {
   resolves = ["ls cmds", "curl urls"]
@@ -279,3 +284,5 @@ EOF
 
 ! popper run --parallel
 echo "Some actions failed as expected !"
+
+fi
