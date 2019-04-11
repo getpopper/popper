@@ -419,8 +419,6 @@ class DockerRunner(ActionRunner):
 
             action_dir = os.path.basename(
                 self.action['uses'].replace('./', ''))
-            if action_dir:
-                action_dir += '/'
 
             tag = (
                 'popper/' + repo_id + action_dir + ':' + self.env['GITHUB_SHA']
