@@ -417,10 +417,14 @@ class DockerRunner(ActionRunner):
             else:
                 repo_id = ''
 
+            action_dir = os.path.basename(
+                self.action['uses'].replace('./', ''))
+            if action_dir:
+                action_dir += '/'
+
             tag = (
-                'popper/' + repo_id + self.action['uses'] + ':' +
-                self.env['GITHUB_SHA']
-            ).replace('./', '')
+                'popper/' + repo_id + action_dir + ':' + self.env['GITHUB_SHA']
+            )
 
             dockerfile_path = os.path.join(os.getcwd(), self.action['uses'])
         else:
