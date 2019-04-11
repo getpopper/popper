@@ -632,7 +632,7 @@ class HostRunner(ActionRunner):
 
         for i in self.action.get('env', {}):
             os.environ.pop(i)
-        
+
         os.chdir(cwd)
 
         if ecode != 0:
