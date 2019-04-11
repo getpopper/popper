@@ -43,7 +43,7 @@ class Workflow(object):
         if scm.get_user():
             repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
         else:
-            repo_id = None
+            repo_id = 'unknown'
 
         self.env = {
             'GITHUB_WORKSPACE': self.workspace,
@@ -412,7 +412,7 @@ class DockerRunner(ActionRunner):
             tag = self.action['uses'].replace('docker://', '')
             build = False
         elif './' in self.action['uses']:
-            if self.env['GITHUB_REPOSITORY']:
+            if self.env['GITHUB_REPOSITORY'] == 'unknown':
                 repo_id = self.env['GITHUB_REPOSITORY'] + '/'
             else:
                 repo_id = ''
