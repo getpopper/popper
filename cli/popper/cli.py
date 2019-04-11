@@ -80,7 +80,7 @@ flist = None
 def kill(pid):
     try:
         pgrp = os.getpgid(pid)
-        os.killpg(pgrp, signal.SIGINT)
+        os.killpg(pgrp, signal.SIGTERM)
     except OSError:
         pass
 
