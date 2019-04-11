@@ -104,6 +104,7 @@ fi
 
 #################
 # hostrunner actions
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 mkdir -p actions/sleep
 
@@ -202,3 +203,6 @@ sleep 5
 ps aux > running_procs
 test $(cat running_procs | grep sleep | wc -l) -eq 0
 rm running_procs
+
+# }
+fi
