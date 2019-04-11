@@ -77,13 +77,6 @@ process_list = list()
 interrupt_params = None
 flist = None
 
-def kill(pid):
-    try:
-        pgrp = os.getpgid(pid)
-        os.killpg(pgrp, signal.SIGTERM)
-    except OSError:
-        pass
-
 def signal_handler(sig, frame):
 
     pu.info('Caught Ctrl-C signal! Stopping running actions.\n')
@@ -94,7 +87,10 @@ def signal_handler(sig, frame):
 
     for pid in process_list:
         pu.info("Stopping process '{}'\n".format(pid))
-        kill(pid)
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except OSError:
+            pass
 
     for cid in docker_list:
         pu.info("Stopping container '{}'\n".format(cid))
