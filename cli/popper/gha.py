@@ -407,7 +407,10 @@ class DockerRunner(ActionRunner):
             tag = self.action['uses'].replace('docker://', '')
             build = False
         elif './' in self.action['uses']:
-            tag = 'action/' + os.path.basename(self.action['uses'])
+            tag = (
+                'action/' + self.env['GITHUB_REPOSITORY'] +
+                self.action['uses'] + ':' + self.env['GITHUB_SHA']
+            ).replace('./', '')
             dockerfile_path = os.path.join(os.getcwd(), self.action['uses'])
         else:
             tag = '/'.join(self.action['uses'].split('/')[:2])
