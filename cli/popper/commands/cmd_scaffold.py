@@ -1,8 +1,8 @@
 import os
 
 import click
-from popper import utils as pu
 from popper.cli import pass_context
+from ..cli import log
 
 
 @click.command('scaffold', short_help='Scaffolds a workflow folder.')
@@ -70,7 +70,7 @@ def cli(ctx):
 
     for filename in os.listdir(project_root):
         if filename.endswith('.workflow'):
-            pu.fail('.workflow file already present !')
+            log.fail('.workflow file already present !')
 
     if not os.path.exists(actions_dir):
         os.mkdir(actions_dir)
@@ -94,4 +94,4 @@ def cli(ctx):
     with open(os.path.join(actions_dir, 'example/README.md'), 'w') as rf:
         rf.write(readme_content)
 
-    pu.info('Successfully scaffolded. \n')
+    log.info('Successfully scaffolded. ')

@@ -1,8 +1,7 @@
 import os
 import shutil
-
 import git
-from popper import utils as pu
+from popper.cli import log
 
 
 repo = None
@@ -17,7 +16,7 @@ def init_repo_object():
     try:
         repo = git.Repo(search_parent_directories=True)
     except git.exc.InvalidGitRepositoryError:
-        pu.fail('Unable to find root of a Git repository.\n')
+        log.fail('Unable to find root of a Git repository.')
 
 
 def get_git_root_folder():
@@ -36,9 +35,9 @@ def get_popper_root_folder():
     if os.path.exists(os.path.join(root_folder, '.popper.yml')):
         return root_folder
 
-    pu.fail(
+    log.fail(
         "Unable to find .popper.yml at {}. "
-        "Run 'popper init' first.\n".format(root_folder))
+        "Run 'popper init' first.".format(root_folder))
 
 
 def infer_repo_name_from_root_folder():
@@ -95,10 +94,9 @@ def get_sha(debug):
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
     except ValueError as e:
-        if debug:
-            print(e)
-        pu.fail('Could not obtain revision of repository located at {}\n'
-                .format(get_git_root_folder()))
+        log.debug(e)
+        log.fail('Could not obtain revision of repository located at {}'
+                 .format(get_git_root_folder()))
 
 
 def get_remote_url():

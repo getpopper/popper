@@ -1,9 +1,8 @@
 import os
-
 import click
-from popper import utils as pu
 from popper.cli import pass_context
 from popper.gha import Workflow
+from ..cli import log
 
 
 @click.command('add', short_help='Import workflow from remote repo.')
@@ -16,4 +15,4 @@ def cli(ctx, path):
     try:
         Workflow.import_from_repo(path, os.getcwd())
     except Exception:
-        pu.fail('Failed to import from {} !'.format(path))
+        log.fail('Failed to import from {} !'.format(path))

@@ -5,10 +5,9 @@ import sys
 
 import click
 import popper.cli
-from popper import utils as pu
 from popper.cli import pass_context
 from popper.gha import Workflow
-
+from ..cli import log
 
 @click.command(
     'run', short_help='Run a workflow or action.')
@@ -68,25 +67,38 @@ from popper.gha import Workflow
     required=False,
     is_flag=True
 )
+@click.option(
+    '--log-path',
+    help='Takes a path to a log directory',
+    required=False
+)
 @pass_context
 def cli(ctx, action, wfile, workspace, reuse,
-        recursive, quiet, debug, dry_run, parallel):
+        recursive, quiet, debug, dry_run, parallel, log_path):
     """Executes one or more pipelines and reports on their status.
     """
     popper.scm.get_git_root_folder()
+    level = 'ACTION_INFO'
+    if quiet:
+        level = 'INFO'
+    if debug:
+        level = 'DEBUG'
+    log.setLevel(level)
     if recursive:
         wfile_list = pu.find_recursive_wfile()
+        if not wfile_list:
+            log.fail("Recursive search couldn't find any .workflow files ")
         for wfile in wfile_list:
-            pu.info("Found and running workflow at "+wfile+"\n")
+            log.info("Found and running workflow at " + wfile)
             run_pipeline(action, wfile, workspace, reuse, quiet,
-                         debug, dry_run, parallel)
+                         debug, dry_run, parallel, log_path)
     else:
         run_pipeline(action, wfile, workspace, reuse, quiet,
-                     debug, dry_run, parallel)
+                     debug, dry_run, parallel, log_path)
 
 
 def run_pipeline(action, wfile, workspace, reuse,
-                 quiet, debug, dry_run, parallel):
+                 quiet, debug, dry_run, parallel, log_path):
     pipeline = Workflow(wfile, workspace, quiet, debug, dry_run,
                         reuse, parallel)
 
@@ -94,27 +106,18 @@ def run_pipeline(action, wfile, workspace, reuse,
     popper.cli.interrupt_params = pipeline
 
     if reuse:
-        pu.info(
-            "\n  " +
-            "WARNING: using --reuse ignores any changes made to an action" +
-            "\n  " +
-            "or to an action block in the workflow.\n\n"
-        )
+        log.warn("using --reuse ignores any changes made to an action")
+        log.warn("or to an action block in the workflow.")
 
     if parallel:
         if sys.version_info[0] < 3:
-            pu.fail('--parallel is only supported on Python3')
-
-        pu.info(
-            "\n  " +
-            "WARNING: using --parallel may result in interleaved ouput." +
-            "\n  " +
-            "You may use --quiet flag to avoid confusion.\n\n"
-        )
+            log.fail('--parallel is only supported on Python3')
+        log.warn("using --parallel may result in interleaved output.")
+        log.warn("You may use --quiet flag to avoid confusion.")
 
     pipeline.run(action, reuse, parallel)
 
     if action:
-        pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
+        log.info('Action "{}" finished successfully.'.format(action))
     else:
-        pu.info('\nWorkflow finished successfully.\n\n')
+        log.info('Workflow finished successfully.')

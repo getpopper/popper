@@ -2,26 +2,10 @@ import os
 import sys
 import threading
 import time
-from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
-
-import click
 import popper.cli
-
-
-
-def fail(msg):
-    """Prints the error message on the terminal."""
-    click.secho('ERROR: ' + msg, fg='red', bold=True, err=True, nl=False)
-    sys.exit(1)
-
-
-def warn(msg):
-    click.secho('WARNING: ' + msg, bold=True, fg='red', err=True, nl=False)
-
-
-def info(msg, **styles):
-    """Prints the message on the terminal."""
-    click.secho(msg, nl=False, **styles)
+from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
+import popper
+from popper.cli import log
 
 
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
@@ -54,18 +38,16 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     # quick shortcut for 1) above
     if not verbose and not log_file:
         out = ""
-        if debug:
-            info('DEBUG: Using subprocess.check_output() for {}\n'.format(cmd))
+        log.debug('Using subprocess.check_output() for {}'.format(cmd))
         try:
             out = check_output(cmd, shell=True, stderr=PIPE,
                                universal_newlines=True)
             ecode = 0
         except CalledProcessError as ex:
             ecode = ex.returncode
-            if debug:
-                info('DEBUG: Catched exception: {}\n'.format(ex))
+            log.debug('Catched exception: {}'.format(ex))
             if not ignore_error:
-                fail("Command '{}' failed: {}\n".format(cmd, ex))
+                log.fail("Command '{}' failed: {}".format(cmd, ex))
         return b(out).strip(), ecode
 
     sleep_time = 0.25
@@ -75,32 +57,27 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
     if log_file:
         if verbose:
-            if debug:
-                info('\nDEBUG: Creating file for combined stdout/stderr\n')
+            log.debug('Creating file for combined stdout/stderr')
             outf = open(log_file + '.log', 'w')
         else:
-            if debug:
-                info('\nDEBUG: Creating separate files for stdout/stderr\n')
+            log.debug('Creating separate files for stdout/stderr')
             outf = open(log_file + '.out', 'w')
             errf = open(log_file + '.err', 'w')
 
     try:
         if verbose:
-            if debug:
-                info('DEBUG: subprocess.Popen() with combined stdout/stderr\n')
+            log.debug('subprocess.Popen() with combined stdout/stderr')
             p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
                       universal_newlines=True, preexec_fn=os.setsid)
         else:
-            if debug:
-                info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
+            log.debug('subprocess.Popen() with separate stdout/stderr')
             p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
                       universal_newlines=True, preexec_fn=os.setsid)
 
         if add_to_process_list:
             popper.cli.process_list.append(p.pid)
 
-        if debug:
-            info('DEBUG: Reading process output\n')
+        log.debug('Reading process output')
 
         while ecode is None:
 
@@ -108,7 +85,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
                 # read until end of file (when process stops)
                 for line in iter(p.stdout.readline, ''):
                     line_decoded = b(line)
-                    info(line_decoded)
+                    log.info(line_decoded)
                     if log_file:
                         outf.write(line)
             else:
@@ -120,25 +97,21 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
                 num_times_point_at_current_sleep_time += 1
 
-                if debug:
-                    info('DEBUG: sleeping for {}\n'.format(sleep_time))
-                else:
-                    info('.')
+                log.debug('sleeping for {}'.format(sleep_time))
 
                 time.sleep(sleep_time)
 
             ecode = p.poll()
-            if debug:
-                info('DEBUG: Code returned by process: {}\n'.format(ecode))
+            log.debug('Code returned by process: {}'.format(ecode))
 
     except CalledProcessError as ex:
-        msg = "Command '{}' failed: {}\n".format(cmd, ex)
+        msg = "Command '{}' failed: {}".format(cmd, ex)
         ecode = ex.returncode
         if not ignore_error:
-            fail(msg)
-        info(msg)
+            log.fail(msg)
+        log.info(msg)
     finally:
-        info('\n')
+        log.info()
         if outf:
             outf.close()
         if errf:
@@ -213,11 +186,11 @@ def find_default_wfile(wfile):
             wfile = ".github/main.workflow"
 
     if not wfile:
-        fail(
-            "Files {} or {} not found.\n".format("./main.workflow",
+        log.fail(
+            "Files {} or {} not found.".format("./main.workflow",
                                                  ".github/main.workflow"))
     if not os.path.isfile(wfile):
-        fail("File {} not found.\n".format(wfile))
+        log.fail("File {} not found.".format(wfile))
         exit(1)
 
     return wfile
@@ -271,7 +244,7 @@ def parse(url):
         tail = '/'.join(parts[1:])
         service = service_url[4:]
     elif url.startswith('ssh://'):
-        fail("The ssh protocol is not supported yet.")
+        log.fail("The ssh protocol is not supported yet.")
     else:
         service_url = 'https://github.com'
         service = 'github.com'
@@ -304,7 +277,7 @@ def get_parts(url):
         service_url, rest = url.split(':')
         parts = ['github.com'] + rest.split('/')
     elif url.startswith('ssh://'):
-        fail('The ssh protocol is not supported yet.')
+        log.fail('The ssh protocol is not supported yet.')
     else:
         parts = ['github.com'] + url.split('/')
     return parts
