@@ -8,3 +8,9 @@ git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
 pushd /tmp/gha-demo
 PHONY_SECRET=phony popper run --debug
 popd
+
+# test with an action defined on the root of the repo
+git clone https://github.com/actions/npm /tmp/npm
+pushd /tmp/npm
+popper run "Integration Test"
+popd
