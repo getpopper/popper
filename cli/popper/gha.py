@@ -40,12 +40,16 @@ class Workflow(object):
         self.normalize()
         self.complete_graph()
 
+        if scm.get_user():
+            repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
+        else:
+            repo_id = 'unknown'
+
         self.env = {
             'GITHUB_WORKSPACE': self.workspace,
             'GITHUB_WORKFLOW': self.wf['name'],
             'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': '{}/{}'.format(scm.get_user(),
-                                                scm.get_name()),
+            'GITHUB_REPOSITORY': repo_id,
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
@@ -403,11 +407,23 @@ class DockerRunner(ActionRunner):
     def run(self, reuse):
         popper.cli.docker_list.append(self.cid)
         build = True
+
         if 'docker://' in self.action['uses']:
             tag = self.action['uses'].replace('docker://', '')
             build = False
         elif './' in self.action['uses']:
-            tag = 'action/' + os.path.basename(self.action['uses'])
+            if self.env['GITHUB_REPOSITORY'] == 'unknown':
+                repo_id = self.env['GITHUB_REPOSITORY'] + '/'
+            else:
+                repo_id = ''
+
+            action_dir = os.path.basename(
+                self.action['uses'].replace('./', ''))
+
+            tag = (
+                'popper/' + repo_id + action_dir + ':' + self.env['GITHUB_SHA']
+            )
+
             dockerfile_path = os.path.join(os.getcwd(), self.action['uses'])
         else:
             tag = '/'.join(self.action['uses'].split('/')[:2])

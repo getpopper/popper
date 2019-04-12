@@ -10,79 +10,13 @@ git clone https://github.com/cplee/github-actions-demo.git
 cd github-actions-demo
 export PHONY_SECRET=foo
 
-popper run --dry-run > actual
+# delete any containers that might exist
+docker rm $(docker ps -aq) || true
 
-echo "DRYRUN: [install] docker pull node:11.6.0
-DRYRUN: [install] docker create node:11.6.0 npm install
-DRYRUN: [install] docker start
-DRYRUN: [test] docker pull node:11.6.0
-DRYRUN: [test] docker create node:11.6.0 npm test
-DRYRUN: [test] docker start
-DRYRUN: [lint] docker build -t action/jshint $PWD/./.github/actions/jshint
-DRYRUN: [lint] docker create action/jshint
-DRYRUN: [lint] docker start
-DRYRUN: [branch-filter] docker build -t actions/bin /tmp/actions/github.com/actions/bin/./filter
-DRYRUN: [branch-filter] docker create actions/bin branch master
-DRYRUN: [branch-filter] docker start
-DRYRUN: [deploy] docker build -t actions/bin /tmp/actions/github.com/actions/bin/./sh
-DRYRUN: [deploy] docker create actions/bin env
-DRYRUN: [deploy] docker start
+dry_num_lines=$(popper run --dry-run | grep 'DRYRUN' | wc -l)
 
-Workflow finished successfully.
-" > expected_1
+# 5 actions, 3 lines per action
+test 15 -eq $dry_num_lines
 
-
-echo "DRYRUN: [install] docker pull node:11.6.0
-DRYRUN: [install] docker create node:11.6.0 npm install
-DRYRUN: [install] docker start
-DRYRUN: [lint] ./entrypoint.sh
-DRYRUN: [test] docker pull node:11.6.0
-DRYRUN: [test] docker create node:11.6.0 npm test
-DRYRUN: [test] docker start
-DRYRUN: [branch-filter] ./entrypoint.sh branch master
-DRYRUN: [deploy] ./entrypoint.sh env
-
-Workflow finished successfully.
-" > expected_2
-
-
-echo "DRYRUN: [install] docker pull node:11.6.0
-DRYRUN: [install] docker create node:11.6.0 npm install
-DRYRUN: [install] docker start
-DRYRUN: [lint] docker build -t action/jshint /tmp/mypaper/github-actions-demo/./.github/actions/jshint
-DRYRUN: [lint] docker create action/jshint
-DRYRUN: [lint] docker start
-DRYRUN: [test] docker pull node:11.6.0
-DRYRUN: [test] docker create node:11.6.0 npm test
-DRYRUN: [test] docker start
-DRYRUN: [branch-filter] ./entrypoint.sh branch master
-DRYRUN: [deploy] ./entrypoint.sh env
-
-Workflow finished successfully.
-" > expected_3
-
-
-# Using xargs to remove trailing whitespaces
-# Even tr -s '\n' '\n' is for the same purpose
-# Using sort so as to get some appearance of order
-
-cat expected_1 | tr -s '\n' '\n' | sort | xargs > 1
-cat expected_2 | tr -s '\n' '\n' | sort | xargs > 2
-cat expected_3 | tr -s '\n' '\n' | sort | xargs > 3
-cat actual | tr -s '\n' '\n' | sort | xargs> check
-
-count1=`cat 1 | wc -m`
-count2=`cat 2 | wc -m`
-count3=`cat 3 | wc -m`
-check_count=`cat check | wc -m`
-
-if [ $count1 -eq $check_count ]; then
-diff 1 check
-elif [ $count2 -eq $check_count ]; then
-diff 2 check
-elif [ $count3 -eq $check_count ]; then
-diff 3 check
-else
-echo ""> empty
-diff empty check  #Fail scenarrio
-fi
+# test that no containers are running
+test -z "$(docker ps -aq)"
