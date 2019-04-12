@@ -620,18 +620,21 @@ class SingularityRunner(ActionRunner):
 class HostRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
         super(HostRunner, self).__init__(action, workspace, env, q, d, dry)
+        self.cwd = os.getcwd()
 
     def run(self, reuse=False):
         cmd = self.action.get('runs', ['entrypoint.sh'])
         cmd[0] = os.path.join('./', cmd[0])
         cmd.extend(self.action.get('args', ''))
 
-        cwd = os.getcwd()
+        cwd = self.cwd
         if not self.dry_run:
             if 'repo_dir' in self.action:
                 os.chdir(self.action['repo_dir'])
+                cmd[0] = os.path.join(self.action['repo_dir'], cmd[0])
             else:
                 os.chdir(os.path.join(cwd, self.action['uses']))
+                cmd[0] = os.path.join(cwd, self.action['uses'], cmd[0])
 
         os.environ.update(self.action.get('env', {}))
 
