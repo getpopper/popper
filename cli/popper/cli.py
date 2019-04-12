@@ -1,7 +1,6 @@
 import os
 import signal
 import sys
-
 import click
 import difflib
 from . import __version__ as popper_version
@@ -78,7 +77,6 @@ process_list = list()
 interrupt_params = None
 flist = None
 
-
 def signal_handler(sig, frame):
 
     pu.info('Caught Ctrl-C signal! Stopping running actions.\n')
@@ -90,9 +88,8 @@ def signal_handler(sig, frame):
     for pid in process_list:
         pu.info("Stopping process '{}'\n".format(pid))
         try:
-            os.kill(pid, signal.SIGTERM)
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
         except OSError:
-            # Process was probably already killed, so exit silently
             pass
 
     for cid in docker_list:
