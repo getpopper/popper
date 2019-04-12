@@ -13,9 +13,9 @@ language: python
 python: 3.7
 services: docker
 install:
-- git clone https://github.com/systemslab/popper
+- git clone https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
-- pip install popper/cli
+- pip install /tmp/popper/cli
 script: popper run --recursive
 """
     },
@@ -30,9 +30,9 @@ jobs:
     - checkout
     - run:
         command: |
-        git clone https://github.com/systemslab/popper
+        git clone https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
-        pip install popper/cli
+        pip install /tmp/popper/cli
         popper run
 """
     },
@@ -40,9 +40,9 @@ jobs:
         './Jenkinsfile': """
 ---
 stage ('Popper') {{ node {{
-  sh "git clone https://github.com/systemslab/popper"
+  sh "git clone https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
-  sh "pip install popper/cli"
+  sh "pip install /tmp/popper/cli"
   sh "popper run --recursive
 }}}}
 """
@@ -65,8 +65,8 @@ before_script:
 - apk upgrade
 - apk add python python-dev py-pip build-base git bash
 - pip install virtualenv
-- git clone https://github.com/systemslab/popper
-- pip install popper/cli
+- git clone https://github.com/systemslab/popper /tmp/popper
+- pip install /tmp/popper/cli
 
 popper:
   script: popper run --recursive
