@@ -12,5 +12,5 @@ popd
 # test with an action defined on the root of the repo
 git clone https://github.com/actions/npm /tmp/npm
 pushd /tmp/npm
-popper run "Integration Test"
+DOCKER_USERNAME=foo DOCKER_PASSWORD=bar popper run "Integration Test"
 popd
