@@ -412,13 +412,16 @@ class DockerRunner(ActionRunner):
             tag = self.action['uses'].replace('docker://', '')
             build = False
         elif './' in self.action['uses']:
-            if self.env['GITHUB_REPOSITORY'] == 'unknown':
-                repo_id = self.env['GITHUB_REPOSITORY'] + '/'
-            else:
-                repo_id = ''
-
             action_dir = os.path.basename(
                 self.action['uses'].replace('./', ''))
+
+            if self.env['GITHUB_REPOSITORY'] == 'unknown':
+                repo_id = ''
+            else:
+                repo_id = self.env['GITHUB_REPOSITORY']
+
+                if action_dir:
+                    repo_id += '/'
 
             tag = (
                 'popper/' + repo_id + action_dir + ':' + self.env['GITHUB_SHA']
