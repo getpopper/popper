@@ -231,7 +231,7 @@ class Workflow(object):
         for _, a in self.wf['action'].items():
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
-                    docker.from_env(), a, self.workspace, self.env,
+                    a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
                 continue
 
@@ -244,7 +244,7 @@ class Workflow(object):
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
-                        docker.from_env(), a, self.workspace, self.env,
+                        a, self.workspace, self.env,
                         self.quiet, self.debug, self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'singularity.def')):
@@ -264,7 +264,7 @@ class Workflow(object):
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
-                    docker.from_env(), a, self.workspace, self.env,
+                    a, self.workspace, self.env,
                     self.quiet, self.debug, self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
@@ -399,10 +399,10 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, docker_client, action, workspace, env, q, d, dry):
+    def __init__(self, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
-        self.docker_client = docker_client
+        self.docker_client = docker.from_env()
 
     def run(self, reuse):
         popper.cli.docker_list.append(self.cid)
@@ -457,12 +457,12 @@ class DockerRunner(ActionRunner):
     def docker_exists(self):
         if self.dry_run:
             return True
-        container = self.docker_client.containers.list(
+        containers = self.docker_client.containers.list(
             all=True, filters={'name': self.cid})
 
-        container = [c for c in container if c.name == self.cid]
-        if container:
-            self.container = container[0]
+        filtered_containers = [c for c in containers if c.name == self.cid]
+        if len(filtered_containers):
+            self.container = filtered_containers[0]
             return True
 
         return False
@@ -488,6 +488,8 @@ class DockerRunner(ActionRunner):
             env_vars.update({e: v})
         env_vars.update({'HOME': os.environ['HOME']})
         volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
+        if self.debug:
+            pu.info('DEBUG: Invoking docker_create() method\n')
         self.container = self.docker_client.containers.create(
             image=img, command=self.action.get('args', None),
             name=self.cid, volumes={v: {'bind': v} for v in volumes},
@@ -500,17 +502,33 @@ class DockerRunner(ActionRunner):
                                                 self.action['name']))
         if self.dry_run:
             return 0
-        self.container.start()
-        eout = self.container.logs(stream=True, stdout=True)
+        eout = self.container.logs(stream=not(self.quiet), stdout=True)
         err = self.container.logs(stream=True, stderr=True)
-        outf = open(self.log_filename + '.out', 'wb')
         errf = open(self.log_filename + '.err', 'wb')
-        for line in eout:
-            outf.write(line)
-        outf.close()
+        self.container.start()
+        if self.quiet:
+            while self.container.status == 'running':
+                if sleep_time < 30 \
+                        and num_times_point_at_current_sleep_time == 5:
+                    sleep_time *= 2
+                    num_times_point_at_current_sleep_time = 0
+
+                num_times_point_at_current_sleep_time += 1
+                if self.debug:
+                    pu.info('DEBUG: sleeping for {}\n'.format(sleep_time))
+                else:
+                    pu.info('.')
+
+                time.sleep(sleep_time)
+        else:
+            outf = open(self.log_filename + '.out', 'wb')
+            for line in eout:
+                outf.write(line)
+            outf.close()
         for line in err:
             errf.write(line)
         errf.close()
+
         statuscode = self.container.wait()
         return statuscode['StatusCode']
 
