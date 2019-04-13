@@ -508,6 +508,7 @@ class DockerRunner(ActionRunner):
         self.container.start()
         if self.quiet:
             while self.container.status == 'running':
+                sleep_time = 0.25
                 if sleep_time < 30 \
                         and num_times_point_at_current_sleep_time == 5:
                     sleep_time *= 2
