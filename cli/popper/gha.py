@@ -5,8 +5,10 @@ import multiprocessing as mp
 import hcl
 import os
 import shutil
-import popper.utils as pu
+import docker
+import sys
 import popper.scm as scm
+import popper.utils as pu
 from spython.main import Client
 import sys
 import popper.cli
@@ -295,11 +297,8 @@ class Workflow(object):
                 }
                 popper.cli.flist = flist
                 for future in as_completed(flist):
-                    try:
-                        future.result()
-                        pu.info('Action ran successfully !\n')
-                    except Exception:
-                        sys.exit(1)
+                    future.result()
+                    pu.info('Action ran successfully !\n')
         else:
             for action in stage:
                 self.wf['action'][action]['runner'].run(reuse)
@@ -403,9 +402,10 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, q, d, dry):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
+        self.docker_client = docker.from_env()
+        self.container = None
 
     def run(self, reuse):
-        popper.cli.docker_list.append(self.cid)
         build = True
 
         if 'docker://' in self.action['uses']:
@@ -432,6 +432,7 @@ class DockerRunner(ActionRunner):
             tag = '/'.join(self.action['uses'].split('/')[:2])
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
+
         if not reuse:
             if self.docker_exists():
                 self.docker_rm()
@@ -448,25 +449,38 @@ class DockerRunner(ActionRunner):
                     self.docker_pull(tag)
                 self.docker_create(tag)
 
+        if self.container is not None:
+            popper.cli.docker_list.append(self.container)
         e = self.docker_start()
 
         if e != 0:
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
     def docker_exists(self):
-        cmd_out, _ = pu.exec_cmd('docker ps -a',
-                                 debug=self.debug, dry_run=self.dry_run)
+        if self.dry_run:
+            return True
+        containers = self.docker_client.containers.list(
+            all=True, filters={'name': self.cid})
 
-        if self.cid in cmd_out:
+        filtered_containers = [c for c in containers if c.name == self.cid]
+        if len(filtered_containers):
+            self.container = filtered_containers[0]
             return True
 
         return False
 
     def docker_rm(self):
-        pu.exec_cmd('docker rm {}'.format(self.cid),
-                    debug=self.debug, dry_run=self.dry_run)
+        if self.dry_run:
+            return
+        self.container.remove(force=True)
 
     def docker_create(self, img):
+        pu.info('{}[{}] docker create {} {}\n'.format(
+            self.msg_prefix,
+            self.action['name'], img, ' '.join(self.action.get('args', ''))
+        ))
+        if self.dry_run:
+            return
         env_vars = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
@@ -474,51 +488,66 @@ class DockerRunner(ActionRunner):
 
         for e, v in self.env.items():
             env_vars.update({e: v})
-
         env_vars.update({'HOME': os.environ['HOME']})
+        volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
+        if self.debug:
+            pu.info('DEBUG: Invoking docker_create() method\n')
+        self.container = self.docker_client.containers.create(
+            image=img, command=self.action.get('args', None),
+            name=self.cid, volumes={v: {'bind': v} for v in volumes},
+            working_dir=self.workspace, environment=env_vars,
+            entrypoint=self.action.get('runs', None))
 
-        env_flags = [" -e {}='{}'".format(k, v) for k, v in env_vars.items()]
-
-        docker_cmd = 'docker create '
-        docker_cmd += ' --name={}'.format(self.cid)
-        docker_cmd += ' --volume {0}:{0}'.format(self.workspace)
-        docker_cmd += ' --volume {0}:{0}'.format(os.environ['HOME'])
-        docker_cmd += ' --volume {0}:{0}'.format('/var/run/docker.sock')
-        docker_cmd += ' --workdir={} '.format(self.workspace)
-        docker_cmd += ''.join(env_flags)
-        if self.action.get('runs', None):
-            docker_cmd += ' --entrypoint={} '.format(self.action['runs'])
-        docker_cmd += ' {}'.format(img)
-        docker_cmd += ' {}'.format(' '.join(self.action.get('args', '')))
-
-        pu.info('{}[{}] docker create {} {}\n'.format(
-            self.msg_prefix,
-            self.action['name'], img, ' '.join(self.action.get('args', ''))
-        ))
-
-        pu.exec_cmd(docker_cmd, debug=self.debug, dry_run=self.dry_run)
 
     def docker_start(self):
         pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
                                                 self.action['name']))
+        if self.dry_run:
+            return 0
+        eout = self.container.logs(stream=not(self.quiet), stdout=True)
+        err = self.container.logs(stream=True, stderr=True)
+        errf = open(self.log_filename + '.err', 'wb')
+        self.container.start()
+        if self.quiet:
+            while self.container.status == 'running':
+                sleep_time = 0.25
+                if sleep_time < 30 \
+                        and num_times_point_at_current_sleep_time == 5:
+                    sleep_time *= 2
+                    num_times_point_at_current_sleep_time = 0
 
-        cmd = 'docker start --attach {}'.format(self.cid)
-        _, ecode = pu.exec_cmd(
-            cmd, verbose=(not self.quiet), debug=self.debug,
-            log_file=self.log_filename, dry_run=self.dry_run)
-        return ecode
+                num_times_point_at_current_sleep_time += 1
+                if self.debug:
+                    pu.info('DEBUG: sleeping for {}\n'.format(sleep_time))
+                else:
+                    pu.info('.')
+
+                time.sleep(sleep_time)
+        else:
+            outf = open(self.log_filename + '.out', 'wb')
+            for line in eout:
+                outf.write(line)
+            outf.close()
+        for line in err:
+            errf.write(line)
+        errf.close()
+
+        statuscode = self.container.wait()
+        return statuscode['StatusCode']
 
     def docker_pull(self, img):
         pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix,
                                                  self.action['name'], img))
-        pu.exec_cmd('docker pull {}'.format(img),
-                    debug=self.debug, dry_run=self.dry_run)
+        if self.dry_run:
+            return
+        self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
-        cmd = 'docker build -t {} {}'.format(tag, path)
-        pu.info('{}[{}] {}\n'.format(self.msg_prefix,
-                                     self.action['name'], cmd))
-        pu.exec_cmd(cmd, debug=self.debug, dry_run=self.dry_run)
+        pu.info('{}[{}] docker build -t {} {}\n'.format(
+            self.msg_prefix, self.action['name'], tag, path))
+        if self.dry_run:
+            return
+        self.docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
 
 
 class SingularityRunner(ActionRunner):
