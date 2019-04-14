@@ -38,7 +38,7 @@ action "github official action" {
 
 action "docker action" {
   uses = "docker://node:6"
-  args = ["node --version"]
+  args = ["node", "--version"]
 }
 
 action "example action" {

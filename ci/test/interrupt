@@ -14,7 +14,7 @@ workflow "test" {
 }
 action "sleep" {
   uses = "docker://busybox"
-  args = "sleep 360"
+  args = ["sleep", "360"]
 }
 EOF
 
@@ -49,32 +49,32 @@ workflow "test" {
 
 action "sleep1" {
   uses = "docker://busybox"
-  args = ["sleep 360"]
+  args = ["sleep", "360"]
 }
 
 action "sleep2" {
   uses = "docker://busybox"
-  args = ["sleep 360"]
+  args = ["sleep", "360"]
 }
 
 action "sleep3" {
   uses = "docker://busybox"
-  args = ["sleep 360"]
+  args = ["sleep", "360"]
 }
 
 action "sleep4" {
   uses = "docker://busybox"
-  args = ["sleep 360"]
+  args = ["sleep", "360"]
 }
 
 action "sleep5" {
   uses = "docker://busybox"
-  args = ["sleep 360"]
+  args = ["sleep", "360"]
 }
 
 action "sleep" {
   uses = "docker://busybox"
-  args = ["sleep 360"]
+  args = ["sleep", "360"]
   needs = [
     "sleep1",
     "sleep2",

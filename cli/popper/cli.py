@@ -92,8 +92,8 @@ def signal_handler(sig, frame):
         except OSError:
             pass
 
-    for cid in docker_list:
-        pu.info("Stopping container '{}'\n".format(cid))
-        pu.exec_cmd('docker stop -t 1 {}'.format(cid))
+    for container in docker_list:
+        pu.info("Stopping container '{}'\n".format(container.name))
+        container.remove(force=True)
 
     sys.exit(0)
