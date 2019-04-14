@@ -405,7 +405,6 @@ class DockerRunner(ActionRunner):
         self.docker_client = docker.from_env()
 
     def run(self, reuse):
-        popper.cli.docker_list.append(self.cid)
         build = True
 
         if 'docker://' in self.action['uses']:
@@ -449,6 +448,7 @@ class DockerRunner(ActionRunner):
                     self.docker_pull(tag)
                 self.docker_create(tag)
 
+        popper.cli.docker_list.append(self.container)
         e = self.docker_start()
 
         if e != 0:
