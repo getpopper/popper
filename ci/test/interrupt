@@ -23,14 +23,7 @@ action "sleep" {
 }
 EOF
 
-popper run &
-pid=$!
-
-# give popper some time to create containers
-sleep 5
-
-# -2 is for SIGINT or Ctrl-C
-kill -2 $pid
+send_sigint 'popper run' 5
 
 # give popper some time to remove containers
 sleep 5
@@ -88,12 +81,7 @@ action "sleep" {
 }
 EOF
 
-popper run --parallel &
-pid=$!
-
-sleep 5
-
-kill -2 $pid
+send_sigint 'popper run --parallel' 2
 
 sleep 30
 
@@ -126,12 +114,7 @@ action "sleep" {
 }
 EOF
 
-popper run &
-pid=$!
-
-sleep 5
-
-kill -2 $pid
+send_sigint 'popper run' 5
 
 sleep 5
 
@@ -197,12 +180,7 @@ action "sleep" {
 }
 EOF
 
-popper run --parallel &
-pid=$!
-
-sleep 15
-
-kill -2 $pid
+send_sigint 'popper run --parallel' 15
 
 sleep 5
 
@@ -262,14 +240,7 @@ action "custom action" {
 }
 EOF
 
-popper run &
-pid=$!
-
-sleep 5
-
-kill -2 $pid
-
-sleep 5
+send_sigint 'popper run' 2
 
 ###############################
 # SingularityRunner - Parallel
@@ -284,26 +255,32 @@ workflow "test" {
 
 action "sleep1" {
   uses = "shub://singularityhub/centos"
+  runs = ["sleep", "60"]
 }
 
 action "sleep2" {
   uses = "shub://singularityhub/centos"
+  runs = ["sleep", "60"]
 }
 
 action "sleep3" {
   uses = "shub://singularityhub/centos"
+  runs = ["sleep", "60"]
 }
 
 action "sleep4" {
   uses = "shub://singularityhub/centos"
+  runs = ["sleep", "60"]
 }
 
 action "sleep5" {
   uses = "shub://singularityhub/centos"
+  runs = ["sleep", "60"]
 }
 
 action "sleep" {
   uses = "shub://singularityhub/centos"
+  runs = ["sleep", "60"]
   needs = [
     "sleep1",
     "sleep2",
@@ -314,13 +291,5 @@ action "sleep" {
 }
 EOF
 
-popper run --parallel &
-pid=$!
-
-sleep 5
-
-kill -2 $pid
-
-sleep 5
-
+send_sigint 'popper run --parallel' 5
 fi

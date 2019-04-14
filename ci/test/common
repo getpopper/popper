@@ -23,3 +23,16 @@ function init_test_repo {
   popd
 }
 
+function send_sigint {
+  { setsid $1; } &
+  subshell_pid=$!
+  pids=$(ps -ax -o ppid,pid --no-headers | sed -r 's/^ +//g;s/ +/ /g' |
+                           grep "^$subshell_pid " | cut -f 2 -d " ")
+
+  sleep $2
+
+  for child in $pids;  do
+    kill -SIGINT "-$child"
+  done
+  wait $subshell_pid
+}
