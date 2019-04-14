@@ -403,6 +403,7 @@ class DockerRunner(ActionRunner):
         super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
         self.cid = self.action['name'].replace(' ', '_')
         self.docker_client = docker.from_env()
+        self.container = None
 
     def run(self, reuse):
         build = True
@@ -448,7 +449,8 @@ class DockerRunner(ActionRunner):
                     self.docker_pull(tag)
                 self.docker_create(tag)
 
-        popper.cli.docker_list.append(self.container)
+        if self.container is not None:
+            popper.cli.docker_list.append(self.container)
         e = self.docker_start()
 
         if e != 0:
