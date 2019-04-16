@@ -24,7 +24,8 @@ setup(
         'pyyaml',
         'pyaes',
         'futures; python_version == "2.7"',
-        'docker'
+        'docker',
+        'colorama'
     ],
     entry_points='''
         [console_scripts]

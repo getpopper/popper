@@ -11,17 +11,22 @@ import popper.cli
 
 def fail(msg):
     """Prints the error message on the terminal."""
-    click.secho('ERROR: ' + msg, fg='red', bold=True, err=True, nl=False)
+    click.echo('\033[41;37;1m' + 'ERROR: ' + '\033[0m' + msg,
+               err=True, nl=False)
     sys.exit(1)
 
 
 def warn(msg):
-    click.secho('WARNING: ' + msg, bold=True, fg='red', err=True, nl=False)
+    click.echo('\033[43;37;1m' + 'WARNING: ' + '\033[0m' +
+               msg, bold=True, fg='red', err=True, nl=False)
 
 
-def info(msg, **styles):
+def info(msg, prefix='', action=''):
     """Prints the message on the terminal."""
-    click.secho(msg, nl=False, **styles)
+    ##style_action = '[' + action + ']' if action else ''
+    click.echo('\033[42;37;1m' + prefix +
+               '\033[34;1m' + action +
+               '\033[0;1m' + msg, nl=False)
 
 
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
@@ -55,7 +60,8 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     if not verbose and not log_file:
         out = ""
         if debug:
-            info('DEBUG: Using subprocess.check_output() for {}\n'.format(cmd))
+            info(prefix='DEBUG:',
+                 msg=' Using subprocess.check_output() for {}\n'.format(cmd))
         try:
             out = check_output(cmd, shell=True, stderr=PIPE,
                                universal_newlines=True)
@@ -63,7 +69,8 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         except CalledProcessError as ex:
             ecode = ex.returncode
             if debug:
-                info('DEBUG: Catched exception: {}\n'.format(ex))
+                info(prefix='DEBUG:',
+                     msg='Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
         return b(out).strip(), ecode
@@ -76,23 +83,27 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     if log_file:
         if verbose:
             if debug:
-                info('\nDEBUG: Creating file for combined stdout/stderr\n')
+                info(prefix='\nDEBUG:',
+                     msg='Creating file for combined stdout/stderr\n')
             outf = open(log_file + '.log', 'w')
         else:
             if debug:
-                info('\nDEBUG: Creating separate files for stdout/stderr\n')
+                info(prefix='\nDEBUG:',
+                     msg=' Creating separate files for stdout/stderr\n')
             outf = open(log_file + '.out', 'w')
             errf = open(log_file + '.err', 'w')
 
     try:
         if verbose:
             if debug:
-                info('DEBUG: subprocess.Popen() with combined stdout/stderr\n')
+                info(prefix='DEBUG:',
+                     msg=' subprocess.Popen() with combined stdout/stderr\n')
             p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
                       universal_newlines=True, preexec_fn=os.setsid)
         else:
             if debug:
-                info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
+                info(prefix='DEBUG:',
+                     msg=' subprocess.Popen() with separate stdout/stderr\n')
             p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
                       universal_newlines=True, preexec_fn=os.setsid)
 
@@ -100,7 +111,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             popper.cli.process_list.append(p.pid)
 
         if debug:
-            info('DEBUG: Reading process output\n')
+            info(prefix='\nDEBUG:', msg=' Reading process output\n')
 
         while ecode is None:
 
@@ -121,7 +132,8 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
                 num_times_point_at_current_sleep_time += 1
 
                 if debug:
-                    info('DEBUG: sleeping for {}\n'.format(sleep_time))
+                    info(prefix='DEBUG:',
+                         msg=' sleeping for {}\n'.format(sleep_time))
                 else:
                     info('.')
 
@@ -129,7 +141,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
             ecode = p.poll()
             if debug:
-                info('DEBUG: Code returned by process: {}\n'.format(ecode))
+                info(prefix='DEBUG:', msg=' Code returned by process: {}\n'.format(ecode))
 
     except CalledProcessError as ex:
         msg = "Command '{}' failed: {}\n".format(cmd, ex)
