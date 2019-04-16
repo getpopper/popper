@@ -652,23 +652,25 @@ class SingularityRunner(ActionRunner):
 
         ecode = None
         bind_list = [self.workspace, os.environ['HOME']]
-        if not self.dry_run:
-            if runs:
-                pu.info('{}[{}] singularity exec {} {}\n'.format(
+
+        if runs:
+            info = '{}[{}] singularity exec {} {}\n'.format(
                     self.msg_prefix, self.action['name'],
                     self.image_name, runs)
-                )
-                output = sclient.execute(self.image_name, runs,
-                                         contain=True, bind=bind_list,
-                                         stream=True)
-            else:
-                pu.info('{}[{}] singularity run {} {}\n'.format(
+            commands = runs
+            start = sclient.execute
+        else:
+            info = '{}[{}] singularity run {} {}\n'.format(
                     self.msg_prefix, self.action['name'],
                     self.image_name, args)
-                )
-                output = sclient.run(self.image_name, args,
-                                     contain=True, bind=bind_list,
-                                     stream=True)
+            commands = args
+            start = sclient.run
+
+        pu.info(info)
+        if not self.dry_run:
+            output = start(self.image_name, commands, contain=True,
+                  bind=bind_list, stream=True)
+            
             outf = open(self.log_filename + '.out', 'w')
             errf = open(self.log_filename + '.err', 'w')
             try:
