@@ -94,9 +94,9 @@ def run_pipeline(action, wfile, workspace, reuse,
     popper.cli.interrupt_params = pipeline
 
     if reuse:
-        pu.info(
+        pu.warn(
             "\n  " +
-            "WARNING: using --reuse ignores any changes made to an action" +
+            "using --reuse ignores any changes made to an action" +
             "\n  " +
             "or to an action block in the workflow.\n\n"
         )
@@ -105,9 +105,9 @@ def run_pipeline(action, wfile, workspace, reuse,
         if sys.version_info[0] < 3:
             pu.fail('--parallel is only supported on Python3')
 
-        pu.info(
+        pu.warn(
             "\n  " +
-            "WARNING: using --parallel may result in interleaved ouput." +
+            "using --parallel may result in interleaved ouput." +
             "\n  " +
             "You may use --quiet flag to avoid confusion.\n\n"
         )
@@ -115,6 +115,8 @@ def run_pipeline(action, wfile, workspace, reuse,
     pipeline.run(action, reuse, parallel)
 
     if action:
-        pu.info('\nAction "{}" finished successfully.\n\n'.format(action))
+        pu.info(
+            prefix='\nAction "{}" finished successfully.\n\n'.format(action),
+            msg='')
     else:
         pu.info('\nWorkflow finished successfully.\n\n')

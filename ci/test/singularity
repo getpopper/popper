@@ -60,3 +60,5 @@ if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 popper run --parallel
 
 fi
+popper run
+popper run --quiet

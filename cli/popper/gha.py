@@ -198,7 +198,8 @@ class Workflow(object):
 
             if not self.dry_run:
                 if not infoed:
-                    pu.info(' cloning actions from repositories\n', '[popper]')
+                    pu.info(msg=' cloning actions from repositories\n',
+                            action='popper')
                     infoed = True
 
                 scm.clone(url, user, repo, repo_parent_dir, version,
@@ -475,9 +476,9 @@ class DockerRunner(ActionRunner):
         self.container.remove(force=True)
 
     def docker_create(self, img):
-        pu.info('docker create {} {}\n'.format(img,
+        pu.info(msg=' docker create {} {}\n'.format(img,
             ' '.join(self.action.get('args', ''))),
-            self.msg_prefix, self.action['name'])
+            prefix=self.msg_prefix, action=self.action['name'])
         if self.dry_run:
             return
         env_vars = self.action.get('env', {})
@@ -490,7 +491,7 @@ class DockerRunner(ActionRunner):
         env_vars.update({'HOME': os.environ['HOME']})
         volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
         if self.debug:
-            pu.info(' Invoking docker_create() method\n', 'DEBUG:')
+            pu.info(' Invoking docker_create() method\n', prefix='DEBUG:')
         self.container = self.docker_client.containers.create(
             image=img,
             command=self.action.get('args', None),
@@ -503,7 +504,8 @@ class DockerRunner(ActionRunner):
         )
 
     def docker_start(self):
-        pu.info(self.msg_prefix, self.action['name'], ' docker start \n')
+        pu.info(prefix=self.msg_prefix, action=self.action['name'],
+                msg=' docker start \n')
         if self.dry_run:
             return 0
         self.container.start()
@@ -513,7 +515,8 @@ class DockerRunner(ActionRunner):
                 if sleep_time < 10:
                     sleep_time *= 2
                 if self.debug:
-                    pu.info(' sleeping for {}\n'.format(sleep_time), 'DEBUG:')
+                    pu.info(msg=' sleeping for {}\n'.format(sleep_time),
+                            prefix='DEBUG:')
                 else:
                     pu.info('.')
 
@@ -530,15 +533,15 @@ class DockerRunner(ActionRunner):
         return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
-        pu.info(' docker pull {}\n'.format(img),
-                self.msg_prefix, self.action['name'])
+        pu.info(msg=' docker pull {}\n'.format(img),
+                prefix=self.msg_prefix, action=self.action['name'])
         if self.dry_run:
             return
         self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
-        pu.info(self.msg_prefix, self.action['name'],
-                ' docker build -t {} {}\n'.format(tag, path))
+        pu.info(prefix=self.msg_prefix, action=self.action['name'],
+                msg=' docker build -t {} {}\n'.format(tag, path))
         if self.dry_run:
             return
         self.docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
@@ -702,8 +705,8 @@ class HostRunner(ActionRunner):
 
         os.environ.update(self.action.get('env', {}))
 
-        pu.info(' {}\n'.format(' '.join(cmd)), self.msg_prefix,
-                               self.action['name'])
+        pu.info(msg=' {}\n'.format(' '.join(cmd)), prefix=self.msg_prefix,
+                action=self.action['name'])
 
         _, ecode = pu.exec_cmd(
             ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,

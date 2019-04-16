@@ -3,30 +3,35 @@ import sys
 import threading
 import time
 from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
-
 import click
 import popper.cli
 
 
-
 def fail(msg):
     """Prints the error message on the terminal."""
-    click.echo('\033[41;37;1m' + 'ERROR: ' + '\033[0m' + msg,
-               err=True, nl=False)
+    click.echo(click.style('ERROR: ', bg='red', fg='white') +
+               click.style(msg, bold=True),
+               err=True, nl=False, color=True)
     sys.exit(1)
 
 
 def warn(msg):
-    click.echo('\033[43;37;1m' + 'WARNING: ' + '\033[0m' +
-               msg, bold=True, fg='red', err=True, nl=False)
+    click.echo(click.style('WARNING: ', bg='yellow', fg='black', bold=True) +
+               click.style(msg, fg='yellow', bold=True),
+               err=True, nl=False, color=True)
 
 
 def info(msg, prefix='', action=''):
     """Prints the message on the terminal."""
-    ##style_action = '[' + action + ']' if action else ''
-    click.echo('\033[42;37;1m' + prefix +
-               '\033[34;1m' + action +
-               '\033[0;1m' + msg, nl=False)
+    click.echo(click.style(prefix, fg='green', bold=True) +
+               click.style('[' + action + ']' if action else '',
+                           fg='blue', bold=True) +
+               click.style(msg, fg='white', bold=True), nl=False, color=True)
+
+
+def print_yaml(msg, **styles):
+    """Prints the messages in YAML's block format'\033[0m' +. """
+    click.secho(yaml.safe_dump(msg, default_flow_style=False), **styles)
 
 
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
