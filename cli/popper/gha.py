@@ -499,7 +499,6 @@ class DockerRunner(ActionRunner):
             working_dir=self.workspace, environment=env_vars,
             entrypoint=self.action.get('runs', None))
 
-
     def docker_start(self):
         pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
                                                 self.action['name']))
@@ -655,22 +654,22 @@ class SingularityRunner(ActionRunner):
 
         if runs:
             info = '{}[{}] singularity exec {} {}\n'.format(
-                    self.msg_prefix, self.action['name'],
-                    self.image_name, runs)
+                self.msg_prefix, self.action['name'],
+                self.image_name, runs)
             commands = runs
             start = sclient.execute
         else:
             info = '{}[{}] singularity run {} {}\n'.format(
-                    self.msg_prefix, self.action['name'],
-                    self.image_name, args)
+                self.msg_prefix, self.action['name'],
+                self.image_name, args)
             commands = args
             start = sclient.run
 
         pu.info(info)
         if not self.dry_run:
             output = start(self.image_name, commands, contain=True,
-                  bind=bind_list, stream=True)
-            
+                           bind=bind_list, stream=True)
+
             outf = open(self.log_filename + '.out', 'w')
             errf = open(self.log_filename + '.err', 'w')
             try:

@@ -97,7 +97,7 @@ def signal_handler(sig, frame):
     for container in docker_list:
         pu.info("Stopping container '{}'\n".format(container.name))
         container.remove(force=True)
-    
+
     for img in set(singularity_list):
         if os.path.isfile(img):
             pu.info('Removing {}\n'.format(img))
