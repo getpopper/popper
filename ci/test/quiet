@@ -52,11 +52,7 @@ action "custom action" {
 }
 EOF
 
-popper run --debug
+output_lines_without_quiet=$(popper run | wc -l)
+output_lines_with_quiet=$(popper run --quiet | wc -l)
 
-PY_VERSION=$( (python --version) 2>&1)
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
-
-popper run --parallel
-
-fi
+test $output_lines_without_quiet -gt $output_lines_with_quiet
