@@ -6,7 +6,7 @@ import difflib
 from . import __version__ as popper_version
 from .exceptions import UsageError
 import popper.utils as pu
-
+from spython.main import Client as sclient
 
 class Context(object):
 
@@ -73,7 +73,6 @@ def cli(ctx):
 
 
 docker_list = list()
-singularity_list = list()
 process_list = list()
 interrupt_params = None
 flist = None
@@ -98,9 +97,8 @@ def signal_handler(sig, frame):
         pu.info("Stopping container '{}'\n".format(container.name))
         container.remove(force=True)
 
-    for img in set(singularity_list):
-        if os.path.isfile(img):
-            pu.info('Removing {}\n'.format(img))
-            os.remove(img)
+    if len(sclient.instances()) > 0:
+        pu.info("Stopping all instances\n")
+        sclient.instance_stopall()
 
     sys.exit(0)

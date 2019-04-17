@@ -217,7 +217,7 @@ workflow "test" {
 
 action "shub action" {
   uses = "shub://singularityhub/centos"
-  runs = ["ls", "-al"]
+  runs = ["sleep", "360"]
 }
 
 action "public action" {
@@ -241,6 +241,10 @@ action "custom action" {
 EOF
 
 send_sigint 'popper run' 2
+
+sleep 5
+
+test -z $(singularity instance list | tail -n +2)
 
 ###############################
 # SingularityRunner - Parallel
@@ -292,4 +296,10 @@ action "sleep" {
 EOF
 
 send_sigint 'popper run --parallel' 5
+
+sleep 10
+
+test -z $(singularity instance list | tail -n +2)
 fi
+
+echo "Interrupt test ran successfully !"

@@ -578,7 +578,6 @@ class SingularityRunner(ActionRunner):
                                                 self.action['action_dir'])
 
         self.image_name = self.pid + '.simg'
-        popper.cli.singularity_list.append(self.image_name)
         if not reuse:
             if self.singularity_exists():
                 self.singularity_rm()
