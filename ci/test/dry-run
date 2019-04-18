@@ -76,4 +76,5 @@ EOF
 
 dry_num_lines=$(popper run --dry-run | grep 'DRYRUN' | wc -l)
 
-test $dry_num_lines -eq 6
+# 3 actions, atleast one line per action
+test $dry_num_lines -gt 3
