@@ -97,8 +97,4 @@ def signal_handler(sig, frame):
         pu.info("Stopping container '{}'\n".format(container.name))
         container.remove(force=True)
 
-    if len(sclient.instances()) > 0:
-        pu.info("Stopping all instances\n")
-        sclient.instance_stopall()
-
     sys.exit(0)
