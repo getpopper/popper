@@ -244,7 +244,7 @@ send_sigint 'popper run' 2
 
 sleep 5
 
-test -z $(singularity instance list | tail -n +2)
+test -z "$(singularity instance list | tail -n +2)"
 
 ###############################
 # SingularityRunner - Parallel
@@ -299,7 +299,7 @@ send_sigint 'popper run --parallel' 5
 
 sleep 10
 
-test -z $(singularity instance list | tail -n +2)
+test -z "$(singularity instance list | tail -n +2)"
 fi
 
 echo "Interrupt test ran successfully !"
