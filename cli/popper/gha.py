@@ -1,18 +1,18 @@
 from __future__ import unicode_literals
-from builtins import dict, str, input
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing as mp
-import subprocess
-import hcl
 import os
 import shutil
+import subprocess
 import time
-import docker
-import popper.scm as scm
-import popper.utils as pu
-from spython.main import Client as sclient
-import popper.cli
+from builtins import dict, input, str
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from distutils.dir_util import copy_tree
+
+import docker
+import hcl
+import popper.cli
+from popper import scm, utils as pu
+from spython.main import Client as sclient
 
 
 class Workflow(object):
@@ -405,7 +405,7 @@ class DockerRunner(ActionRunner):
         self.docker_client = docker.from_env()
         self.container = None
 
-    def run(self, reuse):
+    def run(self, reuse=False):
         build = True
 
         if 'docker://' in self.action['uses']:

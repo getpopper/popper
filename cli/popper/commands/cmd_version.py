@@ -1,5 +1,6 @@
 import click
-import popper.utils as pu
+from popper import utils as pu
+
 from .. import __version__ as popper_version
 from ..cli import pass_context
 
