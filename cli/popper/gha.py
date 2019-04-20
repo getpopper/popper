@@ -6,12 +6,11 @@ import subprocess
 import hcl
 import os
 import shutil
+import time
 import docker
-import sys
 import popper.scm as scm
 import popper.utils as pu
 from spython.main import Client as sclient
-import sys
 import popper.cli
 from distutils.dir_util import copy_tree
 
@@ -42,26 +41,6 @@ class Workflow(object):
         self.check_secrets()
         self.normalize()
         self.complete_graph()
-
-        if scm.get_user():
-            repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
-        else:
-            repo_id = 'unknown'
-
-        self.env = {
-            'GITHUB_WORKSPACE': self.workspace,
-            'GITHUB_WORKFLOW': self.wf['name'],
-            'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': repo_id,
-            'GITHUB_EVENT_NAME': self.wf['on'],
-            'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
-                                                 'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(debug),
-            'GITHUB_REF': scm.get_ref()
-        }
-
-        for e in dict(self.env):
-            self.env.update({e.replace('GITHUB_', 'POPPER_'): self.env[e]})
 
     def validate_syntax(self):
         """ Validates the .workflow file.
@@ -279,6 +258,26 @@ class Workflow(object):
     def run(self, action_name=None, reuse=False, parallel=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = self.workspace
+
+        if scm.get_user():
+            repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
+        else:
+            repo_id = 'unknown'
+
+        self.env = {
+            'GITHUB_WORKSPACE': self.workspace,
+            'GITHUB_WORKFLOW': self.wf['name'],
+            'GITHUB_ACTOR': 'popper',
+            'GITHUB_REPOSITORY': repo_id,
+            'GITHUB_EVENT_NAME': self.wf['on'],
+            'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
+                                                 'workflow/event.json'),
+            'GITHUB_SHA': scm.get_sha(self.debug),
+            'GITHUB_REF': scm.get_ref()
+        }
+
+        for e in dict(self.env):
+            self.env.update({e.replace('GITHUB_', 'POPPER_'): self.env[e]})
 
         self.download_actions()
         self.instantiate_runners()
@@ -509,10 +508,9 @@ class DockerRunner(ActionRunner):
         errf = open(self.log_filename + '.err', 'wb')
         self.container.start()
         if self.quiet:
+            sleep_time = 0.25
             while self.container.status == 'running':
-                sleep_time = 0.25
-                if sleep_time < 30 \
-                        and num_times_point_at_current_sleep_time == 5:
+                if sleep_time < 30:
                     sleep_time *= 2
                     num_times_point_at_current_sleep_time = 0
 
