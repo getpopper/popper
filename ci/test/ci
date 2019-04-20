@@ -3,9 +3,8 @@ set -ex
 
 source ./common
 init_test_repo
-popper init
-
 cd $test_repo_path
+popper init
 
 popper ci --service travis
 test -f .travis.yml
