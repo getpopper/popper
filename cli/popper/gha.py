@@ -493,28 +493,27 @@ class DockerRunner(ActionRunner):
         if self.debug:
             pu.info('DEBUG: Invoking docker_create() method\n')
         self.container = self.docker_client.containers.create(
-            image=img, command=self.action.get('args', None),
-            name=self.cid, volumes={v: {'bind': v} for v in volumes},
-            working_dir=self.workspace, environment=env_vars,
-            entrypoint=self.action.get('runs', None))
+            image=img,
+            command=self.action.get('args', None),
+            name=self.cid,
+            volumes={v: {'bind': v} for v in volumes},
+            working_dir=self.workspace,
+            environment=env_vars,
+            entrypoint=self.action.get('runs', None),
+            detach=True
+        )
 
     def docker_start(self):
         pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
                                                 self.action['name']))
         if self.dry_run:
             return 0
-        eout = self.container.logs(stream=not(self.quiet), stdout=True)
-        err = self.container.logs(stream=True, stderr=True)
-        errf = open(self.log_filename + '.err', 'wb')
         self.container.start()
         if self.quiet:
             sleep_time = 0.25
             while self.container.status == 'running':
-                if sleep_time < 30:
+                if sleep_time < 10:
                     sleep_time *= 2
-                    num_times_point_at_current_sleep_time = 0
-
-                num_times_point_at_current_sleep_time += 1
                 if self.debug:
                     pu.info('DEBUG: sleeping for {}\n'.format(sleep_time))
                 else:
@@ -522,16 +521,15 @@ class DockerRunner(ActionRunner):
 
                 time.sleep(sleep_time)
         else:
-            outf = open(self.log_filename + '.out', 'wb')
-            for line in eout:
-                outf.write(line)
-            outf.close()
-        for line in err:
-            errf.write(line)
-        errf.close()
+            def b(t):
+                if isinstance(t, bytes):
+                    return t.decode('utf-8')
+                return t
+            cout = self.container.logs(stream=True)
+            for l in cout:
+                pu.info(b(l))
 
-        statuscode = self.container.wait()
-        return statuscode['StatusCode']
+        return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
         pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix,
