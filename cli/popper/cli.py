@@ -6,7 +6,7 @@ import difflib
 from . import __version__ as popper_version
 from .exceptions import UsageError
 import popper.utils as pu
-from spython.main import Client as sclient
+
 
 class Context(object):
 

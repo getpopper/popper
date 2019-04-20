@@ -1,5 +1,4 @@
 import click
-import os
 import popper.utils as pu
 import popper.scm as scm
 from popper.gha import Workflow
@@ -13,11 +12,8 @@ def cli(ctx, path):
     """Imports a workflow from a remote project to the current project
     directory.
     """
-    project_root = scm.get_root_folder()
-    if not pu.is_popperized(project_root):
-        pu.fail('Repository has not been popperized.')
-        return
+    project_root = scm.get_popper_root_folder()
     try:
         Workflow.import_from_repo(path, project_root)
-    except Exception as e:
+    except Exception:
         pu.fail('Failed to import from {} !'.format(path))

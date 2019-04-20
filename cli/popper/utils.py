@@ -2,106 +2,9 @@ import click
 import os
 import sys
 import time
-import yaml
 import threading
 import popper.cli
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
-
-noalias_dumper = yaml.dumper.SafeDumper
-noalias_dumper.ignore_aliases = lambda self, data: True
-
-init_config = {
-    'metadata': {
-        'access_right': "open",
-        'license': "CC-BY-4.0",
-        'upload_type': "publication",
-        'publication_type': "article"
-    },
-    'search_sources': [
-        "popperized"
-    ],
-    'version': 2,
-}
-
-gitignore_content = ".pipeline_cache.yml\npopper/\n"
-
-main_workflow_content = """
-workflow "example" {
-  on = "push"
-  resolves = "example action"
-}
-
-action "github official action" {
-  uses = "actions/bin/sh@master"
-  args = ["ls"]
-}
-
-action "docker action" {
-  uses = "docker://node:6"
-  args = ["node", "--version"]
-}
-
-action "example action" {
-  uses = "./%s"
-  args = ["github.com"]
-}
-"""
-
-dockerfile_content = """
-FROM debian:stable-slim
-
-LABEL "name"="curl"
-LABEL "maintainer"="GitHub Actions <support+actions@github.com>"
-LABEL "version"="1.0.0"
-
-LABEL "com.github.actions.name"="cURL for GitHub Actions"
-LABEL "com.github.actions.description"="Runs cURL in an Action"
-LABEL "com.github.actions.icon"="upload-cloud"
-LABEL "com.github.actions.color"="green"
-
-
-COPY entrypoint.sh /entrypoint.sh
-
-RUN apt-get update && \
-    apt-get install curl -y && \
-    apt-get clean -y
-
-ENTRYPOINT ["sh", "/entrypoint.sh"]
-"""
-
-entrypoint_content = """
-#!/bin/sh
-set -e
-
-sh -c "curl $*"
-"""
-
-readme_content = "Executes cURL with arguments listed in the Action's args."
-
-
-def get_items(dict_object):
-    """Python 2/3 compatible way of iterating over a dictionary"""
-    for key in dict_object:
-        yield key, dict_object[key]
-
-
-def write_config(rootfolder, config):
-    """Writes config to .popper.yml file."""
-    config_filename = os.path.join(rootfolder, '.popper.yml')
-
-    with open(config_filename, 'w') as f:
-        yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
-
-
-def is_popperized(rootfolder):
-    """Determines if the current repo has already been popperized by checking
-    whether the '.popper.yml' file on the root of the project exits.
-
-    Returns:
-       True if the '.popper.yml' exists, False otherwise.
-    """
-    config_filename = os.path.join(rootfolder, '.popper.yml')
-    return os.path.isfile(config_filename)
 
 
 def fail(msg):
@@ -117,11 +20,6 @@ def warn(msg):
 def info(msg, **styles):
     """Prints the message on the terminal."""
     click.secho(msg, nl=False, **styles)
-
-
-def print_yaml(msg, **styles):
-    """Prints the messages in YAML's block format. """
-    click.secho(yaml.safe_dump(msg, default_flow_style=False), **styles)
 
 
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
@@ -247,6 +145,11 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     return "", ecode
 
 
+def get_items(dict_object):
+    """Python 2/3 compatible way of iterating over a dictionary"""
+    for key in dict_object:
+        yield key, dict_object[key]
+
 
 class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by
@@ -366,7 +269,7 @@ def parse(url):
         tail = '/'.join(parts[1:])
         service = service_url[4:]
     elif url.startswith('ssh://'):
-        pu.fail("The ssh protocol is not supported yet.")
+        fail("The ssh protocol is not supported yet.")
     else:
         service_url = 'https://github.com'
         service = 'github.com'
@@ -399,7 +302,7 @@ def get_parts(url):
         service_url, rest = url.split(':')
         parts = ['github.com'] + rest.split('/')
     elif url.startswith('ssh://'):
-        pu.fail('The ssh protocol is not supported yet.')
+        fail('The ssh protocol is not supported yet.')
     else:
         parts = ['github.com'] + url.split('/')
     return parts
