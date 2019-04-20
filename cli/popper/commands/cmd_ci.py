@@ -86,10 +86,10 @@ popper:
 def cli(ctx, service):
     """Generates configuration files for distinct CI services.
     """
-    project_root = scm.get_root_folder()
-
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)
+
+    project_root = scm.get_popper_root_folder()
 
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
         ci_file_content = ci_file_content
@@ -102,4 +102,4 @@ def cli(ctx, service):
         with open(ci_file, 'w') as f:
             f.write(ci_file_content)
 
-    pu.info('Wrote CI configuration file successfully\n')
+    pu.info('Wrote {} configuration successfully.\n'.format(service))

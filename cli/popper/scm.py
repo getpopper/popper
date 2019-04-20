@@ -1,21 +1,43 @@
 import os
 import git
 import shutil
-import click
-import sys
 import popper.utils as pu
-import traceback
-
-try:
-    repo = git.Repo(search_parent_directories=True)
-except git.exc.InvalidGitRepositoryError:
-    pu.fail('Unable to find root of project. Initialize repository first.')
 
 
-def get_root_folder():
+repo = None
+
+
+def init_repo_object():
+    global repo
+
+    if repo is not None:
+        return
+
+    try:
+        repo = git.Repo(search_parent_directories=True)
+    except git.exc.InvalidGitRepositoryError:
+        pu.fail('Unable to find root of a Git repository.\n')
+
+
+def get_git_root_folder():
     """Tries to find the root folder.
     """
+    init_repo_object()
     return os.path.dirname(repo.git_dir)
+
+
+def get_popper_root_folder():
+    """Tries to find the root folder of a popper repository. A Popper
+    repository is where the .popper.yml is stored in.
+    """
+    root_folder = get_git_root_folder()
+
+    if os.path.exists(os.path.join(root_folder, '.popper.yml')):
+        return root_folder
+
+    pu.fail(
+        "Unable to find .popper.yml at {}. "
+        "Run 'popper init' first.\n".format(root_folder))
 
 
 def infer_repo_name_from_root_folder():
@@ -24,6 +46,7 @@ def infer_repo_name_from_root_folder():
     Returns:
         repo_name (str): the name of the root folder.
     """
+    init_repo_object()
     return os.path.basename(repo.git_dir)
 
 
@@ -61,20 +84,20 @@ def get_user():
 
 def get_ref():
     """Returns the Git REF pointed by .git/HEAD"""
-    r = get_root_folder()
+    init_repo_object()
     return "" if repo.head.is_detached else repo.head.ref.path
 
 
 def get_sha(debug):
     """Runs git rev-parse --short HEAD and returns result"""
+    init_repo_object()
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
     except ValueError as e:
         if debug:
-            traceback.print_exc()
+            print(e)
         pu.fail('Could not obtain revision of repository located at {}\n'
-                .format(get_root_folder()))
-
+                .format(get_git_root_folder()))
 
 
 def get_remote_url():
@@ -107,12 +130,15 @@ def clone(url, org, repo, repo_parent_dir, version=None, debug=False):
     else:
         url += '/'
 
-    cloned_repo = git.Repo.clone_from(
+    init_repo_object()
+
+    git.Repo.clone_from(
         '{}{}/{}'.format(url, org, repo.split('@')[0]),
         os.path.join(repo_parent_dir, repo),
         depth=1,
         branch=version
     )
+
 
 def get_git_files():
     """Used to return a list of files that are being tracked by
@@ -121,4 +147,5 @@ def get_git_files():
     Returns:
         files (list) : list of git tracked files
     """
+    init_repo_object()
     return repo.git.ls_files().split("\n")
