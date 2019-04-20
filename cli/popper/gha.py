@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 from builtins import dict, str, input
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import multiprocessing as mp
+import subprocess
 import hcl
 import os
 import shutil
@@ -9,7 +10,7 @@ import docker
 import sys
 import popper.scm as scm
 import popper.utils as pu
-from spython.main import Client
+from spython.main import Client as sclient
 import sys
 import popper.cli
 from distutils.dir_util import copy_tree
@@ -498,7 +499,6 @@ class DockerRunner(ActionRunner):
             working_dir=self.workspace, environment=env_vars,
             entrypoint=self.action.get('runs', None))
 
-
     def docker_start(self):
         pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
                                                 self.action['name']))
@@ -558,7 +558,8 @@ class SingularityRunner(ActionRunner):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 q, d, dry)
         self.pid = self.action['name'].replace(' ', '_')
-        Client.quiet = q
+        sclient.quiet = q
+        sclient.debug = d
 
     def run(self, reuse=False):
         """Runs the singularity action
@@ -576,57 +577,59 @@ class SingularityRunner(ActionRunner):
             singularityfile_path = os.path.join(self.action['repo_dir'],
                                                 self.action['action_dir'])
 
+        self.image_name = self.pid + '.simg'
         if not reuse:
             if self.singularity_exists():
                 self.singularity_rm()
             if build:
-                self.singularity_build(singularityfile_path, image)
+                self.singularity_build(singularityfile_path)
             else:
                 self.singularity_pull(image)
         else:
             if not self.singularity_exists():
                 if build:
-                    self.singularity_build(singularityfile_path, image)
+                    self.singularity_build(singularityfile_path)
                 else:
                     self.singularity_pull(image)
 
-        e = self.singularity_start(image)
+        e = self.singularity_start()
 
         if e != 0:
             pu.fail('Action {} failed!\n'.format(self.action['name']))
 
-    def generate_image_name(self, image):
-        """Generates the image name from the image url.
-        """
-        return image.replace('shub://', '').replace('/', '-') + '.simg'
-
     def singularity_exists(self):
         """Check whether an instance exists or not.
         """
-        instances = Client.instances(quiet=self.quiet)
-        for instance in instances:
-            if self.pid in instance.name:
-                return True
+        if os.path.exists(self.image_name):
+            return True
         return False
 
     def singularity_rm(self):
         """Stops and removes an instance.
         """
-        Client.instances(self.pid, quiet=self.quiet).stop()
+        os.remove(self.image_name)
 
     def singularity_pull(self, image):
         """Pulls an docker or singularity images from hub.
         """
-        Client.pull(image)
+        pu.info('{}[{}] singularity pull {}\n'.format(
+            self.msg_prefix, self.action['name'], image)
+        )
+        if not self.dry_run:
+            sclient.pull(image, name=self.image_name)
 
-    def singularity_build(self, path, image):
+    def singularity_build(self, path):
         """Builds an image from a recipefile.
         """
-        Client.build(os.path.join(
-            path, 'singularity.def'
-        ), self.generate_image_name(image))
+        recipefile_path = os.path.join(path, 'singularity.def')
+        pu.info('{}[{}] singularity build {} {}\n'.format(
+            self.msg_prefix, self.action['name'],
+            self.image_name, recipefile_path)
+        )
+        if not self.dry_run:
+            sclient.build(recipefile_path, self.image_name)
 
-    def singularity_start(self, image):
+    def singularity_start(self):
         """Starts a singularity instance based on the image.
         """
         env_vars = self.action.get('env', {})
@@ -641,12 +644,47 @@ class SingularityRunner(ActionRunner):
 
         # sets the env variables
         for k, v in env_vars.items():
-            Client.setenv(k, v)
+            sclient.setenv(k, v)
+        args = self.action.get('args', None)
+        runs = self.action.get('runs', None)
 
-        e = Client.run(image=self.generate_image_name(image),
-                       args=' '.join(self.action.get('args', '')),
-                       return_result=True)
-        return e['return_code']
+        ecode = None
+        bind_list = [self.workspace, os.environ['HOME']]
+
+        if runs:
+            info = '{}[{}] singularity exec {} {}\n'.format(
+                self.msg_prefix, self.action['name'],
+                self.image_name, runs)
+            commands = runs
+            start = sclient.execute
+        else:
+            info = '{}[{}] singularity run {} {}\n'.format(
+                self.msg_prefix, self.action['name'],
+                self.image_name, args)
+            commands = args
+            start = sclient.run
+
+        pu.info(info)
+        if not self.dry_run:
+            output = start(self.image_name, commands, contain=True,
+                           bind=bind_list, stream=True)
+
+            outf = open(self.log_filename + '.out', 'w')
+            errf = open(self.log_filename + '.err', 'w')
+            try:
+                for line in output:
+                    pu.info(line)
+                    outf.write(line)
+                ecode = 0
+            except subprocess.CalledProcessError as ex:
+                errf.write(ex.stderr if ex.stderr else '')
+                ecode = ex.returncode
+            finally:
+                outf.close()
+                errf.close()
+        else:
+            ecode = 0
+        return ecode
 
 
 class HostRunner(ActionRunner):
