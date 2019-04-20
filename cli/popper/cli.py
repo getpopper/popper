@@ -6,7 +6,7 @@ import difflib
 from . import __version__ as popper_version
 from .exceptions import UsageError
 import popper.utils as pu
-
+from spython.main import Client as sclient
 
 class Context(object):
 
@@ -56,7 +56,7 @@ class PopperCLI(click.MultiCommand):
             message = ""
             if len(most_similar_commands) != 0:
                 message = "\n\nThe most similar commands are: " \
-                        + most_similar_commands
+                    + most_similar_commands
             raise UsageError(
                 "Command '" + name + "' doesn't exist. " +
                 "\nType 'popper --help' for more."
@@ -77,6 +77,7 @@ process_list = list()
 interrupt_params = None
 flist = None
 
+
 def signal_handler(sig, frame):
 
     pu.info('Caught Ctrl-C signal! Stopping running actions.\n')
@@ -94,6 +95,6 @@ def signal_handler(sig, frame):
 
     for container in docker_list:
         pu.info("Stopping container '{}'\n".format(container.name))
-        container.remove(force=True)
+        container.stop()
 
     sys.exit(0)
