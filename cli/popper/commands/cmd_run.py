@@ -74,7 +74,7 @@ def cli(ctx, action, wfile, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel):
     """Executes one or more pipelines and reports on their status.
     """
-    popper.scm.get_popper_root_folder()
+    popper.scm.get_git_root_folder()
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         for wfile in wfile_list:

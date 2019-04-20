@@ -3,6 +3,7 @@ set -ex
 
 source ./common
 init_test_repo
+popper init
 
 cd $test_repo_path
 
