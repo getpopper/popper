@@ -28,11 +28,6 @@ action "test validate" {
   runs = "validate"
 }
 
-action "test clone" {
-  uses = "./ci/test"
-  runs = "clone"
-}
-
 action "test scaffold" {
   uses = "./ci/test"
   runs = "scaffold"
@@ -82,21 +77,19 @@ action "end" {
   uses = "./ci/test"
   runs = "version"
   needs = [
-    "test init",
-    "test ci",
-    "test reuse",
     "test actions-demo",
-    "test validate",
-    "test scaffold",
-    "test clone",
-    "test recursive",
-    "test dry-run",
-    "test scaffold",
-    "test parallel",
-    "test dot",
-    "test singularity",
-    "test interrupt",
     "test add",
-    "test quiet"
+    "test ci",
+    "test dot",
+    "test dry-run",
+    "test init",
+    "test interrupt",
+    "test parallel",
+    "test quiet",
+    "test recursive",
+    "test reuse",
+    "test scaffold",
+    "test singularity",
+    "test validate"
   ]
 }

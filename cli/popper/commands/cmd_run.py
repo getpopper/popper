@@ -6,7 +6,9 @@ import popper.utils as pu
 import sys
 from popper.gha import Workflow
 from popper.cli import pass_context
+
 import popper.cli
+import popper.scm
 
 
 @click.command(
@@ -72,6 +74,7 @@ def cli(ctx, action, wfile, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel):
     """Executes one or more pipelines and reports on their status.
     """
+    popper.scm.get_git_root_folder()
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         for wfile in wfile_list:

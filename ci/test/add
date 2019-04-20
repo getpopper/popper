@@ -5,8 +5,6 @@ source ./common
 init_test_repo
 cd $test_repo_path
 
-popper init
-
 popper add https://github.com/actions/bin@master
 test -f /tmp/mypaper/main.workflow
 rm /tmp/mypaper/main.workflow
