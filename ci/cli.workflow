@@ -31,11 +31,6 @@ action "test validate" {
   runs = "validate"
 }
 
-action "test clone" {
-  uses = "./ci/test"
-  runs = "clone"
-}
-
 action "test scaffold" {
   uses = "./ci/test"
   runs = "scaffold"
@@ -51,9 +46,9 @@ action "test dry-run" {
   runs = "dry-run"
 }
 
-action "test parallel stage exec" {
+action "test parallel" {
   uses = "./ci/test"
-  runs = "parallel_stage_exec"
+  runs = "parallel"
 }
 
 action "test dot" {
@@ -66,23 +61,39 @@ action "test singularity" {
   runs = "singularity"
 }
 
+action "test interrupt" {
+  uses = "./ci/test"
+  runs = "interrupt"
+}
+
+action "test add" {
+  uses = "./ci/test"
+  runs = "add"
+}
+
+action "test quiet" {
+  uses = "./ci/test"
+  runs = "quiet"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
   needs = [
     "Shellcheck",
-    "test init",
-    "test ci",
-    "test reuse",
     "test actions-demo",
-    "test validate",
-    "test scaffold",
-    "test clone",
-    "test recursive",
-    "test dry-run",
-    "test scaffold",
-    "test parallel stage exec",
+    "test add",
+    "test ci",
     "test dot",
-    "test singularity"
+    "test dry-run",
+    "test init",
+    "test interrupt",
+    "test parallel",
+    "test quiet",
+    "test recursive",
+    "test reuse",
+    "test scaffold",
+    "test singularity",
+    "test validate"
   ]
 }

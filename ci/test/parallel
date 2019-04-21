@@ -5,6 +5,11 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
+PY_VERSION=$( (python --version) 2>&1)
+
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+
+
 cat <<EOF > main.workflow
 workflow "test" {
   resolves = ["ls cmds", "curl urls"]
@@ -12,52 +17,52 @@ workflow "test" {
 
 action "ls al" {
   uses = "docker://busybox"
-  args = ["ls -al"]
+  args = ["ls", "-al"]
 }
 
 action "ls ltr" {
   uses = "docker://busybox"
-  args = ["ls -ltr"]
+  args = ["ls", "-ltr"]
 }
 
 action "ls line count" {
   uses = "docker://busybox"
-  args = ["ls | wc -l"]
+  args = ["sh", "-c", "ls | wc -l"]
 }
 
 action "ls d" {
   uses = "docker://busybox"
-  args = ["ls -d"]
+  args = ["ls", "-d"]
 }
 
 action "ls r" {
   uses = "docker://busybox"
-  args = ["ls -r"]
+  args = ["ls", "-r"]
 }
 
 action "ls R" {
   uses = "docker://busybox"
-  args = ["ls -R"]
+  args = ["ls", "-R"]
 }
 
 action "ls s" {
   uses = "docker://busybox"
-  args = ["ls -s"]
+  args = ["ls", "-s"]
 }
 
 action "ls t" {
   uses = "docker://busybox"
-  args = ["ls -t"]
+  args = ["ls", "-t"]
 }
 
 action "ls S" {
   uses = "docker://busybox"
-  args = ["ls -S"]
+  args = ["ls", "-S"]
 }
 
 action "ls X" {
     uses = "docker://busybox"
-    args = ["ls -X"]
+    args = ["ls", "-X"]
 }
 
 action "ls cmds" {
@@ -150,52 +155,52 @@ workflow "test" {
 
 action "ls al" {
   uses = "docker://busybox"
-  args = ["ls -al"]
+  args = ["ls", "-al"]
 }
 
 action "ls ltr" {
   uses = "docker://busybox"
-  args = ["ls -ltr"]
+  args = ["ls", "-ltr"]
 }
 
 action "ls line count" {
   uses = "docker://busybox"
-  args = ["ls | wc -l"]
+  args = ["sh", "-c", "ls | wc -l"]
 }
 
 action "ls d" {
   uses = "docker://busybox"
-  args = ["ls -dhdd"]
+  args = ["ls", "-dhdd"]
 }
 
 action "ls r" {
   uses = "docker://busybox"
-  args = ["ls -tyygfsr"]
+  args = ["ls", "-tyygfsr"]
 }
 
 action "ls R" {
   uses = "docker://busybox"
-  args = ["ls -R"]
+  args = ["ls", "-R"]
 }
 
 action "ls s" {
   uses = "docker://busybox"
-  args = ["ls -s"]
+  args = ["ls", "-s"]
 }
 
 action "ls t" {
   uses = "docker://busybox"
-  args = ["ls -gdtdt"]
+  args = ["ls", "-gdtdt"]
 }
 
 action "ls S" {
   uses = "docker://busybox"
-  args = ["ls -S"]
+  args = ["ls", "-S"]
 }
 
 action "ls X" {
     uses = "docker://busybox"
-    args = ["ls -X"]
+    args = ["ls", "-X"]
 }
 
 action "ls cmds" {
@@ -279,3 +284,5 @@ EOF
 
 ! popper run --parallel
 echo "Some actions failed as expected !"
+
+fi

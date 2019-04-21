@@ -5,6 +5,7 @@ source ./common
 init_test_repo
 
 cd "$test_repo_path"
+popper init
 
 popper ci --service travis
 test -f .travis.yml

@@ -2,105 +2,9 @@ import click
 import os
 import sys
 import time
-import yaml
 import threading
+import popper.cli
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
-
-noalias_dumper = yaml.dumper.SafeDumper
-noalias_dumper.ignore_aliases = lambda self, data: True
-
-init_config = {
-    'metadata': {
-        'access_right': "open",
-        'license': "CC-BY-4.0",
-        'upload_type': "publication",
-        'publication_type': "article"
-    },
-    'search_sources': [
-        "popperized"
-    ],
-    'version': 2,
-}
-
-gitignore_content = ".pipeline_cache.yml\npopper/\n"
-
-main_workflow_content = """
-workflow "example" {
-  on = "push"
-  resolves = "example action"
-}
-
-action "github official action" {
-  uses = "actions/bin/sh@master"
-  args = ["ls"]
-}
-
-action "docker action" {
-  uses = "docker://node:6"
-  args = ["node --version"]
-}
-
-action "example action" {
-  uses = "./%s"
-  args = ["github.com"]
-}
-"""
-
-dockerfile_content = """
-FROM debian:stable-slim
-
-LABEL "name"="curl"
-LABEL "maintainer"="GitHub Actions <support+actions@github.com>"
-LABEL "version"="1.0.0"
-
-LABEL "com.github.actions.name"="cURL for GitHub Actions"
-LABEL "com.github.actions.description"="Runs cURL in an Action"
-LABEL "com.github.actions.icon"="upload-cloud"
-LABEL "com.github.actions.color"="green"
-
-
-COPY entrypoint.sh /entrypoint.sh
-
-RUN apt-get update && \
-    apt-get install curl -y && \
-    apt-get clean -y
-
-ENTRYPOINT ["sh", "/entrypoint.sh"]
-"""
-
-entrypoint_content = """
-#!/bin/sh
-set -e
-
-sh -c "curl $*"
-"""
-
-readme_content = "Executes cURL with arguments listed in the Action's args."
-
-
-def get_items(dict_object):
-    """Python 2/3 compatible way of iterating over a dictionary"""
-    for key in dict_object:
-        yield key, dict_object[key]
-
-
-def write_config(rootfolder, config):
-    """Writes config to .popper.yml file."""
-    config_filename = os.path.join(rootfolder, '.popper.yml')
-
-    with open(config_filename, 'w') as f:
-        yaml.dump(config, f, default_flow_style=False, Dumper=noalias_dumper)
-
-
-def is_popperized(rootfolder):
-    """Determines if the current repo has already been popperized by checking
-    whether the '.popper.yml' file on the root of the project exits.
-
-    Returns:
-       True if the '.popper.yml' exists, False otherwise.
-    """
-    config_filename = os.path.join(rootfolder, '.popper.yml')
-    return os.path.isfile(config_filename)
 
 
 def fail(msg):
@@ -118,13 +22,8 @@ def info(msg, **styles):
     click.secho(msg, nl=False, **styles)
 
 
-def print_yaml(msg, **styles):
-    """Prints the messages in YAML's block format. """
-    click.secho(yaml.safe_dump(msg, default_flow_style=False), **styles)
-
-
 def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
-             log_file=None, dry_run=False):
+             log_file=None, dry_run=False, add_to_process_list=False):
 
     # If dry_run is True, I don't want the command to be executed
     # just an empty return
@@ -149,6 +48,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             return t.decode('utf-8')
         return t
 
+    ecode = None
     # quick shortcut for 1) above
     if not verbose and not log_file:
         out = ""
@@ -157,16 +57,17 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
         try:
             out = check_output(cmd, shell=True, stderr=PIPE,
                                universal_newlines=True)
+            ecode = 0
         except CalledProcessError as ex:
+            ecode = ex.returncode
             if debug:
                 info('DEBUG: Catched exception: {}\n'.format(ex))
             if not ignore_error:
                 fail("Command '{}' failed: {}\n".format(cmd, ex))
-        return b(out).strip(), 0
+        return b(out).strip(), ecode
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
-    ecode = None
     outf = None
     errf = None
 
@@ -186,12 +87,15 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
             if debug:
                 info('DEBUG: subprocess.Popen() with combined stdout/stderr\n')
             p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
-                      universal_newlines=True)
+                      universal_newlines=True, preexec_fn=os.setsid)
         else:
             if debug:
                 info('DEBUG: subprocess.Popen() with separate stdout/stderr\n')
             p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
-                      universal_newlines=True)
+                      universal_newlines=True, preexec_fn=os.setsid)
+
+        if add_to_process_list:
+            popper.cli.process_list.append(p.pid)
 
         if debug:
             info('DEBUG: Reading process output\n')
@@ -227,6 +131,7 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
     except CalledProcessError as ex:
         msg = "Command '{}' failed: {}\n".format(cmd, ex)
+        ecode = ex.returncode
         if not ignore_error:
             fail(msg)
         info(msg)
@@ -240,21 +145,17 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
     return "", ecode
 
 
-def get_git_files():
-    """Used to return a list of files that are being tracked by
-    git.
-
-    Returns:
-        files (list) : list of git tracked files
-    """
-    gitfiles, _ = exec_cmd("git ls-files")
-    return gitfiles.split("\n")
+def get_items(dict_object):
+    """Python 2/3 compatible way of iterating over a dictionary"""
+    for key in dict_object:
+        yield key, dict_object[key]
 
 
 class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -271,6 +172,7 @@ class threadsafe_iter_2:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -292,6 +194,7 @@ def threadsafe_generator(f):
         else:
             return threadsafe_iter_3(f(*args, **kwargs))
     return g
+
 
 def find_default_wfile(wfile):
     """
@@ -334,3 +237,72 @@ def find_recursive_wfile():
                 wfile = os.path.abspath(wfile)
                 wfile_list.append(wfile)
     return wfile_list
+
+
+def parse(url):
+    service_url = None
+    service = None
+    user = None
+    repo = None
+    action = None
+    if url.startswith('https://'):
+        url = url[8:]
+        parts = url.split('/')
+        service_url = 'https://' + parts[0]
+        service = parts[0]
+        user = parts[1]
+        repo = parts[2]
+        tail = '/'.join(parts[2:])
+    elif url.startswith('http://'):
+        url = url[7:]
+        parts = url.split('/')
+        service_url = 'http://' + parts[0]
+        service = parts[0]
+        user = parts[1]
+        repo = parts[2]
+        tail = '/'.join(parts[2:])
+    elif url.startswith('git@'):
+        service_url, rest = url.split(':')
+        parts = rest.split('/')
+        user = parts[0]
+        repo = parts[1]
+        tail = '/'.join(parts[1:])
+        service = service_url[4:]
+    elif url.startswith('ssh://'):
+        fail("The ssh protocol is not supported yet.")
+    else:
+        service_url = 'https://github.com'
+        service = 'github.com'
+        parts = url.split('/')
+        user = parts[0]
+        repo = parts[1]
+        tail = '/'.join(parts[1:])
+        action = '/'.join(url.split('/')[1:])
+
+    if '@' in tail:
+        action_dir = '/'.join(url.split('@')[-2].split('/')[-1:])
+        version = url.split('@')[-1]
+    elif '@' in action:
+        action_dir = '/'.join(action.split('@')[-2].split('/')[-1:])
+        version = action.split('@')[-1]
+    else:
+        action_dir = '/'.join(url.split('/')[2:])
+        version = None
+    action_dir = os.path.join('./', action_dir)
+
+    return (service_url, service, user, repo, action, action_dir, version)
+
+
+def get_parts(url):
+    if url.startswith('https://'):
+        parts = url[8:].split('/')
+    elif url.startswith('http://'):
+        parts = url[7:].split('/')
+    elif url.startswith('git@'):
+        service_url, rest = url.split(':')
+        parts = ['github.com'] + rest.split('/')
+    elif url.startswith('ssh://'):
+        fail('The ssh protocol is not supported yet.')
+    else:
+        parts = ['github.com'] + url.split('/')
+    return parts

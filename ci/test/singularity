@@ -29,15 +29,17 @@ workflow "test" {
 
 action "shub action" {
   uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
 }
 
 action "public action" {
   uses = "JayjeetAtGithub/actions/wget@master"
+  args = ["github.com"]
 }
 
 action "custom action" {
   uses = "./actions/example"
-  args = ["ls -a"]
+  args = ["ls", "-al"]
   secrets = ["SECRET_KEY"]
   env = {
     F_NAME = "first_name",
@@ -50,5 +52,11 @@ action "custom action" {
 }
 EOF
 
-popper run
-popper run --quiet
+popper run --debug
+
+PY_VERSION=$( (python --version) 2>&1)
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+
+popper run --parallel
+
+fi

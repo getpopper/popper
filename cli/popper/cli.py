@@ -1,9 +1,11 @@
 import os
+import signal
 import sys
 import click
 import difflib
 from . import __version__ as popper_version
 from .exceptions import UsageError
+import popper.utils as pu
 
 
 class Context(object):
@@ -54,7 +56,7 @@ class PopperCLI(click.MultiCommand):
             message = ""
             if len(most_similar_commands) != 0:
                 message = "\n\nThe most similar commands are: " \
-                        + most_similar_commands
+                    + most_similar_commands
             raise UsageError(
                 "Command '" + name + "' doesn't exist. " +
                 "\nType 'popper --help' for more."
@@ -67,3 +69,32 @@ class PopperCLI(click.MultiCommand):
 @pass_context
 def cli(ctx):
     """Popper command line interface."""
+    signal.signal(signal.SIGINT, signal_handler)
+
+
+docker_list = list()
+process_list = list()
+interrupt_params = None
+flist = None
+
+
+def signal_handler(sig, frame):
+
+    pu.info('Caught Ctrl-C signal! Stopping running actions.\n')
+
+    if interrupt_params.parallel:
+        for future in flist:
+            future.cancel()
+
+    for pid in process_list:
+        pu.info("Stopping process '{}'\n".format(pid))
+        try:
+            os.killpg(os.getpgid(pid), signal.SIGTERM)
+        except OSError:
+            pass
+
+    for container in docker_list:
+        pu.info("Stopping container '{}'\n".format(container.name))
+        container.stop()
+
+    sys.exit(0)

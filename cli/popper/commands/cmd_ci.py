@@ -13,9 +13,9 @@ language: python
 python: 3.7
 services: docker
 install:
-- git clone --recursive https://github.com/systemslab/popper /tmp/popper
-- export PATH=$PATH:/tmp/popper/cli/bin
+- git clone https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
+- pip install /tmp/popper/cli
 script: popper run --recursive
 """
     },
@@ -30,9 +30,9 @@ jobs:
     - checkout
     - run:
         command: |
-        git clone --recursive https://github.com/systemslab/popper /tmp/popper
-        export PATH=$PATH:/tmp/popper/cli/bin
+        git clone https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
+        pip install /tmp/popper/cli
         popper run
 """
     },
@@ -40,9 +40,9 @@ jobs:
         './Jenkinsfile': """
 ---
 stage ('Popper') {{ node {{
-  sh "git clone --recursive https://github.com/systemslab/popper /tmp/popper"
-  sh "export PATH=$PATH:/tmp/popper/cli/bin"
+  sh "git clone https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
+  sh "pip install /tmp/popper/cli"
   sh "popper run --recursive
 }}}}
 """
@@ -65,8 +65,8 @@ before_script:
 - apk upgrade
 - apk add python python-dev py-pip build-base git bash
 - pip install virtualenv
-- git clone --recursive https://github.com/systemslab/popper /tmp/popper
-- export PATH=$PATH:/tmp/popper/cli/bin
+- git clone https://github.com/systemslab/popper /tmp/popper
+- pip install /tmp/popper/cli
 
 popper:
   script: popper run --recursive
@@ -86,10 +86,10 @@ popper:
 def cli(ctx, service):
     """Generates configuration files for distinct CI services.
     """
-    project_root = scm.get_root_folder()
-
     if service not in ci_files:
         pu.fail("Unrecognized service " + service)
+
+    project_root = scm.get_popper_root_folder()
 
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
         ci_file_content = ci_file_content
@@ -102,4 +102,4 @@ def cli(ctx, service):
         with open(ci_file, 'w') as f:
             f.write(ci_file_content)
 
-    pu.info('Wrote CI configuration file successfully\n')
+    pu.info('Wrote {} configuration successfully.\n'.format(service))

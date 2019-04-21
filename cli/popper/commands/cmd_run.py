@@ -3,9 +3,13 @@
 import click
 import os
 import popper.utils as pu
-
+import sys
 from popper.gha import Workflow
 from popper.cli import pass_context
+import popper.cli
+
+import popper.cli
+import popper.scm
 
 
 @click.command(
@@ -71,6 +75,7 @@ def cli(ctx, action, wfile, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel):
     """Executes one or more pipelines and reports on their status.
     """
+    popper.scm.get_git_root_folder()
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         for wfile in wfile_list:
@@ -84,7 +89,11 @@ def cli(ctx, action, wfile, workspace, reuse,
 
 def run_pipeline(action, wfile, workspace, reuse,
                  quiet, debug, dry_run, parallel):
-    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run)
+    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run,
+                        reuse, parallel)
+
+    # Saving workflow instance for signal handling
+    popper.cli.interrupt_params = pipeline
 
     if reuse:
         pu.info(
@@ -95,6 +104,9 @@ def run_pipeline(action, wfile, workspace, reuse,
         )
 
     if parallel:
+        if sys.version_info[0] < 3:
+            pu.fail('--parallel is only supported on Python3')
+
         pu.info(
             "\n  " +
             "WARNING: using --parallel may result in interleaved ouput." +
