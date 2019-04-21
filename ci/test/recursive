@@ -29,8 +29,7 @@ do
 done
 
 popper run --recursive >> out
-
-files=$(grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-)
+mapfile -t files < <(grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-)
 
 counter=0
 
@@ -46,7 +45,7 @@ do
     done
 done
 
-counter=$(> success wc -l)
+counter=$(< success wc -l)
 
 echo "Ran $counter/5 cases successfully"
 test "$counter" -eq 5

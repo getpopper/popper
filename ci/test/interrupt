@@ -185,7 +185,7 @@ send_sigint 'popper run --parallel' 15
 sleep 5
 
 ps aux > running_procs
-test "$(< running_procs grep -c sleep)" -eq 0
+test "$(grep -c sleep running_procs)" -eq 0
 rm running_procs
 
 fi

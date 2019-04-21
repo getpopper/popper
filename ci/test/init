@@ -7,4 +7,4 @@ cd "$test_repo_path"
 
 popper init
 test -f .popper.yml
-> .popper.yml grep 'version: 2'
+grep 'version: 2' .popper.yml
