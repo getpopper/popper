@@ -1,11 +1,13 @@
+import difflib
 import os
 import signal
 import sys
+
 import click
-import difflib
+from popper import utils as pu
+from click.exceptions import ClickException
+
 from . import __version__ as popper_version
-from .exceptions import UsageError
-import popper.utils as pu
 
 
 class Context(object):
@@ -56,8 +58,8 @@ class PopperCLI(click.MultiCommand):
             message = ""
             if len(most_similar_commands) != 0:
                 message = "\n\nThe most similar commands are: " \
-                    + most_similar_commands
-            raise UsageError(
+                        + most_similar_commands
+            raise ClickException(
                 "Command '" + name + "' doesn't exist. " +
                 "\nType 'popper --help' for more."
                 + message + '\n' + str(e)

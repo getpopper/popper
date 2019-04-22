@@ -1,8 +1,9 @@
-import click
 import os
-import popper.utils as pu
-import popper.scm as scm
+
+import click
+from popper import scm, utils as pu
 from popper.cli import pass_context
+
 
 ci_files = {
     'travis': {

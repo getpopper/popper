@@ -1,8 +1,9 @@
-import click
 import os
-import popper.utils as pu
-from popper.gha import Workflow
+
+import click
+from popper import utils as pu
 from popper.cli import pass_context
+from popper.gha import Workflow
 
 
 @click.command('add', short_help='Import workflow from remote repo.')

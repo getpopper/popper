@@ -1,10 +1,12 @@
-import click
 import os
 import sys
-import time
 import threading
+import time
+from subprocess import PIPE, STDOUT, CalledProcessError, Popen, check_output
+
+import click
 import popper.cli
-from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
+
 
 
 def fail(msg):

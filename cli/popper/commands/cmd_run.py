@@ -1,15 +1,13 @@
 #!/usr/bin/env python
 
-import click
 import os
-import popper.utils as pu
 import sys
-from popper.gha import Workflow
-from popper.cli import pass_context
-import popper.cli
 
+import click
 import popper.cli
-import popper.scm
+from popper import utils as pu
+from popper.cli import pass_context
+from popper.gha import Workflow
 
 
 @click.command(
