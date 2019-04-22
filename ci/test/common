@@ -5,9 +5,9 @@ export test_repo_path=/tmp/mypaper
 
 function delete_dir {
   set +e
-  if ! rm -rf $1; then
+  if ! rm -rf "$1"; then
     # try to remove using docker
-    docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf $1
+    docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf "$1"
   fi
   set -e
 }
@@ -24,12 +24,13 @@ function init_test_repo {
 }
 
 function send_sigint {
+  # shellcheck disable=SC2086
   { setsid $1; } &
   subshell_pid=$!
   pids=$(ps -ax -o ppid,pid --no-headers | sed -r 's/^ +//g;s/ +/ /g' |
                            grep "^$subshell_pid " | cut -f 2 -d " ")
 
-  sleep $2
+  sleep "$2"
 
   for child in $pids;  do
     kill -SIGINT "-$child"
