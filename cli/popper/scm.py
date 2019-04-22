@@ -1,7 +1,8 @@
 import os
-import git
 import shutil
-import popper.utils as pu
+
+import git
+from popper import utils as pu
 
 
 repo = None

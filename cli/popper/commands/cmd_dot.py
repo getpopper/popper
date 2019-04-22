@@ -2,10 +2,9 @@ import os
 
 import click
 import hcl
-import popper.utils as pu
-from ..cli import pass_context
+from popper import utils as pu
+from popper.cli import pass_context
 from popper.gha import Workflow
-
 
 
 @click.option(
