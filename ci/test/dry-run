@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 ## `--dry-run` test for DockerRunner
 
@@ -14,19 +14,20 @@ git checkout c824a5a
 export PHONY_SECRET=foo
 
 # delete any containers that might exist
-docker rm $(docker ps -aq) || true
+mapfile -t args < <(docker ps -aq)
+docker rm "${args[@]}" || true
 
-dry_num_lines=$(popper run --dry-run | grep 'DRYRUN' | wc -l)
+dry_num_lines=$(popper run --dry-run | grep -c 'DRYRUN')
 
 # 5 actions, at least one line per action
-test $dry_num_lines -gt 5
+test "$dry_num_lines" -gt 5
 
 # test that no containers are running
 test -z "$(docker ps -aq)"
 
 ## `--dry-run` test for SingularityRunner
 
-cd $test_repo_path
+cd "$test_repo_path"
 mkdir actions
 mkdir actions/example
 
@@ -74,7 +75,7 @@ action "custom action" {
 }
 EOF
 
-dry_num_lines=$(popper run --dry-run | grep 'DRYRUN' | wc -l)
+dry_num_lines=$(popper run --dry-run | grep -c 'DRYRUN')
 
 # 3 actions, atleast one line per action
-test $dry_num_lines -gt 3
+test "$dry_num_lines" -gt 3

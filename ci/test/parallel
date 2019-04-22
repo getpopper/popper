@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 PY_VERSION=$( (python --version) 2>&1)
 
@@ -145,8 +145,8 @@ action "curl urls" {
 EOF
 
 popper run --parallel |& tee out
-counter="$(grep 'Action ran successfully !' out | wc -l)"
-test $counter -eq 21
+counter="$(grep -c 'Action ran successfully !' out)"
+test "$counter" -eq 21
 
 cat <<EOF > main.workflow
 workflow "test" {
