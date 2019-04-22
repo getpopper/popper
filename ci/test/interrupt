@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 # Fetch the version of python
 PY_VERSION=$( (python --version) 2>&1)
@@ -119,7 +119,7 @@ send_sigint 'popper run' 5
 sleep 5
 
 ps aux > running_procs
-test $(cat running_procs | grep sleep | wc -l) -eq 0
+test "$(grep -c sleep running_procs)" -eq 0
 rm running_procs
 
 
@@ -185,7 +185,7 @@ send_sigint 'popper run --parallel' 15
 sleep 5
 
 ps aux > running_procs
-test $(cat running_procs | grep sleep | wc -l) -eq 0
+test "$(grep -c sleep running_procs)" -eq 0
 rm running_procs
 
 fi

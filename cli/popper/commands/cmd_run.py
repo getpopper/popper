@@ -6,6 +6,7 @@ import popper.utils as pu
 import sys
 from popper.gha import Workflow
 from popper.cli import pass_context
+import popper.cli
 
 import popper.cli
 import popper.scm
@@ -78,7 +79,7 @@ def cli(ctx, action, wfile, workspace, reuse,
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         for wfile in wfile_list:
-            pu.info("Found and running workflow at " + wfile + "\n")
+            pu.info("Found and running workflow at "+wfile+"\n")
             run_pipeline(action, wfile, workspace, reuse, quiet,
                          debug, dry_run, parallel)
     else:

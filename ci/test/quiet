@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
-
+# shellcheck source=./ci/test/common
 source ./common
 init_test_repo
-cd $test_repo_path
+cd "$test_repo_path"
 
 mkdir actions
 mkdir actions/example
@@ -55,4 +55,4 @@ EOF
 output_lines_without_quiet=$(popper run | wc -l)
 output_lines_with_quiet=$(popper run --quiet | wc -l)
 
-test $output_lines_without_quiet -gt $output_lines_with_quiet
+test "$output_lines_without_quiet" -gt "$output_lines_with_quiet"
