@@ -645,7 +645,7 @@ class SingularityRunner(ActionRunner):
             errf = open(self.log_filename + '.err', 'w')
             try:
                 for line in output:
-                    log.info(line)
+                    log.action_info(line)
                     outf.write(line)
                 ecode = 0
             except subprocess.CalledProcessError as ex:
