@@ -92,15 +92,15 @@ def cli(ctx, action, wfile, workspace, reuse,
         for wfile in wfile_list:
             log.info("Found and running workflow at " + wfile)
             run_pipeline(action, wfile, workspace, reuse,
-                         debug, dry_run, parallel, log_path)
+                         dry_run, parallel, log_path)
     else:
         run_pipeline(action, wfile, workspace, reuse,
-                     debug, dry_run, parallel, log_path)
+                     dry_run, parallel, log_path)
 
 
 def run_pipeline(action, wfile, workspace, reuse,
-                 debug, dry_run, parallel, log_path):
-    pipeline = Workflow(wfile, workspace, debug, dry_run,
+                 dry_run, parallel, log_path):
+    pipeline = Workflow(wfile, workspace, dry_run,
                         reuse, parallel)
 
     # Saving workflow instance for signal handling

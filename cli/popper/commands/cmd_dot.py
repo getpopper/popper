@@ -33,7 +33,7 @@ def cli(ctx, wfile, recursive):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        pipeline = Workflow(wfile, False, False, False, False, False, False)
+        pipeline = Workflow(wfile, False, False, False, False)
 
         graph = list()
 

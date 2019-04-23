@@ -19,7 +19,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, debug, dry_run,
+    def __init__(self, wfile, workspace, dry_run,
                  reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
@@ -27,7 +27,6 @@ class Workflow(object):
             self.wf = hcl.load(fp)
 
         self.workspace = workspace
-        self.debug = debug
         self.dry_run = dry_run
         self.reuse = reuse
         self.parallel = parallel
@@ -197,8 +196,7 @@ class Workflow(object):
                     log.info('[popper] cloning actions from repositories')
                     infoed = True
 
-                scm.clone(url, user, repo, repo_parent_dir, version,
-                          debug=self.debug)
+                scm.clone(url, user, repo, repo_parent_dir, version)
 
                 cloned.add('{}/{}'.format(user, repo))
 
@@ -208,29 +206,29 @@ class Workflow(object):
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
-                    self.debug, self.dry_run)
+                    self.dry_run)
                 continue
 
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
-                    self.debug, self.dry_run)
+                    self.dry_run)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
                         a, self.workspace, self.env,
-                        self.debug, self.dry_run)
+                        self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'singularity.def')):
                     a['runner'] = SingularityRunner(
                         a, self.workspace, self.env,
-                        self.debug, self.dry_run)
+                        self.dry_run)
                 else:
                     a['runner'] = HostRunner(
                         a, self.workspace, self.env,
-                        self.debug, self.dry_run)
+                        self.dry_run)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -241,15 +239,15 @@ class Workflow(object):
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
-                    self.debug, self.dry_run)
+                    self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
-                    self.debug, self.dry_run)
+                    self.dry_run)
             else:
                 a['runner'] = HostRunner(
                     a, self.workspace, self.env,
-                    self.debug, self.dry_run)
+                    self.dry_run)
 
     def run(self, action_name=None, reuse=False, parallel=False):
         """Run the pipeline or a specific action"""
@@ -268,7 +266,7 @@ class Workflow(object):
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(self.debug),
+            'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
         }
 
@@ -370,11 +368,10 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, debug, dry_run):
+    def __init__(self, action, workspace, env, dry_run):
         self.action = action
         self.workspace = workspace
         self.env = env
-        self.debug = debug
         self.dry_run = dry_run
         self.msg_prefix = "DRYRUN: " if dry_run else ""
 
@@ -394,8 +391,8 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d, dry):
-        super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
+    def __init__(self, action, workspace, env, dry):
+        super(DockerRunner, self).__init__(action, workspace, env, dry)
         self.cid = self.action['name'].replace(' ', '_')
         self.docker_client = docker.from_env()
         self.container = None
@@ -532,11 +529,10 @@ class SingularityRunner(ActionRunner):
     """Singularity Action Runner Class
     """
 
-    def __init__(self, action, workspace, env, d, dry):
+    def __init__(self, action, workspace, env, dry):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                d, dry)
+                                                dry)
         self.pid = self.action['name'].replace(' ', '_')
-        sclient.debug = d
 
     def run(self, reuse=False):
         """Runs the singularity action
@@ -553,7 +549,6 @@ class SingularityRunner(ActionRunner):
             image = '/'.join(self.action['uses'].split('/')[:2])
             singularityfile_path = os.path.join(self.action['repo_dir'],
                                                 self.action['action_dir'])
-
         self.image_name = self.pid + '.simg'
         if not reuse:
             if self.singularity_exists():
@@ -665,8 +660,8 @@ class SingularityRunner(ActionRunner):
 
 
 class HostRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d, dry):
-        super(HostRunner, self).__init__(action, workspace, env, q, d, dry)
+    def __init__(self, action, workspace, env, dry):
+        super(HostRunner, self).__init__(action, workspace, env, dry)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
@@ -689,7 +684,7 @@ class HostRunner(ActionRunner):
                                      ' '.join(cmd)))
 
         _, ecode = pu.exec_cmd(
-            ' '.join(cmd), verbose=True, debug=self.debug,
+            ' '.join(cmd), verbose=True,
             ignore_error=True, log_file=self.log_filename,
             dry_run=self.dry_run, add_to_process_list=True)
 

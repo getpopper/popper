@@ -7,7 +7,7 @@ from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
 from popper.cli import log
 
 
-def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
+def exec_cmd(cmd, verbose=False, ignore_error=False,
              log_file=None, dry_run=False, add_to_process_list=False):
 
     # If dry_run is True, I don't want the command to be executed

@@ -88,7 +88,7 @@ def get_ref():
     return "" if repo.head.is_detached else repo.head.ref.path
 
 
-def get_sha(debug):
+def get_sha():
     """Runs git rev-parse --short HEAD and returns result"""
     init_repo_object()
     try:
@@ -114,7 +114,7 @@ def get_remote_url():
     return url
 
 
-def clone(url, org, repo, repo_parent_dir, version=None, debug=False):
+def clone(url, org, repo, repo_parent_dir, version=None):
     """Clones a repository using Git. The URL for the repo is
     https://github.com/ by default. To override this, other URLs can be given
     by defining them in the 'action_urls' list specified in the .popper.yml
