@@ -72,6 +72,10 @@ class PopperLogger(logging.Logger):
 
     @staticmethod
     def remove(msg):
+        """
+        Travis CI Build introduces a new line character on its own.
+        It will strip the newline character if it exists
+        """
         return msg[:-1] if msg.endswith('\n') else msg
 
     def fail(self, msg='', *args, **kwargs):
@@ -92,22 +96,20 @@ class PopperLogger(logging.Logger):
 
     def error(self, msg, *args, **kwargs):
         """
-        Logs a message with severity 'ERROR', and then exits.
+        Sends a warning about the use of fail(). We are depreciating it in
+        favor of fail()
 
         The error() method has been replaced with fail(), as fail is more
         indicative of the functionality provided i.e. fail() will also
-        result in the failure of the module when called
+        result in the failure of the module when called and stop execution.
         """
-        msg = self.remove(msg)
         super(PopperLogger, self).\
-            warning('Note: error() has been replaced with fail()')
+            warning('error() has been replaced with fail()')
         pass
 
     def info(self, msg='', *args, **kwargs):
         """
         Logs a message with severity 'INFO'
-
-        Wrapper so that we can use info() instead of info('')
         """
         msg = self.remove(msg)
         super(PopperLogger, self).info(msg, *args, **kwargs)
@@ -115,8 +117,6 @@ class PopperLogger(logging.Logger):
     def debug(self, msg='', *args, **kwargs):
         """
         Logs a message with severity 'DEBUG'
-
-        Wrapper so that we can use debug() instead of debug('')
         """
         msg = self.remove(msg)
         super(PopperLogger, self).debug(msg, *args, **kwargs)
@@ -124,14 +124,15 @@ class PopperLogger(logging.Logger):
     def warning(self, msg='', *args, **kwargs):
         """
         Logs a message with severity 'WARNING'
-
-        Wrapper so that we can use warning() instead of warning('')
         """
         msg = self.remove(msg)
         super(PopperLogger, self).warning(msg, *args, **kwargs)
 
 
 def setup_logging(level='ACTION_INFO'):
+    """
+    Setups logging facilities with custom Logger and Formatter
+    """
     logging.setLoggerClass(PopperLogger)
     log = logging.getLogger('popper')
     formatter = PopperFormatter()
@@ -150,7 +151,7 @@ def add_log(log, logfile):
         timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         logfile += '_' + timestamp
     dir = os.path.dirname(logfile)
-    if not os.path.exists(dir) and dir!='':
+    if not os.path.exists(dir) and dir != '':
         os.makedirs(dir)
     handler = logging.FileHandler(logfile)
     formatter = PopperFormatter(colors=False)

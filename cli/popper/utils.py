@@ -16,17 +16,6 @@ def exec_cmd(cmd, ignore_error=False,
     if dry_run:
         return "", 0    # No error occurred
 
-    # the main logic is the following:
-    #
-    # 1) verbose=False and log_file=None
-    #      ==> don't write anything to stdout/log
-    # 2) verbose=True and log_file=None
-    #      ==> combine stdout/stderr in the same stream and print it to stdout
-    # 3) verbose=False and log_file not None
-    #      ==> write two files, one .out and one .err
-    # 4) verbose=True and log_file not None
-    #      ==> combine stdout/stderr, write to stdout and to a SINGLE log file
-
     # internal nested function to make treatment of stdout 2 and 3 compatible
     def b(t):
         if isinstance(t, bytes):
