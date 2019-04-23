@@ -1,6 +1,7 @@
 import logging
 import sys
-
+import os
+import datetime
 
 ACTION_INFO = 15
 logging.addLevelName(ACTION_INFO, 'ACTION_INFO')
@@ -143,10 +144,17 @@ def setup_logging(level='ACTION_INFO'):
     return log
 
 
-def add_log(logfile, log):
+def add_log(log, logfile):
+    logfile = 'popper_logs/log' if logfile is None else logfile
+    if logfile == 'popper_logs/log':
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        logfile += '_' + timestamp
+    dir = os.path.dirname(logfile)
+    if not os.path.exists(dir) and dir!='':
+        os.makedirs(dir)
     handler = logging.FileHandler(logfile)
-    formatter = PopperFormatter()
+    formatter = PopperFormatter(colors=False)
 
+    # Set
     handler.setFormatter(formatter)
     log.addHandler(handler)
-    log.setLevel('DEBUG')

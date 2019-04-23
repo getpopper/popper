@@ -9,6 +9,7 @@ from popper.cli import pass_context
 from popper.gha import Workflow
 import popper.utils as pu
 from ..cli import log
+import popper.log as logging
 
 @click.command(
     'run', short_help='Run a workflow or action.')
@@ -85,6 +86,7 @@ def cli(ctx, action, wfile, workspace, reuse,
     if debug:
         level = 'DEBUG'
     log.setLevel(level)
+    logging.add_log(log, log_file)
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         if not wfile_list:
@@ -92,14 +94,14 @@ def cli(ctx, action, wfile, workspace, reuse,
         for wfile in wfile_list:
             log.info("Found and running workflow at " + wfile)
             run_pipeline(action, wfile, workspace, reuse,
-                         dry_run, parallel, log_file)
+                         dry_run, parallel)
     else:
         run_pipeline(action, wfile, workspace, reuse,
-                     dry_run, parallel, log_file)
+                     dry_run, parallel)
 
 
 def run_pipeline(action, wfile, workspace, reuse,
-                 dry_run, parallel, log_file):
+                 dry_run, parallel):
     pipeline = Workflow(wfile, workspace, dry_run,
                         reuse, parallel)
 
