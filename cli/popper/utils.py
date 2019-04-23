@@ -4,7 +4,6 @@ import threading
 import time
 import popper.cli
 from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
-import popper
 from popper.cli import log
 
 
@@ -188,7 +187,7 @@ def find_default_wfile(wfile):
     if not wfile:
         log.fail(
             "Files {} or {} not found.".format("./main.workflow",
-                                                 ".github/main.workflow"))
+                                               ".github/main.workflow"))
     if not os.path.isfile(wfile):
         log.fail("File {} not found.".format(wfile))
         exit(1)
@@ -265,7 +264,7 @@ def parse(url):
         version = None
     action_dir = os.path.join('./', action_dir)
 
-    return (service_url, service, user, repo, action, action_dir, version)
+    return service_url, service, user, repo, action, action_dir, version
 
 
 def get_parts(url):

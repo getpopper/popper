@@ -12,6 +12,7 @@ import popper.cli
 from popper import scm, utils as pu
 from spython.main import Client as sclient
 from popper.cli import log
+from distutils.dir_util import copy_tree
 
 
 class Workflow(object):
