@@ -3,12 +3,12 @@ import sys
 import threading
 import time
 import popper.cli
-from subprocess import check_output, CalledProcessError, PIPE, Popen, STDOUT
+from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 from popper.cli import log
 
 
-def exec_cmd(cmd, verbose=False, ignore_error=False,
-             log_file=None, dry_run=False, add_to_process_list=False):
+def exec_cmd(cmd, ignore_error=False,
+             dry_run=False, add_to_process_list=False):
 
     # If dry_run is True, I don't want the command to be executed
     # just an empty return
@@ -34,44 +34,14 @@ def exec_cmd(cmd, verbose=False, ignore_error=False,
         return t
 
     ecode = None
-    # quick shortcut for 1) above
-    if not verbose and not log_file:
-        out = ""
-        log.debug('Using subprocess.check_output() for {}'.format(cmd))
-        try:
-            out = check_output(cmd, shell=True, stderr=PIPE,
-                               universal_newlines=True)
-            ecode = 0
-        except CalledProcessError as ex:
-            ecode = ex.returncode
-            log.debug('Catched exception: {}'.format(ex))
-            if not ignore_error:
-                log.fail("Command '{}' failed: {}".format(cmd, ex))
-        return b(out).strip(), ecode
 
     sleep_time = 0.25
     num_times_point_at_current_sleep_time = 0
-    outf = None
-    errf = None
-
-    if log_file:
-        if verbose:
-            log.debug('Creating file for combined stdout/stderr')
-            outf = open(log_file + '.log', 'w')
-        else:
-            log.debug('Creating separate files for stdout/stderr')
-            outf = open(log_file + '.out', 'w')
-            errf = open(log_file + '.err', 'w')
 
     try:
-        if verbose:
-            log.debug('subprocess.Popen() with combined stdout/stderr')
-            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
-                      universal_newlines=True, preexec_fn=os.setsid)
-        else:
-            log.debug('subprocess.Popen() with separate stdout/stderr')
-            p = Popen(cmd, stdout=outf, stderr=errf, shell=True,
-                      universal_newlines=True, preexec_fn=os.setsid)
+        log.debug('subprocess.Popen() with combined stdout/stderr')
+        p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
+                  universal_newlines=True, preexec_fn=os.setsid)
 
         if add_to_process_list:
             popper.cli.process_list.append(p.pid)
@@ -79,26 +49,17 @@ def exec_cmd(cmd, verbose=False, ignore_error=False,
         log.debug('Reading process output')
 
         while ecode is None:
+            # when we are not writing output to stdout, print dot progress
+            if sleep_time < 30 \
+                    and num_times_point_at_current_sleep_time == 5:
+                sleep_time *= 2
+                num_times_point_at_current_sleep_time = 0
 
-            if verbose:
-                # read until end of file (when process stops)
-                for line in iter(p.stdout.readline, ''):
-                    line_decoded = b(line)
-                    log.info(line_decoded)
-                    if log_file:
-                        outf.write(line)
-            else:
-                # when we are not writing output to stdout, print dot progress
-                if sleep_time < 30 \
-                        and num_times_point_at_current_sleep_time == 5:
-                    sleep_time *= 2
-                    num_times_point_at_current_sleep_time = 0
+            num_times_point_at_current_sleep_time += 1
 
-                num_times_point_at_current_sleep_time += 1
+            log.debug('sleeping for {}'.format(sleep_time))
 
-                log.debug('sleeping for {}'.format(sleep_time))
-
-                time.sleep(sleep_time)
+            time.sleep(sleep_time)
 
             ecode = p.poll()
             log.debug('Code returned by process: {}'.format(ecode))
@@ -111,10 +72,6 @@ def exec_cmd(cmd, verbose=False, ignore_error=False,
         log.info(msg)
     finally:
         log.info()
-        if outf:
-            outf.close()
-        if errf:
-            errf.close()
 
     return "", ecode
 

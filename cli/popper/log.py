@@ -41,11 +41,21 @@ class PopperFormatter(logging.Formatter):
         'CRITICAL':    '{}%(levelname)s: %(msg)s{}'.format(BOLD_RED, RESET)
     }
 
-    def __init__(self):
+    log_format_no_colors = {
+        'DEBUG': '%(levelname)s: %(msg)s ',
+        'ACTION_INFO': '%(msg)s',
+        'INFO': '%(msg)s',
+        'WARNING': '%(levelname)s: %(msg)s',
+        'ERROR': '%(levelname)s: %(msg)s',
+        'CRITICAL': '%(levelname)s: %(msg)s'
+    }
+
+    def __init__(self, colors=True):
         super(PopperFormatter, self).__init__(fmt='%(levelname)s: %(msg)s')
+        self.log_fmt = self.log_format if colors else self.log_format_no_colors
 
     def format(self, record):
-        fmt = self.log_format[logging.getLevelName(record.levelno)]
+        fmt = self.log_fmt[logging.getLevelName(record.levelno)]
         if sys.version_info[0] < 3:
             self._fmt = fmt
         else:

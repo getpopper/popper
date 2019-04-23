@@ -69,13 +69,13 @@ from ..cli import log
     is_flag=True
 )
 @click.option(
-    '--log-path',
-    help='Takes a path to a log directory',
+    '--log-file',
+    help='Generates a log file at the mentioned location',
     required=False
 )
 @pass_context
 def cli(ctx, action, wfile, workspace, reuse,
-        recursive, quiet, debug, dry_run, parallel, log_path):
+        recursive, quiet, debug, dry_run, parallel, log_file):
     """Executes one or more pipelines and reports on their status.
     """
     popper.scm.get_git_root_folder()
@@ -92,14 +92,14 @@ def cli(ctx, action, wfile, workspace, reuse,
         for wfile in wfile_list:
             log.info("Found and running workflow at " + wfile)
             run_pipeline(action, wfile, workspace, reuse,
-                         dry_run, parallel, log_path)
+                         dry_run, parallel, log_file)
     else:
         run_pipeline(action, wfile, workspace, reuse,
-                     dry_run, parallel, log_path)
+                     dry_run, parallel, log_file)
 
 
 def run_pipeline(action, wfile, workspace, reuse,
-                 dry_run, parallel, log_path):
+                 dry_run, parallel, log_file):
     pipeline = Workflow(wfile, workspace, dry_run,
                         reuse, parallel)
 

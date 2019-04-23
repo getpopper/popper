@@ -3,7 +3,6 @@ import multiprocessing as mp
 import os
 import shutil
 import subprocess
-import time
 from builtins import dict, input, str
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import docker
@@ -378,11 +377,6 @@ class ActionRunner(object):
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
-        self.log_path = os.path.join(self.workspace, 'popper_logs')
-        if not os.path.exists(self.log_path):
-            os.makedirs(self.log_path)
-        self.log_filename = os.path.join(
-            self.log_path, self.action['name'].replace(' ', '-'))
 
     def run(self, reuse=False):
         raise NotImplementedError(
@@ -641,19 +635,12 @@ class SingularityRunner(ActionRunner):
             output = start(self.image_name, commands, contain=True,
                            bind=bind_list, stream=True)
 
-            outf = open(self.log_filename + '.out', 'w')
-            errf = open(self.log_filename + '.err', 'w')
             try:
                 for line in output:
                     log.action_info(line)
-                    outf.write(line)
                 ecode = 0
             except subprocess.CalledProcessError as ex:
-                errf.write(ex.stderr if ex.stderr else '')
                 ecode = ex.returncode
-            finally:
-                outf.close()
-                errf.close()
         else:
             ecode = 0
         return ecode
@@ -684,8 +671,8 @@ class HostRunner(ActionRunner):
                                      ' '.join(cmd)))
 
         _, ecode = pu.exec_cmd(
-            ' '.join(cmd), verbose=True,
-            ignore_error=True, log_file=self.log_filename,
+            ' '.join(cmd),
+            ignore_error=True,
             dry_run=self.dry_run, add_to_process_list=True)
 
         for i in self.action.get('env', {}):
