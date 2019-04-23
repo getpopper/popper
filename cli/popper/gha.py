@@ -19,7 +19,7 @@ class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run,
+    def __init__(self, wfile, workspace, debug, dry_run,
                  reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
@@ -28,10 +28,6 @@ class Workflow(object):
 
         self.workspace = workspace
         self.debug = debug
-        if debug:
-            self.quiet = False
-        else:
-            self.quiet = quiet
         self.dry_run = dry_run
         self.reuse = reuse
         self.parallel = parallel
@@ -212,29 +208,29 @@ class Workflow(object):
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.debug, self.dry_run)
                 continue
 
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.debug, self.dry_run)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
                         a, self.workspace, self.env,
-                        self.quiet, self.debug, self.dry_run)
+                        self.debug, self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'singularity.def')):
                     a['runner'] = SingularityRunner(
                         a, self.workspace, self.env,
-                        self.quiet, self.debug, self.dry_run)
+                        self.debug, self.dry_run)
                 else:
                     a['runner'] = HostRunner(
                         a, self.workspace, self.env,
-                        self.quiet, self.debug, self.dry_run)
+                        self.debug, self.dry_run)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -245,15 +241,15 @@ class Workflow(object):
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.debug, self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.debug, self.dry_run)
             else:
                 a['runner'] = HostRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.debug, self.dry_run)
 
     def run(self, action_name=None, reuse=False, parallel=False):
         """Run the pipeline or a specific action"""
@@ -374,11 +370,10 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, quiet, debug, dry_run):
+    def __init__(self, action, workspace, env, debug, dry_run):
         self.action = action
         self.workspace = workspace
         self.env = env
-        self.quiet = quiet
         self.debug = debug
         self.dry_run = dry_run
         self.msg_prefix = "DRYRUN: " if dry_run else ""
@@ -508,21 +503,13 @@ class DockerRunner(ActionRunner):
         if self.dry_run:
             return 0
         self.container.start()
-        if self.quiet:
-            sleep_time = 0.25
-            while self.container.status == 'running':
-                if sleep_time < 10:
-                    sleep_time *= 2
-                log.debug('sleeping for {}'.format(sleep_time))
-                time.sleep(sleep_time)
-        else:
-            def b(t):
-                if isinstance(t, bytes):
-                    return t.decode('utf-8')
-                return t
-            cout = self.container.logs(stream=True)
-            for line in cout:
-                log.action_info(b(line).strip('\n'))
+        def b(t):
+            if isinstance(t, bytes):
+                return t.decode('utf-8')
+            return t
+        cout = self.container.logs(stream=True)
+        for line in cout:
+            log.action_info(b(line).strip('\n'))
 
         return self.container.wait()['StatusCode']
 
@@ -545,11 +532,10 @@ class SingularityRunner(ActionRunner):
     """Singularity Action Runner Class
     """
 
-    def __init__(self, action, workspace, env, q, d, dry):
+    def __init__(self, action, workspace, env, d, dry):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                q, d, dry)
+                                                d, dry)
         self.pid = self.action['name'].replace(' ', '_')
-        sclient.quiet = q
         sclient.debug = d
 
     def run(self, reuse=False):
@@ -703,7 +689,7 @@ class HostRunner(ActionRunner):
                                      ' '.join(cmd)))
 
         _, ecode = pu.exec_cmd(
-            ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,
+            ' '.join(cmd), verbose=True, debug=self.debug,
             ignore_error=True, log_file=self.log_filename,
             dry_run=self.dry_run, add_to_process_list=True)
 

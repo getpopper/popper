@@ -91,16 +91,16 @@ def cli(ctx, action, wfile, workspace, reuse,
             log.fail("Recursive search couldn't find any .workflow files ")
         for wfile in wfile_list:
             log.info("Found and running workflow at " + wfile)
-            run_pipeline(action, wfile, workspace, reuse, quiet,
+            run_pipeline(action, wfile, workspace, reuse,
                          debug, dry_run, parallel, log_path)
     else:
-        run_pipeline(action, wfile, workspace, reuse, quiet,
+        run_pipeline(action, wfile, workspace, reuse,
                      debug, dry_run, parallel, log_path)
 
 
 def run_pipeline(action, wfile, workspace, reuse,
-                 quiet, debug, dry_run, parallel, log_path):
-    pipeline = Workflow(wfile, workspace, quiet, debug, dry_run,
+                 debug, dry_run, parallel, log_path):
+    pipeline = Workflow(wfile, workspace, debug, dry_run,
                         reuse, parallel)
 
     # Saving workflow instance for signal handling
