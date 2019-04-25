@@ -70,19 +70,10 @@ class PopperLogger(logging.Logger):
     A Logger so that we can add popper fail and action_info log methods
     """
 
-    @staticmethod
-    def remove(msg):
-        """
-        Travis CI Build introduces a new line character on its own.
-        It will strip the newline character if it exists
-        """
-        return msg[:-1] if msg.endswith('\n') else msg
-
     def fail(self, msg='', *args, **kwargs):
         """
         Log a message with severity 'ERROR', and then exits.
         """
-        msg = self.remove(msg)
         super(PopperLogger, self).error(msg, *args, **kwargs)
         sys.exit(1)
 
@@ -90,7 +81,6 @@ class PopperLogger(logging.Logger):
         """
         Log a message with severity 'ACTION_INFO'.
         """
-        msg = self.remove(msg)
         if self.isEnabledFor(ACTION_INFO):
             self._log(ACTION_INFO, msg, args, **kwargs)
 
@@ -111,21 +101,18 @@ class PopperLogger(logging.Logger):
         """
         Logs a message with severity 'INFO'
         """
-        msg = self.remove(msg)
         super(PopperLogger, self).info(msg, *args, **kwargs)
 
     def debug(self, msg='', *args, **kwargs):
         """
         Logs a message with severity 'DEBUG'
         """
-        msg = self.remove(msg)
         super(PopperLogger, self).debug(msg, *args, **kwargs)
 
     def warning(self, msg='', *args, **kwargs):
         """
         Logs a message with severity 'WARNING'
         """
-        msg = self.remove(msg)
         super(PopperLogger, self).warning(msg, *args, **kwargs)
 
 
@@ -146,10 +133,6 @@ def setup_logging(level='ACTION_INFO'):
 
 
 def add_log(log, logfile):
-    logfile = 'popper_logs/log' if logfile is None else logfile
-    if logfile == 'popper_logs/log':
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        logfile += '_' + timestamp
     dir = os.path.dirname(logfile)
     if not os.path.exists(dir) and dir != '':
         os.makedirs(dir)

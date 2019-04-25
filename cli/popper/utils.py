@@ -37,21 +37,23 @@ def exec_cmd(cmd, ignore_error=False,
 
         log.debug('Reading process output')
 
-        while ecode is None:
-            # when we are not writing output to stdout, print dot progress
-            if sleep_time < 30 \
-                    and num_times_point_at_current_sleep_time == 5:
-                sleep_time *= 2
-                num_times_point_at_current_sleep_time = 0
+        for line in iter(p.stdout.readline, ''):
+            line_decoded = b(line)
+            log.info(line_decoded)
+        # when we are not writing output to stdout, print dot progress
+        if sleep_time < 30 \
+                and num_times_point_at_current_sleep_time == 5:
+            sleep_time *= 2
+            num_times_point_at_current_sleep_time = 0
 
-            num_times_point_at_current_sleep_time += 1
+        num_times_point_at_current_sleep_time += 1
 
-            log.debug('sleeping for {}'.format(sleep_time))
+        log.debug('sleeping for {}'.format(sleep_time))
 
-            time.sleep(sleep_time)
+        time.sleep(sleep_time)
 
-            ecode = p.poll()
-            log.debug('Code returned by process: {}'.format(ecode))
+        ecode = p.poll()
+        log.debug('Code returned by process: {}'.format(ecode))
 
     except CalledProcessError as ex:
         msg = "Command '{}' failed: {}".format(cmd, ex)

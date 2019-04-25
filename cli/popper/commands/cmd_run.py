@@ -86,7 +86,8 @@ def cli(ctx, action, wfile, workspace, reuse,
     if debug:
         level = 'DEBUG'
     log.setLevel(level)
-    logging.add_log(log, log_file)
+    if log_file:
+        logging.add_log(log, log_file)
     if recursive:
         wfile_list = pu.find_recursive_wfile()
         if not wfile_list:
