@@ -39,7 +39,7 @@ def exec_cmd(cmd, ignore_error=False,
 
         for line in iter(p.stdout.readline, ''):
             line_decoded = b(line)
-            log.info(line_decoded)
+            log.info(line_decoded[:-1])
         # when we are not writing output to stdout, print dot progress
         if sleep_time < 30 \
                 and num_times_point_at_current_sleep_time == 5:
