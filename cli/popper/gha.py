@@ -494,13 +494,9 @@ class DockerRunner(ActionRunner):
         if self.dry_run:
             return 0
         self.container.start()
-        def b(t):
-            if isinstance(t, bytes):
-                return t.decode('utf-8')
-            return t
         cout = self.container.logs(stream=True)
         for line in cout:
-            log.action_info(b(line).strip('\n'))
+            log.action_info(pu.decoder(line).strip('\n'))
 
         return self.container.wait()['StatusCode']
 
@@ -682,3 +678,10 @@ class HostRunner(ActionRunner):
 
         if ecode != 0:
             log.fail("Action '{}' failed.".format(self.action['name']))
+
+
+def consume_stdout(p):
+    """Consumes stdout and is used to write to Travis CI Build Logs"""
+    for line in iter(p.stdout.readline, ''):
+        line_decoded = pu.decoder(line)
+        log.info(line_decoded[:-1])

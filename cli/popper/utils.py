@@ -1,10 +1,10 @@
 import os
 import sys
 import threading
-import time
 import popper.cli
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 from popper.cli import log
+from popper.gha import consume_stdout
 
 
 def exec_cmd(cmd, ignore_error=False,
@@ -16,16 +16,7 @@ def exec_cmd(cmd, ignore_error=False,
     if dry_run:
         return "", 0    # No error occurred
 
-    # internal nested function to make treatment of stdout 2 and 3 compatible
-    def b(t):
-        if isinstance(t, bytes):
-            return t.decode('utf-8')
-        return t
-
     ecode = None
-
-    sleep_time = 0.25
-    num_times_point_at_current_sleep_time = 0
 
     try:
         log.debug('subprocess.Popen() with combined stdout/stderr')
@@ -37,20 +28,7 @@ def exec_cmd(cmd, ignore_error=False,
 
         log.debug('Reading process output')
 
-        for line in iter(p.stdout.readline, ''):
-            line_decoded = b(line)
-            log.info(line_decoded[:-1])
-        # when we are not writing output to stdout, print dot progress
-        if sleep_time < 30 \
-                and num_times_point_at_current_sleep_time == 5:
-            sleep_time *= 2
-            num_times_point_at_current_sleep_time = 0
-
-        num_times_point_at_current_sleep_time += 1
-
-        log.debug('sleeping for {}'.format(sleep_time))
-
-        time.sleep(sleep_time)
+        consume_stdout(p)
 
         ecode = p.poll()
         log.debug('Code returned by process: {}'.format(ecode))
@@ -65,6 +43,13 @@ def exec_cmd(cmd, ignore_error=False,
         log.info()
 
     return "", ecode
+
+
+def decoder(line):
+    """Make treatment of stdout Python 2/3 compatible"""
+    if isinstance(line, bytes):
+        return line.decode('utf-8')
+    return line
 
 
 def get_items(dict_object):
