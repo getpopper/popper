@@ -9,7 +9,7 @@ cd "$test_repo_path"
 git clone https://github.com/cplee/github-actions-demo.git
 cd github-actions-demo
 
-export PHONY_SECRET=foo
+# export PHONY_SECRET=foo
 
 popper dot > dot_output
 
@@ -27,7 +27,7 @@ cd example-aws/
 
 export KUBE_CONFIG_DATA=foo
 export AWS_ACCESS_KEY_ID=foo
-export AWS_SECRET_ACCESS_KEY=foo
+# export AWS_SECRET_ACCESS_KEY=foo
 
 ## Testing --recursive feature
 # Move main.workflow to somewhere else to test --recursive flag
