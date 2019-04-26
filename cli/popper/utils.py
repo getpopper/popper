@@ -7,7 +7,7 @@ import click
 import popper.cli
 
 
-def fail(msg):
+def fail(msg, colorize=True):
     """Prints the error message on the terminal."""
     click.echo(click.style('ERROR: ', bg='red', fg='white') +
                click.style(msg, bold=True),
@@ -15,17 +15,17 @@ def fail(msg):
     sys.exit(1)
 
 
-def warn(msg):
+def warn(msg, colorize=True):
     click.echo(click.style('WARNING: ', bg='yellow', fg='black', bold=True) +
                click.style(msg, fg='yellow', bold=True),
                err=True, nl=False, color=True)
 
 
-def info(msg, prefix='', action=''):
+def info(msg, prefix='', action='', colorize=True):
     """Prints the message on the terminal."""
     click.echo(click.style(prefix, fg='green', bold=True) +
                click.style(action, fg='blue', bold=True) +
-               click.style(msg, fg='white'), nl=False, color=True)
+               click.style(msg), nl=False, color=colorize)
 
 
 def print_yaml(msg, **styles):

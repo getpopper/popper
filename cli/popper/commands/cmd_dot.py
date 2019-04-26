@@ -55,7 +55,7 @@ def cli(ctx, wfile, recursive):
         graph = add(parent_action, cur_action, wf['action'], graph)
         graph = ''.join(list(set(graph)))
         graph = "digraph G {\n" + graph + "}\n"
-        pu.info(msg=graph)
+        pu.info(msg=graph, colorize=False)
 
 
 # Recursively go through "needs" and add corresponding actions to graph
