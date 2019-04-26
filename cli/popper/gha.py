@@ -476,8 +476,8 @@ class DockerRunner(ActionRunner):
         self.container.remove(force=True)
 
     def docker_create(self, img):
-        pu.info(msg=' docker create {} {}\n'.format(img,
-            ' '.join(self.action.get('args', ''))),
+        pu.info(msg=' docker create {} {}\n'.format(
+            img, ' '.join(self.action.get('args', ''))),
             prefix=self.msg_prefix, action='['+self.action['name']+']')
         if self.dry_run:
             return

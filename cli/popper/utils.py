@@ -145,7 +145,8 @@ def exec_cmd(cmd, verbose=False, debug=False, ignore_error=False,
 
             ecode = p.poll()
             if debug:
-                info(prefix='DEBUG:', msg=' Code returned by process: {}\n'.format(ecode))
+                info(prefix='DEBUG:',
+                     msg=' Code returned by process: {}\n'.format(ecode))
 
     except CalledProcessError as ex:
         msg = "Command '{}' failed: {}\n".format(cmd, ex)
