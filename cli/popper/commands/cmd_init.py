@@ -1,9 +1,9 @@
 import os
-
 import click
 import yaml
-from popper import scm, utils as pu
+from popper import scm
 from popper.cli import pass_context
+from ..cli import log
 
 
 @click.command('init', short_help='Initialize a Popper project.')
@@ -16,9 +16,8 @@ def cli(ctx):
     project_root = scm.get_git_root_folder()
 
     if os.getcwd() != project_root:
-        pu.fail(
-            "Could not find a Git repository on current directory.\n"
-            "Run 'popper init' on the root of your Git repository.\n")
+        log.fail("Could not find a Git repository on current directory.")
+        log.fail("Run 'popper init' on the root of your Git repository.")
 
     config_filename = os.path.join(project_root, '.popper.yml')
 
@@ -31,4 +30,4 @@ def cli(ctx):
         yaml.dump(init_config, f, default_flow_style=False,
                   Dumper=noalias_dumper)
 
-    pu.info('Initialized Popper repository {}\n'.format(project_root))
+    log.info('Initialized Popper repository {}'.format(project_root))
