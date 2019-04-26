@@ -199,7 +199,7 @@ class Workflow(object):
             if not self.dry_run:
                 if not infoed:
                     pu.info(msg=' cloning actions from repositories\n',
-                            action='popper')
+                            action='[popper]')
                     infoed = True
 
                 scm.clone(url, user, repo, repo_parent_dir, version,
@@ -478,7 +478,7 @@ class DockerRunner(ActionRunner):
     def docker_create(self, img):
         pu.info(msg=' docker create {} {}\n'.format(img,
             ' '.join(self.action.get('args', ''))),
-            prefix=self.msg_prefix, action=self.action['name'])
+            prefix=self.msg_prefix, action='['+self.action['name']+']')
         if self.dry_run:
             return
         env_vars = self.action.get('env', {})
@@ -504,7 +504,7 @@ class DockerRunner(ActionRunner):
         )
 
     def docker_start(self):
-        pu.info(prefix=self.msg_prefix, action=self.action['name'],
+        pu.info(prefix=self.msg_prefix, action='['+self.action['name']+']',
                 msg=' docker start \n')
         if self.dry_run:
             return 0
@@ -534,13 +534,13 @@ class DockerRunner(ActionRunner):
 
     def docker_pull(self, img):
         pu.info(msg=' docker pull {}\n'.format(img),
-                prefix=self.msg_prefix, action=self.action['name'])
+                prefix=self.msg_prefix, action='['+self.action['name']+']')
         if self.dry_run:
             return
         self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
-        pu.info(prefix=self.msg_prefix, action=self.action['name'],
+        pu.info(prefix=self.msg_prefix, action='['+self.action['name']+']',
                 msg=' docker build -t {} {}\n'.format(tag, path))
         if self.dry_run:
             return
@@ -706,7 +706,7 @@ class HostRunner(ActionRunner):
         os.environ.update(self.action.get('env', {}))
 
         pu.info(msg=' {}\n'.format(' '.join(cmd)), prefix=self.msg_prefix,
-                action=self.action['name'])
+                action='['+self.action['name']+']')
 
         _, ecode = pu.exec_cmd(
             ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,

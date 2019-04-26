@@ -24,9 +24,8 @@ def warn(msg):
 def info(msg, prefix='', action=''):
     """Prints the message on the terminal."""
     click.echo(click.style(prefix, fg='green', bold=True) +
-               click.style('[' + action + ']' if action else '',
-                           fg='blue', bold=True) +
-               click.style(msg, fg='white', bold=True), nl=False, color=True)
+               click.style(action, fg='blue', bold=True) +
+               click.style(msg, fg='white'), nl=False, color=True)
 
 
 def print_yaml(msg, **styles):
