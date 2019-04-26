@@ -4,7 +4,6 @@ import threading
 import popper.cli
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 from popper.cli import log
-from popper.gha import consume_stdout
 
 
 def exec_cmd(cmd, ignore_error=False,
@@ -28,7 +27,8 @@ def exec_cmd(cmd, ignore_error=False,
 
         log.debug('Reading process output')
 
-        consume_stdout(p)
+        import popper.gha as tmp
+        tmp.consume_stdout(p)
 
         ecode = p.poll()
         log.debug('Code returned by process: {}'.format(ecode))
