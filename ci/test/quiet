@@ -52,7 +52,7 @@ action "custom action" {
 }
 EOF
 
-output_lines_without_quiet=$(popper run | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | wc -l)
-output_lines_with_quiet=$(popper run --quiet | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | wc -l)
+output_lines_without_quiet=$(popper run | sed -r "s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | wc -l)
+output_lines_with_quiet=$(popper run --quiet | sed -r "s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" | wc -l)
 
 test "$output_lines_without_quiet" -gt "$output_lines_with_quiet"

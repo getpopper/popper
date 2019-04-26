@@ -11,7 +11,7 @@ cd github-actions-demo
 
 export PHONY_SECRET=foo
 
-popper dot | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" > dot_output
+popper dot | sed -r "s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" > dot_output
 
 grep "digraph G" dot_output
 grep "branch_filter -> deploy;" dot_output
@@ -33,7 +33,7 @@ export AWS_SECRET_ACCESS_KEY=foo
 # Move main.workflow to somewhere else to test --recursive flag
 mkdir dummy
 mv .github/main.workflow dummy/.
-popper dot --recursive | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"> dot_output
+popper dot --recursive | sed -r "s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g"> dot_output
 
 grep "digraph G" dot_output
 grep "Build_and_Deploy -> Build_Docker_image;" dot_output
@@ -52,7 +52,7 @@ grep "Verify_EKS_deployment -> List_Public_IP;" dot_output
 
 ## testing --wfile feature
 cd "$test_repo_path"
-popper dot --wfile example-aws/dummy/main.workflow | sed -r "s/\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" > dot_output
+popper dot --wfile example-aws/dummy/main.workflow | sed -r "s/\\x1B\\[([0-9]{1,2}(;[0-9]{1,2})?)?[mGK]//g" > dot_output
 
 grep "digraph G" dot_output
 grep "Build_and_Deploy -> Build_Docker_image;" dot_output
