@@ -4,10 +4,12 @@ import signal
 import sys
 
 import click
-from popper import utils as pu
 from click.exceptions import ClickException
 
 from . import __version__ as popper_version
+import popper.log as log
+
+log = log.setup_logging()
 
 
 class Context(object):
@@ -82,21 +84,21 @@ flist = None
 
 def signal_handler(sig, frame):
 
-    pu.info('Caught Ctrl-C signal! Stopping running actions.\n')
+    log.info('Caught Ctrl-C signal! Stopping running actions.')
 
     if interrupt_params.parallel:
         for future in flist:
             future.cancel()
 
     for pid in process_list:
-        pu.info("Stopping process '{}'\n".format(pid))
+        log.info("Stopping process '{}'".format(pid))
         try:
             os.killpg(os.getpgid(pid), signal.SIGTERM)
         except OSError:
             pass
 
     for container in docker_list:
-        pu.info("Stopping container '{}'\n".format(container.name))
+        log.info("Stopping container '{}'".format(container.name))
         container.stop()
 
     sys.exit(0)

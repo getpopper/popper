@@ -1,11 +1,8 @@
-import os
-
 import click
-import hcl
 from popper import utils as pu
 from popper.cli import pass_context
 from popper.gha import Workflow
-
+from ..cli import log
 
 @click.option(
     '--wfile',
@@ -36,7 +33,7 @@ def cli(ctx, wfile, recursive):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        pipeline = Workflow(wfile, False, False, False, False, False, False)
+        pipeline = Workflow(wfile, False, False, False, False)
 
         graph = list()
 
@@ -55,7 +52,7 @@ def cli(ctx, wfile, recursive):
         graph = add(parent_action, cur_action, wf['action'], graph)
         graph = ''.join(list(set(graph)))
         graph = "digraph G {\n" + graph + "}\n"
-        pu.info(graph)
+        log.info(graph)
 
 
 # Recursively go through "needs" and add corresponding actions to graph

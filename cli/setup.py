@@ -18,11 +18,8 @@ setup(
         'future; python_version == "2.7"',
         'spython',
         'click',
-        'requests',
-        'lark-parser==0.5.6',
         'pyhcl',
         'pyyaml',
-        'pyaes',
         'futures; python_version == "2.7"',
         'docker'
     ],

@@ -3,23 +3,22 @@ import multiprocessing as mp
 import os
 import shutil
 import subprocess
-import time
 from builtins import dict, input, str
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from distutils.dir_util import copy_tree
-
 import docker
 import hcl
 import popper.cli
 from popper import scm, utils as pu
 from spython.main import Client as sclient
+from popper.cli import log
+from distutils.dir_util import copy_tree
 
 
 class Workflow(object):
     """A GHA workflow.
     """
 
-    def __init__(self, wfile, workspace, quiet, debug, dry_run,
+    def __init__(self, wfile, workspace, dry_run,
                  reuse, parallel):
         wfile = pu.find_default_wfile(wfile)
 
@@ -27,11 +26,6 @@ class Workflow(object):
             self.wf = hcl.load(fp)
 
         self.workspace = workspace
-        self.debug = debug
-        if debug:
-            self.quiet = False
-        else:
-            self.quiet = quiet
         self.dry_run = dry_run
         self.reuse = reuse
         self.parallel = parallel
@@ -48,21 +42,21 @@ class Workflow(object):
         resolves_present = False
         uses_present = False
         if not self.wf.get('workflow', None):
-            pu.fail('A workflow block must be present\n')
+            log.fail('A workflow block must be present')
         else:
             for _, wf_block in dict(self.wf['workflow']).items():
                 if wf_block.get('resolves', None):
                     resolves_present = True
             if not resolves_present:
-                pu.fail('[resolves] attribute must be present\n')
+                log.fail('[resolves] attribute must be present')
         if not self.wf.get('action', None):
-            pu.fail('Atleast one action block must be present\n')
+            log.fail('Atleast one action block must be present')
         else:
             for _, a_block in self.wf['action'].items():
                 if a_block.get('uses', None):
                     uses_present = True
             if not uses_present:
-                pu.fail('[uses] attribute must be present\n')
+                log.fail('[uses] attribute must be present')
 
     def is_list_of_strings(self, lst):
         try:
@@ -105,39 +99,39 @@ class Workflow(object):
         if isinstance(self.wf['resolves'], basestring):
             self.wf['resolves'] = [self.wf['resolves']]
         elif not self.is_list_of_strings(self.wf['resolves']):
-            pu.fail('[resolves] must be a list of strings or a string\n')
+            log.fail('[resolves] must be a list of strings or a string')
         if not isinstance(self.wf['on'], basestring):
-            pu.fail('[on] attribute must be a string\n')
+            log.fail('[on] attribute must be a string')
         for _, a_block in self.wf['action'].items():
             if not isinstance(a_block['uses'], basestring):
-                pu.fail('[uses] attribute must be a string\n')
+                log.fail('[uses] attribute must be a string')
             if a_block.get('needs', None):
                 if isinstance(a_block['needs'], basestring):
                     a_block['needs'] = [a_block['needs']]
                 elif not self.is_list_of_strings(a_block['needs']):
-                    pu.fail(
+                    log.fail(
                         '[needs] attribute must be a list of strings \
-                        or a string\n')
+                        or a string')
             if a_block.get('runs', None):
                 if isinstance(a_block['runs'], basestring):
                     a_block['runs'] = [a_block['runs']]
                 elif not self.is_list_of_strings(a_block['runs']):
-                    pu.fail(
+                    log.fail(
                         '[runs] attribute must be a list of strings \
-                        or a string\n')
+                        or a string')
             if a_block.get('args', None):
                 if isinstance(a_block['args'], basestring):
                     a_block['args'] = a_block['args'].split()
                 elif not self.is_list_of_strings(a_block['args']):
-                    pu.fail(
+                    log.fail(
                         '[args] attribute must be a list of strings \
-                        or a string\n')
+                        or a string')
             if a_block.get('env', None):
                 if not isinstance(a_block['env'], dict):
-                    pu.fail('[env] attribute must be a dict\n')
+                    log.fail('[env] attribute must be a dict')
             if a_block.get('secrets', None):
                 if not self.is_list_of_strings(a_block['secrets']):
-                    pu.fail('[secrets] attribute must be a list of strings\n')
+                    log.fail('[secrets] attribute must be a list of strings')
 
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
@@ -167,7 +161,7 @@ class Workflow(object):
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI') == "true":
-                        pu.fail('Secret {} not defined\n.'.format(s))
+                        log.fail('Secret {} not defined'.format(s))
                     else:
                         val = input("Enter the value for {0}:\n".format(s))
                         os.environ[s] = val
@@ -198,11 +192,10 @@ class Workflow(object):
 
             if not self.dry_run:
                 if not infoed:
-                    pu.info('[popper] cloning actions from repositories\n')
+                    log.info('[popper] cloning actions from repositories')
                     infoed = True
 
-                scm.clone(url, user, repo, repo_parent_dir, version,
-                          debug=self.debug)
+                scm.clone(url, user, repo, repo_parent_dir, version)
 
                 cloned.add('{}/{}'.format(user, repo))
 
@@ -212,29 +205,29 @@ class Workflow(object):
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.dry_run)
                 continue
 
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.dry_run)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
                         a, self.workspace, self.env,
-                        self.quiet, self.debug, self.dry_run)
+                        self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'singularity.def')):
                     a['runner'] = SingularityRunner(
                         a, self.workspace, self.env,
-                        self.quiet, self.debug, self.dry_run)
+                        self.dry_run)
                 else:
                     a['runner'] = HostRunner(
                         a, self.workspace, self.env,
-                        self.quiet, self.debug, self.dry_run)
+                        self.dry_run)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -245,15 +238,15 @@ class Workflow(object):
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.dry_run)
             else:
                 a['runner'] = HostRunner(
                     a, self.workspace, self.env,
-                    self.quiet, self.debug, self.dry_run)
+                    self.dry_run)
 
     def run(self, action_name=None, reuse=False, parallel=False):
         """Run the pipeline or a specific action"""
@@ -272,7 +265,7 @@ class Workflow(object):
             'GITHUB_EVENT_NAME': self.wf['on'],
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
-            'GITHUB_SHA': scm.get_sha(self.debug),
+            'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
         }
 
@@ -298,7 +291,7 @@ class Workflow(object):
                 popper.cli.flist = flist
                 for future in as_completed(flist):
                     future.result()
-                    pu.info('Action ran successfully !\n')
+                    log.info('Action ran successfully !')
         else:
             for action in stage:
                 self.wf['action'][action]['runner'].run(reuse)
@@ -321,7 +314,7 @@ class Workflow(object):
     def import_from_repo(path, project_root):
         parts = pu.get_parts(path)
         if len(parts) < 3:
-            pu.fail(
+            log.fail(
                 'Required url format: \
                  <url>/<user>/<repo>[/folder[/wf.workflow]]'
             )
@@ -340,7 +333,7 @@ class Workflow(object):
             elif os.path.isfile(ptw_two):
                 path_to_workflow = ptw_two
             else:
-                pu.fail("Unable to find a .workflow file")
+                log.fail("Unable to find a .workflow file")
         elif len(parts) >= 4:
             path_to_workflow = os.path.join(
                 cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
@@ -348,10 +341,10 @@ class Workflow(object):
                 path_to_workflow = os.path.join(
                     path_to_workflow, 'main.workflow')
             if not os.path.isfile(path_to_workflow):
-                pu.fail("Unable to find a .workflow file")
+                log.fail("Unable to find a .workflow file")
 
         shutil.copy(path_to_workflow, project_root)
-        pu.info("Successfully imported from {}\n".format(path_to_workflow))
+        log.info("Successfully imported from {}".format(path_to_workflow))
 
         with open(path_to_workflow, 'r') as fp:
             wf = hcl.load(fp)
@@ -366,7 +359,7 @@ class Workflow(object):
         for a in action_paths:
             copy_tree(os.path.join(cloned_project_dir, a),
                       os.path.join(project_root, a))
-            pu.info("Copied {} to {}...\n".format(os.path.join(
+            log.info("Copied {} to {}...".format(os.path.join(
                 cloned_project_dir, a), project_root))
 
 
@@ -374,23 +367,16 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, quiet, debug, dry_run):
+    def __init__(self, action, workspace, env, dry_run):
         self.action = action
         self.workspace = workspace
         self.env = env
-        self.quiet = quiet
-        self.debug = debug
         self.dry_run = dry_run
         self.msg_prefix = "DRYRUN: " if dry_run else ""
 
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
-        self.log_path = os.path.join(self.workspace, 'popper_logs')
-        if not os.path.exists(self.log_path):
-            os.makedirs(self.log_path)
-        self.log_filename = os.path.join(
-            self.log_path, self.action['name'].replace(' ', '-'))
 
     def run(self, reuse=False):
         raise NotImplementedError(
@@ -399,8 +385,8 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d, dry):
-        super(DockerRunner, self).__init__(action, workspace, env, q, d, dry)
+    def __init__(self, action, workspace, env, dry):
+        super(DockerRunner, self).__init__(action, workspace, env, dry)
         self.cid = self.action['name'].replace(' ', '_')
         self.docker_client = docker.from_env()
         self.container = None
@@ -454,7 +440,7 @@ class DockerRunner(ActionRunner):
         e = self.docker_start()
 
         if e != 0:
-            pu.fail('Action {} failed!\n'.format(self.action['name']))
+            log.fail('Action {} failed!'.format(self.action['name']))
 
     def docker_exists(self):
         if self.dry_run:
@@ -475,7 +461,7 @@ class DockerRunner(ActionRunner):
         self.container.remove(force=True)
 
     def docker_create(self, img):
-        pu.info('{}[{}] docker create {} {}\n'.format(
+        log.info('{}[{}] docker create {} {}'.format(
             self.msg_prefix,
             self.action['name'], img, ' '.join(self.action.get('args', ''))
         ))
@@ -490,8 +476,7 @@ class DockerRunner(ActionRunner):
             env_vars.update({e: v})
         env_vars.update({'HOME': os.environ['HOME']})
         volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
-        if self.debug:
-            pu.info('DEBUG: Invoking docker_create() method\n')
+        log.debug('Invoking docker_create() method')
         self.container = self.docker_client.containers.create(
             image=img,
             command=self.action.get('args', None),
@@ -504,42 +489,26 @@ class DockerRunner(ActionRunner):
         )
 
     def docker_start(self):
-        pu.info('{}[{}] docker start \n'.format(self.msg_prefix,
-                                                self.action['name']))
+        log.info('{}[{}] docker start '.format(self.msg_prefix,
+                                               self.action['name']))
         if self.dry_run:
             return 0
         self.container.start()
-        if self.quiet:
-            sleep_time = 0.25
-            while self.container.status == 'running':
-                if sleep_time < 10:
-                    sleep_time *= 2
-                if self.debug:
-                    pu.info('DEBUG: sleeping for {}\n'.format(sleep_time))
-                else:
-                    pu.info('.')
-
-                time.sleep(sleep_time)
-        else:
-            def b(t):
-                if isinstance(t, bytes):
-                    return t.decode('utf-8')
-                return t
-            cout = self.container.logs(stream=True)
-            for l in cout:
-                pu.info(b(l))
+        cout = self.container.logs(stream=True)
+        for line in cout:
+            log.action_info(pu.decoder(line).strip('\n'))
 
         return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
-        pu.info('{}[{}] docker pull {}\n'.format(self.msg_prefix,
+        log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
                                                  self.action['name'], img))
         if self.dry_run:
             return
         self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
-        pu.info('{}[{}] docker build -t {} {}\n'.format(
+        log.info('{}[{}] docker build -t {} {}'.format(
             self.msg_prefix, self.action['name'], tag, path))
         if self.dry_run:
             return
@@ -550,12 +519,10 @@ class SingularityRunner(ActionRunner):
     """Singularity Action Runner Class
     """
 
-    def __init__(self, action, workspace, env, q, d, dry):
+    def __init__(self, action, workspace, env, dry):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                q, d, dry)
+                                                dry)
         self.pid = self.action['name'].replace(' ', '_')
-        sclient.quiet = q
-        sclient.debug = d
 
     def run(self, reuse=False):
         """Runs the singularity action
@@ -572,7 +539,6 @@ class SingularityRunner(ActionRunner):
             image = '/'.join(self.action['uses'].split('/')[:2])
             singularityfile_path = os.path.join(self.action['repo_dir'],
                                                 self.action['action_dir'])
-
         self.image_name = self.pid + '.simg'
         if not reuse:
             if self.singularity_exists():
@@ -591,7 +557,7 @@ class SingularityRunner(ActionRunner):
         e = self.singularity_start()
 
         if e != 0:
-            pu.fail('Action {} failed!\n'.format(self.action['name']))
+            log.fail('Action {} failed!'.format(self.action['name']))
 
     def singularity_exists(self):
         """Check whether an instance exists or not.
@@ -608,7 +574,7 @@ class SingularityRunner(ActionRunner):
     def singularity_pull(self, image):
         """Pulls an docker or singularity images from hub.
         """
-        pu.info('{}[{}] singularity pull {}\n'.format(
+        log.info('{}[{}] singularity pull {}'.format(
             self.msg_prefix, self.action['name'], image)
         )
         if not self.dry_run:
@@ -618,7 +584,7 @@ class SingularityRunner(ActionRunner):
         """Builds an image from a recipefile.
         """
         recipefile_path = os.path.join(path, 'singularity.def')
-        pu.info('{}[{}] singularity build {} {}\n'.format(
+        log.info('{}[{}] singularity build {} {}'.format(
             self.msg_prefix, self.action['name'],
             self.image_name, recipefile_path)
         )
@@ -648,44 +614,37 @@ class SingularityRunner(ActionRunner):
         bind_list = [self.workspace, os.environ['HOME']]
 
         if runs:
-            info = '{}[{}] singularity exec {} {}\n'.format(
+            info = '{}[{}] singularity exec {} {}'.format(
                 self.msg_prefix, self.action['name'],
                 self.image_name, runs)
             commands = runs
             start = sclient.execute
         else:
-            info = '{}[{}] singularity run {} {}\n'.format(
+            info = '{}[{}] singularity run {} {}'.format(
                 self.msg_prefix, self.action['name'],
                 self.image_name, args)
             commands = args
             start = sclient.run
 
-        pu.info(info)
+        log.info(info)
         if not self.dry_run:
             output = start(self.image_name, commands, contain=True,
                            bind=bind_list, stream=True)
 
-            outf = open(self.log_filename + '.out', 'w')
-            errf = open(self.log_filename + '.err', 'w')
             try:
                 for line in output:
-                    pu.info(line)
-                    outf.write(line)
+                    log.action_info(line)
                 ecode = 0
             except subprocess.CalledProcessError as ex:
-                errf.write(ex.stderr if ex.stderr else '')
                 ecode = ex.returncode
-            finally:
-                outf.close()
-                errf.close()
         else:
             ecode = 0
         return ecode
 
 
 class HostRunner(ActionRunner):
-    def __init__(self, action, workspace, env, q, d, dry):
-        super(HostRunner, self).__init__(action, workspace, env, q, d, dry)
+    def __init__(self, action, workspace, env, dry):
+        super(HostRunner, self).__init__(action, workspace, env, dry)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
@@ -704,12 +663,12 @@ class HostRunner(ActionRunner):
 
         os.environ.update(self.action.get('env', {}))
 
-        pu.info('{}[{}] {}\n'.format(self.msg_prefix, self.action['name'],
+        log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
                                      ' '.join(cmd)))
 
         _, ecode = pu.exec_cmd(
-            ' '.join(cmd), verbose=(not self.quiet), debug=self.debug,
-            ignore_error=True, log_file=self.log_filename,
+            ' '.join(cmd),
+            ignore_error=True,
             dry_run=self.dry_run, add_to_process_list=True)
 
         for i in self.action.get('env', {}):
@@ -718,4 +677,11 @@ class HostRunner(ActionRunner):
         os.chdir(cwd)
 
         if ecode != 0:
-            pu.fail("\n\nAction '{}' failed.\n.".format(self.action['name']))
+            log.fail("Action '{}' failed.".format(self.action['name']))
+
+
+def consume_stdout(p):
+    """Consumes stdout and is used to write to Travis CI Build Logs"""
+    for line in iter(p.stdout.readline, ''):
+        line_decoded = pu.decoder(line)
+        log.info(line_decoded[:-1])
