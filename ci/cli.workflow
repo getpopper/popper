@@ -6,11 +6,6 @@ action "Shellcheck" {
   uses = "actions/bin/shellcheck@master"
   args = "-x ./ci/test/*"
 }
-action "test init" {
-  needs = "Shellcheck"
-  uses = "./ci/test"
-  runs = "init"
-}
 
 action "test ci" {
   needs = "Shellcheck"
@@ -99,7 +94,6 @@ action "end" {
     "test ci",
     "test dot",
     "test dry-run",
-    "test init",
     "test interrupt",
     "test parallel",
     "test quiet",

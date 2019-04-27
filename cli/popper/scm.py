@@ -24,20 +24,6 @@ def get_git_root_folder():
     return os.path.dirname(repo.git_dir)
 
 
-def get_popper_root_folder():
-    """Tries to find the root folder of a popper repository. A Popper
-    repository is where the .popper.yml is stored in.
-    """
-    root_folder = get_git_root_folder()
-
-    if os.path.exists(os.path.join(root_folder, '.popper.yml')):
-        return root_folder
-
-    log.fail(
-        "Unable to find .popper.yml at {}. "
-        "Run 'popper init' first.".format(root_folder))
-
-
 def infer_repo_name_from_root_folder():
     """Finds the root folder of a local Github repository and returns it.
 
@@ -146,3 +132,76 @@ def get_git_files():
     """
     init_repo_object()
     return repo.git.ls_files().split("\n")
+
+
+def parse(url):
+    service_url = None
+    service = None
+    user = None
+    repo = None
+
+    parts = url.split('/')
+    tail = parts[-1]
+
+    if url.startswith('https://'):
+        url = url[8:]
+        parts = url.split('/')
+        service_url = 'https://' + parts[0]
+        service = parts[0]
+        user = parts[1]
+        repo = parts[2]
+    elif url.startswith('http://'):
+        url = url[7:]
+        service_url = 'http://' + parts[0]
+        service = parts[0]
+        user = parts[1]
+        repo = parts[2]
+    elif url.startswith('git@'):
+        service_url, rest = url.split(':')
+        service = service_url[4:]
+        user = parts[0]
+        repo = parts[1]
+    elif url.startswith('ssh://'):
+        log.fail("The ssh protocol is not supported yet.")
+    else:
+        service_url = 'https://github.com'
+        service = 'github.com'
+        user = parts[0]
+        repo = parts[1]
+
+    if '@' in tail:
+        # check case when action is at root of repo (e.g. actions/foo@master)
+        if '@' in repo:
+            repo = tail.split('@')[0]
+            action_dir = ''
+        else:
+            action_dir = '/'.join(tail.split('@')[0])
+        version = tail.split('@')[1]
+    else:
+        action_dir = '/'.join(url.split('/')[2:])
+        version = None
+
+    log.debug('parse("{}"):'.format(url))
+    log.debug('  service_url: {}'.format(service_url))
+    log.debug('  service: {}'.format(service))
+    log.debug('  user: {}'.format(user))
+    log.debug('  repo: {}'.format(repo))
+    log.debug('  action_dir: {}'.format(action_dir))
+    log.debug('  version: {}'.format(version))
+
+    return service_url, service, user, repo, action_dir, version
+
+
+def get_parts(url):
+    if url.startswith('https://'):
+        parts = url[8:].split('/')
+    elif url.startswith('http://'):
+        parts = url[7:].split('/')
+    elif url.startswith('git@'):
+        service_url, rest = url.split(':')
+        parts = ['github.com'] + rest.split('/')
+    elif url.startswith('ssh://'):
+        log.fail('The ssh protocol is not supported yet.')
+    else:
+        parts = ['github.com'] + url.split('/')
+    return parts

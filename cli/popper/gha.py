@@ -6,6 +6,7 @@ import multiprocessing as mp
 from builtins import dict, input, str
 from distutils.dir_util import copy_tree
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
 import docker
 import hcl
@@ -119,22 +120,22 @@ class Workflow(object):
                     a_block['needs'] = [a_block['needs']]
                 elif not self.is_list_of_strings(a_block['needs']):
                     log.fail(
-                        '[needs] attribute must be a list of strings \
-                        or a string')
+                        '[needs] attribute must be a list of strings '
+                        'or a string')
             if a_block.get('runs', None):
                 if isinstance(a_block['runs'], basestring):
                     a_block['runs'] = [a_block['runs']]
                 elif not self.is_list_of_strings(a_block['runs']):
                     log.fail(
-                        '[runs] attribute must be a list of strings \
-                        or a string')
+                        '[runs] attribute must be a list of strings '
+                        'or a string')
             if a_block.get('args', None):
                 if isinstance(a_block['args'], basestring):
                     a_block['args'] = a_block['args'].split()
                 elif not self.is_list_of_strings(a_block['args']):
                     log.fail(
-                        '[args] attribute must be a list of strings \
-                        or a string')
+                        '[args] attribute must be a list of strings '
+                        'or a string')
             if a_block.get('env', None):
                 if not isinstance(a_block['env'], dict):
                     log.fail('[env] attribute must be a dict')
@@ -179,34 +180,37 @@ class Workflow(object):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
+
+        if self.dry_run:
+            return
+
         for _, a in self.wf['action'].items():
-            if ('docker://' in a['uses'] or
-                'shub://' in a['uses'] or
-                    './' in a['uses']):
+            if ('docker://' in a['uses'] or 'shub://' in a['uses'] or
+               './' in a['uses']):
                 continue
 
-            url, service, user, repo, action, action_dir, version = pu.parse(
-                a['uses'])
+            if not infoed:
+                log.info('[popper] cloning action repositories')
+                infoed = True
+
+            url, service, usr, repo, action_dir, version = scm.parse(a['uses'])
 
             repo_parent_dir = os.path.join(
-                self.actions_cache_path, service, user
+                self.actions_cache_path, service, usr
             )
+
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
-            if '{}/{}'.format(user, repo) in cloned:
+
+            if '{}/{}'.format(usr, repo) in cloned:
                 continue
 
             if not os.path.exists(repo_parent_dir):
                 os.makedirs(repo_parent_dir)
 
-            if not self.dry_run:
-                if not infoed:
-                    log.info('[popper] cloning actions from repositories')
-                    infoed = True
-
-                scm.clone(url, user, repo, repo_parent_dir, version)
-
-                cloned.add('{}/{}'.format(user, repo))
+            log.info('[popper] - {}/{}/{}@{}'.format(url, usr, repo, version))
+            scm.clone(url, usr, repo, repo_parent_dir, version)
+            cloned.add('{}/{}'.format(usr, repo))
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
@@ -321,14 +325,14 @@ class Workflow(object):
 
     @staticmethod
     def import_from_repo(path, project_root):
-        parts = pu.get_parts(path)
+        parts = scm.get_parts(path)
         if len(parts) < 3:
             log.fail(
                 'Required url format: \
                  <url>/<user>/<repo>[/folder[/wf.workflow]]'
             )
 
-        url, service, user, repo, _, _, version = pu.parse(path)
+        url, service, user, repo, _, version = scm.parse(path)
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
         scm.clone(url, user, repo, os.path.dirname(
             cloned_project_dir), version
@@ -386,7 +390,6 @@ class ActionRunner(object):
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
-
     def run(self, reuse=False):
         raise NotImplementedError(
             "This method is required to be implemented in derived classes."
@@ -418,15 +421,16 @@ class DockerRunner(ActionRunner):
                 if action_dir:
                     repo_id += '/'
 
-            tag = (
-                'popper/' + repo_id + action_dir + ':' + self.env['GITHUB_SHA']
-            )
+            tag = repo_id + action_dir + ':' + self.env['GITHUB_SHA']
 
             dockerfile_path = os.path.join(os.getcwd(), self.action['uses'])
         else:
-            tag = '/'.join(self.action['uses'].split('/')[:2])
+            _, _, user, repo, _, version = scm.parse(self.action['uses'])
+            tag = '{}/{}:{}'.format(user, repo, version)
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
+        log.debug('docker tag: {}'.format(tag))
+        log.debug('dockerfile path: {}'.format(dockerfile_path))
 
         if not reuse:
             if self.docker_exists():
@@ -505,13 +509,13 @@ class DockerRunner(ActionRunner):
         self.container.start()
         cout = self.container.logs(stream=True)
         for line in cout:
-            log.action_info(pu.decoder(line).strip('\n'))
+            log.action_info(pu.decode(line).strip('\n'))
 
         return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
         log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
-                                                 self.action['name'], img))
+                                                self.action['name'], img))
         if self.dry_run:
             return
         self.docker_client.images.pull(repository=img)
@@ -673,13 +677,37 @@ class HostRunner(ActionRunner):
         os.environ.update(self.action.get('env', {}))
 
         log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
-                                     ' '.join(cmd)))
+                                    ' '.join(cmd)))
 
-        _, ecode = pu.exec_cmd(
-            ' '.join(cmd),
-            ignore_error=True,
-            dry_run=self.dry_run, add_to_process_list=True)
+        if self.dry_run:
+            return
 
+        ecode = 0
+
+        try:
+            log.debug('subprocess.Popen() with combined stdout/stderr')
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
+                      universal_newlines=True, preexec_fn=os.setsid)
+
+            popper.cli.process_list.append(p.pid)
+
+            log.debug('Reading process output')
+
+            for line in iter(p.stdout.readline, ''):
+                line_decoded = pu.decode(line)
+                log.info(line_decoded[:-1])
+
+            ecode = p.poll()
+            log.debug('Code returned by process: {}'.format(ecode))
+
+        except CalledProcessError as ex:
+            msg = "Command '{}' failed: {}".format(cmd, ex)
+            ecode = ex.returncode
+            log.info(msg)
+        finally:
+            log.info()
+
+        # remove variables that we added to the environment
         for i in self.action.get('env', {}):
             os.environ.pop(i)
 
@@ -687,10 +715,3 @@ class HostRunner(ActionRunner):
 
         if ecode != 0:
             log.fail("Action '{}' failed.".format(self.action['name']))
-
-
-def consume_stdout(p):
-    """Consumes stdout and is used to write to Travis CI Build Logs"""
-    for line in iter(p.stdout.readline, ''):
-        line_decoded = pu.decoder(line)
-        log.info(line_decoded[:-1])
