@@ -409,6 +409,7 @@ class DockerRunner(ActionRunner):
         if 'docker://' in self.action['uses']:
             tag = self.action['uses'].replace('docker://', '')
             build = False
+            dockerfile_path = 'n/a'
         elif './' in self.action['uses']:
             action_dir = os.path.basename(
                 self.action['uses'].replace('./', ''))

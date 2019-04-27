@@ -1,4 +1,3 @@
-import os
 import sys
 
 import click
@@ -20,7 +19,7 @@ from popper import log as logging
     help='Path to workspace folder.',
     required=False,
     show_default=True,
-    default=os.getcwd()
+    default=popper.scm.get_git_root_folder()
 )
 @click.option(
     '--reuse',
@@ -109,14 +108,14 @@ def run_pipeline(action, wfile, workspace, reuse,
     popper.cli.interrupt_params = pipeline
 
     if reuse:
-        log.warn("using --reuse ignores any changes made to an action")
-        log.warn("or to an action block in the workflow.")
+        log.warn("Using --reuse ignores any changes made to an action's logic "
+                 "or to an action block in the .workflow file.")
 
     if parallel:
         if sys.version_info[0] < 3:
             log.fail('--parallel is only supported on Python3')
-        log.warn("using --parallel may result in interleaved output.")
-        log.warn("You may use --quiet flag to avoid confusion.")
+        log.warn("Using --parallel may result in interleaved output. "
+                 "You may use --quiet flag to avoid confusion.")
 
     pipeline.run(action, reuse, parallel)
 
