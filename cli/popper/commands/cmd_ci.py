@@ -1,9 +1,9 @@
 import os
 
 import click
+
 from popper import scm, utils as pu
-from popper.cli import pass_context
-from ..cli import log
+from popper.cli import pass_context, log
 
 
 ci_files = {

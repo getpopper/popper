@@ -1,7 +1,7 @@
 import click
-from .. import __version__ as popper_version
-from ..cli import pass_context
-from ..cli import log
+
+from popper import __version__ as popper_version
+from popper.cli import pass_context, log
 
 
 @click.command('version', short_help='Show version of Popper and exit.')

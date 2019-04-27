@@ -1,8 +1,9 @@
 import os
+
 import click
-from popper.cli import pass_context
+
+from popper.cli import pass_context, log
 from popper.gha import Workflow
-from ..cli import log
 
 
 @click.command('add', short_help='Import workflow from remote repo.')

@@ -4,12 +4,13 @@ import os
 import sys
 
 import click
+
 import popper.cli
-from popper.cli import pass_context
+from popper.cli import pass_context, log
 from popper.gha import Workflow
-import popper.utils as pu
-from ..cli import log
-import popper.log as logging
+from popper import utils as pu
+import popper import log as logging
+
 
 @click.command(
     'run', short_help='Run a workflow or action.')

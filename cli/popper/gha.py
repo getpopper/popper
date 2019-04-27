@@ -1,17 +1,19 @@
 from __future__ import unicode_literals
-import multiprocessing as mp
 import os
 import shutil
 import subprocess
+import multiprocessing as mp
 from builtins import dict, input, str
+from distutils.dir_util import copy_tree
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import docker
 import hcl
+from spython.main import Client as sclient
+
 import popper.cli
 from popper import scm, utils as pu
-from spython.main import Client as sclient
 from popper.cli import log
-from distutils.dir_util import copy_tree
 
 
 class Workflow(object):
