@@ -9,7 +9,7 @@ import popper.cli
 from popper.cli import pass_context, log
 from popper.gha import Workflow
 from popper import utils as pu
-import popper import log as logging
+from popper import log as logging
 
 
 @click.command(
