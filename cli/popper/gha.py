@@ -13,6 +13,8 @@ from spython.main import Client as sclient
 from popper.cli import log
 from distutils.dir_util import copy_tree
 
+VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
+VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
 class Workflow(object):
     """A GHA workflow.
@@ -39,24 +41,28 @@ class Workflow(object):
     def validate_syntax(self):
         """ Validates the .workflow file.
         """
-        resolves_present = False
-        uses_present = False
+        # Validates the workflow block
         if not self.wf.get('workflow', None):
-            log.fail('A workflow block must be present')
+            log.fail('A workflow block must be present.')
+        elif len(self.wf['workflow'].items()) > 1:
+            log.fail('Cannot have more than one workflow blocks.')
         else:
-            for _, wf_block in dict(self.wf['workflow']).items():
-                if wf_block.get('resolves', None):
-                    resolves_present = True
-            if not resolves_present:
-                log.fail('[resolves] attribute must be present')
+            wf_block = list(self.wf['workflow'].values())[0]
+            for key in wf_block.keys():
+                if key not in VALID_WORKFLOW_ATTRS:
+                    log.fail('Invalid attrs found.')
+            if not wf_block.get('resolves', None):
+                log.fail('[resolves] attribute must be present.')
+        # Validate the action blocks
         if not self.wf.get('action', None):
-            log.fail('Atleast one action block must be present')
+            log.fail('Atleast one action block must be present.')
         else:
             for _, a_block in self.wf['action'].items():
-                if a_block.get('uses', None):
-                    uses_present = True
-            if not uses_present:
-                log.fail('[uses] attribute must be present')
+                for key in a_block.keys():
+                    if key not in VALID_ACTION_ATTRS:
+                        log.fail('Invalid attrs found.')
+                if not a_block.get('uses', None):
+                    log.fail('[uses] attribute must be present.')
 
     def is_list_of_strings(self, lst):
         try:
