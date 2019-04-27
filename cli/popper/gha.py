@@ -19,7 +19,7 @@ class Workflow(object):
     """
 
     def __init__(self, wfile, workspace, dry_run,
-                 reuse, parallel, no_prompt=False):
+                 reuse, parallel, skip_secrets_prompt=False):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -29,7 +29,7 @@ class Workflow(object):
         self.dry_run = dry_run
         self.reuse = reuse
         self.parallel = parallel
-        self.no_prompt = no_prompt
+        self.skip_secrets_prompt = skip_secrets_prompt
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.validate_syntax()
@@ -156,7 +156,7 @@ class Workflow(object):
         self.wf['root'] = root_nodes
 
     def check_secrets(self):
-        if self.dry_run or self.no_prompt:
+        if self.dry_run or self.skip_secrets_prompt:
             return
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):

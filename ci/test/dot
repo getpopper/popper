@@ -5,11 +5,9 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
-## testing default file feature
+## Testing default file feature
 git clone https://github.com/cplee/github-actions-demo.git
 cd github-actions-demo
-
-# export PHONY_SECRET=foo
 
 popper dot > dot_output
 
@@ -24,10 +22,6 @@ grep "test -> branch_filter;" dot_output
 cd "$test_repo_path"
 git clone https://github.com/actions/example-aws.git
 cd example-aws/
-
-# export KUBE_CONFIG_DATA=foo
-# export AWS_ACCESS_KEY_ID=foo
-# export AWS_SECRET_ACCESS_KEY=foo
 
 ## Testing --recursive feature
 # Move main.workflow to somewhere else to test --recursive flag
@@ -50,7 +44,7 @@ grep "Tag_image_for_ECR -> Push_image_to_ECR;" dot_output
 grep "Verify_EKS_deployment -> List_Public_IP;" dot_output
 
 
-## testing --wfile feature
+## Testing --wfile feature
 cd "$test_repo_path"
 popper dot --wfile example-aws/dummy/main.workflow > dot_output
 
