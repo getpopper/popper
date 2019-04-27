@@ -175,10 +175,10 @@ def parse(url):
             repo = tail.split('@')[0]
             action_dir = ''
         else:
-            action_dir = '/'.join(tail.split('@')[0])
+            action_dir = tail.split('@')[0]
         version = tail.split('@')[1]
     else:
-        action_dir = '/'.join(url.split('/')[2:])
+        action_dir = tail
         version = None
 
     log.debug('parse("{}"):'.format(url))

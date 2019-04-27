@@ -453,7 +453,7 @@ class DockerRunner(ActionRunner):
         e = self.docker_start()
 
         if e != 0:
-            log.fail('Action {} failed!'.format(self.action['name']))
+            log.fail("Action '{}' failed!".format(self.action['name']))
 
     def docker_exists(self):
         if self.dry_run:

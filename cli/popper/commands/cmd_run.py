@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 import os
 import sys
 
@@ -10,6 +8,7 @@ from popper.cli import pass_context, log
 from popper.gha import Workflow
 from popper import utils as pu
 from popper import log as logging
+
 
 
 @click.command(
@@ -40,39 +39,38 @@ from popper import log as logging
 )
 @click.option(
     '--recursive',
-    help='Run any .workflow file found recursively from current path. ',
+    help='Run any .workflow file found recursively from current path.',
     required=False,
     is_flag=True
 )
 @click.option(
     '--quiet',
-    help='Do not print output of actions. Instead, progress dots are printed.',
+    help='Do not print output of coming from actions.',
     required=False,
     is_flag=True
 )
 @click.option(
     '--debug',
     help=(
-        'Verbose output of ALL subcommands executed by popper '
-        '(overrides --debug)'),
+        'Generate detailed messages of what popper does (overrides --quiet)'),
     required=False,
     is_flag=True
 )
 @click.option(
     '--dry-run',
-    help='A dry run for a workflow',
+    help='A dry run for a workflow.',
     required=False,
     is_flag=True
 )
 @click.option(
     '--parallel',
-    help='Executes actions in stages in parallel',
+    help='Executes actions in stages in parallel.',
     required=False,
     is_flag=True
 )
 @click.option(
     '--log-file',
-    help='Generates a log file at the mentioned location',
+    help='Path to a log file. No log is created if this is not given.',
     required=False
 )
 @pass_context
