@@ -14,8 +14,7 @@ git checkout c824a5a
 export PHONY_SECRET=foo
 
 # delete any containers that might exist
-mapfile -t args < <(docker ps -aq)
-docker rm "${args[@]}" || true
+docker rm "$(docker ps -qa)" || true
 
 dry_num_lines=$(popper run --dry-run | grep -c 'DRYRUN')
 

@@ -181,17 +181,10 @@ class Workflow(object):
         cloned = set()
         infoed = False
 
-        if self.dry_run:
-            return
-
         for _, a in self.wf['action'].items():
             if ('docker://' in a['uses'] or 'shub://' in a['uses'] or
                './' in a['uses']):
                 continue
-
-            if not infoed:
-                log.info('[popper] cloning action repositories')
-                infoed = True
 
             url, service, usr, repo, action_dir, version = scm.parse(a['uses'])
 
@@ -201,6 +194,13 @@ class Workflow(object):
 
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
+
+            if self.dry_run:
+                continue
+
+            if not infoed:
+                log.info('[popper] cloning action repositories')
+                infoed = True
 
             if '{}/{}'.format(usr, repo) in cloned:
                 continue
