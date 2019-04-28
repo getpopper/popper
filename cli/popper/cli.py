@@ -6,11 +6,9 @@ import sys
 import click
 from click.exceptions import ClickException
 
-from . import __version__ as popper_version
-import popper.log as log
+from popper import __version__ as popper_version, log as log
 
 log = log.setup_logging()
-
 
 class Context(object):
 

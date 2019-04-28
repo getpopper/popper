@@ -1,9 +1,10 @@
 import os
+
 import click
 import yaml
+
 from popper import scm
-from popper.cli import pass_context
-from ..cli import log
+from popper.cli import pass_context, log
 
 
 @click.command('init', short_help='Initialize a Popper project.')

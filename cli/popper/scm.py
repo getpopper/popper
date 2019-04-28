@@ -3,9 +3,7 @@ import shutil
 import git
 from popper.cli import log
 
-
 repo = None
-
 
 def init_repo_object():
     global repo

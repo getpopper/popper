@@ -1,8 +1,8 @@
 import os
 
 import click
-from popper.cli import pass_context
-from ..cli import log
+
+from popper.cli import pass_context, log
 
 
 @click.command('scaffold', short_help='Scaffolds a workflow folder.')
