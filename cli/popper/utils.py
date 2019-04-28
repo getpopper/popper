@@ -1,8 +1,9 @@
 import os
 import sys
 import threading
-import popper.cli
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
+
+import popper.cli
 from popper.cli import log
 
 

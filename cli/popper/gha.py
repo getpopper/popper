@@ -1,17 +1,19 @@
 from __future__ import unicode_literals
-import multiprocessing as mp
 import os
 import shutil
 import subprocess
+import multiprocessing as mp
 from builtins import dict, input, str
+from distutils.dir_util import copy_tree
 from concurrent.futures import ThreadPoolExecutor, as_completed
+
 import docker
 import hcl
+from spython.main import Client as sclient
+
 import popper.cli
 from popper import scm, utils as pu
-from spython.main import Client as sclient
 from popper.cli import log
-from distutils.dir_util import copy_tree
 
 
 class Workflow(object):
@@ -19,7 +21,7 @@ class Workflow(object):
     """
 
     def __init__(self, wfile, workspace, dry_run,
-                 reuse, parallel):
+                 reuse, parallel, skip_secrets_prompt=False):
         wfile = pu.find_default_wfile(wfile)
 
         with open(wfile, 'r') as fp:
@@ -29,6 +31,7 @@ class Workflow(object):
         self.dry_run = dry_run
         self.reuse = reuse
         self.parallel = parallel
+        self.skip_secrets_prompt = skip_secrets_prompt
 
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.validate_syntax()
@@ -155,7 +158,7 @@ class Workflow(object):
         self.wf['root'] = root_nodes
 
     def check_secrets(self):
-        if self.dry_run:
+        if self.dry_run or self.skip_secrets_prompt:
             return
         for _, a in self.wf['action'].items():
             for s in a.get('secrets', []):

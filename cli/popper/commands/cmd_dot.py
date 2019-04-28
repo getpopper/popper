@@ -1,8 +1,9 @@
 import click
+
 from popper import utils as pu
-from popper.cli import pass_context
+from popper.cli import pass_context, log
 from popper.gha import Workflow
-from ..cli import log
+
 
 @click.option(
     '--wfile',
@@ -33,7 +34,7 @@ def cli(ctx, wfile, recursive):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        pipeline = Workflow(wfile, False, False, False, False)
+        pipeline = Workflow(wfile, False, False, False, False, True)
 
         graph = list()
 
