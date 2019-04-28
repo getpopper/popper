@@ -83,6 +83,6 @@ def signal_handler(sig, frame):
 
     for container in docker_list:
         log.info("Stopping container '{}'".format(container.name))
-        container.stop()
+        container.stop(timeout=1)
 
     sys.exit(0)
