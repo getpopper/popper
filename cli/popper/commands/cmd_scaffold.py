@@ -25,11 +25,13 @@ action "github official action" {
 }
 
 action "docker action" {
+  needs = "github official action"
   uses = "docker://node:6"
   args = ["node", "--version"]
 }
 
 action "example action" {
+  needs = "docker action"
   uses = "./%s"
   args = ["github.com"]
 }
