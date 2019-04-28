@@ -32,13 +32,6 @@ EOF
 
 ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run
 
-# create authenticated access to gitlab
-if [ -n "$POPPER_GITLAB_API_TOKEN" ]; then
-  GITLAB_REPO_URL="https://oauth2:$POPPER_GITLAB_API_TOKEN@gitlab.com/barbaragd/action-test@master"
-else
-  GITLAB_REPO_URL="https://gitlab.com/barbaragd/action-test@master"
-fi
-
 # test with actions hosted on gitlab
 cd $test_repo_path
 cat <<EOF > main.workflow
@@ -46,7 +39,7 @@ workflow "clone" {
   resolves = "test"
 }
 action "test" {
-  uses = "$GITLAB_REPO_URL"
+  uses = "https://gitlab.com/barbaragd/action-test@master"
 }
 EOF
 
