@@ -96,8 +96,8 @@ def cli(ctx, service):
 
     if project_root != os.getcwd():
         log.fail(
-            'This command needs to be executed on the root of your'
-            'Git project folder.')
+            'This command needs to be executed on the root of your '
+            'Git project folder (where the .git/ folder is located).')
 
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
         ci_file_content = ci_file_content
