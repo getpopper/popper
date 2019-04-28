@@ -411,3 +411,22 @@ action "show env" {
 EOF
 
 popper run
+
+## show WARNING on unreachable actions
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "reachable"
+}
+
+action "reachable" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+
+action "unreachable" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run | grep 'WARNING'

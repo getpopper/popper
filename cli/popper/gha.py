@@ -179,10 +179,10 @@ class Workflow(object):
         # - reachable from the workflow's 'resolves' node
         # - a node without dependencies
         for n in set(nodes_without_dependencies):
-            if (not self.wf['action'][n].get('next', None)
-                    or n not in self.wf['resolves']):
-                root_nodes.add(n)
+            if (self.wf['action'][n].get('next', None)
+                    or n in self.wf['resolves']):
                 nodes_without_dependencies.remove(n)
+                root_nodes.add(n)
 
         if nodes_without_dependencies:
             log.warn(

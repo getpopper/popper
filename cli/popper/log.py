@@ -116,19 +116,41 @@ class PopperLogger(logging.Logger):
         super(PopperLogger, self).warning(msg, *args, **kwargs)
 
 
+class LevelFilter(logging.Filter):
+    def __init__(self, passlevels, reject):
+        self.passlevels = passlevels
+        self.reject = reject
+
+    def filter(self, record):
+        if self.reject:
+            return (record.levelno not in self.passlevels)
+        else:
+            return (record.levelno in self.passlevels)
+
+
 def setup_logging(level='ACTION_INFO'):
     """
     Setups logging facilities with custom Logger and Formatter
     """
     logging.setLoggerClass(PopperLogger)
     log = logging.getLogger('popper')
-    formatter = PopperFormatter()
-    handler = logging.StreamHandler(sys.stdout)
 
-    # Set
-    handler.setFormatter(formatter)
-    log.addHandler(handler)
+    formatter = PopperFormatter()
+
+    # INFO/ACTION_INFO goes to stdout
+    h1 = logging.StreamHandler(sys.stdout)
+    h1.addFilter(LevelFilter([logging.INFO, ACTION_INFO], False))
+    h1.setFormatter(formatter)
+
+    # anything goes to stdout
+    h2 = logging.StreamHandler(sys.stderr)
+    h2.addFilter(LevelFilter([logging.INFO, ACTION_INFO], True))
+    h2.setFormatter(formatter)
+
+    log.addHandler(h1)
+    log.addHandler(h2)
     log.setLevel(level)
+
     return log
 
 
