@@ -34,7 +34,7 @@ ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run
 
 # create authenticated access to gitlab
 if [ -n "$POPPER_GITLAB_API_TOKEN" ]; then
-  GITLAB_REPO_URL="https://oauth2:$POPPER_GITHLAB_API_TOKEN@gitlab.com/barbaragd/action-test@master"
+  GITLAB_REPO_URL="https://oauth2:$POPPER_GITLAB_API_TOKEN@gitlab.com/barbaragd/action-test@master"
 else
   GITLAB_REPO_URL="https://gitlab.com/barbaragd/action-test@master"
 fi
