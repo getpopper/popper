@@ -429,4 +429,4 @@ action "unreachable" {
 }
 EOF
 
-popper run | grep 'WARNING'
+popper run 2>&1 | grep 'WARNING'
