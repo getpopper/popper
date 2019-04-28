@@ -10,6 +10,7 @@ from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
 import docker
 import hcl
+import yaml
 from spython.main import Client as sclient
 
 import popper.cli
@@ -18,6 +19,9 @@ from popper.cli import log
 
 VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves", "on"]
+
+yaml.Dumper.ignore_aliases = lambda *args: True
+
 
 class Workflow(object):
     """A GHA workflow.
@@ -42,8 +46,13 @@ class Workflow(object):
         self.normalize()
         self.complete_graph()
 
+        log.debug('workflow:\n{}'.format(
+            yaml.dump(self.wf, default_flow_style=False, default_style='')))
+
     def validate_syntax(self):
-        """ Validates the .workflow file.
+        """ Validates the .workflow file by checking whether required items are
+        specified, and if extra attributes not defined in the GHA specification
+        are part of a workflow.
         """
         # Validates the workflow block
         if not self.wf.get('workflow', None):
@@ -68,6 +77,7 @@ class Workflow(object):
                 if not a_block.get('uses', None):
                     log.fail('[uses] attribute must be present.')
 
+    @staticmethod
     def is_list_of_strings(self, lst):
         try:
             basestring
@@ -77,27 +87,29 @@ class Workflow(object):
             isinstance(elem, basestring) for elem in lst)
 
     def normalize(self):
-        """normalize the dictionary representation of the workflow"""
-
-        # modify from this:
+        """Normalize the dictionary representation of the workflow by creating
+        lists for all attributes that can be either a string or a list
+        """
+        # move from this:
         #
-        #   "workflow": {
-        #     "test-and-deploy": {
-        #       "resolves": "deploy"
-        #     }
-        #   }
+        #  "workflow": {
+        #    "test-and-deploy": {
+        #      "resolves": "deploy"
+        #    }
+        #  }
         #
-        # to this:
+        # to this (top-level items in self.wf dictionary):
         #
-        #   "workflow": {
-        #     "name": "test-and-deploy",
-        #     "on": "push",
-        #     "resolves": "deploy"
-        #   }
+        #  "name": "test-and-deploy",
+        #  "on": "push",
+        #  "resolves": "deploy"
+        #
         for wf_name, wf_block in dict(self.wf['workflow']).items():
             self.wf['name'] = wf_name
             self.wf['on'] = wf_block.get('on', 'push')
             self.wf['resolves'] = wf_block['resolves']
+
+        del(self.wf['workflow'])
 
         # python 2 to 3 compatibility
         try:
@@ -146,8 +158,9 @@ class Workflow(object):
     def complete_graph(self):
         """A GHA workflow is defined by specifying edges that point to the
         previous nodes they depend on. To make the workflow easier to process,
-        we add forward edges. We also obtains the root nodes.
+        we add forward edges. This also obtains the root nodes.
         """
+        nodes_without_dependencies = set()
         root_nodes = set()
 
         for name, a_block in self.wf['action'].items():
@@ -160,9 +173,23 @@ class Workflow(object):
                 self.wf['action'][n]['next'].add(name)
 
             if not a_block.get('needs', None):
-                root_nodes.add(name)
+                nodes_without_dependencies.add(name)
 
-        self.wf['root'] = root_nodes
+        # a root node is:
+        # - reachable from the workflow's 'resolves' node
+        # - a node without dependencies
+        for n in set(nodes_without_dependencies):
+            if (not self.wf['action'][n].get('next', None)
+                    or n not in self.wf['resolves']):
+                root_nodes.add(n)
+                nodes_without_dependencies.remove(n)
+
+        if nodes_without_dependencies:
+            log.warn(
+                "These actions are unreachable and won't be "
+                "executed: {}".format(','.join(nodes_without_dependencies)))
+
+        self.wf['root'] = list(root_nodes)
 
     def check_secrets(self):
         if self.dry_run or self.skip_secrets_prompt:
@@ -664,7 +691,7 @@ class HostRunner(ActionRunner):
     def run(self, reuse=False):
         cmd = self.action.get('runs', ['entrypoint.sh'])
         cmd[0] = os.path.join('./', cmd[0])
-        cmd.extend(self.action.get('args', ''))
+        cmd.extend(self.action.get('args', []))
 
         cwd = self.cwd
         if not self.dry_run:
@@ -686,8 +713,8 @@ class HostRunner(ActionRunner):
         ecode = 0
 
         try:
-            log.debug('subprocess.Popen() with combined stdout/stderr')
-            p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
+            log.debug('Executing: {}'.format(' '.join(cmd)))
+            p = Popen(cmd, stdout=PIPE, stderr=STDOUT,
                       universal_newlines=True, preexec_fn=os.setsid)
 
             popper.cli.process_list.append(p.pid)
