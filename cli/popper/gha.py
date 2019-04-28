@@ -78,7 +78,7 @@ class Workflow(object):
                     log.fail('[uses] attribute must be present.')
 
     @staticmethod
-    def is_list_of_strings(self, lst):
+    def is_list_of_strings(lst):
         try:
             basestring
         except UnboundLocalError:
