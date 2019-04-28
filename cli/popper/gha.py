@@ -169,8 +169,8 @@ class Workflow(object):
 
             for n in a_block.get('needs', []):
                 if not self.wf['action'][n].get('next', None):
-                    self.wf['action'][n]['next'] = set()
-                self.wf['action'][n]['next'].add(name)
+                    self.wf['action'][n]['next'] = []
+                self.wf['action'][n]['next'].append(name)
 
             if not a_block.get('needs', None):
                 nodes_without_dependencies.add(name)
@@ -179,7 +179,7 @@ class Workflow(object):
         # - reachable from the workflow's 'resolves' node
         # - a node without dependencies
         for n in set(nodes_without_dependencies):
-            if (not self.wf['action'][n].get('next', None)
+            if (not self.wf['action'][n]['next']
                     or n not in self.wf['resolves']):
                 root_nodes.add(n)
                 nodes_without_dependencies.remove(n)
