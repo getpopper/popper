@@ -16,21 +16,30 @@ pushd /tmp/npm
 DOCKER_USERNAME=foo DOCKER_PASSWORD=bar popper run "Integration Test"
 popd
 
-# test with actions hosted on gitlab
+# test with a remote action defined on the root of the repo
 init_test_repo
 cd $test_repo_path
 cat <<EOF > main.workflow
+workflow "action on root folder" {
+  resolves = "test"
+}
+action "test" {
+  uses = "popperized/ansible@master"
+  args = "--version"
+  secrets = ["ANSIBLE_SSH_KEY_DATA"]
+}
+EOF
+
+ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run
+
+# test with actions hosted on gitlab
+cd $test_repo_path
+cat <<EOF > main.workflow
 workflow "clone" {
-  resolves = "test clone git@"
+  resolves = "test"
 }
-
-action "test clone https" {
-  uses = "https://gitlab.com/barbaragd/action-test.git@master"
-}
-
-action "test clone git@"{
-  uses = "git@gitlab.com:barbaragd/action-test.git@master"
-  needs = "test clone https"
+action "test" {
+  uses = "https://gitlab.com/barbaragd/action-test@master"
 }
 EOF
 

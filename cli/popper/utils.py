@@ -1,52 +1,11 @@
 import os
 import sys
 import threading
-from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
-import popper.cli
 from popper.cli import log
 
 
-def exec_cmd(cmd, ignore_error=False,
-             dry_run=False, add_to_process_list=False):
-
-    # If dry_run is True, I don't want the command to be executed
-    # just an empty return
-
-    if dry_run:
-        return "", 0    # No error occurred
-
-    ecode = None
-
-    try:
-        log.debug('subprocess.Popen() with combined stdout/stderr')
-        p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True,
-                  universal_newlines=True, preexec_fn=os.setsid)
-
-        if add_to_process_list:
-            popper.cli.process_list.append(p.pid)
-
-        log.debug('Reading process output')
-
-        import popper.gha as tmp
-        tmp.consume_stdout(p)
-
-        ecode = p.poll()
-        log.debug('Code returned by process: {}'.format(ecode))
-
-    except CalledProcessError as ex:
-        msg = "Command '{}' failed: {}".format(cmd, ex)
-        ecode = ex.returncode
-        if not ignore_error:
-            log.fail(msg)
-        log.info(msg)
-    finally:
-        log.info()
-
-    return "", ecode
-
-
-def decoder(line):
+def decode(line):
     """Make treatment of stdout Python 2/3 compatible"""
     if isinstance(line, bytes):
         return line.decode('utf-8')
@@ -145,72 +104,3 @@ def find_recursive_wfile():
                 wfile = os.path.abspath(wfile)
                 wfile_list.append(wfile)
     return wfile_list
-
-
-def parse(url):
-    service_url = None
-    service = None
-    user = None
-    repo = None
-    action = None
-    if url.startswith('https://'):
-        url = url[8:]
-        parts = url.split('/')
-        service_url = 'https://' + parts[0]
-        service = parts[0]
-        user = parts[1]
-        repo = parts[2]
-        tail = '/'.join(parts[2:])
-    elif url.startswith('http://'):
-        url = url[7:]
-        parts = url.split('/')
-        service_url = 'http://' + parts[0]
-        service = parts[0]
-        user = parts[1]
-        repo = parts[2]
-        tail = '/'.join(parts[2:])
-    elif url.startswith('git@'):
-        service_url, rest = url.split(':')
-        parts = rest.split('/')
-        user = parts[0]
-        repo = parts[1]
-        tail = '/'.join(parts[1:])
-        service = service_url[4:]
-    elif url.startswith('ssh://'):
-        log.fail("The ssh protocol is not supported yet.")
-    else:
-        service_url = 'https://github.com'
-        service = 'github.com'
-        parts = url.split('/')
-        user = parts[0]
-        repo = parts[1]
-        tail = '/'.join(parts[1:])
-        action = '/'.join(url.split('/')[1:])
-
-    if '@' in tail:
-        action_dir = '/'.join(url.split('@')[-2].split('/')[-1:])
-        version = url.split('@')[-1]
-    elif '@' in action:
-        action_dir = '/'.join(action.split('@')[-2].split('/')[-1:])
-        version = action.split('@')[-1]
-    else:
-        action_dir = '/'.join(url.split('/')[2:])
-        version = None
-    action_dir = os.path.join('./', action_dir)
-
-    return service_url, service, user, repo, action, action_dir, version
-
-
-def get_parts(url):
-    if url.startswith('https://'):
-        parts = url[8:].split('/')
-    elif url.startswith('http://'):
-        parts = url[7:].split('/')
-    elif url.startswith('git@'):
-        service_url, rest = url.split(':')
-        parts = ['github.com'] + rest.split('/')
-    elif url.startswith('ssh://'):
-        log.fail('The ssh protocol is not supported yet.')
-    else:
-        parts = ['github.com'] + url.split('/')
-    return parts
