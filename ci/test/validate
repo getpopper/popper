@@ -9,6 +9,51 @@ cd "$test_repo_path"
 # Workflow block tests #
 #----------------------#
 
+## more than one workflow block present
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+workflow "test two" {
+  resolves = "show env"
+}
+
+workflow "test three" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+
+action "show env one" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## workflow block present with unknown attributes.
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+  attr1 = "attr1"
+  attr2 = "attr2"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
 ## workflow block not present
 cat <<EOF > main.workflow
 weeeorkflow "test" {
@@ -113,6 +158,23 @@ popper run
 # Action block tests   #
 #----------------------#
 
+## action block present with unknown attributes
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  attr1 = "attr1"
+  attr2 = "attr2"
+}
+EOF
+
+! popper run
+
 ## action block not present
 cat <<EOF > main.workflow
 workflow "test" {
@@ -148,6 +210,11 @@ workflow "test" {
 }
 
 action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+
+action "show env one" {
   args = "ls"
 }
 EOF
