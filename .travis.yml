@@ -10,7 +10,7 @@ before_install:
 - wget http://neurodeb.pirsquared.org/pool/main/s/singularity-container/singularity-container_2.6.1-2~nd16.04+1_amd64.deb
 - sudo apt-get -f install ./singularity-container_2.6.1-2~nd16.04+1_amd64.deb
 - pip install git+https://github.com/virtuald/pyhcl.git@0.3.12#egg=pyhcl
-script:
+install:
 - pip install cli/
-- which popper
+script:
 - popper run --recursive
