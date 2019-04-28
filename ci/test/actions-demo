@@ -25,12 +25,13 @@ workflow "action on root folder" {
 }
 
 action "test" {
-  uses = "poppperized/ansible@master"
+  uses = "popperized/ansible@master"
   args = "--version"
+  secrets = ["ANSIBLE_SSH_KEY_DATA"]
 }
 EOF
 
-ANSIBLE_SSH_KEY_DATA="dummydata" popper run
+ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run
 
 # test with actions hosted on gitlab
 cd $test_repo_path

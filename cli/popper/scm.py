@@ -157,7 +157,8 @@ def parse(url):
         user = parts[1]
         repo = parts[2]
     elif url.startswith('git@'):
-        service_url, rest = url.split(':')
+        service_url, remaining = url.split(':')
+        parts = remaining.split('/')
         service = service_url[4:]
         user = parts[0]
         repo = parts[1]
