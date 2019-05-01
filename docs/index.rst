@@ -6,12 +6,11 @@
 Popper
 ======
 
-Popper is an experimentation protocol for organizing a academic article's 
-artifacts following a DevOps approach (sometimes referred to as "SciOps"). This 
-documentation describes the experimentation protocol and the Popper CLI tool; 
-it gives examples from multiple domains showing how to follow the protocol; and 
-also shows how to use a CI system to continuously validate Popperized 
-experiments.
+Popper is a workflow execution engine based on Github Actions (GHA) that allows 
+you to execute GHA workflows locally on your machine. Popper workflows are 
+defined in HCL syntax and behave like GHA workflows. The main difference with 
+respect to GHA workflows is that, through some extensions to the GHA syntax, a 
+Popper workflow can execute actions in other runtimes in addition to Docker.
 
 
 .. toctree::
@@ -22,20 +21,15 @@ experiments.
 .. toctree::
    :maxdepth: 2
 
-   sections/concepts.md
-
-.. toctree::
-   :maxdepth: 2
-
    sections/cli_features.md
 
 .. toctree::
    :maxdepth: 2
 
-   sections/ci_features.md
+   sections/extensions.md
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    sections/examples.md
 
