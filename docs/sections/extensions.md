@@ -17,49 +17,12 @@ action "IDENTIFIER" {
 }
 ```
 
-Other optional [action block 
-attributes](https://developer.github.com/actions/managing-workflows/workflow-configuration-options/#using-a-dockerfile-image-in-an-action) 
-can be specified. The `uses` attribute references Docker images, 
-filesystem paths or github repositories. We reproduce the syntax for 
-the `uses` attribute below for convenience:
-
-<table>
-<colgroup>
-<col style="width: 20%" />
-<col style="width: 79%" />
-</colgroup>
-<thead>
-<tr class="header">
-<th>Template</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr class="odd">
-<td><code>{user}/{repo}@{ref}</code></td>
-<td>A specific branch, ref, or SHA in a public GitHub repository. <strong>Example</strong>: <code>actions/heroku@master</code></td>
-</tr>
-<tr class="even">
-<td><code>{user}/{repo}/{path}@{ref}</code></td>
-<td>A subdirectory in a public GitHub repository at a specific branch, ref, or SHA. <strong>Example</strong>: <code>actions/aws/ec2@v2.0.1</code></td>
-</tr>
-<tr class="odd">
-<td><code>./path/to/dir</code></td>
-<td>The path to the directory that contains the action in your workflow’s repository. <strong>Example</strong>: <code>./.github/action/my-action</code></td>
-</tr>
-<tr class="even">
-<td><code>docker://{image}:{tag}</code></td>
-<td>A Docker image published on Docker Hub. <strong>Example</strong>: <code>docker://alpine:3.8</code></td>
-</tr>
-<tr class="odd">
-<td><code>docker://{host}/{image}:{tag}</code></td>
-<td>A Docker image in a public registry. <strong>Example</strong>: <code>docker://gcr.io/cloud-builders/gradle</code></td>
-</tr>
-</tbody>
-</table>
-
-In the case of the first two options (where an action references a 
-public repository), Popper extends the syntax in the following way:
+The `uses` attribute references Docker images, filesystem paths or 
+github repositories (see [syntax 
+documentation](https://developer.github.com/actions/managing-workflows/workflow-configuration-options/#using-a-dockerfile-image-in-an-action) 
+for more). In the case of the first two options (where an action 
+references a public repository), Popper extends the syntax in the 
+following way:
 
 ```
 `{url}/{user}/{repo}/{path}@{ref}`
@@ -78,8 +41,8 @@ action "another one on bitbucket" {
 }
 ```
 
-the above references actions hosted on [Gitlab](https://gitlab.com) 
-and [Bitbucket](https://bitbucket.org).
+The above references actions hosted on [Gitlab](https://gitlab.com) 
+and [Bitbucket](https://bitbucket.org), respectively.
 
 ## Other Runtimes
 
@@ -95,7 +58,7 @@ of the `uses` attribute of action blocks.
 
 ### Singularity
 
-> **NOTE**: This feature requires Singularity 2.6+ to be installed.
+> **NOTE**: This feature requires Singularity 2.6+.
 
 An action executes in a Singularity container when:
 
