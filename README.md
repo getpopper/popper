@@ -13,36 +13,39 @@
 > branch](https://github.com/systemslab/popper/tree/v1.x).
 
 Popper is a workflow execution engine based on [Github 
-actions](https://github.com/features/actions) (GHA). Popper workflows 
-are defined in [HCL](https://github.com/hashicorp/hcl) syntax and 
-behave like GHA workflows. The main difference with respect to GHA 
-workflows is that a Popper workflow can execute actions in other 
-runtimes in addition to Docker. The workflow language is strictly a 
-superset of GHA workflow language so Popper can run a GHA workflow 
-locally as if it was being executed by the GHA platform.
+actions](https://github.com/features/actions) (GHA) that allows you to 
+execute GHA workflows locally on your machine. Popper workflows are 
+defined in [HCL](https://github.com/hashicorp/hcl) syntax and behave 
+like GHA workflows. The main difference with respect to GHA workflows 
+is that, through [several extensions to the GHA 
+syntax](https://popper.rtfd.io/en/latest/sections/extensions), a 
+Popper workflow can execute actions in other runtimes in addition to 
+Docker. The workflow language is strictly a superset of GHA workflow 
+language so Popper can run a GHA workflow locally as if it was being 
+executed by the GHA platform.
 
 <p align="center">
   <img src="https://systemslab.github.io/popper/images/demo.svg">
 </p>
 
-In addition to running a GHA workflow locally, the goal for the Popper 
-2.x series is to provide the following functionality:
+In addition to running a GHA workflow locally, the goal of this 
+project is to provide the following functionality:
 
   * **Runtimes**. Actions can execute locally on the host where the 
-    `popper` command runs (i.e. "outside" a container, thus not 
-    strictly depending on having Docker installed). We are working in 
-    adding support for other runtimes are such as 
-    [`rkt`](https://github.com/rkt/rkt), 
+    `popper` command runs (i.e. "outside" a container), thus not 
+    strictly depending on having Docker installed. We are working in 
+    adding support for other runtimes such as 
     [Vagrant](https://www.vagrantup.com/), 
-    [Singularity](https://sylabs.io/) and others (see [this 
+    [Singularity](https://sylabs.io/), [Conda](https://conda.io) and 
+    others (see [this 
     project](https://github.com/systemslab/popper/projects/12) for 
     more).
-  * **Actions catalog**. Provide users with a searchable catalog of 
-    available actions and workflows so that they can re-use as much as 
-    possible what others have already done.
   * **Continuous integration**. Generate configuration files for 
     distinct CI services, allowing users to execute Popper workflows 
     on these services (Travis, Jenkins, Gitlab and Circle supported).
+  * **Action and workflow search**. Provide users with a searchable 
+    catalog of available actions and workflows so that they can re-use 
+    as much as possible what others have already done.
   * **Scaffolding**. Aid in the implementation of new actions and 
     workflows, as well as extending existing ones.
   * **Action library**. As part of our efforts, we maintain a list of 
@@ -50,30 +53,27 @@ In addition to running a GHA workflow locally, the goal for the Popper
 
 -----
 
-The contents of this repository are:
+This repository contains:
 
   * [`cli/`](cli/). The codebase of the CLI tool.
   * [`docs/`](docs/). General 
-    [documentation](http://popper.readthedocs.io/en/latest/) 
+    [documentation](https://popper.readthedocs.io/en/latest/) 
     containing guides, CLI documentation and pointers to other 
     resources.
   * [`gh-pages`](https://github.com/systemslab/popper/tree/gh-pages) 
     branch. Contents of our [landing page](http://falsifiable.us).
 
-Quick links to other resources:
-
-  * [Recorded webinar presentation (using 1.x 
-    version)](https://youtu.be/tZcaV31FxUM).
-  * [Software Carpentry formatted Lesson (for 1.x 
-    versions)](https://popperized.github.io/swc-lesson/).
-  * [Github Actions awesome 
-    list](https://github.com/sdras/awesome-actions).
-
 ## Installation
 
-See [here](cli/) for instructions on how to install the CLI tool. Once
-installed, to get an overview and list of commands check out the
-command line help:
+We have a [`pip`](https://pypi.python.org/pypi) package available. To
+install:
+
+```bash
+pip install popper
+```
+
+Once installed, you can get an overview and list of available 
+commands:
 
 ```bash
 popper --help

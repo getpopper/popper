@@ -1,16 +1,13 @@
 # Getting Started
 
-_Popper_ is a convention for organizing an academic article's 
-artifacts following a [DevOps](https://en.wikipedia.org/wiki/DevOps) 
-approach, with the goal of making it easy for others (and yourself!) 
-to repeat an experiment or analysis pipeline.
-
-We first need to install the CLI tool by following [these 
-instructions](https://github.com/systemslab/popper/tree/master/cli#install). 
-Show the available commands:
+Popper is a workflow execution engine based on [Github 
+Actions](https://github.com/features/actions) written in Python. With 
+Popper, you can execute workflows locally on your machine without 
+having to use Github's platform. To get started, we first need to 
+install the CLI tool using [Pip](https://pip.pypa.io/en/stable/):
 
 ```bash
-popper --help
+pip install popper
 ```
 
 Show which version you installed:
@@ -19,7 +16,18 @@ Show which version you installed:
 popper version
 ```
 
-Create a project repository (if you are not familiar with git, look 
+> **NOTE**: Any version greater than 2.0 is currently officially 
+> supported.
+
+To get a lit of the available commands:
+
+```bash
+popper --help
+```
+
+## Create a Git repository
+
+Create a project repository (if you are not familiar with Git, look 
 [here](https://www.learnenough.com/git-tutorial)):
 
 ```bash
@@ -31,65 +39,60 @@ git add .
 git commit -m 'first commit'
 ```
 
-Initialize the popper repository and add the `.popper.yml` file to 
-git:
+## Link to GitHub repository
+
+First, create a repository [on 
+Github](https://help.github.com/articles/create-a-repo/). Once your 
+Github repository has been created, register it as a remote repository 
+on your local repository:
 
 ```bash
-popper init
+git remote add origin git@github.com:<user>/<repo>
+```
+
+where `<user>` is your username and `<repo>` is the name of the 
+repository you have created. Then, push your local commits:
+
+```bash
+git push -u origin master
+```
+
+## Create a workflow
+
+We need to create a `.workflow` file:
+
+```bash
+popper scaffold
+```
+
+The above generates an example workflow that you can use as the 
+starting point of your project. We first commit the files that got 
+generated:
+
+```bash
 git add .
-git commit -m 'adds .popper.yml file'
+git commit -m 'Adding example workflow.'
+git push
 ```
 
-## New pipeline
+To learn more about how to modify this workflow in order to fit your 
+needs, please take a look at the [official 
+documentation](https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/), 
+read [this 
+tutorial](https://scotch.io/bar-talk/introducing-github-actions#toc-how-it-works) 
+or take a look at [some examples](examples.html).
 
-Initialize pipeline using `init` (scaffolding):
+## Run your workflow
 
-```bash
-popper init myexp
-```
-
-Show what this did:
-
-```bash
-ls -l pipelines/myexp
-```
-
-Commit the "empty" pipeline:
-
-```bash
-git add pipelines/myexp
-git commit -m 'adding myexp scaffold'
-```
-
-## Popper Run
-
-Run popper run:
+To execute the workflow you just created:
 
 ```bash
 popper run
 ```
 
-Once a pipeline is executed, one can show the logs:
+You should see the output of actions printed to the terminal.
 
-```bash
-ls -l pipelines/myexp/popper_logs
-```
-
-## Adding Project to GitHub
-
-Create a repository [on 
-github](https://help.github.com/articles/create-a-repo/), register the 
-remote repository to your local git and push all your commits:
-
-```bash
-git remote add origin git@github.com:<user>/<repo>
-git push -u origin master
-```
-
-where `<user>` is your username and `<repo>` is the name of the 
-repository you have created.
-
-## Adding Project to Travis
+## Continuously Run Your Workflow on Travis
 
 For this, we need to [login to Travis 
 CI](https://docs.travis-ci.com/user/getting-started/#Prerequisites) 
@@ -116,5 +119,4 @@ Trigger an execution by pushing to github:
 git push
 ```
 
-Go to TravisCI website to see your experiments being executed.
-
+Go to the TravisCI website to see your experiments being executed.
