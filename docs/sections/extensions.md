@@ -3,7 +3,7 @@
 This section describes the extensions Popper brings on top of Github 
 Actions.
 
-> **NOTE**: These extensions are NOT supported by the official Github 
+> **NOTE**: These extensions are not supported by the official Github 
 > Actions platform.
 
 ## Downloading actions from arbitrary Git repositories
@@ -20,12 +20,11 @@ action "IDENTIFIER" {
 The `uses` attribute references Docker images, filesystem paths or 
 github repositories (see [syntax 
 documentation](https://developer.github.com/actions/managing-workflows/workflow-configuration-options/#using-a-dockerfile-image-in-an-action) 
-for more). In the case of the first two options (where an action 
-references a public repository), Popper extends the syntax in the 
-following way:
+for more). In the case where an action references a public repository, 
+Popper extends the syntax in the following way:
 
 ```
-`{url}/{user}/{repo}/{path}@{ref}`
+{url}/{user}/{repo}/{path}@{ref}
 ```
 
 The `{url}` can reference any Git repository, allowing workflows to 
@@ -78,13 +77,15 @@ An action executes in a Singularity container when:
 
 ### Host
 
-Actions can execute directly on the host where the `popper` command is 
-running. This happens when no `Dockerfile` or `Singularity` file is 
-found in the path where the referenced action is stored (be it a local 
-path or the path in a public repository). Popper looks for an 
-`entrypoint.sh` file and executes it if found, otherwise an error is 
-thrown. Alternatively, if the action block specifies a `runs` 
-attribute, the script corresponding to it is executed. For example:
+There are situations where a container engine is not available and 
+cannot be installed. In these cases, actions can execute directly on 
+the host where the `popper` command is running. If an action folder 
+does not contain a `Dockerfile` or `Singularity` file (be it a local 
+path or the path in a public repository), the action will be executed 
+on the host. Popper looks for an `entrypoint.sh` file and executes it 
+if found, otherwise an error is thrown. Alternatively, if the action 
+block specifies a `runs` attribute, the script corresponding to it is 
+executed. For example:
 
 ```hcl
 action "run on host" {
@@ -100,8 +101,10 @@ action "another execution on host" {
 In the above example, the `run on host` action is executed by looking 
 for an `entrypoint.sh` file on the `./myactions/onhost/` folder. The 
 `another execution on host` action will instead execute the `myscript` 
-folder. Another way of executing actions on the host is to use the 
-special `sh` value for the `uses` attribute. For example:
+script (located in `./myactions/onhost/`).
+
+Another way of executing actions on the host is to use the special 
+`sh` value for the `uses` attribute. For example:
 
 ```hcl
 action "run on host" {
@@ -121,4 +124,3 @@ workflow might not be portable.
 > the root folder of the project. Thus, to ensure portability, scripts 
 > should use paths relative to the root of the folder. If absolute 
 > paths are needed, the `$GITHUB_WORKSPACE` variable can be used.
-

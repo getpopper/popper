@@ -54,15 +54,35 @@ or to execute all the workflows in a project:
 popper run --recursive
 ```
 
+## Environment Variables
+
+Popper defines the same environment variables that are [defined by the 
+official Github Actions 
+runner](https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables). 
+To see the values assigned to these variables, run the following 
+workflow:
+
+```hcl
+workflow "env workflow" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = ["env"]
+}
+```
+
 ## Reusing existing workflows
 
 Many times, when starting an experiment, it is useful to be able to use
-existing workflow as scaffolding for the operations we wish to make. 
-The [Popperized](https://github.com/popperized) GitHub organization 
-exists as a curated list of existing Popper workflows for the purpose 
-of both learning and to use them as a starting point. Additionally, 
-the CLI includes capabilities easily sift through and import these 
-workflows.
+an existing workflow as a scaffold for the one we wish to write. The 
+[`popper-examples` 
+repository](https://github.com/popperized/popper-examples) contains a 
+list of example workflows and actions for the purpose of both learning 
+and to use them as a starting point. Another examples can be found on 
+Github's [official `actions` 
+organization](https://github.com/actions).
 
 Once you have found a workflow you're interested in importing, you can 
 use the `popper add` command to obtain a workflow. For example:
@@ -70,7 +90,7 @@ use the `popper add` command to obtain a workflow. For example:
 ```bash
 cd myproject/
 mkdir myworkflow
-popper add https://github.com/popperized/popper-examples/workflows/data-science
+popper add https://github.com/popperized/popper-examples/workflows/cloudlab-iperf-test
 Downloading workflow data-science as data-science...
 Workflow docker-data-science has been added successfully.
 ```

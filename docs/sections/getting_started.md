@@ -19,7 +19,7 @@ popper version
 > **NOTE**: Any version greater than 2.0 is currently officially 
 > supported.
 
-To get a lit of the available commands:
+To get a list of available commands:
 
 ```bash
 popper --help
