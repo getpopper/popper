@@ -25,8 +25,8 @@ the `uses` attribute below for convenience:
 
 <table>
 <colgroup>
-<col style="width: 21%" />
-<col style="width: 78%" />
+<col style="width: 20%" />
+<col style="width: 79%" />
 </colgroup>
 <thead>
 <tr class="header">
@@ -36,24 +36,24 @@ the `uses` attribute below for convenience:
 </thead>
 <tbody>
 <tr class="odd">
-<td><span class="title-ref">{user}/{repo}@{ref}</span></td>
-<td>A specific branch, ref, or SHA in a public GitHub repository. <strong>Example</strong>: <span class="title-ref">actions/heroku@master</span></td>
+<td><code>{user}/{repo}@{ref}</code></td>
+<td>A specific branch, ref, or SHA in a public GitHub repository. <strong>Example</strong>: <code>actions/heroku@master</code></td>
 </tr>
 <tr class="even">
-<td><span class="title-ref">{user}/{repo}/{path}@{ref}</span></td>
-<td>A subdirectory in a public GitHub repository at a specific branch, ref, or SHA. <strong>Example</strong>: <span class="title-ref">actions/aws/ec2@v2.0.1</span></td>
+<td><code>{user}/{repo}/{path}@{ref}</code></td>
+<td>A subdirectory in a public GitHub repository at a specific branch, ref, or SHA. <strong>Example</strong>: <code>actions/aws/ec2@v2.0.1</code></td>
 </tr>
 <tr class="odd">
-<td><span class="title-ref">./path/to/dir</span></td>
-<td>The path to the directory that contains the action in your workflow's repository. <strong>Example</strong>: <span class="title-ref">./.github/action/my-action</span></td>
+<td><code>./path/to/dir</code></td>
+<td>The path to the directory that contains the action in your workflow’s repository. <strong>Example</strong>: <code>./.github/action/my-action</code></td>
 </tr>
 <tr class="even">
-<td><span class="title-ref">docker://{image}:{tag}</span></td>
-<td>A Docker image published on Docker Hub. <strong>Example</strong>: <span class="title-ref">docker://alpine:3.8</span></td>
+<td><code>docker://{image}:{tag}</code></td>
+<td>A Docker image published on Docker Hub. <strong>Example</strong>: <code>docker://alpine:3.8</code></td>
 </tr>
 <tr class="odd">
-<td><span class="title-ref">docker://{host}/{image}:{tag}</span></td>
-<td>A Docker image in a public registry. <strong>Example</strong>: <span class="title-ref">docker://gcr.io/cloud-builders/gradle</span></td>
+<td><code>docker://{host}/{image}:{tag}</code></td>
+<td>A Docker image in a public registry. <strong>Example</strong>: <code>docker://gcr.io/cloud-builders/gradle</code></td>
 </tr>
 </tbody>
 </table>
