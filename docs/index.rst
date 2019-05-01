@@ -19,17 +19,17 @@ Popper workflow can execute actions in other runtimes in addition to Docker.
    sections/getting_started.md
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    sections/cli_features.md
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    sections/extensions.md
 
 .. toctree::
-   :maxdepth: 3
+   :maxdepth: 2
 
    sections/examples.md
 

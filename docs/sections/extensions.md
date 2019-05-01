@@ -23,15 +23,21 @@ can be specified. The `uses` attribute references Docker images or
 Docker image definitions, i.e. `Dockerfile`s. The syntax for the 
 `uses` attribute is the following:
 
-| Template | Description |
-| -------- | ----------- |
-| `{user}/{repo}@{ref}` | A specific branch, ref, or SHA in a public GitHub repository. **Example**: `actions/heroku@master` |
-| `{user}/{repo}/{path}@{ref}` | A subdirectory in a public GitHub repository at a specific branch, ref, or SHA. **Example**: `actions/aws/ec2@v2.0.1` |
-| `./path/to/dir` | The path to the directory that contains the action in your workflow's repository. **Example**: `./.github/action/my-action` |
-| `docker://{image}:{tag}` | A Docker image published on Docker Hub. **Example**: `docker://alpine:3.8` |
-| `docker://{host}/{image}:{tag}` | A Docker image in a public registry. **Example**: `docker://gcr.io/cloud-builders/gradle` |
-
-
+```eval_rst
++---------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| Template                        | Description                                                                                                                 |
++=================================+=============================================================================================================================+
+| `{user}/{repo}@{ref}`           | A specific branch, ref, or SHA in a public GitHub repository. **Example**: `actions/heroku@master`                          |
++---------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| `{user}/{repo}/{path}@{ref}`    | A subdirectory in a public GitHub repository at a specific branch, ref, or SHA. **Example**: `actions/aws/ec2@v2.0.1`       |
++---------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| `./path/to/dir`                 | The path to the directory that contains the action in your workflow's repository. **Example**: `./.github/action/my-action` |
++---------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| `docker://{image}:{tag}`        | A Docker image published on Docker Hub. **Example**: `docker://alpine:3.8`                                                  |
++---------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+| `docker://{host}/{image}:{tag}` | A Docker image in a public registry. **Example**: `docker://gcr.io/cloud-builders/gradle`                                   |
++---------------------------------+-----------------------------------------------------------------------------------------------------------------------------+
+```
 
 
 ## Other Runtimes
