@@ -8,193 +8,56 @@ from distutils.dir_util import copy_tree
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
-import docker
 import hcl
 import yaml
+import docker
 from spython.main import Client as sclient
 
 import popper.cli
-from popper import scm, utils as pu
 from popper.cli import log
+from popper.parser import Workflow
+from popper import scm, utils as pu
 
-VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
-VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
 yaml.Dumper.ignore_aliases = lambda *args: True
 
 
-class Workflow(object):
-    """A GHA workflow.
+class WorkflowRunner(object):
+    """A GHA workflow runner.
     """
 
     def __init__(self, wfile, workspace, dry_run,
                  reuse, parallel, skip_secrets_prompt=False):
-        wfile = pu.find_default_wfile(wfile)
 
-        with open(wfile, 'r') as fp:
-            self.wf = hcl.load(fp)
+        wfile = pu.find_default_wfile(wfile)
 
         self.workspace = workspace
         self.dry_run = dry_run
         self.reuse = reuse
         self.parallel = parallel
         self.skip_secrets_prompt = skip_secrets_prompt
-
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
-        self.validate_syntax()
-        self.check_secrets()
-        self.normalize()
-        self.complete_graph()
 
+        # Initialize a Worklow. During initialization all the validation
+        # takes place automatically.
+        self.wf = Workflow(wfile)
+        self.check_secrets()
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
-    def validate_syntax(self):
-        """ Validates the .workflow file by checking whether required items are
-        specified, and if extra attributes not defined in the GHA specification
-        are part of a workflow.
-        """
-        # Validates the workflow block
-        if not self.wf.get('workflow', None):
-            log.fail('A workflow block must be present.')
-        elif len(self.wf['workflow'].items()) > 1:
-            log.fail('Cannot have more than one workflow blocks.')
-        else:
-            wf_block = list(self.wf['workflow'].values())[0]
-            for key in wf_block.keys():
-                if key not in VALID_WORKFLOW_ATTRS:
-                    log.fail('Invalid attrs found.')
-            if not wf_block.get('resolves', None):
-                log.fail('[resolves] attribute must be present.')
-        # Validate the action blocks
-        if not self.wf.get('action', None):
-            log.fail('Atleast one action block must be present.')
-        else:
-            for _, a_block in self.wf['action'].items():
-                for key in a_block.keys():
-                    if key not in VALID_ACTION_ATTRS:
-                        log.fail('Invalid attrs found.')
-                if not a_block.get('uses', None):
-                    log.fail('[uses] attribute must be present.')
-
-    @staticmethod
-    def is_list_of_strings(lst):
-        try:
-            basestring
-        except UnboundLocalError:
-            basestring = str
-        return bool(lst) and isinstance(lst, list) and all(
-            isinstance(elem, basestring) for elem in lst)
-
-    def normalize(self):
-        """Normalize the dictionary representation of the workflow by creating
-        lists for all attributes that can be either a string or a list
-        """
-        # move from this:
-        #
-        #  "workflow": {
-        #    "test-and-deploy": {
-        #      "resolves": "deploy"
-        #    }
-        #  }
-        #
-        # to this (top-level items in self.wf dictionary):
-        #
-        #  "name": "test-and-deploy",
-        #  "on": "push",
-        #  "resolves": "deploy"
-        #
-        for wf_name, wf_block in dict(self.wf['workflow']).items():
-            self.wf['name'] = wf_name
-            self.wf['on'] = wf_block.get('on', 'push')
-            self.wf['resolves'] = wf_block['resolves']
-
-        del(self.wf['workflow'])
-
-        # python 2 to 3 compatibility
-        try:
-            basestring
-        except UnboundLocalError:
-            basestring = str
-
-        # create a list for all attributes that can be either string or list
-        if isinstance(self.wf['resolves'], basestring):
-            self.wf['resolves'] = [self.wf['resolves']]
-        elif not self.is_list_of_strings(self.wf['resolves']):
-            log.fail('[resolves] must be a list of strings or a string')
-        if not isinstance(self.wf['on'], basestring):
-            log.fail('[on] attribute must be a string')
-        for _, a_block in self.wf['action'].items():
-            if not isinstance(a_block['uses'], basestring):
-                log.fail('[uses] attribute must be a string')
-            if a_block.get('needs', None):
-                if isinstance(a_block['needs'], basestring):
-                    a_block['needs'] = [a_block['needs']]
-                elif not self.is_list_of_strings(a_block['needs']):
-                    log.fail(
-                        '[needs] attribute must be a list of strings '
-                        'or a string')
-            if a_block.get('runs', None):
-                if isinstance(a_block['runs'], basestring):
-                    a_block['runs'] = [a_block['runs']]
-                elif not self.is_list_of_strings(a_block['runs']):
-                    log.fail(
-                        '[runs] attribute must be a list of strings '
-                        'or a string')
-            if a_block.get('args', None):
-                if isinstance(a_block['args'], basestring):
-                    a_block['args'] = a_block['args'].split()
-                elif not self.is_list_of_strings(a_block['args']):
-                    log.fail(
-                        '[args] attribute must be a list of strings '
-                        'or a string')
-            if a_block.get('env', None):
-                if not isinstance(a_block['env'], dict):
-                    log.fail('[env] attribute must be a dict')
-            if a_block.get('secrets', None):
-                if not self.is_list_of_strings(a_block['secrets']):
-                    log.fail('[secrets] attribute must be a list of strings')
-
-    def complete_graph(self):
-        """A GHA workflow is defined by specifying edges that point to the
-        previous nodes they depend on. To make the workflow easier to process,
-        we add forward edges. This also obtains the root nodes.
-        """
-        nodes_without_dependencies = set()
-        root_nodes = set()
-
-        for name, a_block in self.wf['action'].items():
-
-            a_block['name'] = name
-
-            for n in a_block.get('needs', []):
-                if not self.wf['action'][n].get('next', None):
-                    self.wf['action'][n]['next'] = set()
-                self.wf['action'][n]['next'].add(name)
-
-            if not a_block.get('needs', None):
-                nodes_without_dependencies.add(name)
-
-        # a root node is:
-        # - reachable from the workflow's 'resolves' node
-        # - a node without dependencies
-        for n in set(nodes_without_dependencies):
-            if (self.wf['action'][n].get('next', None)
-                    or n in self.wf['resolves']):
-                nodes_without_dependencies.remove(n)
-                root_nodes.add(n)
-
-        if nodes_without_dependencies:
-            log.warn(
-                "These actions are unreachable and won't be "
-                "executed: {}".format(','.join(nodes_without_dependencies)))
-
-        self.wf['root'] = list(root_nodes)
-
     def check_secrets(self):
+        """Checks whether the secrets defined in the action block is
+        set in the execution environment or not.
+
+        Note:
+            When the environment variable `CI` is set to `true`,
+            then the execution fails if secrets are not defined
+            else it prompts the user to enter the environment vars
+            during the time of execution itself.
+        """
         if self.dry_run or self.skip_secrets_prompt:
             return
-        for _, a in self.wf['action'].items():
+        for _, a in self.wf.actions:
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI') == "true":
@@ -208,9 +71,9 @@ class Workflow(object):
         cloned = set()
         infoed = False
 
-        for _, a in self.wf['action'].items():
+        for _, a in self.wf.actions:
             if ('docker://' in a['uses'] or 'shub://' in a['uses'] or
-               './' in a['uses']):
+                    './' in a['uses']):
                 continue
 
             url, service, usr, repo, action_dir, version = scm.parse(a['uses'])
@@ -241,7 +104,7 @@ class Workflow(object):
 
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
-        for _, a in self.wf['action'].items():
+        for _, a in self.wf.actions:
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
@@ -299,10 +162,10 @@ class Workflow(object):
 
         self.env = {
             'GITHUB_WORKSPACE': self.workspace,
-            'GITHUB_WORKFLOW': self.wf['name'],
+            'GITHUB_WORKFLOW': self.wf.name,
             'GITHUB_ACTOR': 'popper',
             'GITHUB_REPOSITORY': repo_id,
-            'GITHUB_EVENT_NAME': self.wf['on'],
+            'GITHUB_EVENT_NAME': self.wf.on,
             'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
             'GITHUB_SHA': scm.get_sha(),
@@ -316,16 +179,16 @@ class Workflow(object):
         self.instantiate_runners()
 
         if action_name:
-            self.wf['action'][action_name]['runner'].run(reuse)
+            self.wf.get_runner(action_name).run(reuse)
         else:
-            for s in self.get_stages():
+            for s in self.wf.get_stages():
                 self.run_stage(s, reuse, parallel)
 
     def run_stage(self, stage, reuse=False, parallel=False):
         if parallel:
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
-                    ex.submit(self.wf['action'][a]['runner'].run, reuse):
+                    ex.submit(self.wf.get_runner(a).run, reuse):
                         a for a in stage
                 }
                 popper.cli.flist = flist
@@ -334,21 +197,7 @@ class Workflow(object):
                     log.info('Action ran successfully !')
         else:
             for action in stage:
-                self.wf['action'][action]['runner'].run(reuse)
-
-    @pu.threadsafe_generator
-    def get_stages(self):
-        """Generator of stages. A stages is a list of actions that can be
-        executed in parallel.
-        """
-        current_stage = self.wf['root']
-
-        while current_stage:
-            yield current_stage
-            next_stage = set()
-            for n in current_stage:
-                next_stage.update(self.wf['action'][n].get('next', set()))
-            current_stage = next_stage
+                self.wf.get_runner(action).run(reuse)
 
     @staticmethod
     def import_from_repo(path, project_root):
@@ -387,13 +236,12 @@ class Workflow(object):
         log.info("Successfully imported from {}".format(path_to_workflow))
 
         with open(path_to_workflow, 'r') as fp:
-            wf = hcl.load(fp)
+            wf = Workflow(path_to_workflow)
 
         action_paths = list()
-        if wf.get('action', None):
-            for _, a_block in wf['action'].items():
-                if a_block['uses'].startswith("./"):
-                    action_paths.append(a_block['uses'])
+        for _, a_block in wf.actions:
+            if a_block['uses'].startswith("./"):
+                action_paths.append(a_block['uses'])
 
         action_paths = set([a.split("/")[1] for a in action_paths])
         for a in action_paths:

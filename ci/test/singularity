@@ -19,7 +19,7 @@ echo 'Entered runscript'
 echo \$F_NAME
 echo \$L_NAME
 echo \$SECRET_KEY
-sh -c \$@
+sh -c \$*
 EOF
 
 cat <<EOF > main.workflow

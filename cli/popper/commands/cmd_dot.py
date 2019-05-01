@@ -2,7 +2,7 @@ import click
 
 from popper import utils as pu
 from popper.cli import pass_context, log
-from popper.gha import Workflow
+from popper.gha import WorkflowRunner
 
 
 @click.option(
@@ -34,7 +34,7 @@ def cli(ctx, wfile, recursive):
         for n in children:
             _n = n.replace(' ', '_').replace('-', '_')
             graph_str += "  {} -> {};\n".format(_parent, _n)
-            for M in wf['action'][n].get('next', []):
+            for M in wf.get_action(n).get('next', []):
                 graph_str = add_to_graph(graph_str, wf, n, [M])
 
         return graph_str
@@ -47,8 +47,8 @@ def cli(ctx, wfile, recursive):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        pipeline = Workflow(wfile, False, False, False, False, True)
+        pipeline = WorkflowRunner(wfile, False, False, False, False, True)
         wf = pipeline.wf
-        workflow_name = wf['name'].replace(' ', '_').replace('-', '_')
-        graph_str = add_to_graph("", wf, workflow_name, wf['root'])
+        workflow_name = wf.name.replace(' ', '_').replace('-', '_')
+        graph_str = add_to_graph("", wf, workflow_name, wf.root)
         log.info("digraph G {\n" + graph_str + "}\n")
