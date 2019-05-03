@@ -516,6 +516,7 @@ class DockerRunner(ActionRunner):
         for e, v in self.env.items():
             env_vars.update({e: v})
         env_vars.update({'HOME': os.environ['HOME']})
+        env_vars.update({'TERM': 'xterm-256color'})
         volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
         log.debug('Invoking docker_create() method')
         self.container = self.docker_client.containers.create(
@@ -526,7 +527,8 @@ class DockerRunner(ActionRunner):
             working_dir=self.workspace,
             environment=env_vars,
             entrypoint=self.action.get('runs', None),
-            detach=True
+            detach=True,
+            tty=True
         )
 
     def docker_start(self):
@@ -536,8 +538,13 @@ class DockerRunner(ActionRunner):
             return 0
         self.container.start()
         cout = self.container.logs(stream=True)
+        tmp = ""
         for line in cout:
-            log.action_info(pu.decode(line).strip('\n'))
+            try:
+                tmp += pu.decode(line)
+            except UnicodeDecodeError:
+                pass
+        log.action_info(tmp)
 
         return self.container.wait()['StatusCode']
 
