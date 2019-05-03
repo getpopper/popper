@@ -12,7 +12,7 @@ execute GHA workflows locally on your machine. Popper workflows are
 defined in [HCL](https://github.com/hashicorp/hcl) syntax and behave 
 like GHA workflows. The main difference with respect to GHA workflows 
 is that, through [several extensions to the GHA 
-syntax](https://popper.rtfd.io/en/latest/sections/extensions), a 
+syntax](https://popper.rtfd.io/en/latest/sections/extensions.html), a 
 Popper workflow can execute actions in other runtimes in addition to 
 Docker. The workflow language is strictly a superset of GHA workflow 
 language so Popper can run a GHA workflow locally as if it was being 
