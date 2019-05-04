@@ -158,8 +158,26 @@ popper run
 # Action block tests   #
 #----------------------#
 
-## action block present with unknown attributes
+## workflow with duplicate action blocks
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
 
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+## action block present with unknown attributes
 cat <<EOF > main.workflow
 workflow "test" {
   resolves = "show env"
