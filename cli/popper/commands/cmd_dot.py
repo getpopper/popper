@@ -52,10 +52,11 @@ def cli(ctx, wfile, recursive):
         workflow_name = wf.name.replace(' ', '_').replace('-', '_')
         graph_set = add_to_graph(set(), wf, workflow_name, wf.root)
         graph_str = "\n".join(graph_set)
+        workflow_attr = " [ shape=diamond, bordercolor=blue, border=bold]"
         digraph = "\n".join(
             [
                 "digraph G {",
-                workflow_name + " [shape=diamond]",
+                workflow_name + workflow_attr,
                 graph_str,
                 "}"
             ]
