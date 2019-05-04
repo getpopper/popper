@@ -27,17 +27,17 @@ def cli(ctx, wfile, recursive):
     """
     Creates a graph in the .dot format representing the workflow.
     """
-    def add_to_graph(graph_str, wf, parent, children):
+    def add_to_graph(graph_set, wf, parent, children):
         """Recursively goes through "next" and adds corresponding actions
         """
         _parent = parent.replace(' ', '_').replace('-', '_')
         for n in children:
             _n = n.replace(' ', '_').replace('-', '_')
-            graph_str += "  {} -> {};\n".format(_parent, _n)
+            graph_set.add("  {} -> {};".format(_parent, _n))
             for M in wf.get_action(n).get('next', []):
-                graph_str = add_to_graph(graph_str, wf, n, [M])
+                graph_set = add_to_graph(graph_set, wf, n, [M])
 
-        return graph_str
+        return graph_set
 
     wfile_list = list()
 
@@ -50,5 +50,13 @@ def cli(ctx, wfile, recursive):
         pipeline = WorkflowRunner(wfile, False, False, False, False, True)
         wf = pipeline.wf
         workflow_name = wf.name.replace(' ', '_').replace('-', '_')
-        graph_str = add_to_graph("", wf, workflow_name, wf.root)
-        log.info("digraph G {\n" + graph_str + "}\n")
+        graph_set = add_to_graph(set(), wf, workflow_name, wf.root)
+        graph_str = "\n".join(graph_set)
+        digraph = "\n".join(
+            [
+                "digraph G {",
+                graph_str,
+                "}"
+            ]
+        )
+        log.info(digraph)
