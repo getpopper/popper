@@ -19,7 +19,7 @@ language so Popper can run a GHA workflow locally as if it was being
 executed by the GHA platform.
 
 <p align="center">
-  <img src="https://systemslab.github.io/popper/images/demo.svg">
+  <img src="docs/figures/demo.gif">
 </p>
 
 In addition to running a GHA workflow locally, the goal of this 
