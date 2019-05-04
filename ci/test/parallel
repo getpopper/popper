@@ -84,52 +84,52 @@ action "ls cmds" {
 
 action "curl github" {
   uses = "actions/bin/curl@master"
-  args = ["github.com"]
+  args = ["-L", "github.com"]
 }
 
 action "curl google" {
   uses = "actions/bin/curl@master"
-  args = ["google.com"]
+  args = ["-L", "google.com"]
 }
 
 action "curl facebook" {
   uses = "actions/bin/curl@master"
-  args = ["facebook.com"]
+  args = ["-L", "facebook.com"]
 }
 
 action "curl gitlab" {
   uses = "actions/bin/curl@master"
-  args = ["gitlab.com"]
+  args = ["-L", "gitlab.com"]
 }
 
 action "curl bitbucket" {
   uses = "actions/bin/curl@master"
-  args = ["bitbucket.org"]
+  args = ["-L", "bitbucket.org"]
 }
 
 action "curl medium" {
   uses = "actions/bin/curl@master"
-  args = ["medium.com"]
+  args = ["-L", "medium.com"]
 }
 
 action "curl twitter" {
   uses = "actions/bin/curl@master"
-  args = ["twitter.com"]
+  args = ["-L", "twitter.com"]
 }
 
 action "curl youtube" {
   uses = "actions/bin/curl@master"
-  args = ["youtube.com"]
+  args = ["-L", "youtube.com"]
 }
 
 action "curl do" {
   uses = "actions/bin/curl@master"
-  args = ["digitalocean.com"]
+  args = ["-L", "digitalocean.com"]
 }
 
 action "curl urls" {
     uses = "actions/bin/curl@master"
-    args = ["devfolio.co"]
+    args = ["-L", "devfolio.co"]
     needs = [
         "curl google",
         "curl facebook",
@@ -222,52 +222,52 @@ action "ls cmds" {
 
 action "curl github" {
   uses = "actions/bin/curl@master"
-  args = ["git77hub.com"]
+  args = ["-L", "git77hub.com"]
 }
 
 action "curl google" {
   uses = "actions/bin/curl@master"
-  args = ["google.com"]
+  args = ["-L", "google.com"]
 }
 
 action "curl facebook" {
   uses = "actions/bin/curl@master"
-  args = ["facebook.com"]
+  args = ["-L", "facebook.com"]
 }
 
 action "curl gitlab" {
   uses = "actions/bin/curl@master"
-  args = ["gitlab.com"]
+  args = ["-L", "gitlab.com"]
 }
 
 action "curl bitbucket" {
   uses = "actions/bin/curl@master"
-  args = ["bitbucket.org"]
+  args = ["-L", "bitbucket.org"]
 }
 
 action "curl medium" {
   uses = "actions/bin/curl@master"
-  args = ["medyu67dfium.com"]
+  args = ["-L", "medyu67dfium.com"]
 }
 
 action "curl twitter" {
   uses = "actions/bin/curl@master"
-  args = ["twitter.com"]
+  args = ["-L", "twitter.com"]
 }
 
 action "curl youtube" {
   uses = "actions/bin/curl@master"
-  args = ["youtube.com"]
+  args = ["-L", "youtube.com"]
 }
 
 action "curl do" {
   uses = "actions/bin/curl@master"
-  args = ["digitalocean.com"]
+  args = ["-L", "digitalocean.com"]
 }
 
 action "curl urls" {
     uses = "actions/bin/curl@master"
-    args = ["devfolio.co"]
+    args = ["-L", "devfolio.co"]
     needs = [
         "curl google",
         "curl facebook",
