@@ -55,6 +55,7 @@ def cli(ctx, wfile, recursive):
         digraph = "\n".join(
             [
                 "digraph G {",
+                workflow_name + " [shape=diamond]",
                 graph_str,
                 "}"
             ]
