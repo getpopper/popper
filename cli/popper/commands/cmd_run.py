@@ -4,7 +4,7 @@ import click
 
 import popper.cli
 from popper.cli import pass_context, log
-from popper.gha import Workflow
+from popper.gha import WorkflowRunner
 from popper import utils as pu
 from popper import log as logging
 
@@ -101,7 +101,7 @@ def cli(ctx, action, wfile, workspace, reuse,
 
 def run_pipeline(action, wfile, workspace, reuse,
                  dry_run, parallel):
-    pipeline = Workflow(wfile, workspace, dry_run,
+    pipeline = WorkflowRunner(wfile, workspace, dry_run,
                         reuse, parallel)
 
     # Saving workflow instance for signal handling
