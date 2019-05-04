@@ -8,7 +8,7 @@ from popper.cli import log
 def decode(line):
     """Make treatment of stdout Python 2/3 compatible"""
     if isinstance(line, bytes):
-        return line.decode('utf-8')
+        return line.decode('cp1252').encode('utf-8')
     return line
 
 

@@ -538,13 +538,10 @@ class DockerRunner(ActionRunner):
             return 0
         self.container.start()
         cout = self.container.logs(stream=True)
-        tmp = ""
-        for line in cout:
-            try:
-                tmp += pu.decode(line)
-            except UnicodeDecodeError:
-                pass
-        log.action_info(tmp)
+        b = bytearray()
+        for byte in cout:
+            b.extend(byte)
+        log.action_info(b.decode(encoding='utf-8'))
 
         return self.container.wait()['StatusCode']
 
