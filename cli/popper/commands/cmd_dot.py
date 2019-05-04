@@ -30,10 +30,8 @@ def cli(ctx, wfile, recursive):
     def add_to_graph(graph_set, wf, parent, children):
         """Recursively goes through "next" and adds corresponding actions
         """
-        _parent = parent.replace(' ', '_').replace('-', '_')
         for n in children:
-            _n = n.replace(' ', '_').replace('-', '_')
-            graph_set.add("  {} -> {};".format(_parent, _n))
+            graph_set.add('  "{}" -> "{}";'.format(parent, n))
             for M in wf.get_action(n).get('next', []):
                 graph_set = add_to_graph(graph_set, wf, n, [M])
 
@@ -49,16 +47,16 @@ def cli(ctx, wfile, recursive):
     for wfile in wfile_list:
         pipeline = WorkflowRunner(wfile, False, False, False, False, True)
         wf = pipeline.wf
-        workflow_name = wf.name.replace(' ', '_').replace('-', '_')
+        workflow_name = wf.name
         graph_set = add_to_graph(set(), wf, workflow_name, wf.root)
-        graph_str = "\n".join(graph_set)
-        workflow_attr = " [ shape=diamond, bordercolor=blue, border=bold]"
-        digraph = "\n".join(
+        graph_str = '\n'.join(graph_set)
+        workflow_attr = '[ shape=diamond, bordercolor=blue, border=bold]'
+        digraph = '\n'.join(
             [
-                "digraph G {",
-                workflow_name + workflow_attr,
+                'digraph G {',
+                '"{}" {}'.format(workflow_name, workflow_attr),
                 graph_str,
-                "}"
+                '}'
             ]
         )
         log.info(digraph)
