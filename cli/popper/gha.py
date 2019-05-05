@@ -11,6 +11,7 @@ from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 import hcl
 import yaml
 import docker
+import vagrant
 from spython.main import Client as sclient
 
 import popper.cli
@@ -73,7 +74,8 @@ class WorkflowRunner(object):
 
         for _, a in self.wf.actions:
             if ('docker://' in a['uses'] or 'shub://' in a['uses'] or
-                    './' in a['uses'] or a['uses'] == 'sh'):
+                './' in a['uses'] or 'vagrant://' in a['uses'] or
+                    a['uses'] == 'sh'):
                 continue
 
             url, service, usr, repo, action_dir, version = scm.parse(a['uses'])
@@ -123,16 +125,26 @@ class WorkflowRunner(object):
                     self.dry_run)
                 continue
 
+            if 'vagrant://' in a['uses']:
+                a['runner'] = VagrantRunner(
+                    a, self.workspace, self.env,
+                    self.dry_run)
+                continue
+
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
                         a, self.workspace, self.env,
                         self.dry_run)
-                elif os.path.exists(os.path.join(a['uses'],
-                                                 'Singularity')):
+                elif os.path.exists(os.path.join(a['uses'], 'Singularity')):
                     a['runner'] = SingularityRunner(
                         a, self.workspace, self.env,
                         self.dry_run)
+                elif os.path.exists(os.path.join(a['uses'], 'Vagrantfile')):
+                    a['runner'] = VagrantRunner(
+                        a, self.workspace, self.env,
+                        self.dry_run
+                    )
                 else:
                     a['runner'] = HostRunner(
                         a, self.workspace, self.env,
@@ -143,6 +155,8 @@ class WorkflowRunner(object):
                                            'Dockerfile')
             singularityfile_path = os.path.join(a['repo_dir'], a['action_dir'],
                                                 'Singularity')
+            vagrantfile_path = os.path.join(a['repo_dir'], a['action_dir'],
+                                            'Vagrantfile')
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
@@ -152,6 +166,11 @@ class WorkflowRunner(object):
                 a['runner'] = SingularityRunner(
                     a, self.workspace, self.env,
                     self.dry_run)
+            elif os.path.exists(vagrantfile_path):
+                a['runner'] = VagrantRunner(
+                    a, self.workspace, self.env,
+                    self.dry_run
+                )
             else:
                 a['runner'] = HostRunner(
                     a, self.workspace, self.env,
@@ -173,7 +192,7 @@ class WorkflowRunner(object):
             'GITHUB_REPOSITORY': repo_id,
             'GITHUB_EVENT_NAME': self.wf.on,
             'GITHUB_EVENT_PATH': '{}/{}'.format(self.workspace,
-                                                 'workflow/event.json'),
+                                                'workflow/event.json'),
             'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
         }
@@ -278,6 +297,9 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
+    """Action runner to run Docker Actions.
+    """
+
     def __init__(self, action, workspace, env, dry):
         super(DockerRunner, self).__init__(action, workspace, env, dry)
         self.cid = self.action['name'].replace(' ', '_')
@@ -411,7 +433,7 @@ class DockerRunner(ActionRunner):
 
 
 class SingularityRunner(ActionRunner):
-    """Singularity Action Runner Class
+    """Action runner to run Singularity Actions.
     """
 
     def __init__(self, action, workspace, env, dry):
@@ -537,10 +559,114 @@ class SingularityRunner(ActionRunner):
         return ecode
 
 
+class VagrantRunner(ActionRunner):
+    """Action runner to run Vagrant Actions.
+    """
+
+    def __init__(self, action, workspace, env, dry):
+        super(VagrantRunner, self).__init__(action, workspace, env, dry)
+
+    def run(self, reuse=False):
+        root = scm.get_git_root_folder()
+
+        if 'vagrant://' in self.action['uses']:
+            uses = self.action['uses'][10:]
+            box_name = uses
+            uses = uses.split('/')
+            box_url = 'https://app.vagrantup.com/' + \
+                uses[0] + '/boxes/' + uses[1]
+            path = os.path.abspath(os.path.join(
+                root, box_name
+            ))
+            self.vagrant = vagrant.Vagrant(path)
+            if not os.path.exists(path):
+                os.makedirs(path)
+            elif os.path.isfile(os.path.join(path, 'Vagrantfile')):
+                os.remove(os.path.join(path, 'Vagrantfile'))
+
+            self.vagrant_init(box_name, box_url)
+        elif './' in self.action['uses']:
+            path = os.path.abspath(os.path.join(
+                root, self.action['uses']
+            ))
+            self.vagrant = vagrant.Vagrant(path)
+        else:
+            path = os.path.abspath(os.path.join(self.action['repo_dir'],
+                                                self.action['action_dir']))
+            self.vagrant = vagrant.Vagrant(path)
+
+        if not reuse:
+            if self.vagrant_exists(path):
+                self.vagrant_destroy()
+
+        popper.cli.vagrant_list.append(self.vagrant)
+        e = self.vagrant_up()
+
+        if e != 0:
+            log.fail('Action {} failed!'.format(self.action['name']))
+
+        cmd = []
+        if self.action.get('runs', None):
+            cmd.extend(self.action['runs'])
+        if self.action.get('args', None):
+            cmd.extend(self.action['args'])
+        self.vagrant_ssh(' '.join(cmd))
+
+    def setenv(self, k, v):
+        os.environ[k] = v
+
+    def vagrant_init(self, box_name, box_url):
+        log.info('{}[{}] vagrant init {} {}'.format(
+            self.msg_prefix, self.action['name'], box_name, box_url)
+        )
+        if not self.dry_run:
+            self.vagrant.init(box_name, box_url)
+
+    def vagrant_up(self):
+        log.info('{}[{}] vagrant up'.format(
+            self.msg_prefix, self.action['name'])
+        )
+        ecode = None
+        if not self.dry_run:
+            output = self.vagrant.up(stream_output=True)
+            try:
+                for line in output:
+                    log.info(line)
+                ecode = 0
+            except subprocess.CalledProcessError as ex:
+                ecode = ex.returncode
+        else:
+            ecode = 0
+        return ecode
+
+    def vagrant_exists(self, path):
+        vms = self.vagrant.global_status()
+        return path in map(lambda v: v.path, vms)
+
+    def vagrant_destroy(self):
+        log.info('{}[{}] vagrant destroy'.format(
+            self.msg_prefix, self.action['name'])
+        )
+        if not self.dry_run:
+            self.vagrant.destroy()
+
+    def vagrant_ssh(self, cmd):
+        if cmd:
+            log.info('{}[{}] vagrant ssh --command {}'.format(
+                self.msg_prefix, self.action['name'], cmd)
+            )
+            if not self.dry_run:
+                try:
+                    output = self.vagrant.ssh(command=cmd)
+                    log.info(output)
+                except subprocess.CalledProcessError as ex:
+                    log.fail('Failed with exit code {}'.format(ex.returncode))
+
+
 class HostRunner(ActionRunner):
+    """Action runner to run actions on host machine.
     """
-    Host Action Runner Class.
-    """
+
     def __init__(self, action, workspace, env, dry):
         super(HostRunner, self).__init__(action, workspace, env, dry)
         self.cwd = os.getcwd()

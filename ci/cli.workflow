@@ -91,6 +91,12 @@ action "test sh" {
   runs = "sh"
 }
 
+action "test vagrant docker" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "vagrant-docker"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -107,6 +113,8 @@ action "end" {
     "test reuse",
     "test scaffold",
     "test singularity",
-    "test validate"
+    "test validate",
+    "test sh",
+    "test vagrant docker"
   ]
 }

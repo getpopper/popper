@@ -1,0 +1,51 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+export VAGRANT_SECRET=12345
+
+mkdir -p actions/virtualbox-example
+
+cat <<EOF > actions/virtualbox-example/Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.box = "hashicorp/precise32"
+  config.vm.provision "shell", inline: <<-SHELL
+    sudo apt-get update
+    sudo apt-get install -y nginx
+  SHELL
+end
+EOF
+
+cat <<EOF > main.workflow
+workflow "test vagrant workrunner"{
+    resolves = [
+        "vagrant hub action",
+        "remote action",
+        "local action with virtualbox"
+    ]
+}
+
+action "vagrant hub action" {
+    uses = "vagrant://ubuntu/xenial64"
+    runs = ["echo"]
+    args = ["Hello", "World"]
+}
+
+action "remote action" {
+    uses = "JayjeetAtGithub/actions-demo/ls@master"
+    args = ["ls", "-la"]
+}
+
+action "local action with virtualbox" {
+    uses = "./actions/virtualbox-example"
+    runs = ["wget"]
+    args = ["facebook.com"]
+}
+EOF
+
+popper run --dry-run
+popper run --debug
+popper run --reuse

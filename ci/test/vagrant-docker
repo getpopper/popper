@@ -1,0 +1,34 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+mkdir -p actions/docker-example
+
+cat <<EOF > actions/docker-example/Vagrantfile
+Vagrant.configure("2") do |config|
+  config.vm.provider "docker" do |d|
+    d.name = "ubuntu-container"
+    d.image = "ubuntu"
+    d.cmd = ["tail", "-f", "/dev/null"]
+  end
+end
+EOF
+
+cat <<EOF > main.workflow
+workflow "test vagrant workrunner"{
+    resolves = [
+        "local action with docker"
+    ]
+}
+
+action "local action with docker" {
+    uses = "./actions/docker-example"
+}
+EOF
+
+popper run --debug
+
+docker stop ubuntu-container

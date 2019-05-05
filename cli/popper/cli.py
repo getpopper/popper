@@ -62,6 +62,7 @@ def cli(ctx):
 
 docker_list = list()
 process_list = list()
+vagrant_list = list()
 interrupt_params = None
 flist = None
 
@@ -84,5 +85,8 @@ def signal_handler(sig, frame):
     for container in docker_list:
         log.info("Stopping container '{}'".format(container.name))
         container.stop(timeout=1)
+
+    for vm in vagrant_list:
+        vm.halt(force=True)
 
     sys.exit(0)
