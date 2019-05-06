@@ -85,6 +85,12 @@ action "test quiet" {
   runs = "quiet"
 }
 
+action "test sh" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "sh"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
