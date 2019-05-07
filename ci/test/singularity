@@ -10,7 +10,7 @@ mkdir actions/example
 
 export SECRET_KEY=1234
 
-cat <<EOF > actions/example/singularity.def
+cat <<EOF > actions/example/Singularity
 Bootstrap: docker
 From: ubuntu:14.04
 
@@ -33,7 +33,7 @@ action "shub action" {
 }
 
 action "public action" {
-  uses = "JayjeetAtGithub/actions/wget@master"
+  uses = "JayjeetAtGithub/actions-demo/wget@master"
   args = ["github.com"]
 }
 
