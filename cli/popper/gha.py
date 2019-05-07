@@ -123,7 +123,7 @@ class WorkflowRunner(object):
                         a, self.workspace, self.env,
                         self.dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
-                                                 'singularity.def')):
+                                                 'Singularity')):
                     a['runner'] = SingularityRunner(
                         a, self.workspace, self.env,
                         self.dry_run)
@@ -136,7 +136,7 @@ class WorkflowRunner(object):
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
                                            'Dockerfile')
             singularityfile_path = os.path.join(a['repo_dir'], a['action_dir'],
-                                                'singularity.def')
+                                                'Singularity')
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
@@ -472,7 +472,7 @@ class SingularityRunner(ActionRunner):
     def singularity_build(self, path):
         """Builds an image from a recipefile.
         """
-        recipefile_path = os.path.join(path, 'singularity.def')
+        recipefile_path = os.path.join(path, 'Singularity')
         log.info('{}[{}] singularity build {} {}'.format(
             self.msg_prefix, self.action['name'],
             self.image_name, recipefile_path)

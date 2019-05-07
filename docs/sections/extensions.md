@@ -65,14 +65,14 @@ An action executes in a Singularity container when:
     will pull the container from the [singularity 
     hub](https://singularity-hub.org).
 
-  * A `singularity.def` file is found in the action folder. For 
+  * A `Singularity` file is found in the action folder. For 
     example, if `./actions/mycontainer` is the value of the `uses` 
-    attribute in an action block, and a `singularity.def` is found, 
+    attribute in an action block, and a `Singularity` is found, 
     Popper builds and executes a singularity container.
 
-  * A `singularity.def` is found in the public repository of the given 
+  * A `Singularity` is found in the public repository of the given 
     action. If an action resides in a public Git repository, and the 
-    path to the action contains a `singularity.def` file, it will get 
+    path to the action contains a `Singularity` file, it will get 
     executed in Singularity.
 
 ### Host
