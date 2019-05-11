@@ -109,18 +109,26 @@ Another way of executing actions on the host is to use the special
 ```hcl
 action "run on host" {
   uses = "sh"
-  runs = "ls -la"
+  args = ["ls", "-la"]
+}
+
+action "another execution on host" {
+  uses = "sh"
+  runs = "myscript"
+  args = "args"
 }
 ```
 
-The above runs `ls` on the root of the repository folder (the 
-repository storing the `.workflow` file). This option allows users to 
-execute arbitrary commands or scripts contained in the repository 
-without having to define an action folder. The downside of this 
-approach is that, depending on the command being executed, the 
+The above args `ls -la` on the root of the repository folder (the
+repository storing the `.workflow` file). This option allows users to
+execute arbitrary commands or scripts contained in the repository
+without having to define an action folder. The downside of this
+approach is that, depending on the command being executed, the
 workflow might not be portable.
 
-> **NOTE**: The working directory for actions that run on the host is 
-> the root folder of the project. Thus, to ensure portability, scripts 
-> should use paths relative to the root of the folder. If absolute 
+> **NOTE**: The working directory for actions that run on the host
+> depends on how the action is defined. If an action folder is present,
+> the `$PWD` is set to the action folder. If `uses='sh'` is used, the
+> `$PWD` is set to the root of the project. Thus, to ensure portability,
+> scripts should use paths relative to the root of the folder. If absolute
 > paths are needed, the `$GITHUB_WORKSPACE` variable can be used.
