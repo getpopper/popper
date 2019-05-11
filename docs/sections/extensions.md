@@ -107,15 +107,15 @@ Another way of executing actions on the host is to use the special
 `sh` value for the `uses` attribute. For example:
 
 ```hcl
-action "run command on host" {
+action "run on host" {
   uses = "sh"
   args = ["ls", "-la"]
 }
 
-action "run script on host" {
+action "another execution on host" {
   uses = "sh"
-  runs = ["runscript"]
-  args = ["arguments"]
+  runs = "myscript"
+  args = "args"
 }
 ```
 
