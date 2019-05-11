@@ -1,0 +1,305 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+PY_VERSION=$( (python --version) 2>&1)
+
+## Serial Executions
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = ["sh"]
+}
+
+action "sh" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+EOF
+
+popper run
+
+cat <<EOF > script
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+
+chmod +x script
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = ["sh"]
+}
+
+action "sh" {
+    uses = "sh"
+    runs = ["script"]
+    args = ["Popper"]
+}
+EOF
+
+popper run
+
+
+cat <<EOF > script
+#!/bin/bash
+set -ex
+echo "Hello World"
+EOF
+
+chmod +x script
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = ["sh"]
+}
+
+action "sh" {
+    uses = "sh"
+    runs = ["script"]
+}
+EOF
+
+popper run
+
+
+## Parallel Executions
+
+if [[ $PY_VERSION != *"Python 2.7"* ]]; then
+
+cat <<EOF > script1
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script1
+
+cat <<EOF > script2
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script2
+
+cat <<EOF > script3
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script3
+
+cat <<EOF > script4
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script4
+
+cat <<EOF > script5
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script5
+
+cat <<EOF > script6
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script6
+
+cat <<EOF > script7
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script7
+
+cat <<EOF > script8
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script8
+
+cat <<EOF > script9
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script9
+
+cat <<EOF > script10
+#!/bin/bash
+set -ex
+echo "Hello from \$*"
+EOF
+chmod +x script10
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = ["sh"]
+}
+
+action "sh1" {
+    uses = "sh"
+    runs = ["script1"]
+    args = ["Popper"]
+}
+
+action "sh2" {
+    uses = "sh"
+    runs = ["script2"]
+    args = ["Popper"]
+}
+
+action "sh3" {
+    uses = "sh"
+    runs = ["script3"]
+    args = ["Popper"]
+}
+
+action "sh4" {
+    uses = "sh"
+    runs = ["script4"]
+    args = ["Popper"]
+}
+
+action "sh5" {
+    uses = "sh"
+    runs = ["script5"]
+    args = ["Popper"]
+}
+
+action "sh6" {
+    uses = "sh"
+    runs = ["script6"]
+    args = ["Popper"]
+}
+
+action "sh7" {
+    uses = "sh"
+    runs = ["script7"]
+    args = ["Popper"]
+}
+
+action "sh8" {
+    uses = "sh"
+    runs = ["script8"]
+    args = ["Popper"]
+}
+
+action "sh9" {
+    uses = "sh"
+    runs = ["script9"]
+    args = ["Popper"]
+}
+
+action "sh10" {
+    uses = "sh"
+    runs = ["script10"]
+    args = ["Popper"]
+}
+
+action "sh" {
+    needs = [
+        "sh1",
+        "sh2",
+        "sh3",
+        "sh4",
+        "sh5",
+        "sh6",
+        "sh7",
+        "sh8",
+        "sh9",
+        "sh10"
+    ]
+    uses = "sh"
+    args = ["echo", "Running sh action parallely..."]
+}
+EOF
+
+count=$(popper run --parallel --debug | grep -c 'Action ran successfully !')
+test "$count" -eq 11
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = ["sh"]
+}
+
+action "sh1" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh2" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh3" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh4" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh5" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh6" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh7" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh8" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh9" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh10" {
+    uses = "sh"
+    args = ["ls", "-l"]
+}
+
+action "sh" {
+    needs = [
+        "sh1",
+        "sh2",
+        "sh3",
+        "sh4",
+        "sh5",
+        "sh6",
+        "sh7",
+        "sh8",
+        "sh9",
+        "sh10"
+    ]
+    uses = "sh"
+    args = ["echo", "Running sh action parallely..."]
+}
+EOF
+
+count=$(popper run --parallel --debug | grep -c 'Action ran successfully !')
+test "$count" -eq 11
+fi

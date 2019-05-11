@@ -73,7 +73,7 @@ class WorkflowRunner(object):
 
         for _, a in self.wf.actions:
             if ('docker://' in a['uses'] or 'shub://' in a['uses'] or
-                    './' in a['uses']):
+                    './' in a['uses'] or a['uses'] == 'sh'):
                 continue
 
             url, service, usr, repo, action_dir, version = scm.parse(a['uses'])
@@ -105,6 +105,12 @@ class WorkflowRunner(object):
     def instantiate_runners(self):
         """Factory of ActionRunner instances, one for each action"""
         for _, a in self.wf.actions:
+            if a['uses'] == 'sh':
+                a['runner'] = HostRunner(
+                    a, self.workspace, self.env,
+                    self.dry_run)
+                continue
+
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, self.workspace, self.env,
@@ -166,7 +172,7 @@ class WorkflowRunner(object):
             'GITHUB_ACTOR': 'popper',
             'GITHUB_REPOSITORY': repo_id,
             'GITHUB_EVENT_NAME': self.wf.on,
-            'GITHUB_EVENT_PATH': '/{}/{}'.format(self.workspace,
+            'GITHUB_EVENT_PATH': '{}/{}'.format(self.workspace,
                                                  'workflow/event.json'),
             'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
@@ -532,23 +538,35 @@ class SingularityRunner(ActionRunner):
 
 
 class HostRunner(ActionRunner):
+    """
+    Host Action Runner Class.
+    """
     def __init__(self, action, workspace, env, dry):
         super(HostRunner, self).__init__(action, workspace, env, dry)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
-        cmd = self.action.get('runs', ['entrypoint.sh'])
-        cmd[0] = os.path.join('./', cmd[0])
-        cmd.extend(self.action.get('args', []))
+        root = scm.get_git_root_folder()
+        if self.action['uses'] == 'sh':
+            cmd = self.action.get('runs', [])
+            if cmd:
+                cmd[0] = os.path.join(root, cmd[0])
+            cmd.extend(self.action.get('args', []))
 
-        cwd = self.cwd
-        if not self.dry_run:
-            if 'repo_dir' in self.action:
-                os.chdir(self.action['repo_dir'])
-                cmd[0] = os.path.join(self.action['repo_dir'], cmd[0])
-            else:
-                os.chdir(os.path.join(cwd, self.action['uses']))
-                cmd[0] = os.path.join(cwd, self.action['uses'], cmd[0])
+            if not self.dry_run:
+                os.chdir(root)
+        else:
+            cmd = self.action.get('runs', ['entrypoint.sh'])
+            cmd[0] = os.path.join('./', cmd[0])
+            cmd.extend(self.action.get('args', []))
+
+            if not self.dry_run:
+                if 'repo_dir' in self.action:
+                    os.chdir(self.action['repo_dir'])
+                    cmd[0] = os.path.join(self.action['repo_dir'], cmd[0])
+                else:
+                    os.chdir(os.path.join(root, self.action['uses']))
+                    cmd[0] = os.path.join(root, self.action['uses'], cmd[0])
 
         os.environ.update(self.action.get('env', {}))
 
@@ -573,6 +591,7 @@ class HostRunner(ActionRunner):
                 line_decoded = pu.decode(line)
                 log.info(line_decoded[:-1])
 
+            p.wait()
             ecode = p.poll()
             log.debug('Code returned by process: {}'.format(ecode))
 
@@ -587,7 +606,7 @@ class HostRunner(ActionRunner):
         for i in self.action.get('env', {}):
             os.environ.pop(i)
 
-        os.chdir(cwd)
+        os.chdir(self.cwd)
 
         if ecode != 0:
             log.fail("Action '{}' failed.".format(self.action['name']))
