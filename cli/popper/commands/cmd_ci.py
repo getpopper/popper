@@ -123,8 +123,9 @@ def cli(ctx, service, with_singularity):
         if with_singularity:
             if service in ['jenkins', 'gitlab']:
                 log.fail(
-                    'Scaffolding of singularity install script not supported for '
-                    'Jenkins and Gitlab CI. Please do it manually.')
+                    'Scaffolding of Singularity install script is not '
+                    'supported for Jenkins and Gitlab CI. Include it '
+                    'manually depending upon the CI\'s OS.')
             scripts.append(install_scripts['singularity'])
 
         if scripts:
