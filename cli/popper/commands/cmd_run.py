@@ -15,6 +15,12 @@ from popper import log as logging
 @click.argument(
     'action', required=False)
 @click.option(
+    '--with-dependencies',
+    help='Run the action with all its dependencies.',
+    required=False,
+    is_flag=True
+)
+@click.option(
     '--workspace',
     help='Path to workspace folder.',
     required=False,
@@ -81,7 +87,7 @@ from popper import log as logging
 )
 @pass_context
 def cli(ctx, action, wfile, skip, workspace, reuse,
-        recursive, quiet, debug, dry_run, parallel, log_file):
+        recursive, quiet, debug, dry_run, parallel, log_file, with_dependencies):
     """Executes one or more pipelines and reports on their status.
     """
     popper.scm.get_git_root_folder()
@@ -100,14 +106,14 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
         for wfile in wfile_list:
             log.info("Found and running workflow at " + wfile)
             run_pipeline(action, wfile, skip, workspace, reuse,
-                         dry_run, parallel)
+                         dry_run, parallel, with_dependencies)
     else:
         run_pipeline(action, wfile, skip, workspace, reuse,
-                     dry_run, parallel)
+                     dry_run, parallel, with_dependencies)
 
 
 def run_pipeline(action, wfile, skip, workspace, reuse,
-                 dry_run, parallel):
+                 dry_run, parallel, with_dependencies):
 
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
@@ -116,6 +122,10 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
 
     # Saving workflow instance for signal handling
     popper.cli.interrupt_params['parallel'] = parallel
+
+    if (not action) and with_dependencies:
+        log.warn("--with-dependencies works only when an [action] argument "
+                 "is passed.")
 
     if reuse:
         log.warn("Using --reuse ignores any changes made to an action's logic "
@@ -127,7 +137,7 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    pipeline.run(action, skip, workspace, reuse, dry_run, parallel)
+    pipeline.run(action, skip, workspace, reuse, dry_run, parallel, with_dependencies)
 
     if action:
         log.info('Action "{}" finished successfully.'.format(action))

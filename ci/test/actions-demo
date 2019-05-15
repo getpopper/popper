@@ -38,9 +38,38 @@ cat <<EOF > main.workflow
 workflow "clone" {
   resolves = "test"
 }
+
+action "dependency four" {
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
+action "dependency three" {
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
+action "dependency two" {
+  needs = ["dependency three", "dependency four"]
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
+action "dependency one" {
+  needs = ["dependency two"]
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
 action "test" {
+  needs = ["dependency one"]
   uses = "https://gitlab.com/barbaragd/action-test@master"
 }
 EOF
 
-popper run
+# popper run
+
+# test --with-dependencies flag
+popper run test
+popper run --with-dependencies test
+popper run --with-dependencies 'dependency one'

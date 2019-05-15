@@ -148,7 +148,7 @@ class WorkflowRunner(object):
                     dry_run)
 
     def run(self, action, skip, workspace, reuse, dry_run,
-            parallel, skip_secrets_prompt=False):
+            parallel, with_dependencies, skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = workspace
 
