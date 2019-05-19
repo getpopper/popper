@@ -1,0 +1,127 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+popper run a1
+popper run a2
+popper run b
+popper run c
+popper run d
+
+! popper run --skip e1
+! popper run --skip a1 --skip a2
+popper run --skip a1 --dry-run
+popper run --skip a2 --dry-run
+! popper run --skip b --skip c
+popper run --skip b --dry-run
+popper run --skip c --dry-run
+popper run --skip d --dry-run
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "wrong"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+! popper run
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b1", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+! popper run

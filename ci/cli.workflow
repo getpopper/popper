@@ -91,6 +91,12 @@ action "test sh" {
   runs = "sh"
 }
 
+action "test skip" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "skip"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -107,6 +113,8 @@ action "end" {
     "test reuse",
     "test scaffold",
     "test singularity",
-    "test validate"
+    "test validate",
+    "test skip",
+    "test sh"
   ]
 }

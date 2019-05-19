@@ -2,7 +2,7 @@ import click
 
 from popper import utils as pu
 from popper.cli import pass_context, log
-from popper.gha import WorkflowRunner
+from popper.parser import Workflow
 
 
 @click.option(
@@ -13,6 +13,13 @@ from popper.gha import WorkflowRunner
     ),
     required=False,
     default=None
+)
+@click.option(
+    '--skip',
+    help=('Skip the list of actions specified.'),
+    required=False,
+    default=list(),
+    multiple=True
 )
 @click.option(
     '--recursive',
@@ -29,7 +36,7 @@ from popper.gha import WorkflowRunner
 )
 @click.command('dot', short_help='Generate a graph in the .dot format.')
 @pass_context
-def cli(ctx, wfile, recursive, colors):
+def cli(ctx, wfile, skip, recursive, colors):
     """
     Creates a graph in the .dot format representing the workflow.
     """
@@ -58,10 +65,12 @@ def cli(ctx, wfile, recursive, colors):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        pipeline = WorkflowRunner(wfile, False, False, False, False, True)
-        wf = pipeline.wf
+        wf = Workflow(wfile)
+        wf.skip_actions(skip)
+        wf.check_for_unreachable_actions()
+
         node_attrs = (
-          'shape=box, style="filled{}", fillcolor=transparent{}'
+            'shape=box, style="filled{}", fillcolor=transparent{}'
         )
         wf_attr = node_attrs.format(',rounded', ',color=red' if colors else '')
         act_attr = node_attrs.format('', ',color=cyan' if colors else '')

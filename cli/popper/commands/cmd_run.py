@@ -5,9 +5,9 @@ import click
 import popper.cli
 from popper.cli import pass_context, log
 from popper.gha import WorkflowRunner
+from popper.parser import Workflow
 from popper import utils as pu
 from popper import log as logging
-
 
 
 @click.command(
@@ -35,6 +35,13 @@ from popper import log as logging
     ),
     required=False,
     default=None
+)
+@click.option(
+    '--skip',
+    help=('Skip the list of actions specified.'),
+    required=False,
+    default=list(),
+    multiple=True
 )
 @click.option(
     '--recursive',
@@ -73,7 +80,7 @@ from popper import log as logging
     required=False
 )
 @pass_context
-def cli(ctx, action, wfile, workspace, reuse,
+def cli(ctx, action, wfile, skip, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel, log_file):
     """Executes one or more pipelines and reports on their status.
     """
@@ -92,20 +99,23 @@ def cli(ctx, action, wfile, workspace, reuse,
             log.fail("Recursive search couldn't find any .workflow files ")
         for wfile in wfile_list:
             log.info("Found and running workflow at " + wfile)
-            run_pipeline(action, wfile, workspace, reuse,
+            run_pipeline(action, wfile, skip, workspace, reuse,
                          dry_run, parallel)
     else:
-        run_pipeline(action, wfile, workspace, reuse,
+        run_pipeline(action, wfile, skip, workspace, reuse,
                      dry_run, parallel)
 
 
-def run_pipeline(action, wfile, workspace, reuse,
+def run_pipeline(action, wfile, skip, workspace, reuse,
                  dry_run, parallel):
-    pipeline = WorkflowRunner(wfile, workspace, dry_run,
-                        reuse, parallel)
+
+    # Initialize a Worklow. During initialization all the validation
+    # takes place automatically.
+    wf = Workflow(wfile)
+    pipeline = WorkflowRunner(wf)
 
     # Saving workflow instance for signal handling
-    popper.cli.interrupt_params = pipeline
+    popper.cli.interrupt_params['parallel'] = parallel
 
     if reuse:
         log.warn("Using --reuse ignores any changes made to an action's logic "
@@ -117,7 +127,7 @@ def run_pipeline(action, wfile, workspace, reuse,
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    pipeline.run(action, reuse, parallel)
+    pipeline.run(action, skip, workspace, reuse, dry_run, parallel)
 
     if action:
         log.info('Action "{}" finished successfully.'.format(action))

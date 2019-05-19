@@ -62,7 +62,7 @@ def cli(ctx):
 
 docker_list = list()
 process_list = list()
-interrupt_params = None
+interrupt_params = dict()
 flist = None
 
 
@@ -70,7 +70,7 @@ def signal_handler(sig, frame):
 
     log.info('Caught Ctrl-C signal! Stopping running actions.')
 
-    if interrupt_params.parallel:
+    if interrupt_params['parallel']:
         for future in flist:
             future.cancel()
 
