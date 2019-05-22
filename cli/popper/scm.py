@@ -106,7 +106,9 @@ def clone(url, org, repo, repo_parent_dir, version=None):
     """
     repo_dir = os.path.join(repo_parent_dir, repo)
     if os.path.exists(repo_dir):
-        shutil.rmtree(repo_dir)
+        cloned_repo = git.Repo(repo_dir)
+        cloned_repo.remotes.origin.pull(version)
+        return
 
     if '@' in url:
         url += ':'
