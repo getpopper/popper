@@ -5,6 +5,7 @@ import subprocess
 import multiprocessing as mp
 from builtins import dict, input, str
 from distutils.dir_util import copy_tree
+from distutils.spawn import find_executable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
@@ -173,7 +174,7 @@ class WorkflowRunner(object):
             'GITHUB_REPOSITORY': repo_id,
             'GITHUB_EVENT_NAME': self.wf.on,
             'GITHUB_EVENT_PATH': '{}/{}'.format(self.workspace,
-                                                 'workflow/event.json'),
+                                                'workflow/event.json'),
             'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
         }
@@ -283,6 +284,10 @@ class DockerRunner(ActionRunner):
         self.cid = self.action['name'].replace(' ', '_')
         self.docker_client = docker.from_env()
         self.container = None
+        if not find_executable('docker'):
+            log.fail(
+                'Could not find the docker command.'
+            )
 
     def run(self, reuse=False):
         build = True
@@ -418,6 +423,10 @@ class SingularityRunner(ActionRunner):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 dry)
         self.pid = self.action['name'].replace(' ', '_')
+        if not find_executable('singularity'):
+            log.fail(
+                'Could not find the singularity command.'
+            )
 
     def run(self, reuse=False):
         """Runs the singularity action
@@ -541,6 +550,7 @@ class HostRunner(ActionRunner):
     """
     Host Action Runner Class.
     """
+
     def __init__(self, action, workspace, env, dry):
         super(HostRunner, self).__init__(action, workspace, env, dry)
         self.cwd = os.getcwd()
