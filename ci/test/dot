@@ -11,7 +11,7 @@ cd github-actions-demo
 
 popper dot > dot_output
 
-grep "digraph G { graph [" dot_output
+grep "digraph G .* graph" dot_output
 grep "\"branch-filter\" -> \"deploy\";" dot_output
 grep "\"install\" -> \"lint\";" dot_output
 grep "\"install\" -> \"test\";" dot_output
@@ -29,7 +29,7 @@ mkdir dummy
 mv .github/main.workflow dummy/.
 popper dot --recursive > dot_output
 
-grep "digraph G { graph [" dot_output
+grep "digraph G .* graph" dot_output
 grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
 grep "\"Build and Deploy\" -> \"Login to ECR\";" dot_output
 grep "\"Build and Deploy\" -> \"Build Docker image\";" dot_output
@@ -48,7 +48,7 @@ grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
 cd "$test_repo_path"
 popper dot --wfile example-aws/dummy/main.workflow > dot_output
 
-grep "digraph G { graph [" dot_output
+grep "digraph G .* graph" dot_output
 grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
 grep "\"Build and Deploy\" -> \"Login to ECR\";" dot_output
 grep "\"Build and Deploy\" -> \"Build Docker image\";" dot_output
@@ -64,8 +64,8 @@ grep "\"Deploy branch filter\" -> \"Deploy to EKS\";" dot_output
 grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
 
 # test no color
-! grep ".*[\"Verify EKS deployment\"];.* color" dot_output
+! grep ".*\"Verify EKS deployment\".*color=" dot_output
 
 # test with color
-popper dot --color --wfile example-aws/dummy/main.workflow > dot_output
-grep ".*[\"Verify EKS deployment\"];.* color" dot_output
+popper dot --colors --wfile example-aws/dummy/main.workflow > dot_output
+grep ".*\"Verify EKS deployment\".*color=" dot_output

@@ -64,7 +64,7 @@ action "test dot" {
 action "test singularity" {
   needs = "lint"
   uses = "./ci/test"
-  runs = "singularity"
+  runs = "singularized"
 }
 
 action "test interrupt" {
