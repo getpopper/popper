@@ -11,13 +11,13 @@ cd github-actions-demo
 
 popper dot > dot_output
 
-grep "digraph G" dot_output
-grep "branch_filter -> deploy;" dot_output
-grep "install -> lint;" dot_output
-grep "install -> test;" dot_output
-grep "lint -> branch_filter;" dot_output
-grep "test_and_deploy -> install;" dot_output
-grep "test -> branch_filter;" dot_output
+grep "digraph G .* graph" dot_output
+grep "\"branch-filter\" -> \"deploy\";" dot_output
+grep "\"install\" -> \"lint\";" dot_output
+grep "\"install\" -> \"test\";" dot_output
+grep "\"lint\" -> \"branch-filter\";" dot_output
+grep "\"test-and-deploy\" -> \"install\";" dot_output
+grep "\"test\" -> \"branch-filter\";" dot_output
 
 cd "$test_repo_path"
 git clone https://github.com/actions/example-aws.git
@@ -29,34 +29,43 @@ mkdir dummy
 mv .github/main.workflow dummy/.
 popper dot --recursive > dot_output
 
-grep "digraph G" dot_output
-grep "Build_and_Deploy -> Build_Docker_image;" dot_output
-grep "Build_and_Deploy -> Login_to_ECR;" dot_output
-grep "Build_Docker_image -> Tag_image_for_ECR;" dot_output
-grep "Deploy_branch_filter -> Deploy_to_EKS;" dot_output
-grep "Deploy_to_EKS -> Verify_EKS_deployment;" dot_output
-grep "Login_to_ECR -> Push_image_to_ECR;" dot_output
-grep "Push_image_to_ECR -> Deploy_branch_filter;" dot_output
-grep "Push_image_to_ECR -> Store_Kube_Credentials;" dot_output
-grep "Push_image_to_ECR -> Verify_EKS_deployment;" dot_output
-grep "Store_Kube_Credentials -> Deploy_to_EKS;" dot_output
-grep "Tag_image_for_ECR -> Push_image_to_ECR;" dot_output
-grep "Verify_EKS_deployment -> List_Public_IP;" dot_output
-
+grep "digraph G .* graph" dot_output
+grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
+grep "\"Build and Deploy\" -> \"Login to ECR\";" dot_output
+grep "\"Build and Deploy\" -> \"Build Docker image\";" dot_output
+grep "\"Build Docker image\" -> \"Tag image for ECR\";" dot_output
+grep "\"Tag image for ECR\" -> \"Push image to ECR\";" dot_output
+grep "\"Login to ECR\" -> \"Push image to ECR\";" dot_output
+grep "\"Store Kube Credentials\" -> \"Deploy to EKS\";" dot_output
+grep "\"Push image to ECR\" -> \"Deploy branch filter\";" dot_output
+grep "\"Push image to ECR\" -> \"Store Kube Credentials\";" dot_output
+grep "\"Login to ECR\" -> \"Configure Kube Credentials\";" dot_output
+grep "\"Deploy to EKS\" -> \"Verify EKS deployment\";" dot_output
+grep "\"Deploy branch filter\" -> \"Deploy to EKS\";" dot_output
+grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
 
 ## Testing --wfile feature
 cd "$test_repo_path"
 popper dot --wfile example-aws/dummy/main.workflow > dot_output
 
-grep "digraph G" dot_output
-grep "Build_and_Deploy -> Build_Docker_image;" dot_output
-grep "Build_and_Deploy -> Login_to_ECR;" dot_output
-grep "Build_Docker_image -> Tag_image_for_ECR;" dot_output
-grep "Deploy_branch_filter -> Deploy_to_EKS;" dot_output
-grep "Deploy_to_EKS -> Verify_EKS_deployment;" dot_output
-grep "Login_to_ECR -> Push_image_to_ECR;" dot_output
-grep "Push_image_to_ECR -> Deploy_branch_filter;" dot_output
-grep "Push_image_to_ECR -> Store_Kube_Credentials;" dot_output
-grep "Push_image_to_ECR -> Verify_EKS_deployment;" dot_output
-grep "Store_Kube_Credentials -> Deploy_to_EKS;" dot_output
-grep "Tag_image_for_ECR -> Push_image_to_ECR;" dot_output
+grep "digraph G .* graph" dot_output
+grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
+grep "\"Build and Deploy\" -> \"Login to ECR\";" dot_output
+grep "\"Build and Deploy\" -> \"Build Docker image\";" dot_output
+grep "\"Build Docker image\" -> \"Tag image for ECR\";" dot_output
+grep "\"Tag image for ECR\" -> \"Push image to ECR\";" dot_output
+grep "\"Login to ECR\" -> \"Push image to ECR\";" dot_output
+grep "\"Store Kube Credentials\" -> \"Deploy to EKS\";" dot_output
+grep "\"Push image to ECR\" -> \"Deploy branch filter\";" dot_output
+grep "\"Push image to ECR\" -> \"Store Kube Credentials\";" dot_output
+grep "\"Login to ECR\" -> \"Configure Kube Credentials\";" dot_output
+grep "\"Deploy to EKS\" -> \"Verify EKS deployment\";" dot_output
+grep "\"Deploy branch filter\" -> \"Deploy to EKS\";" dot_output
+grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
+
+# test no color
+! grep ".*\"Verify EKS deployment\".*color=" dot_output
+
+# test with color
+popper dot --colors --wfile example-aws/dummy/main.workflow > dot_output
+grep ".*\"Verify EKS deployment\".*color=" dot_output

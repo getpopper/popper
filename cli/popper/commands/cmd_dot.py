@@ -21,23 +21,34 @@ from popper.gha import WorkflowRunner
     required=False,
     is_flag=True
 )
+@click.option(
+    '--colors',
+    help='Use colors in the graph.',
+    required=False,
+    is_flag=True,
+)
 @click.command('dot', short_help='Generate a graph in the .dot format.')
 @pass_context
-def cli(ctx, wfile, recursive):
+def cli(ctx, wfile, recursive, colors):
     """
     Creates a graph in the .dot format representing the workflow.
     """
-    def add_to_graph(graph_str, wf, parent, children):
-        """Recursively goes through "next" and adds corresponding actions
+    def add_to_graph(dot_str, wf, parent, children, node_attrs, stage_edges):
+        """Recursively goes over the children ("next" attribute) of the given
+        parent, adding an edge from parent to children
         """
-        _parent = parent.replace(' ', '_').replace('-', '_')
         for n in children:
-            _n = n.replace(' ', '_').replace('-', '_')
-            graph_str += "  {} -> {};\n".format(_parent, _n)
-            for M in wf.get_action(n).get('next', []):
-                graph_str = add_to_graph(graph_str, wf, n, [M])
+            edge = '  "{}" -> "{}";\n'.format(parent, n)
+            if edge in stage_edges:
+                continue
+            dot_str += edge + '  "{}" [{}];\n'.format(n, node_attrs)
 
-        return graph_str
+            stage_edges.add(edge)
+
+            for M in wf.get_action(n).get('next', []):
+                dot_str = add_to_graph(dot_str, wf, n, [M],
+                                       node_attrs, stage_edges)
+        return dot_str
 
     wfile_list = list()
 
@@ -49,6 +60,13 @@ def cli(ctx, wfile, recursive):
     for wfile in wfile_list:
         pipeline = WorkflowRunner(wfile, False, False, False, False, True)
         wf = pipeline.wf
-        workflow_name = wf.name.replace(' ', '_').replace('-', '_')
-        graph_str = add_to_graph("", wf, workflow_name, wf.root)
-        log.info("digraph G {\n" + graph_str + "}\n")
+        node_attrs = (
+          'shape=box, style="filled{}", fillcolor=transparent{}'
+        )
+        wf_attr = node_attrs.format(',rounded', ',color=red' if colors else '')
+        act_attr = node_attrs.format('', ',color=cyan' if colors else '')
+        dot_str = add_to_graph("", wf, wf.name, wf.root, act_attr, set())
+        dot_str += '  "{}" [{}];\n'.format(wf.name, wf_attr)
+        log.info(
+            "digraph G { graph [bgcolor=transparent];\n" + dot_str + "}\n"
+        )
