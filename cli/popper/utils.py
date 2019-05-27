@@ -1,7 +1,6 @@
 import os
 import sys
 import threading
-from distutils.spawn import find_executable
 
 from popper.cli import log
 
