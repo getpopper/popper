@@ -1,3 +1,5 @@
+import os
+import re
 import sys
 
 import click
@@ -6,7 +8,7 @@ import popper.cli
 from popper.cli import pass_context, log
 from popper.gha import WorkflowRunner
 from popper.parser import Workflow
-from popper import utils as pu
+from popper import utils as pu, scm
 from popper import log as logging
 
 
@@ -100,17 +102,32 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
     log.setLevel(level)
     if log_file:
         logging.add_log(log, log_file)
-    if recursive:
+
+    if os.environ.get('CI') == "true":
         wfile_list = pu.find_recursive_wfile()
-        if not wfile_list:
-            log.fail("Recursive search couldn't find any .workflow files ")
-        for wfile in wfile_list:
-            log.info("Found and running workflow at " + wfile)
+        wfile_list = workflows_from_commit_message(wfile_list)
+        if len(wfile_list) != 0:
+            log.info("Running in CI environment..")
+            for wfile in wfile_list:
+                log.info("Found and running workflow at " + wfile)
+                run_pipeline(action, wfile, skip, workspace, reuse,
+                             dry_run, parallel, with_dependencies)
+        else:
+            log.info("No workflow to execute.")
+
+    else:
+
+        if recursive:
+            wfile_list = pu.find_recursive_wfile()
+            if not wfile_list:
+                log.fail("Recursive search couldn't find any .workflow files ")
+            for wfile in wfile_list:
+                log.info("Found and running workflow at " + wfile)
+                run_pipeline(action, wfile, skip, workspace, reuse,
+                             dry_run, parallel, with_dependencies)
+        else:
             run_pipeline(action, wfile, skip, workspace, reuse,
                          dry_run, parallel, with_dependencies)
-    else:
-        run_pipeline(action, wfile, skip, workspace, reuse,
-                     dry_run, parallel, with_dependencies)
 
 
 def run_pipeline(action, wfile, skip, workspace, reuse,
@@ -141,3 +158,41 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
         log.info('Action "{}" finished successfully.'.format(action))
     else:
         log.info('Workflow finished successfully.')
+
+
+def workflows_from_commit_message(workflows):
+    head_commit = scm.get_head_commit()
+    if not head_commit:
+        return workflows
+
+    msg = head_commit.message
+
+    if 'Merge' in msg:
+        log.info("Merge detected. Reading message from merged commit.")
+        msg = head_commit.parents[0].message
+
+    if 'popper:skip[' in msg:
+        log.info("Found 'popper:skip' keyword.")
+        re_expr = r'popper:skip\[(.+?)\]'
+    elif 'popper:whitelist[' in msg:
+        log.info("Found 'popper:whitelist' keyword.")
+        re_expr = r'popper:whitelist\[(.+?)\]'
+    else:
+        return workflows
+
+    try:
+        workflow_list = re.search(re_expr, msg).group(1).split(',')
+    except AttributeError:
+        log.fail("Error parsing commit message keyword.")
+
+    if 'skip' in re_expr:
+        for wf in workflow_list:
+            if wf in workflows:
+                workflows.remove(wf)
+            else:
+                log.warn('Workflow {} was not found.'.format(wf))
+    else:
+        workflows = workflow_list
+
+    print('Only running workflows: {}'.format(', '.join(workflows)))
+    return workflows
