@@ -143,7 +143,7 @@ def parse(url):
     repo = None
 
     parts = url.split('/')
-    tail = parts[-1]
+    tail = parts[2:]
 
     if url.startswith('https://'):
         url = url[8:]
