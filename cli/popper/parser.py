@@ -358,8 +358,8 @@ class Workflow(object):
                 a_block = workflow.get_action(ra)
                 common_actions = filtered_actions.intersection(a_block.get('next', set()))
                 if common_actions:
-                    for y in common_actions:
-                        a_block['next'].remove(y)
+                    for ca in common_actions:
+                        a_block['next'].remove(ca)
         else:
             # Prepare the action for its execution only.
             required_actions.add(action)
