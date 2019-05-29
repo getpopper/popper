@@ -170,7 +170,8 @@ class Workflow(object):
                 for key in a_block.keys():
                     if key not in VALID_ACTION_ATTRS:
                         log.fail(
-                            'Invalid action attribute {} was found.'.format(key))
+                            'Invalid action attribute {} was '
+                            'found.'.format(key))
                 if not a_block.get('uses', None):
                     log.fail('[uses] attribute must be present.')
 
