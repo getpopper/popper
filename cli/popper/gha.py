@@ -159,7 +159,7 @@ class WorkflowRunner(object):
 
         if with_dependencies and (not action):
             log.fail('`--with-dependencies` can be used only with '
-            'action argument.')
+                     'action argument.')
 
         if skip and action:
             log.fail('`--skip` can\'t be used when action argument '

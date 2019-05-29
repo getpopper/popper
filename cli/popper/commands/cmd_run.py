@@ -87,7 +87,8 @@ from popper import log as logging
 )
 @pass_context
 def cli(ctx, action, wfile, skip, workspace, reuse,
-        recursive, quiet, debug, dry_run, parallel, log_file, with_dependencies):
+        recursive, quiet, debug, dry_run, parallel,
+        log_file, with_dependencies):
     """Executes one or more pipelines and reports on their status.
     """
     popper.scm.get_git_root_folder()
@@ -133,7 +134,8 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    pipeline.run(action, skip, workspace, reuse, dry_run, parallel, with_dependencies)
+    pipeline.run(action, skip, workspace, reuse, dry_run,
+                 parallel, with_dependencies)
 
     if action:
         log.info('Action "{}" finished successfully.'.format(action))

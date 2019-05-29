@@ -351,12 +351,13 @@ class Workflow(object):
             # Prepare the graph for running only the given action
             # only with its dependencies.
             find_root_recursively(workflow, action, required_actions)
-            
+
             filtered_actions = actions - required_actions
-            
+
             for ra in required_actions:
                 a_block = workflow.get_action(ra)
-                common_actions = filtered_actions.intersection(a_block.get('next', set()))
+                common_actions = filtered_actions.intersection(
+                    a_block.get('next', set()))
                 if common_actions:
                     for ca in common_actions:
                         a_block['next'].remove(ca)
