@@ -338,6 +338,9 @@ class Workflow(object):
             if workflow.get_action(action).get('needs', None):
                 for a in workflow.get_action(action)['needs']:
                     find_root_recursively(workflow, a, required_actions)
+                    if not workflow.get_action(a).get('next', None):
+                        workflow.get_action(a)['next'] = set()
+                    workflow.get_action(a)['next'].add(action)
             else:
                 workflow.root.add(action)
 
