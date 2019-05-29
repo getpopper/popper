@@ -155,7 +155,8 @@ class Workflow(object):
             wf_block = list(self._workflow['workflow'].values())[0]
             for key in wf_block.keys():
                 if key not in VALID_WORKFLOW_ATTRS:
-                    log.fail('Invalid attrs found.')
+                    log.fail(
+                        'Invalid workflow attribute \'{}\' was found.'.format(key))
             if not wf_block.get('resolves', None):
                 log.fail('[resolves] attribute must be present.')
 
@@ -168,7 +169,9 @@ class Workflow(object):
             for _, a_block in self._workflow['action'].items():
                 for key in a_block.keys():
                     if key not in VALID_ACTION_ATTRS:
-                        log.fail('Invalid attrs found.')
+                        log.fail(
+                            'Invalid action attribute \'{}\' was '
+                            'found.'.format(key))
                 if not a_block.get('uses', None):
                     log.fail('[uses] attribute must be present.')
 
