@@ -123,10 +123,6 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
     # Saving workflow instance for signal handling
     popper.cli.interrupt_params['parallel'] = parallel
 
-    if (not action) and with_dependencies:
-        log.warn("--with-dependencies works only when an [action] argument "
-                 "is passed.")
-
     if reuse:
         log.warn("Using --reuse ignores any changes made to an action's logic "
                  "or to an action block in the .workflow file.")
