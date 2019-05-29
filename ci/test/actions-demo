@@ -115,3 +115,45 @@ popper run --with-dependencies a2
 popper run --with-dependencies b
 popper run --with-dependencies c
 popper run --with-dependencies d
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["a2"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+popper run a1
+popper run a2
+popper run b
+popper run c
+popper run d
+popper run --with-dependencies b
+popper run --with-dependencies d
