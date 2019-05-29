@@ -3,6 +3,7 @@ import os
 import shutil
 import subprocess
 import multiprocessing as mp
+from copy import deepcopy
 from builtins import dict, input, str
 from distutils.dir_util import copy_tree
 from distutils.spawn import find_executable
@@ -27,26 +28,14 @@ class WorkflowRunner(object):
     """A GHA workflow runner.
     """
 
-    def __init__(self, wfile, workspace, dry_run,
-                 reuse, parallel, skip_secrets_prompt=False):
+    def __init__(self, workflow):
 
-        wfile = pu.find_default_wfile(wfile)
-
-        self.workspace = workspace
-        self.dry_run = dry_run
-        self.reuse = reuse
-        self.parallel = parallel
-        self.skip_secrets_prompt = skip_secrets_prompt
         self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
-
-        # Initialize a Worklow. During initialization all the validation
-        # takes place automatically.
-        self.wf = Workflow(wfile)
-        self.check_secrets()
+        self.wf = workflow
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
-    def check_secrets(self):
+    def check_secrets(self, wf, dry_run, skip_secrets_prompt):
         """Checks whether the secrets defined in the action block is
         set in the execution environment or not.
 
@@ -56,9 +45,9 @@ class WorkflowRunner(object):
             else it prompts the user to enter the environment vars
             during the time of execution itself.
         """
-        if self.dry_run or self.skip_secrets_prompt:
+        if dry_run or skip_secrets_prompt:
             return
-        for _, a in self.wf.actions:
+        for _, a in wf.actions.items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI') == "true":
@@ -67,12 +56,12 @@ class WorkflowRunner(object):
                         val = input("Enter the value for {0}:\n".format(s))
                         os.environ[s] = val
 
-    def download_actions(self):
+    def download_actions(self, wf, dry_run):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
 
-        for _, a in self.wf.actions:
+        for _, a in wf.actions.items():
             if ('docker://' in a['uses'] or 'shub://' in a['uses'] or
                     './' in a['uses'] or a['uses'] == 'sh'):
                 continue
@@ -86,7 +75,7 @@ class WorkflowRunner(object):
             a['repo_dir'] = os.path.join(repo_parent_dir, repo)
             a['action_dir'] = action_dir
 
-            if self.dry_run:
+            if dry_run:
                 continue
 
             if not infoed:
@@ -103,41 +92,41 @@ class WorkflowRunner(object):
             scm.clone(url, usr, repo, repo_parent_dir, version)
             cloned.add('{}/{}'.format(usr, repo))
 
-    def instantiate_runners(self):
+    def instantiate_runners(self, wf, workspace, env, dry_run):
         """Factory of ActionRunner instances, one for each action"""
-        for _, a in self.wf.actions:
+        for _, a in wf.actions.items():
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
-                    a, self.workspace, self.env,
-                    self.dry_run)
+                    a, workspace, env,
+                    dry_run)
                 continue
 
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env,
-                    self.dry_run)
+                    a, workspace, env,
+                    dry_run)
                 continue
 
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
-                    a, self.workspace, self.env,
-                    self.dry_run)
+                    a, workspace, env,
+                    dry_run)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
-                        a, self.workspace, self.env,
-                        self.dry_run)
+                        a, workspace, env,
+                        dry_run)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'Singularity')):
                     a['runner'] = SingularityRunner(
-                        a, self.workspace, self.env,
-                        self.dry_run)
+                        a, workspace, env,
+                        dry_run)
                 else:
                     a['runner'] = HostRunner(
-                        a, self.workspace, self.env,
-                        self.dry_run)
+                        a, workspace, env,
+                        dry_run)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -147,55 +136,68 @@ class WorkflowRunner(object):
 
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
-                    a, self.workspace, self.env,
-                    self.dry_run)
+                    a, workspace, env,
+                    dry_run)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
-                    a, self.workspace, self.env,
-                    self.dry_run)
+                    a, workspace, env,
+                    dry_run)
             else:
                 a['runner'] = HostRunner(
-                    a, self.workspace, self.env,
-                    self.dry_run)
+                    a, workspace, env,
+                    dry_run)
 
-    def run(self, action_name=None, reuse=False, parallel=False):
+    def run(self, action, skip, workspace, reuse, dry_run,
+            parallel, skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
-        os.environ['WORKSPACE'] = self.workspace
+        os.environ['WORKSPACE'] = workspace
 
         if scm.get_user():
             repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
         else:
             repo_id = 'unknown'
 
-        self.env = {
-            'GITHUB_WORKSPACE': self.workspace,
-            'GITHUB_WORKFLOW': self.wf.name,
+        if skip and action:
+            log.fail('`--skip` cant be used when `action` argument'
+                     'is passed.')
+
+        new_wf = deepcopy(self.wf)
+
+        if skip:
+            new_wf = self.wf.skip_actions(skip)
+
+        if action:
+            new_wf = self.wf.filter_action(action)
+
+        new_wf.check_for_unreachable_actions(skip)
+
+        env = {
+            'GITHUB_WORKSPACE': workspace,
+            'GITHUB_WORKFLOW': new_wf.name,
             'GITHUB_ACTOR': 'popper',
             'GITHUB_REPOSITORY': repo_id,
-            'GITHUB_EVENT_NAME': self.wf.on,
-            'GITHUB_EVENT_PATH': '{}/{}'.format(self.workspace,
+            'GITHUB_EVENT_NAME': new_wf.on,
+            'GITHUB_EVENT_PATH': '{}/{}'.format(workspace,
                                                 'workflow/event.json'),
             'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
         }
 
-        for e in dict(self.env):
-            self.env.update({e.replace('GITHUB_', 'POPPER_'): self.env[e]})
+        for e in dict(env):
+            env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
 
-        self.download_actions()
-        self.instantiate_runners()
+        self.check_secrets(new_wf, dry_run, skip_secrets_prompt)
+        self.download_actions(new_wf, dry_run)
+        self.instantiate_runners(new_wf, workspace, env, dry_run)
 
-        if action_name:
-            self.wf.get_runner(action_name).run(reuse)
-        else:
-            for s in self.wf.get_stages():
-                self.run_stage(s, reuse, parallel)
+        for s in new_wf.get_stages():
+            self.run_stage(new_wf, s, reuse, parallel)
 
-    def run_stage(self, stage, reuse=False, parallel=False):
+    def run_stage(self, wf, stage, reuse=False, parallel=False):
         if parallel:
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
-                    ex.submit(self.wf.get_runner(a).run, reuse):
+                    ex.submit(wf.get_runner(a).run, reuse):
                         a for a in stage
                 }
                 popper.cli.flist = flist
@@ -204,7 +206,7 @@ class WorkflowRunner(object):
                     log.info('Action ran successfully !')
         else:
             for action in stage:
-                self.wf.get_runner(action).run(reuse)
+                wf.get_runner(action).run(reuse)
 
     @staticmethod
     def import_from_repo(path, project_root):
@@ -246,7 +248,7 @@ class WorkflowRunner(object):
             wf = Workflow(path_to_workflow)
 
         action_paths = list()
-        for _, a_block in wf.actions:
+        for _, a_block in wf.actions.items():
             if a_block['uses'].startswith("./"):
                 action_paths.append(a_block['uses'])
 
