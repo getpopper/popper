@@ -103,31 +103,26 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
     if log_file:
         logging.add_log(log, log_file)
 
+    # Recursively find the `.workflow` files.
+    wfile_list = pu.find_recursive_wfile()
+
     if os.environ.get('CI') == "true":
-        wfile_list = pu.find_recursive_wfile()
+        # If running in CI environment, manipulate the workflow files.
+        log.info("Running in CI environment..")
         wfile_list = workflows_from_commit_message(wfile_list)
-        if len(wfile_list) != 0:
-            log.info("Running in CI environment..")
-            for wfile in wfile_list:
-                log.info("Found and running workflow at " + wfile)
-                run_pipeline(action, wfile, skip, workspace, reuse,
-                             dry_run, parallel, with_dependencies)
-        else:
-            log.info("No workflow to execute.")
-
     else:
+        # If running in a non-CI environment.
+        if not recursive:
+            wfile_list = [wfile]
 
-        if recursive:
-            wfile_list = pu.find_recursive_wfile()
-            if not wfile_list:
-                log.fail("Recursive search couldn't find any .workflow files ")
-            for wfile in wfile_list:
-                log.info("Found and running workflow at " + wfile)
-                run_pipeline(action, wfile, skip, workspace, reuse,
-                             dry_run, parallel, with_dependencies)
-        else:
-            run_pipeline(action, wfile, skip, workspace, reuse,
-                         dry_run, parallel, with_dependencies)
+    # If now workflow files are left to process.
+    if not wfile_list:
+        log.fail("No workflow to execute.")
+
+    for wfile in wfile_list:
+        log.info("Found and running workflow at " + wfile)
+        run_pipeline(action, wfile, skip, workspace, reuse,
+                     dry_run, parallel, with_dependencies)
 
 
 def run_pipeline(action, wfile, skip, workspace, reuse,
