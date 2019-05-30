@@ -33,3 +33,74 @@ cat .circleci/config.yml
 ! popper ci --service jenkins --with-singularity
 
 ! popper ci --service gitlab --with-singularity
+
+
+# Test blacklisting/skip in CI environment
+
+export CI=true
+
+cd $test_repo_path
+
+mkdir myaction
+cd myaction
+
+touch README.md
+
+cat <<EOF > a.workflow
+workflow "wf" {
+  resolves = "a"
+}
+
+action "a" {
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+cat <<EOF > b.workflow
+workflow "wf" {
+  resolves = "a"
+}
+
+action "a" {
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+cat <<EOF > c.workflow
+workflow "wf" {
+  resolves = "a"
+}
+
+action "a" {
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+
+
+git init
+git add .
+git commit -m "popper:whitelist[/tmp/mypaper/myaction/a.workflow,/tmp/mypaper/myaction/b.workflow]"
+popper run | grep "Only running workflows: /tmp/mypaper/myaction/a.workflow, /tmp/mypaper/myaction/b.workflow"
+
+
+cd $test_repo_path
+cd myaction
+
+cat <<EOF > d.workflow
+workflow "wf" {
+  resolves = "a"
+}
+
+action "a" {
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+git add .
+git commit -m "popper:skip[/tmp/mypaper/myaction/a.workflow,/tmp/mypaper/myaction/c.workflow"]
+popper run | grep "Only running workflows: /tmp/mypaper/myaction/b.workflow, /tmp/mypaper/myaction/d.workflow"
