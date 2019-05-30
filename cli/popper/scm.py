@@ -15,14 +15,23 @@ def init_repo_object():
     try:
         repo = git.Repo(search_parent_directories=True)
     except git.exc.InvalidGitRepositoryError:
-        log.fail('Unable to find root of a Git repository.')
+        log.warn('Unable to find root of a Git repository.')
+
+    if repo:
+        if repo.head.is_detached:
+            log.fail('HEAD is in detached state.')
 
 
 def get_git_root_folder():
     """Tries to find the root folder.
     """
     init_repo_object()
-    return os.path.dirname(repo.git_dir)
+    if repo:
+        root_folder_path = os.path.dirname(repo.git_dir)
+    else:
+        root_folder_path = os.getcwd()
+
+    return root_folder_path
 
 
 def infer_repo_name_from_root_folder():
@@ -32,7 +41,12 @@ def infer_repo_name_from_root_folder():
         repo_name (str): the name of the root folder.
     """
     init_repo_object()
-    return os.path.basename(repo.git_dir)
+    if repo:
+        repo_name = repo.git_dir
+    else:
+        repo_name = os.getcwd()
+
+    return os.path.basename(repo_name)
 
 
 def get_name():
@@ -70,43 +84,52 @@ def get_user():
 def get_ref():
     """Returns the Git REF pointed by .git/HEAD"""
     init_repo_object()
-    return "" if repo.head.is_detached else repo.head.ref.path
+    if repo:
+        return repo.head.ref.path
+    else:
+        return 'unknown'
 
 
 def get_sha():
     """Runs git rev-parse --short HEAD and returns result"""
     init_repo_object()
-    try:
-        return repo.git.rev_parse(repo.head.object.hexsha, short=True)
-    except ValueError as e:
-        log.debug(e)
-        log.fail('Could not obtain revision of repository located at {}'
-                 .format(get_git_root_folder()))
+    if repo:
+        try:
+            return repo.git.rev_parse(repo.head.object.hexsha, short=True)
+        except ValueError as e:
+            log.debug(e)
+            log.fail('Could not obtain revision of repository located at {}'
+                     .format(get_git_root_folder()))
+    else:
+        return 'unknown'
 
 
 def get_head_commit():
     """Returns the head commit object."""
     init_repo_object()
-    try:
-        head = repo.head
-        return None if head.is_detached else head.reference.commit
-    except ValueError as e:
-        log.debug(e)
-        log.fail('Could not obtain revision of repository located at {}'
-                 .format(get_git_root_folder()))
+    if repo:
+        try:
+            return repo.head.reference.commit
+        except ValueError as e:
+            log.debug(e)
+            log.fail('Could not obtain revision of repository located at {}'
+                     .format(get_git_root_folder()))
+    else:
+        return None
 
 
 def get_remote_url():
     """Obtains remote origin URL, if possible. Otherwise it returns empty str.
     """
     url = ""
-    if len(repo.remotes) > 0:
-        url = repo.remotes.origin.url
-    # cleanup the URL so we get in in https form and without '.git' ending
-    if url.endswith('.git'):
-        url = url[:-4]
-    if 'git@' in url:
-        url = 'https://' + url[4:].replace(':', '/')
+    if repo:
+        if len(repo.remotes) > 0:
+            url = repo.remotes.origin.url
+        # cleanup the URL so we get in in https form and without '.git' ending
+        if url.endswith('.git'):
+            url = url[:-4]
+        if 'git@' in url:
+            url = 'https://' + url[4:].replace(':', '/')
 
     return url
 
@@ -146,7 +169,10 @@ def get_git_files():
         files (list) : list of git tracked files
     """
     init_repo_object()
-    return repo.git.ls_files().split("\n")
+    if repo:
+        return repo.git.ls_files().split("\n")
+    else:
+        return None
 
 
 def parse(url):

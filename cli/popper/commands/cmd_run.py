@@ -158,6 +158,7 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
 
 def workflows_from_commit_message(workflows):
     head_commit = scm.get_head_commit()
+
     if not head_commit:
         return workflows
 

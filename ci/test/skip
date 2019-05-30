@@ -39,20 +39,20 @@ action "d" {
 }
 EOF
 
-popper run a1
-popper run a2
-popper run b
-popper run c
-popper run d
+popper run --dry-run a1
+popper run --dry-run a2
+popper run --dry-run b
+popper run --dry-run c
+popper run --dry-run d
 
-! popper run --skip e1
-! popper run --skip a1 --skip a2
-popper run --skip a1 --dry-run
-popper run --skip a2 --dry-run
-! popper run --skip b --skip c
-popper run --skip b --dry-run
-popper run --skip c --dry-run
-popper run --skip d --dry-run
+! popper run --dry-run --skip e1
+! popper run --dry-run --skip a1 --skip a2
+popper run --dry-run --skip a1
+popper run --dry-run --skip a2
+! popper run --dry-run --skip b --skip c
+popper run --dry-run --skip b 
+popper run --dry-run --skip c
+popper run --dry-run --skip d 
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -88,7 +88,7 @@ action "d" {
 }
 EOF
 
-! popper run
+! popper run --dry-run
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -124,4 +124,4 @@ action "d" {
 }
 EOF
 
-! popper run
+! popper run --dry-run

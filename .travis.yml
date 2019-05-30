@@ -6,6 +6,7 @@ python:
 - "3.7"
 services: docker
 before_install:
+- git rebase HEAD $TRAVIS_BRANCH
 - sudo apt-get update
 - wget http://neurodeb.pirsquared.org/pool/main/s/singularity-container/singularity-container_2.6.1-2~nd16.04+1_amd64.deb
 - sudo apt-get -f install ./singularity-container_2.6.1-2~nd16.04+1_amd64.deb
@@ -13,4 +14,7 @@ before_install:
 install:
 - pip install cli/
 script:
-- popper run --recursive
+- export POPPER_TEST_MODE=1
+- popper run
+- export POPPER_TEST_MODE=2
+- popper run

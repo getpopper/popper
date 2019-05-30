@@ -80,11 +80,10 @@ action "a" {
 EOF
 
 
-
 git init
 git add .
 git commit -m "popper:whitelist[/tmp/mypaper/myaction/a.workflow,/tmp/mypaper/myaction/b.workflow]"
-popper run | grep "Only running workflows: /tmp/mypaper/myaction/a.workflow, /tmp/mypaper/myaction/b.workflow"
+popper run --dry-run | grep "Only running workflows: /tmp/mypaper/myaction/a.workflow, /tmp/mypaper/myaction/b.workflow"
 
 
 cd $test_repo_path
@@ -103,4 +102,4 @@ EOF
 
 git add .
 git commit -m "popper:skip[/tmp/mypaper/myaction/a.workflow,/tmp/mypaper/myaction/c.workflow"]
-popper run | grep "Only running workflows: /tmp/mypaper/myaction/b.workflow, /tmp/mypaper/myaction/d.workflow"
+popper run --dry-run | grep "Only running workflows: /tmp/mypaper/myaction/b.workflow, /tmp/mypaper/myaction/d.workflow"

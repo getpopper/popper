@@ -24,7 +24,7 @@ install:
 - export PYTHONUNBUFFERED=1
 - pip install /tmp/popper/cli
 {}
-script: popper run --recursive
+script: popper run
 """
     },
     'circle': {
@@ -52,7 +52,7 @@ stage ('Popper') {{ node {{
   sh "git clone https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
   sh "pip install /tmp/popper/cli"
-  sh "popper run --recursive
+  sh "popper run
 }}}}
 """
     },
@@ -77,7 +77,7 @@ before_script:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - pip install /tmp/popper/cli
 popper:
-  script: popper run --recursive
+  script: popper run
 """
     }
 }
