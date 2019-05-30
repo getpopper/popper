@@ -148,7 +148,7 @@ class WorkflowRunner(object):
                     dry_run)
 
     def run(self, action, skip, workspace, reuse, dry_run,
-            parallel, skip_secrets_prompt=False):
+            parallel, with_dependencies, skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = workspace
 
@@ -157,8 +157,12 @@ class WorkflowRunner(object):
         else:
             repo_id = 'unknown'
 
+        if with_dependencies and (not action):
+            log.fail('`--with-dependencies` can be used only with '
+                     'action argument.')
+
         if skip and action:
-            log.fail('`--skip` cant be used when `action` argument'
+            log.fail('`--skip` can\'t be used when action argument '
                      'is passed.')
 
         new_wf = deepcopy(self.wf)
@@ -167,7 +171,7 @@ class WorkflowRunner(object):
             new_wf = self.wf.skip_actions(skip)
 
         if action:
-            new_wf = self.wf.filter_action(action)
+            new_wf = self.wf.filter_action(action, with_dependencies)
 
         new_wf.check_for_unreachable_actions(skip)
 

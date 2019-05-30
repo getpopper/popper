@@ -38,9 +38,122 @@ cat <<EOF > main.workflow
 workflow "clone" {
   resolves = "test"
 }
+
+action "dependency four" {
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
+action "dependency three" {
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
+action "dependency two" {
+  needs = ["dependency three", "dependency four"]
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
+action "dependency one" {
+  needs = ["dependency two"]
+  uses = "docker://busybox"
+  runs = ["ls", "-ltr"]
+}
+
 action "test" {
+  needs = ["dependency one"]
   uses = "https://gitlab.com/barbaragd/action-test@master"
 }
 EOF
 
-popper run
+# popper run
+
+# test --with-dependencies flag
+popper run --dry-run test
+popper run --dry-run --with-dependencies test
+popper run --dry-run --with-dependencies 'dependency one'
+
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+! popper run --with-dependencies
+popper run --with-dependencies a1
+popper run --with-dependencies a2
+popper run --with-dependencies b
+popper run --with-dependencies c
+popper run --with-dependencies d
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["a2"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+popper run a1
+popper run a2
+popper run b
+popper run c
+popper run d
+popper run --with-dependencies b
+popper run --with-dependencies d

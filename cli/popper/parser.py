@@ -324,7 +324,7 @@ class Workflow(object):
         workflow.props['skip_list'] = list(skip_list)
         return workflow
 
-    def filter_action(self, action):
+    def filter_action(self, action, with_dependencies):
         """Filters out all actions except the one passed in
         the argument from the workflow.
 
@@ -334,20 +334,53 @@ class Workflow(object):
         Returns:
             Workflow : The updated workflow object.
         """
+        # Recursively generate root when an action is run
+        # with the `--with-dependencies` flag.
+        def find_root_recursively(workflow, action, required_actions):
+            required_actions.add(action)
+            if workflow.get_action(action).get('needs', None):
+                for a in workflow.get_action(action)['needs']:
+                    find_root_recursively(workflow, a, required_actions)
+                    if not workflow.get_action(a).get('next', None):
+                        workflow.get_action(a)['next'] = set()
+                    workflow.get_action(a)['next'].add(action)
+            else:
+                workflow.root.add(action)
+
+        # The list of actions that needs to be preserved.
         workflow = deepcopy(self)
+        actions = set(map(lambda x: x[0], workflow.actions.items()))
+
+        required_actions = set()
+
+        if with_dependencies:
+            # Prepare the graph for running only the given action
+            # only with its dependencies.
+            find_root_recursively(workflow, action, required_actions)
+
+            filtered_actions = actions - required_actions
+
+            for ra in required_actions:
+                a_block = workflow.get_action(ra)
+                common_actions = filtered_actions.intersection(
+                    a_block.get('next', set()))
+                if common_actions:
+                    for ca in common_actions:
+                        a_block['next'].remove(ca)
+        else:
+            # Prepare the action for its execution only.
+            required_actions.add(action)
+
+            if workflow.get_action(action).get('next', None):
+                workflow.get_action(action)['next'] = set()
+
+            if workflow.get_action(action).get('needs', None):
+                workflow.get_action(action)['needs'] = list()
+
+            workflow.root.add(action)
 
         # Make the list of the actions to be removed.
-        actions = list(map(lambda x: x[0], workflow.actions.items()))
-        actions.remove(action)
-
-        # Prepare the action for its execution only.
-        if workflow.get_action(action).get('next', None):
-            workflow.get_action(action)['next'] = set()
-
-        if workflow.get_action(action).get('needs', None):
-            workflow.get_action(action)['needs'] = list()
-
-        workflow.root.add(action)
+        actions = actions - required_actions
 
         # Remove the remaining actions
         for a in actions:
