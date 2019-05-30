@@ -164,7 +164,8 @@ def workflows_from_commit_message(workflows):
 
     if 'Merge' in msg:
         log.info("Merge detected. Reading message from merged commit.")
-        msg = head_commit.parents[0].message
+        if len(head_commit.parents) == 2:
+            msg = head_commit.parents[0].message
 
     if 'popper:skip[' in msg:
         log.info("Found 'popper:skip' keyword.")
