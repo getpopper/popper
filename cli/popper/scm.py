@@ -5,6 +5,7 @@ from popper.cli import log
 
 repo = None
 
+
 def init_repo_object():
     global repo
 
@@ -77,6 +78,18 @@ def get_sha():
     init_repo_object()
     try:
         return repo.git.rev_parse(repo.head.object.hexsha, short=True)
+    except ValueError as e:
+        log.debug(e)
+        log.fail('Could not obtain revision of repository located at {}'
+                 .format(get_git_root_folder()))
+
+
+def get_head_commit():
+    """Returns the head commit object."""
+    init_repo_object()
+    try:
+        head = repo.head
+        return None if head.is_detached else head.reference.commit
     except ValueError as e:
         log.debug(e)
         log.fail('Could not obtain revision of repository located at {}'
