@@ -381,14 +381,26 @@ class DockerRunner(ActionRunner):
         for e, v in self.env.items():
             env_vars.update({e: v})
         env_vars.update({'HOME': os.environ['HOME']})
-        volumes = [self.workspace, os.environ['HOME'], '/var/run/docker.sock']
+
+        # Bind the local volumes to volumes inside container
+        volumes = {}
+        volumes[env_vars['HOME']] = {'bind': '/github/home'}
+        volumes[env_vars['GITHUB_EVENT_PATH']] = {'bind': '/github/workflow/event.json'}
+        volumes[env_vars['GITHUB_WORKSPACE']] = {'bind': '/github/workspace'}
+        volumes['/var/run/docker.sock'] = {'bind': '/var/runner/docker.sock'}
+
+        # Update the corresponding env vars accordingly.
+        env_vars['HOME'] = '/github/home'
+        env_vars['GITHUB_EVENT_PATH'] = '/github/workflow/event.json'
+        env_vars['GITHUB_WORKSPACE'] = '/github/workspace'
+
         log.debug('Invoking docker_create() method')
         self.container = self.docker_client.containers.create(
             image=img,
             command=self.action.get('args', None),
             name=self.cid,
-            volumes={v: {'bind': v} for v in volumes},
-            working_dir=self.workspace,
+            volumes=volumes,
+            working_dir=env_vars['GITHUB_WORKSPACE'],
             environment=env_vars,
             entrypoint=self.action.get('runs', None),
             detach=True
