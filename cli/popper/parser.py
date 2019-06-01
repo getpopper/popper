@@ -22,7 +22,6 @@ class Workflow(object):
     def __init__(self, wfile):
 
         # Read's the workflow file.
-        wfile = pu.find_default_wfile(wfile)
         with open(wfile, 'r') as fp:
             self._workflow = hcl.load(fp)
             fp.seek(0)
