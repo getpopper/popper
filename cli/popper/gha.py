@@ -4,13 +4,12 @@ import shutil
 import subprocess
 import multiprocessing as mp
 from copy import deepcopy
-from builtins import dict, input, str
+from builtins import dict, input
 from distutils.dir_util import copy_tree
 from distutils.spawn import find_executable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
-import hcl
 import yaml
 import docker
 from spython.main import Client as sclient
@@ -248,8 +247,7 @@ class WorkflowRunner(object):
         shutil.copy(path_to_workflow, project_root)
         log.info("Successfully imported from {}".format(path_to_workflow))
 
-        with open(path_to_workflow, 'r') as fp:
-            wf = Workflow(path_to_workflow)
+        wf = Workflow(path_to_workflow)
 
         action_paths = list()
         for _, a_block in wf.actions.items():
@@ -385,9 +383,10 @@ class DockerRunner(ActionRunner):
         # Bind the local volumes to volumes inside container
         volumes = {}
         volumes[env_vars['HOME']] = {'bind': '/github/home'}
-        volumes[env_vars['GITHUB_EVENT_PATH']] = {'bind': '/github/workflow/event.json'}
+        volumes[env_vars['GITHUB_EVENT_PATH']] = {
+            'bind': '/github/workflow/event.json'}
         volumes[env_vars['GITHUB_WORKSPACE']] = {'bind': '/github/workspace'}
-        volumes['/var/run/docker.sock'] = {'bind': '/var/runner/docker.sock'}
+        volumes['/var/run/docker.sock'] = {'bind': '/var/run/docker.sock'}
 
         # Update the corresponding env vars accordingly.
         env_vars['HOME'] = '/github/home'
