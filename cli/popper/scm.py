@@ -17,10 +17,6 @@ def init_repo_object():
     except git.exc.InvalidGitRepositoryError:
         log.warn('Unable to find root of a Git repository.')
 
-    if repo:
-        if repo.head.is_detached:
-            log.fail('HEAD is in detached state.')
-
 
 def get_git_root_folder():
     """Tries to find the root folder.
@@ -85,7 +81,7 @@ def get_ref():
     """Returns the Git REF pointed by .git/HEAD"""
     init_repo_object()
     if repo:
-        return repo.head.ref.path
+        return "" if repo.head.is_detached else repo.head.ref.path
     else:
         return 'unknown'
 
@@ -108,12 +104,7 @@ def get_head_commit():
     """Returns the head commit object."""
     init_repo_object()
     if repo:
-        try:
-            return repo.head.reference.commit
-        except ValueError as e:
-            log.debug(e)
-            log.fail('Could not obtain revision of repository located at {}'
-                     .format(get_git_root_folder()))
+        return repo.commit(get_sha())
     else:
         return None
 

@@ -9,7 +9,7 @@ cd "$test_repo_path"
 
 git clone https://github.com/cplee/github-actions-demo
 cd github-actions-demo
-# git checkout c824a5a
+git checkout c824a5a
 
 export PHONY_SECRET=foo
 

@@ -13,7 +13,7 @@ function delete_dir {
 }
 
 function init_test_repo {
-  if [ "$POPPER_TEST_MODE" -eq 1 ]
+  if [ "$POPPER_TEST_MODE" == "with-git" ]
   then
     delete_dir $test_repo_path
     mkdir $test_repo_path
