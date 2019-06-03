@@ -157,3 +157,26 @@ popper run c
 popper run d
 popper run --with-dependencies b
 popper run --with-dependencies d
+
+# test with docker-in-docker
+init_test_repo
+cd $test_repo_path
+mkdir -p docker-helloworld
+
+cat <<EOF > docker-helloworld/Dockerfile
+FROM alpine:3.9
+ENTRYPOINT ["echo", "'hello world!'"]
+EOF
+
+cat <<EOF > main.workflow
+workflow "did" {
+  resolves = "build"
+}
+
+action "build" {
+  uses = "actions/docker/cli@master"
+  args = "build -t helloworld docker-helloworld"
+}
+EOF
+
+popper run
