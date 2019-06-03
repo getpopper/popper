@@ -120,6 +120,7 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
         log.fail("No workflow to execute.")
 
     for wfile in wfile_list:
+        wfile = pu.find_default_wfile(wfile)
         log.info("Found and running workflow at " + wfile)
         run_pipeline(action, wfile, skip, workspace, reuse,
                      dry_run, parallel, with_dependencies)
