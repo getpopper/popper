@@ -196,5 +196,5 @@ EOF
 
 popper run
 
-rm $HOME/popperfile ./popperfile
+rm "$HOME/popperfile" ./popperfile
 
