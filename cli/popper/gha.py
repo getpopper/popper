@@ -269,7 +269,7 @@ class ActionRunner(object):
     def __init__(self, action, workspace, env, dry_run):
         self.action = action
         self.workspace = workspace
-        self.env = env
+        self.env = dict(env)
         self.dry_run = dry_run
         self.msg_prefix = "DRYRUN: " if dry_run else ""
 

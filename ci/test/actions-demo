@@ -158,9 +158,13 @@ popper run d
 popper run --with-dependencies b
 popper run --with-dependencies d
 
-# test with docker-in-docker
+# test bindings
 init_test_repo
 cd $test_repo_path
+
+echo "popper-at-HOME" > "$HOME/popperfile"
+echo "popper-at-WORKSPACE" > "./popperfile"
+
 mkdir -p docker-helloworld
 
 cat <<EOF > docker-helloworld/Dockerfile
@@ -169,14 +173,28 @@ ENTRYPOINT ["echo", "'hello world!'"]
 EOF
 
 cat <<EOF > main.workflow
-workflow "did" {
-  resolves = "build"
+workflow "test bindings" {
+  resolves = [
+    "did",
+    "ws",
+    "home"
+  ]
 }
-
-action "build" {
+action "did" {
   uses = "actions/docker/cli@master"
   args = "build -t helloworld docker-helloworld"
+}
+action "ws" {
+  uses = "actions/bin/sh@master"
+  runs = ["sh", "-c", "cat \$GITHUB_WORKSPACE/popperfile"]
+}
+action "home" {
+  uses = "actions/bin/sh@master"
+  runs = ["sh", "-c", "cat \$HOME/popperfile"]
 }
 EOF
 
 popper run
+
+rm $HOME/popperfile ./popperfile
+
