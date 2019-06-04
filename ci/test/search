@@ -1,0 +1,18 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+popper search figshare | grep 'popperized/figshare'
+test -f "$HOME/.cache/.popper_cache.yml"
+
+popper search swc | grep 'popperized/swc-lesson'
+popper search --include-readme fig | grep 'popperized/ansible'
+popper search --update-cache abc
+
+! popper info popperized/swc-lesson --update-cache
+! popper info abc
+! popper info popperized/abc
+popper info popperized/figshare | grep "GitHub Actions for Figshare."
