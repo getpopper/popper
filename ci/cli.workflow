@@ -4,7 +4,7 @@ workflow "cli tests" {
 }
 action "lint" {
   uses = "actions/bin/shellcheck@master"
-  args = "-x ./ci/test/*"
+  args = "./ci/test/*"
 }
 
 action "test ci" {
