@@ -28,7 +28,7 @@ do
     create_workflow "$i"
 done
 
-popper run --recursive >> out
+popper run --dry-run --recursive >> out
 mapfile -t files < <(grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-)
 
 counter=0

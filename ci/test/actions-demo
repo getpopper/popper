@@ -67,7 +67,7 @@ action "test" {
 }
 EOF
 
-# popper run
+popper run --dry-run
 
 # test --with-dependencies flag
 popper run --dry-run test
@@ -109,12 +109,12 @@ action "d" {
 }
 EOF
 
-! popper run --with-dependencies
-popper run --with-dependencies a1
-popper run --with-dependencies a2
-popper run --with-dependencies b
-popper run --with-dependencies c
-popper run --with-dependencies d
+! popper run --dry-run --with-dependencies
+popper run --dry-run --with-dependencies a1
+popper run --dry-run --with-dependencies a2
+popper run --dry-run --with-dependencies b
+popper run --dry-run --with-dependencies c
+popper run --dry-run --with-dependencies d
 
 cat <<EOF > main.workflow
 workflow "wf" {

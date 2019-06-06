@@ -103,16 +103,16 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
     if log_file:
         logging.add_log(log, log_file)
 
-    # Recursively find the `.workflow` files.
-    wfile_list = pu.find_recursive_wfile()
-
     if os.environ.get('CI') == "true":
         # If running in CI environment, manipulate the workflow files.
+        wfile_list = pu.find_recursive_wfile()
         log.info("Running in CI environment..")
         wfile_list = workflows_from_commit_message(wfile_list)
     else:
         # If running in a non-CI environment.
-        if not recursive:
+        if recursive:
+            wfile_list = pu.find_recursive_wfile()
+        else:
             wfile_list = [wfile]
 
     # If now workflow files are left to process.
@@ -158,6 +158,7 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
 
 def workflows_from_commit_message(workflows):
     head_commit = scm.get_head_commit()
+
     if not head_commit:
         return workflows
 
