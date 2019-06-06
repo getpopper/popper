@@ -200,10 +200,13 @@ def fetch_metadata(update_cache):
         # Update the cache file.
         log.info('Updating action metadata cache...\n')
         search_sources = read_search_sources()
-        source_list = []
-        for org in search_sources:
+        source_list = list()
+        for org in search_sources['organizations']:
             for repo in repos_in_org(org):
                 source_list.append((org, repo))
+
+        for repo in search_sources['repositories']:
+            source_list.append(tuple(repo.split('/')))
 
         metadata = defaultdict(dict)
         with click.progressbar(

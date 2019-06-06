@@ -1,2 +1,6 @@
+organizations:
 - popperized
 - actions
+repositories:
+- netlify/actions
+- Azure/github-actions

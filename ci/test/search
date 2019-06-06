@@ -11,6 +11,7 @@ test -f "$HOME/.cache/.popper_cache.yml"
 popper search swc | grep 'popperized/swc-lesson'
 popper search --include-readme fig | grep 'popperized/ansible'
 popper search --update-cache abc
+popper search github-actions | grep 'Azure/github-actions'
 
 ! popper info popperized/swc-lesson --update-cache
 ! popper info abc
