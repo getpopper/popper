@@ -386,7 +386,7 @@ class DockerRunner(ActionRunner):
         volumes[env_vars['GITHUB_EVENT_PATH']] = {
             'bind': '/github/workflow/event.json'}
         volumes[env_vars['GITHUB_WORKSPACE']] = {
-            env_vars['GITHUB_WORKSPACE']}
+            'bind': env_vars['GITHUB_WORKSPACE']}
         volumes['/var/run/docker.sock'] = {'bind': '/var/run/docker.sock'}
 
         # Update the corresponding env vars accordingly.
