@@ -98,6 +98,46 @@ Workflow docker-data-science has been added successfully.
 This will download the contents of the workflow and all its 
 dependencies to your project tree.
 
+
+## Searching for actions
+
+The popper CLI is capable of searching for premade actions that
+you can use in your workflows.
+
+You can use the `popper search` command to search for actions
+based on a search keyword. For example, to search for npm based actions,
+you can simply run:
+
+```bash
+$ popper search npm
+Matched actions :
+
+> actions/npm
+```
+
+Additionally, when searching for an action, you may choose to include
+the contents of the readme in your search by using the `--include-readme`
+flag.
+
+Once `popper search` runs, it caches all the metadata related to the search.
+So, to get the latest releases of the actions, you might want to update the
+cache using the `--update-cache` flag.
+
+By default, popper searches for actions from [popperized](https://github.com/popperized)
+and [actions](https://github.com/actions) Github Organizations. To help keep the search
+repositories list keep growing, you can add the Github organization name or the repository
+name(org/repo) in the `.search_sources.yml` file in `cli/popper/resources` and send a pull request
+to the upstream repository.
+
+
+To get the details of a searched action, use the `popper info` command. For example,
+
+```bash
+popper info popperized/cmake
+An action for building CMake projects.
+```
+
+
 ## Continuously validating a pipeline
 
 The `ci` subcommand generates configuration files for multiple CI 
