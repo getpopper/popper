@@ -27,7 +27,9 @@ def cli(ctx, keywords, update_cache, include_readme):
     metadata = pu.fetch_metadata(update_cache)
     result = search(metadata, keywords, include_readme)
     result = list(map(lambda x: x[0] + '/' + x[1], result))
-    log.info('Matched actions : {}'.format(result))
+    log.info('Matched actions : \n')
+    for action in result:
+        log.info('> {}\n'.format(action))
 
 
 def search(metadata, keyword, include_readme):
