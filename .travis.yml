@@ -13,4 +13,7 @@ before_install:
 install:
 - pip install cli/
 script:
-- popper run --recursive
+- export POPPER_TEST_MODE=with-git
+- popper run
+- export POPPER_TEST_MODE=without-git
+- popper run
