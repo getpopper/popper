@@ -382,16 +382,15 @@ class DockerRunner(ActionRunner):
 
         # Bind the local volumes to volumes inside container
         volumes = {}
-        volumes[env_vars['HOME']] = {'bind': '/github/home'}
+        volumes[env_vars['HOME']] = {'bind': env_vars['HOME']}
         volumes[env_vars['GITHUB_EVENT_PATH']] = {
             'bind': '/github/workflow/event.json'}
-        volumes[env_vars['GITHUB_WORKSPACE']] = {'bind': '/github/workspace'}
+        volumes[env_vars['GITHUB_WORKSPACE']] = {
+            env_vars['GITHUB_WORKSPACE']}
         volumes['/var/run/docker.sock'] = {'bind': '/var/run/docker.sock'}
 
         # Update the corresponding env vars accordingly.
-        env_vars['HOME'] = '/github/home'
         env_vars['GITHUB_EVENT_PATH'] = '/github/workflow/event.json'
-        env_vars['GITHUB_WORKSPACE'] = '/github/workspace'
 
         log.debug('Invoking docker_create() method')
         self.container = self.docker_client.containers.create(
