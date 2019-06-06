@@ -6,17 +6,9 @@
 [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
-Popper is a workflow execution engine based on [Github 
-actions](https://github.com/features/actions) (GHA) that allows you to 
-execute GHA workflows locally on your machine. Popper workflows are 
-defined in [HCL](https://github.com/hashicorp/hcl) syntax and behave 
-like GHA workflows. The main difference with respect to GHA workflows 
-is that, through [several extensions to the GHA 
-syntax](https://popper.rtfd.io/en/latest/sections/extensions.html), a 
-Popper workflow can execute actions in other runtimes in addition to 
-Docker. The workflow language is strictly a superset of GHA workflow 
-language so Popper can run a GHA workflow locally as if it was being 
-executed by the GHA platform.
+Popper is a [Github Actions](https://github.com/features/actions) 
+(GHA) workflow execution engine that allows you to execute GHA 
+workflows locally on your machine and CI services.
 
 <p align="center">
   <img src="docs/figures/demo.gif" width="800">
@@ -25,23 +17,23 @@ executed by the GHA platform.
 In addition to running a GHA workflow locally, the goal of this 
 project is to provide the following functionality:
 
-  * **Runtimes**. Actions can execute locally on the host where the 
-    `popper` command runs (i.e. "outside" a container), thus not 
-    strictly depending on having Docker installed. We are working in 
-    adding support for other runtimes such as 
+  * **Continuous integration**. Generate configuration files for 
+    distinct CI services, allowing users to execute Github Action 
+    workflows on these services (Travis, Jenkins, Gitlab and Circle 
+    supported). [See here for 
+    more](https://medium.com/getpopper/waiting-for-your-github-actions-invite-wait-no-longer-cf310b8c630c).
+  * **Other Runtimes**. We are working in adding support for 
+    transparently running workflows in other runtimes such as 
     [Vagrant](https://www.vagrantup.com/), 
-    [Singularity](https://sylabs.io/), [Conda](https://conda.io) and 
+    [Singularity](https://sylabs.io/), [cri-o](https://cri-o.io) and 
     others (see [this 
     project](https://github.com/systemslab/popper/projects/12) for 
     more).
-  * **Continuous integration**. Generate configuration files for 
-    distinct CI services, allowing users to execute Popper workflows 
-    on these services (Travis, Jenkins, Gitlab and Circle supported).
-  * **Action and workflow search**. Provide users with a searchable 
-    catalog of available actions and workflows so that they can re-use 
-    as much as possible what others have already done.
+  * **Action and workflow search**. Provide with a searchable catalog 
+    of publicly available actions (and workflows) so that you do not 
+    need to re-invent the wheel.
   * **Scaffolding**. Aid in the implementation of new actions and 
-    workflows, as well as extending existing ones.
+    workflows.
   * **Action library**. As part of our efforts, we maintain a list of 
     actions available at <https://github.com/popperized>.
 
