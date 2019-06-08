@@ -144,12 +144,15 @@ def clone(url, org, repo, repo_parent_dir, version=None):
 
     init_repo_object()
 
-    git.Repo.clone_from(
-        '{}{}/{}'.format(url, org, repo.split('@')[0]),
-        os.path.join(repo_parent_dir, repo),
-        depth=1,
-        branch=version
-    )
+    repo_url = '{}{}/{}'.format(url, org, repo.split('@')[0])
+    repo_dir = os.path.join(repo_parent_dir, repo)
+
+    git_args = {'depth': 1}
+
+    if version:
+        git_args['branch'] = version
+
+    git.Repo.clone_from(repo_url, repo_dir, **git_args)
 
 
 def get_git_files():

@@ -180,8 +180,7 @@ class WorkflowRunner(object):
             'GITHUB_ACTOR': 'popper',
             'GITHUB_REPOSITORY': repo_id,
             'GITHUB_EVENT_NAME': new_wf.on,
-            'GITHUB_EVENT_PATH': '{}/{}'.format(workspace,
-                                                'workflow/event.json'),
+            'GITHUB_EVENT_PATH': '/tmp/github_event.json',
             'GITHUB_SHA': scm.get_sha(),
             'GITHUB_REF': scm.get_ref()
         }
@@ -222,6 +221,7 @@ class WorkflowRunner(object):
 
         url, service, user, repo, _, version = scm.parse(path)
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
+
         scm.clone(url, user, repo, os.path.dirname(
             cloned_project_dir), version
         )
@@ -234,7 +234,7 @@ class WorkflowRunner(object):
             elif os.path.isfile(ptw_two):
                 path_to_workflow = ptw_two
             else:
-                log.fail("Unable to find a .workflow file")
+                log.fail("Unable to find main.workflow file")
         elif len(parts) >= 4:
             path_to_workflow = os.path.join(
                 cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
@@ -242,24 +242,16 @@ class WorkflowRunner(object):
                 path_to_workflow = os.path.join(
                     path_to_workflow, 'main.workflow')
             if not os.path.isfile(path_to_workflow):
-                log.fail("Unable to find a .workflow file")
+                log.fail("Unable to find a main.workflow file")
 
-        shutil.copy(path_to_workflow, project_root)
+        if '.github/' in path_to_workflow:
+            path_to_copy = os.path.dirname(os.path.dirname(path_to_workflow))
+        else:
+            path_to_copy = os.path.dirname(path_to_workflow)
+
+
+        copy_tree(path_to_copy, project_root)
         log.info("Successfully imported from {}".format(path_to_workflow))
-
-        wf = Workflow(path_to_workflow)
-
-        action_paths = list()
-        for _, a_block in wf.actions.items():
-            if a_block['uses'].startswith("./"):
-                action_paths.append(a_block['uses'])
-
-        action_paths = set([a.split("/")[1] for a in action_paths])
-        for a in action_paths:
-            copy_tree(os.path.join(cloned_project_dir, a),
-                      os.path.join(project_root, a))
-            log.info("Copied {} to {}...".format(os.path.join(
-                cloned_project_dir, a), project_root))
 
 
 class ActionRunner(object):
@@ -392,7 +384,13 @@ class DockerRunner(ActionRunner):
         # Update the corresponding env vars accordingly.
         env_vars['GITHUB_EVENT_PATH'] = '/github/workflow/event.json'
 
-        log.debug('Invoking docker_create() method')
+        log.debug(
+            'Invoking docker_create() method\n' +
+            '  img: {}\n'.format(img) +
+            '  cmd: {}\n'.format(self.action.get('args', None)) +
+            '  vol: {}\n'.format(volumes) +
+            '  args: {}'.format(self.action.get('args', None))
+        )
         self.container = self.docker_client.containers.create(
             image=img,
             command=self.action.get('args', None),
