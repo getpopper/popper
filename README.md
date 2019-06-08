@@ -6,16 +6,15 @@
 [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
-Popper is a [Github Actions](https://github.com/features/actions) 
-(GHA) workflow execution engine that allows you to execute GHA 
-workflows locally on your machine and CI services.
-
 <p align="center">
   <img src="docs/figures/demo.gif" width="800">
 </p>
 
-In addition to running a GHA workflow locally, the goal of this 
-project is to provide the following functionality:
+Popper is a [Github Actions](https://github.com/features/actions) 
+(GHA) workflow execution engine that allows you to execute GHA 
+workflows locally on your machine and CI services. In addition to 
+running a GHA workflow locally, the goal of this project is to provide 
+the following functionality:
 
   * **Continuous integration**. Generate configuration files for 
     distinct CI services, allowing users to execute Github Action 

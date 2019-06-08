@@ -211,15 +211,15 @@ class WorkflowRunner(object):
                 wf.get_runner(action).run(reuse)
 
     @staticmethod
-    def import_from_repo(path, project_root):
-        parts = scm.get_parts(path)
+    def import_from_repo(action_ref, project_root):
+        parts = scm.get_parts(action_ref)
         if len(parts) < 3:
             log.fail(
                 'Required url format: \
                  <url>/<user>/<repo>[/folder[/wf.workflow]]'
             )
 
-        url, service, user, repo, _, version = scm.parse(path)
+        url, service, user, repo, _, version = scm.parse(action_ref)
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
 
         scm.clone(url, user, repo, os.path.dirname(
@@ -251,7 +251,7 @@ class WorkflowRunner(object):
 
 
         copy_tree(path_to_copy, project_root)
-        log.info("Successfully imported from {}".format(path_to_workflow))
+        log.info("Successfully imported from {}".format(action_ref))
 
 
 class ActionRunner(object):
