@@ -198,3 +198,19 @@ popper run
 
 rm "$HOME/popperfile" ./popperfile
 
+# test deeply nested action directories
+init_test_repo
+cd $test_repo_path
+
+cat <<EOF > main.workflow
+workflow "test deeply nested action" {
+  resolves = ["test"]
+}
+
+action "test" {
+  uses = "jayjeetatgithub/sample-action/l1/l2/l3/l4/sh@master"
+  args = ["ls"]
+}
+EOF
+
+popper run --debug

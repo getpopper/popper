@@ -211,22 +211,16 @@ class WorkflowRunner(object):
                 wf.get_runner(action).run(reuse)
 
     @staticmethod
-    def import_from_repo(action_ref, project_root):
-        parts = scm.get_parts(action_ref)
-        if len(parts) < 3:
-            log.fail(
-                'Required url format: \
-                 <url>/<user>/<repo>[/folder[/wf.workflow]]'
-            )
+    def import_from_repo(path, project_root):
+        url, service, user, repo, action_dir, version = scm.parse(path)
 
-        url, service, user, repo, _, version = scm.parse(action_ref)
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
 
         scm.clone(url, user, repo, os.path.dirname(
             cloned_project_dir), version
         )
 
-        if len(parts) == 3:
+        if not action_dir:
             ptw_one = os.path.join(cloned_project_dir, "main.workflow")
             ptw_two = os.path.join(cloned_project_dir, ".github/main.workflow")
             if os.path.isfile(ptw_one):
@@ -237,7 +231,7 @@ class WorkflowRunner(object):
                 log.fail("Unable to find main.workflow file")
         elif len(parts) >= 4:
             path_to_workflow = os.path.join(
-                cloned_project_dir, '/'.join(parts[3:])).split("@")[0]
+                cloned_project_dir, action_dir)
             if not os.path.basename(path_to_workflow).endswith('.workflow'):
                 path_to_workflow = os.path.join(
                     path_to_workflow, 'main.workflow')
