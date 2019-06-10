@@ -15,5 +15,5 @@ def cli(ctx, path):
     """
     try:
         WorkflowRunner.import_from_repo(path, os.getcwd())
-    except Exception:
-        log.fail('Failed to import from {} !'.format(path))
+    except Exception as e:
+        log.fail('Failed to import from {}:\n{}'.format(path, e))
