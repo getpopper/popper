@@ -229,7 +229,7 @@ class WorkflowRunner(object):
                 path_to_workflow = ptw_two
             else:
                 log.fail("Unable to find main.workflow file")
-        elif len(parts) >= 4:
+        else:
             path_to_workflow = os.path.join(
                 cloned_project_dir, action_dir)
             if not os.path.basename(path_to_workflow).endswith('.workflow'):
@@ -242,7 +242,6 @@ class WorkflowRunner(object):
             path_to_copy = os.path.dirname(os.path.dirname(path_to_workflow))
         else:
             path_to_copy = os.path.dirname(path_to_workflow)
-
 
         copy_tree(path_to_copy, project_root)
         log.info("Successfully imported from {}".format(action_ref))
