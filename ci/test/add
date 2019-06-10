@@ -1,110 +1,107 @@
 #!/bin/bash
 set -ex
-# shellcheck source=./ci/test/common
-source ./common
-init_test_repo
-cd "$test_repo_path"
+
+function cleanup {
+  cd /tmp
+  rm -rf test_folder/
+  mkdir test_folder
+  cd test_folder
+}
+
+cleanup
 
 popper add https://github.com/actions/bin@master
-test -f /tmp/mypaper/main.workflow
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/actions/bin/.github@master
-test -f /tmp/mypaper/main.workflow
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/actions/bin/.github/main.workflow@master
-test -f /tmp/mypaper/main.workflow
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add cplee/github-actions-demo@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add cplee/github-actions-demo/.github@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add cplee/github-actions-demo/.github/main.workflow@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/cplee/github-actions-demo@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/cplee/github-actions-demo/.github@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/cplee/github-actions-demo/.github/main.workflow@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@master
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/JayjeetAtGithub/github-actions-demo@develop
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/JayjeetAtGithub/github-actions-demo/.github@develop
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://github.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo@develop
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github@develop
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
 
 popper add https://gitlab.com/JayjeetAtGithub/github-actions-demo/.github/main.workflow@develop
-test -f /tmp/mypaper/.github/actions/jshint/Dockerfile
-test -f /tmp/mypaper/main.workflow
-rm -rf /tmp/mypaper/.github
-rm /tmp/mypaper/main.workflow
+test -f /tmp/test_folder/.github/actions/jshint/Dockerfile
+test -f /tmp/test_folder/.github/main.workflow
+cleanup
+
+popper add popperized/popper-examples/workflows/cloudlab-iperf
+test -f /tmp/test_folder/main.workflow
+test -d /tmp/test_folder/geni
+test -d /tmp/test_folder/ansible
+test -d /tmp/test_folder/gnuplot
+cleanup
 
 echo "Popper add command ran successfully !"
