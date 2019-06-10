@@ -211,8 +211,8 @@ class WorkflowRunner(object):
                 wf.get_runner(action).run(reuse)
 
     @staticmethod
-    def import_from_repo(path, project_root):
-        url, service, user, repo, action_dir, version = scm.parse(path)
+    def import_from_repo(action_ref, project_root):
+        url, service, user, repo, action_dir, version = scm.parse(action_ref)
 
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
 
