@@ -1,4 +1,5 @@
 import os
+import re
 import shutil
 import git
 from popper.cli import log
@@ -170,52 +171,43 @@ def get_git_files():
 
 
 def parse(url):
-    service_url = None
-    service = None
-    user = None
-    repo = None
+    """Method to parse the git url.
 
-    parts = url.split('/')
-    tail = parts[-1]
+    Args:
+        url (str) : The url in string format.
 
-    if url.startswith('https://'):
-        url = url[8:]
-        parts = url.split('/')
-        service_url = 'https://' + parts[0]
-        service = parts[0]
-        user = parts[1]
-        repo = parts[2]
-    elif url.startswith('http://'):
-        url = url[7:]
-        service_url = 'http://' + parts[0]
-        service = parts[0]
-        user = parts[1]
-        repo = parts[2]
-    elif url.startswith('git@'):
-        service_url, remaining = url.split(':')
-        parts = remaining.split('/')
-        service = service_url[4:]
-        user = parts[0]
-        repo = parts[1]
-    elif url.startswith('ssh://'):
-        log.fail("The ssh protocol is not supported yet.")
-    else:
-        service_url = 'https://github.com'
+    Returns:
+        service_url, service, user, repo, action_dir, version
+    """
+
+    if url.startswith('ssh://'):
+        log.fail('The ssh protocol is not supported yet.')
+
+    pattern = re.compile(
+        r'^(http://|https://|git@)?(?:(\w+\.\w+)(?:\/|\:))?'
+        r'([\w\-]+)(?:\/([^\@^\/]+)\/?([^\@]+)?(?:\@([\w\W]+))?)$')
+
+    try:
+        protocol, service, user, repo, action_dir, version = pattern.search(
+            url).groups()
+    except AttributeError:
+        log.fail(
+            'Invalid url. The url should be in any of the 3 forms: \n'
+            '1) https://github.com/user/repo/path/to/action@version \n'
+            '2) gitlab.com/user/repo/path/to/action@version \n'
+            '3) user/repo/path/to/action@version'
+        )
+
+    if not service:
         service = 'github.com'
-        user = parts[0]
-        repo = parts[1]
 
-    if '@' in tail:
-        # check case when action is at root of repo (e.g. actions/foo@master)
-        if '@' in repo:
-            repo = tail.split('@')[0]
-            action_dir = ''
-        else:
-            action_dir = tail.split('@')[0]
-        version = tail.split('@')[1]
-    else:
-        action_dir = tail
-        version = None
+    if not protocol:
+        protocol = 'https://'
+
+    if not action_dir:
+        action_dir = ''
+
+    service_url = protocol + service
 
     log.debug('parse("{}"):'.format(url))
     log.debug('  service_url: {}'.format(service_url))
@@ -226,18 +218,3 @@ def parse(url):
     log.debug('  version: {}'.format(version))
 
     return service_url, service, user, repo, action_dir, version
-
-
-def get_parts(url):
-    if url.startswith('https://'):
-        parts = url[8:].split('/')
-    elif url.startswith('http://'):
-        parts = url[7:].split('/')
-    elif url.startswith('git@'):
-        service_url, rest = url.split(':')
-        parts = ['github.com'] + rest.split('/')
-    elif url.startswith('ssh://'):
-        log.fail('The ssh protocol is not supported yet.')
-    else:
-        parts = ['github.com'] + url.split('/')
-    return parts
