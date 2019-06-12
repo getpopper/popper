@@ -168,7 +168,8 @@ def read_search_sources():
         list : The list of actions.
     """
     response = make_gh_request(
-        'https://gist.githubusercontent.com/JayjeetAtGithub/1ce558c2a0fedb718db6c9f046c2130b/raw/9c2c9ef93ae2d98bc6f42d3e81bf0487f145b420/search_sources.yml')
+        'https://raw.githubusercontent.com/systemslab/popper/'
+        'master/cli/resources/search_sources.yml')
 
     return yaml.load(response.text, Loader=yaml.FullLoader)
 
