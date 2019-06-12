@@ -97,6 +97,12 @@ action "test skip" {
   runs = "skip"
 }
 
+action "test search" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "search"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -115,6 +121,7 @@ action "end" {
     "test singularity",
     "test validate",
     "test skip",
-    "test sh"
+    "test sh",
+    "test search"
   ]
 }

@@ -1,0 +1,25 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+! popper search gcloud 
+
+popper search --update-cache figshare > output
+grep -q 'popperized/figshare/upload' output
+grep -q 'popperized/figshare/download' output
+grep -q 'popperized/figshare/publish' output
+grep -q 'popperized/figshare/create' output
+test -f "$HOME/.cache/.popper_cache.yml"
+
+popper search --include-readme fig > output
+grep -q 'popperized/ansible' output
+grep -q 'actions/npm' output
+
+popper search --update-cache abc
+
+! popper info abc
+popper info apex/actions/go
+popper info popperized/figshare/download | grep "Action for Figshare-files-download"
