@@ -22,13 +22,18 @@ popper ci --service gitlab
 test -f .gitlab-ci.yml
 cat .gitlab-ci.yml
 
+popper ci --service brigade
+test -f brigade.js
+cat brigade.js
+
 popper ci --service travis --with-singularity
-test -f .travis.yml
 cat .travis.yml
 
 popper ci --service circle --with-singularity
-test -f .circleci/config.yml
 cat .circleci/config.yml
+
+popper ci --service brigade --with-singularity
+cat brigade.js
 
 ! popper ci --service jenkins --with-singularity
 

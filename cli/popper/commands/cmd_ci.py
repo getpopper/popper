@@ -1,4 +1,5 @@
 import os
+from string import Template
 
 import click
 
@@ -13,7 +14,7 @@ sudo apt-get -f install ./singularity-container_2.6.1-2~nd16.04+1_amd64.deb"""}
 
 ci_files = {
     'travis': {
-        './.travis.yml': """
+        './.travis.yml': Template("""
 ---
 dist: xenial
 language: python
@@ -23,12 +24,12 @@ install:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
 - pip install /tmp/popper/cli
-{}
+$install_scripts
 script: popper run
-"""
+""")
     },
     'circle': {
-        './.circleci/config.yml': """
+        './.circleci/config.yml': Template("""
 ---
 version: 2
 jobs:
@@ -41,24 +42,23 @@ jobs:
         git clone https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
         pip install /tmp/popper/cli
-        {}
+        $install_scripts
         popper run
-"""
+""")
     },
     'jenkins': {
-        './Jenkinsfile': """
+        './Jenkinsfile': Template("""
 ---
 stage ('Popper') {{ node {{
   sh "git clone https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
   sh "pip install /tmp/popper/cli"
-  sh "popper run
+  sh "popper run"
 }}}}
-"""
+""")
     },
     'gitlab': {
-
-        '.gitlab-ci.yml': """
+        '.gitlab-ci.yml': Template("""
 ---
 image: docker:stable
 
@@ -78,7 +78,25 @@ before_script:
 - pip install /tmp/popper/cli
 popper:
   script: popper run
-"""
+""")
+    },
+    'brigade': {
+        'brigade.js': Template("""
+const { events, Job } = require("brigadier")
+events.on("push", () => {
+    var popper = new Job("popper", "python:3.7-slim-stretch")
+    popper.tasks = [
+        "apt-get update",
+        "apt-get install -y git",
+        "git clone https://github.com/systemslab/popper /tmp/popper",
+        "export PYTHONUNBUFFERED=1",
+        "pip install /tmp/popper/cli",
+        $install_scripts
+        "popper run"
+    ]
+    popper.run()
+})
+""")
     }
 }
 
@@ -87,7 +105,7 @@ popper:
 @click.option(
     '--service',
     help='Name of CI service for which config files get generated.',
-    type=click.Choice(['travis', 'circle', 'jenkins', 'gitlab']),
+    type=click.Choice(['travis', 'circle', 'jenkins', 'gitlab', 'brigade']),
     required=True
 )
 @click.option(
@@ -131,13 +149,16 @@ def cli(ctx, service, with_singularity):
         if scripts:
             scripts = ' && '.join(scripts)
             if service == 'travis':
-                scripts = '- {}'.format(scripts)
+                scripts = '- ' + scripts
+            if service == 'brigade':
+                scripts = '"' + scripts + '",'
         else:
             scripts = ''
 
         # Write content
         with open(ci_file, 'w') as f:
-            f.write(reformat(ci_file_content.format(scripts)))
+            f.write(reformat(ci_file_content.safe_substitute(
+                {'install_scripts': scripts})))
 
     log.info('Wrote {} configuration successfully.'.format(service))
 
