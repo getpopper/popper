@@ -1,8 +1,21 @@
 import os
 import sys
 import threading
+from collections import defaultdict
+
+import yaml
+import click
+import requests
 
 from popper.cli import log
+from popper import scm
+
+if os.environ.get('XDG_CACHE_HOME', None):
+    CACHE_FILE = os.path.join(
+        os.environ['XDG_CACHE_HOME'], '.popper_cache.yml')
+else:
+    CACHE_FILE = os.path.join(
+        os.environ['HOME'], '.cache', '.popper_cache.yml')
 
 
 def decode(line):
@@ -104,3 +117,150 @@ def find_recursive_wfile():
                 wfile = os.path.abspath(wfile)
                 wfile_list.append(wfile)
     return wfile_list
+
+
+def get_gh_headers():
+    """Method for  getting the headers required for making authorized
+    GitHub API requests.
+    Returns:
+        headers (dict): a dictionary representing HTTP-headers and their
+        values.
+    """
+    gh_token = os.environ.get('POPPER_GITHUB_API_TOKEN', None)
+
+    headers = {}
+
+    if gh_token:
+        headers = {
+            'Authorization': 'token ' + gh_token
+        }
+
+    return headers
+
+
+def make_gh_request(url, err=True, msg=None):
+    """Method for making GET requests to GitHub API
+    Args:
+        url (str): URL on which the API request is to be made.
+        err (bool): Checks if an error message needs to be printed or not.
+        msg (str): Error message to be printed for a failed request.
+    Returns:
+        Response object: contains a server's response to an HTTP request.
+    """
+    if not msg:
+        msg = (
+            "Unable to connect. If your network is working properly, you might"
+            " have reached Github's API request limit. Try adding a Github API"
+            " token to the 'POPPER_GITHUB_API_TOKEN' variable."
+        )
+
+    response = requests.get(url, headers=get_gh_headers())
+    if err and response.status_code != 200:
+        log.fail(msg)
+    else:
+        return response
+
+
+def read_search_sources():
+    """Method to fetch the list of actions.
+
+    Returns:
+        list : The list of actions.
+    """
+    response = make_gh_request(
+        'https://gist.githubusercontent.com/JayjeetAtGithub/1ce558c2a0fedb718db6c9f046c2130b/raw/9c2c9ef93ae2d98bc6f42d3e81bf0487f145b420/search_sources.yml')
+
+    return yaml.load(response.text, Loader=yaml.FullLoader)
+
+
+def fetch_metadata(update_cache):
+    """Fetch metatdata of the repositories from the
+    search_sources on which to run the search.
+
+    Args:
+        update_cache (bool) : Flag variable to decide whether to update
+        the cache or not.
+
+    Returns:
+        dict : All metadata related to the actions.
+    """
+    update = False
+    if (not os.path.isfile(CACHE_FILE)) or update_cache:
+        update = True
+
+    if not update:
+        # Use metadata from cache and skip its update.
+        if not os.path.isfile(CACHE_FILE):
+            log.fail('Metadata cache does not exist.')
+
+        with open(CACHE_FILE, 'r') as cf:
+            metadata = yaml.load(cf, Loader=yaml.FullLoader)
+
+    else:
+        # Update the cache file.
+        log.info('Updating action metadata cache...\n')
+        search_sources = read_search_sources()
+
+        source_list = list()
+        for url in search_sources:
+            _, _, user, repo, path_to_action, version = scm.parse(url)
+            source_list.append((user, repo, path_to_action, version))
+
+        metadata = defaultdict(dict)
+        with click.progressbar(
+                source_list,
+                show_eta=False,
+                bar_template='[%(bar)s] %(info)s | %(label)s',
+                show_percent=True) as bar:
+            for r in bar:
+                user, repo, path_to_action, version = r[0], r[1], r[2], r[3]
+                action = os.path.normpath(
+                    os.path.join(user, repo, path_to_action))
+                bar.label = "Fetching action metadata from '{}'".format(action)
+                metadata[action] = fetch_repo_metadata(
+                    user, repo, path_to_action, version)
+
+        with open(CACHE_FILE, 'w') as cf:
+            yaml.dump(dict(metadata), cf)
+
+    return metadata
+
+
+def fetch_repo_metadata(user, repo, path_to_action, version):
+    """Returns the metadata for a repo.
+
+    Args:
+        user (str) : The user to which the actions belongs to.
+        repo (str) : The parent repository name.
+        path_to_action (str): The path to the action from the root.
+        version (str) : The branch where the action resides.
+
+    Returns:
+        dict : Metadata of the repo.
+    """
+    readme = fetch_readme_for_repo(user, repo, path_to_action, version)
+    meta = dict()
+    meta['repo_readme'] = readme
+    return meta
+
+
+def fetch_readme_for_repo(user, repo, path_to_action, version):
+    """Method to fetch the README for the repo
+    if present.
+
+    Args:
+        user (str) : The user to which the actions belongs to.
+        repo (str) : The parent repository name.
+        path_to_action (str): The path to the action from the root.
+        version (str) : The branch where the action resides.
+
+    Returns:
+        str : The contents of the README file.
+
+    """
+    if not version:
+        version = 'master'
+    url = os.path.join('https://raw.githubusercontent.com',
+                       user, repo, version, path_to_action, 'README.md')
+    r = make_gh_request(url, err=False)
+    return r.text
