@@ -8,15 +8,15 @@ cd "$test_repo_path"
 ! popper search gcloud 
 
 popper search --update-cache figshare > output
-cat output | grep 'popperized/figshare/upload'
-cat output | grep 'popperized/figshare/download'
-cat output | grep 'popperized/figshare/create'
-cat output | grep 'popperized/figshare/publish'
+grep -q 'popperized/figshare/upload' output
+grep -q 'popperized/figshare/download' output
+grep -q 'popperized/figshare/publish' output
+grep -q 'popperized/figshare/create' output
 test -f "$HOME/.cache/.popper_cache.yml"
 
 popper search --include-readme fig > output
-cat output | grep 'popperized/ansible'
-cat output | grep 'actions/npm'
+grep -q 'popperized/ansible' output
+grep -q 'actions/npm' output
 
 popper search --update-cache abc
 
