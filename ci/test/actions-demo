@@ -214,3 +214,81 @@ action "test" {
 EOF
 
 popper run --debug
+
+# test on-failure flag
+init_test_repo
+cd $test_repo_path
+
+cat <<EOF > main.workflow
+workflow "test-on-failure" {
+  resolves = ["test"]
+}
+
+action "test" {
+  uses = "sh"
+  args = ["lss"]
+}
+
+action "cleanup" {
+  uses = "sh"
+  args = ["echo", "Cleaning up..."]
+}
+EOF
+
+popper run --on-failure cleanup
+
+! popper run --on-failure clean
+
+cat <<EOF > main.workflow
+workflow "test-on-failure" {
+  resolves = ["test"]
+}
+
+action "test" {
+  uses = "sh"
+  args = ["ls", "-ltr"]
+}
+
+action "cleanup" {
+  uses = "sh"
+  args = ["echo", "Cleaning up..."]
+}
+EOF
+
+popper run --on-failure cleanup
+
+cat <<EOF > main.workflow
+workflow "test-on-failure" {
+  resolves = ["test"]
+}
+
+action "test" {
+  uses = "sh"
+  args = ["lss"]
+}
+
+action "cleanup" {
+  uses = "sh"
+  args = ["echo", "Cleaning up..."]
+}
+EOF
+
+! popper run
+
+cat <<EOF > main.workflow
+workflow "test-on-failure" {
+  resolves = ["test"]
+}
+
+action "test" {
+  uses = "sh"
+  args = ["lss"]
+}
+
+action "cleanup" {
+  uses = "sh"
+  args = ["echdo", "Cleaning up..."]
+}
+EOF
+
+popper run --on-failure cleanup
