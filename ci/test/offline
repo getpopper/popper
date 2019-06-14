@@ -1,0 +1,109 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+if [[ "$(docker images -q debian:stretch-slim 2> /dev/null)" != "" ]]; then
+docker rmi -f debian:stretch-slim
+fi
+
+cat <<EOF > main.workflow
+workflow "Sample Workflow" {
+    resolves = ["Sample Action"]
+}
+
+action "Sample Action" {
+    uses = "docker://debian:stretch-slim"
+    args = ["ls"]
+}
+EOF
+
+! popper run --offline
+
+rm -rf /tmp/actions/github.com/actions/bin
+
+cat <<EOF > main.workflow
+workflow "Sample Workflow" {
+    resolves = ["Sample Action"]
+}
+
+action "Sample Action" {
+    uses = "actions/bin/sh@master"
+    args = ["echo Hello World"]
+}
+EOF
+
+! popper run --offline
+
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["shub action"]
+}
+
+action "shub action" {
+  uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
+}
+EOF
+
+! popper run --offline
+
+rm -rf /tmp/actions/github.com/JayjeetAtGithub/actions-demo
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = ["public action"]
+}
+
+action "public action" {
+  uses = "JayjeetAtGithub/actions-demo/wget@master"
+  args = ["github.com"]
+}
+EOF
+
+! popper run --offline
+
+docker pull debian:stretch-slim
+git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
+
+cat <<EOF > main.workflow
+workflow "Sample Workflow" {
+    resolves = ["Sample Action One", "Sample Action Two"]
+}
+
+action "Sample Action One" {
+    uses = "docker://debian:stretch-slim"
+    args = ["ls"]
+}
+
+action "Sample Action Two" {
+    uses = "actions/bin/sh@master"
+    args = ["echo Hello World"]
+}
+EOF
+
+popper run --offline
+
+singularity pull --name shub_action.simg shub://singularityhub/centos
+git clone https://github.com/JayjeetAtGithub/actions-demo /tmp/actions/github.com/JayjeetAtGithub/actions-demo
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = ["shub action", "public action"]
+}
+
+action "shub action" {
+  uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
+}
+
+action "public action" {
+  uses = "JayjeetAtGithub/actions-demo/wget@master"
+  args = ["github.com"]
+}
+EOF
+
+popper run --offline --reuse

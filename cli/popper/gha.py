@@ -57,7 +57,7 @@ class WorkflowRunner(object):
                             'Enter the value for {} : '.format(s))
                         os.environ[s] = val
 
-    def download_actions(self, wf, dry_run):
+    def download_actions(self, wf, dry_run, offline):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
@@ -69,14 +69,19 @@ class WorkflowRunner(object):
 
             url, service, usr, repo, action_dir, version = scm.parse(a['uses'])
 
-            repo_parent_dir = os.path.join(
-                self.actions_cache_path, service, usr
+            repo_dir = os.path.join(
+                self.actions_cache_path, service, usr, repo
             )
 
-            a['repo_dir'] = os.path.join(repo_parent_dir, repo)
+            a['repo_dir'] = repo_dir
             a['action_dir'] = action_dir
 
             if dry_run:
+                continue
+
+            if offline:
+                if not os.path.exists(repo_dir):
+                    log.fail('Cannot find action folder locally.')
                 continue
 
             if not infoed:
@@ -86,48 +91,45 @@ class WorkflowRunner(object):
             if '{}/{}'.format(usr, repo) in cloned:
                 continue
 
-            if not os.path.exists(repo_parent_dir):
-                os.makedirs(repo_parent_dir)
-
             log.info('[popper] - {}/{}/{}@{}'.format(url, usr, repo, version))
-            scm.clone(url, usr, repo, repo_parent_dir, version)
+            scm.clone(url, usr, repo, repo_dir, version)
             cloned.add('{}/{}'.format(usr, repo))
 
-    def instantiate_runners(self, wf, workspace, env, dry_run):
+    def instantiate_runners(self, wf, workspace, env, dry_run, offline):
         """Factory of ActionRunner instances, one for each action"""
         for _, a in wf.actions.items():
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
                     a, workspace, env,
-                    dry_run)
+                    dry_run, offline)
                 continue
 
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, workspace, env,
-                    dry_run)
+                    dry_run, offline)
                 continue
 
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
                     a, workspace, env,
-                    dry_run)
+                    dry_run, offline)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
                         a, workspace, env,
-                        dry_run)
+                        dry_run, offline)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'Singularity')):
                     a['runner'] = SingularityRunner(
                         a, workspace, env,
-                        dry_run)
+                        dry_run, offline)
                 else:
                     a['runner'] = HostRunner(
                         a, workspace, env,
-                        dry_run)
+                        dry_run, offline)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -138,18 +140,18 @@ class WorkflowRunner(object):
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
                     a, workspace, env,
-                    dry_run)
+                    dry_run, offline)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
                     a, workspace, env,
-                    dry_run)
+                    dry_run, offline)
             else:
                 a['runner'] = HostRunner(
                     a, workspace, env,
-                    dry_run)
+                    dry_run, offline)
 
-    def run(self, action, skip, workspace, reuse, dry_run, parallel,
-            with_dependencies, skip_secrets_prompt=False):
+    def run(self, action, offline, skip, workspace, reuse, dry_run,
+            parallel, with_dependencies, skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = workspace
 
@@ -191,8 +193,8 @@ class WorkflowRunner(object):
             env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
 
         self.check_secrets(new_wf, dry_run, skip_secrets_prompt)
-        self.download_actions(new_wf, dry_run)
-        self.instantiate_runners(new_wf, workspace, env, dry_run)
+        self.download_actions(new_wf, dry_run, offline)
+        self.instantiate_runners(new_wf, workspace, env, dry_run, offline)
 
         for s in new_wf.get_stages():
             self.run_stage(new_wf, s, reuse, parallel)
@@ -218,9 +220,7 @@ class WorkflowRunner(object):
 
         cloned_project_dir = os.path.join("/tmp", service, user, repo)
 
-        scm.clone(url, user, repo, os.path.dirname(
-            cloned_project_dir), version
-        )
+        scm.clone(url, user, repo, cloned_project_dir, version)
 
         if not action_dir:
             ptw_one = os.path.join(cloned_project_dir, "main.workflow")
@@ -253,11 +253,12 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, dry_run):
+    def __init__(self, action, workspace, env, dry_run, offline):
         self.action = action
         self.workspace = workspace
         self.env = dict(env)
         self.dry_run = dry_run
+        self.offline = offline
         self.msg_prefix = "DRYRUN: " if dry_run else ""
 
         if not os.path.exists(self.workspace):
@@ -270,8 +271,9 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, dry):
-        super(DockerRunner, self).__init__(action, workspace, env, dry)
+    def __init__(self, action, workspace, env, dry, offline):
+        super(DockerRunner, self).__init__(
+            action, workspace, env, dry, offline)
         self.cid = self.action['name'].replace(' ', '_')
         self.docker_client = docker.from_env()
         self.container = None
@@ -386,16 +388,21 @@ class DockerRunner(ActionRunner):
             '  vol: {}\n'.format(volumes) +
             '  args: {}'.format(self.action.get('args', None))
         )
-        self.container = self.docker_client.containers.create(
-            image=img,
-            command=self.action.get('args', None),
-            name=self.cid,
-            volumes=volumes,
-            working_dir=env_vars['GITHUB_WORKSPACE'],
-            environment=env_vars,
-            entrypoint=self.action.get('runs', None),
-            detach=True
-        )
+
+        try:
+            self.container = self.docker_client.containers.create(
+                image=img,
+                command=self.action.get('args', None),
+                name=self.cid,
+                volumes=volumes,
+                working_dir=env_vars['GITHUB_WORKSPACE'],
+                environment=env_vars,
+                entrypoint=self.action.get('runs', None),
+                detach=True
+            )
+        except docker.errors.ImageNotFound:
+            log.fail('The required docker image {} was not found.'
+                     .format(img))
 
     def docker_start(self):
         log.info('{}[{}] docker start '.format(self.msg_prefix,
@@ -410,11 +417,12 @@ class DockerRunner(ActionRunner):
         return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
-        log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
-                                                self.action['name'], img))
-        if self.dry_run:
-            return
-        self.docker_client.images.pull(repository=img)
+        if not self.offline:
+            log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
+                                                    self.action['name'], img))
+            if self.dry_run:
+                return
+            self.docker_client.images.pull(repository=img)
 
     def docker_build(self, tag, path):
         log.info('{}[{}] docker build -t {} {}'.format(
@@ -428,9 +436,9 @@ class SingularityRunner(ActionRunner):
     """Singularity Action Runner Class
     """
 
-    def __init__(self, action, workspace, env, dry):
+    def __init__(self, action, workspace, env, dry, offline):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry)
+                                                dry, offline)
         self.pid = self.action['name'].replace(' ', '_')
         if not find_executable('singularity'):
             log.fail(
@@ -487,11 +495,16 @@ class SingularityRunner(ActionRunner):
     def singularity_pull(self, image):
         """Pulls an docker or singularity images from hub.
         """
-        log.info('{}[{}] singularity pull {}'.format(
-            self.msg_prefix, self.action['name'], image)
-        )
-        if not self.dry_run:
-            sclient.pull(image, name=self.image_name)
+        if not self.offline:
+            log.info('{}[{}] singularity pull {}'.format(
+                self.msg_prefix, self.action['name'], image)
+            )
+            if not self.dry_run:
+                sclient.pull(image, name=self.image_name)
+        else:
+            if not self.singularity_exists():
+                log.fail('The required singularity image {} was not found.'
+                         .format(self.image_name))
 
     def singularity_build(self, path):
         """Builds an image from a recipefile.
@@ -560,8 +573,8 @@ class HostRunner(ActionRunner):
     Host Action Runner Class.
     """
 
-    def __init__(self, action, workspace, env, dry):
-        super(HostRunner, self).__init__(action, workspace, env, dry)
+    def __init__(self, action, workspace, env, dry, offline):
+        super(HostRunner, self).__init__(action, workspace, env, dry, offline)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):

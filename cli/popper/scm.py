@@ -126,13 +126,12 @@ def get_remote_url():
     return url
 
 
-def clone(url, org, repo, repo_parent_dir, version=None):
+def clone(url, org, repo, repo_dir, version=None):
     """Clones a repository using Git. The URL for the repo is
     https://github.com/ by default. To override this, other URLs can be given
     by defining them in the 'action_urls' list specified in the .popper.yml
     file.
     """
-    repo_dir = os.path.join(repo_parent_dir, repo)
     if os.path.exists(repo_dir):
         cloned_repo = git.Repo(repo_dir)
         cloned_repo.remotes.origin.pull(version)
@@ -145,8 +144,7 @@ def clone(url, org, repo, repo_parent_dir, version=None):
 
     init_repo_object()
 
-    repo_url = '{}{}/{}'.format(url, org, repo.split('@')[0])
-    repo_dir = os.path.join(repo_parent_dir, repo)
+    repo_url = '{}{}/{}'.format(url, org, repo)
 
     git_args = {'depth': 1}
 

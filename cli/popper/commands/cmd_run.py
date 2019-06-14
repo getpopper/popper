@@ -93,8 +93,14 @@ from popper import log as logging
     help='Path to a log file. No log is created if this is not given.',
     required=False
 )
+@click.option(
+    '--offline',
+    help='Run a popper workflow without network connectivity.',
+    required=False,
+    is_flag=True
+)
 @pass_context
-def cli(ctx, action, wfile, skip, workspace, reuse,
+def cli(ctx, action, wfile, offline, skip, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel,
         log_file, with_dependencies, on_failure):
     """Executes one or more pipelines and reports on their status.
@@ -128,11 +134,11 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
     for wfile in wfile_list:
         wfile = pu.find_default_wfile(wfile)
         log.info("Found and running workflow at " + wfile)
-        run_pipeline(action, wfile, skip, workspace, reuse,
+        run_pipeline(action, wfile, offline, skip, workspace, reuse,
                      dry_run, parallel, with_dependencies, on_failure)
 
 
-def run_pipeline(action, wfile, skip, workspace, reuse,
+def run_pipeline(action, wfile, offline, skip, workspace, reuse,
                  dry_run, parallel, with_dependencies, on_failure):
 
     # Initialize a Worklow. During initialization all the validation
@@ -152,6 +158,10 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
             log.fail('--parallel is only supported on Python3')
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
+
+    if offline:
+        log.warn("Running in Offline mode. Please make sure that all "
+                 "the dependencies are available locally.")
 
     try:
         pipeline.run(action, skip, workspace, reuse, dry_run,

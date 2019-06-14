@@ -103,6 +103,12 @@ action "test search" {
   runs = "search"
 }
 
+action "test offline" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "offline"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -122,6 +128,7 @@ action "end" {
     "test validate",
     "test skip",
     "test sh",
-    "test search"
+    "test search",
+    "test offline"
   ]
 }
