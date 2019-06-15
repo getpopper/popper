@@ -123,7 +123,7 @@ Once `popper search` runs, it caches all the metadata related to the search.
 So, to get the latest releases of the actions, you might want to update the
 cache using the `--update-cache` flag.
 
-By default, popper searches for actions from a list present [here](../../cli/popper/resources/.search_sources.yml).
+By default, popper searches for actions from a list present [here](../../cli/resources/search_sources.yml).
 To help the list keep growing, you can add Github organization names or repository
 names(org/repo) and send a pull request to the upstream repository.
 
