@@ -160,6 +160,8 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
         if (e.code is not 0) and on_failure:
             pipeline.run(on_failure, list(), workspace, reuse, dry_run,
                          parallel, with_dependencies)
+        else:
+            raise
 
     if action:
         log.info('Action "{}" finished successfully.'.format(action))
