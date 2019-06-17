@@ -271,9 +271,9 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    def __init__(self, action, workspace, env, dry, offline):
+    def __init__(self, action, workspace, env, dry, skip_pull):
         super(DockerRunner, self).__init__(
-            action, workspace, env, dry, offline)
+            action, workspace, env, dry, skip_pull)
         self.cid = self.action['name'].replace(' ', '_')
         self.docker_client = docker.from_env()
         self.container = None
@@ -443,9 +443,9 @@ class SingularityRunner(ActionRunner):
     """Singularity Action Runner Class
     """
 
-    def __init__(self, action, workspace, env, dry, offline):
+    def __init__(self, action, workspace, env, dry, skip_pull):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry, offline)
+                                                dry, skip_pull)
         self.pid = self.action['name'].replace(' ', '_')
         if not find_executable('singularity'):
             log.fail(
@@ -580,8 +580,8 @@ class HostRunner(ActionRunner):
     Host Action Runner Class.
     """
 
-    def __init__(self, action, workspace, env, dry, offline):
-        super(HostRunner, self).__init__(action, workspace, env, dry, offline)
+    def __init__(self, action, workspace, env, dry, skip_pull):
+        super(HostRunner, self).__init__(action, workspace, env, dry, skip_pull)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
