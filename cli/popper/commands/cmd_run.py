@@ -173,21 +173,15 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         log.warn("Please make sure that all the required images are "
                  "present locally.")
 
-
-<< << << < ece0d6262c9aa868a891fdbe4521553ba66a0f00
    try:
-        pipeline.run(action, skip_clone, skip_pull, workspace, reuse, dry_run,
+        pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse, dry_run,
                      parallel, with_dependencies)
     except SystemExit as e:
         if (e.code is not 0) and on_failure:
-            pipeline.run(on_failure, list(), workspace, reuse, dry_run,
+            pipeline.run(on_failure, skip_clone, skip_pull, list(), workspace, reuse, dry_run,
                          parallel, with_dependencies)
         else:
             raise
-== =====
-   pipeline.run(action, skip_clone, skip_pull, skip, workspace,
-                 reuse, dry_run, parallel, with_dependencies)
->>>>>> > PEP8 fixes
 
    if action:
         log.info('Action "{}" finished successfully.'.format(action))
