@@ -60,6 +60,7 @@ EOF
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
 git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
+singularity pull --name sample_action_three.simg shub://singularityhub/centos
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
