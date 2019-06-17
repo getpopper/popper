@@ -67,7 +67,10 @@ class Workflow(object):
 
     def get_action(self, action):
         """Returns an action from a workflow."""
-        return self._workflow['action'][action]
+        if self._workflow['action'].get(action, None):
+            return self._workflow['action'][action]
+        else:
+            log.fail("Action '{}' doesn\'t exist.".format(action))
 
     @pu.threadsafe_generator
     def get_stages(self):
@@ -304,10 +307,7 @@ class Workflow(object):
         """
         workflow = deepcopy(self)
         for sa_name in skip_list:
-            try:
-                sa_block = workflow.get_action(sa_name)
-            except KeyError:
-                log.fail('Action {} doesn\'t exist.'.format(sa_name))
+            sa_block = workflow.get_action(sa_name)
 
             # Handle skipping of root action's
             if sa_name in workflow.root:
@@ -348,6 +348,7 @@ class Workflow(object):
 
         # The list of actions that needs to be preserved.
         workflow = deepcopy(self)
+
         actions = set(map(lambda x: x[0], workflow.actions.items()))
 
         required_actions = set()

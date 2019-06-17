@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import os
 import shutil
+import getpass
 import subprocess
 import multiprocessing as mp
 from copy import deepcopy
@@ -52,7 +53,8 @@ class WorkflowRunner(object):
                     if os.environ.get('CI') == "true":
                         log.fail('Secret {} not defined'.format(s))
                     else:
-                        val = input("Enter the value for {0}:\n".format(s))
+                        val = getpass.getpass(
+                            'Enter the value for {} : '.format(s))
                         os.environ[s] = val
 
     def download_actions(self, wf, dry_run):
@@ -146,8 +148,8 @@ class WorkflowRunner(object):
                     a, workspace, env,
                     dry_run)
 
-    def run(self, action, skip, workspace, reuse, dry_run,
-            parallel, with_dependencies, skip_secrets_prompt=False):
+    def run(self, action, skip, workspace, reuse, dry_run, parallel,
+            with_dependencies, skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = workspace
 
@@ -597,7 +599,7 @@ class HostRunner(ActionRunner):
 
         try:
             log.debug('Executing: {}'.format(' '.join(cmd)))
-            p = Popen(cmd, stdout=PIPE, stderr=STDOUT,
+            p = Popen(' '.join(cmd), stdout=PIPE, stderr=STDOUT, shell=True,
                       universal_newlines=True, preexec_fn=os.setsid)
 
             popper.cli.process_list.append(p.pid)
