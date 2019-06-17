@@ -63,7 +63,7 @@ git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
-    resolves = ["sample action one", "sample action two"]
+    resolves = ["sample action one", "sample action two", "sample action three"]
 }
 
 action "sample action one" {
@@ -74,6 +74,11 @@ action "sample action one" {
 action "sample action two" {
     uses = "actions/bin/sh@master"
     args = ["echo Hello World"]
+}
+
+action "sample action three" {
+  uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
 }
 EOF
 
