@@ -361,10 +361,6 @@ class DockerRunner(ActionRunner):
         self.container.remove(force=True)
 
     def docker_create(self, img):
-        if not self.docker_image_exists(img):
-            log.fail('The required docker image {} was not found.'
-                     .format(img))
-
         log.info('{}[{}] docker create {} {}'.format(
             self.msg_prefix,
             self.action['name'], img, ' '.join(self.action.get('args', ''))
@@ -430,6 +426,10 @@ class DockerRunner(ActionRunner):
             if self.dry_run:
                 return
             self.docker_client.images.pull(repository=img)
+        else:
+            if not self.docker_image_exists(img):
+                log.fail('The required docker image {} was not found.'
+                         .format(img))
 
     def docker_build(self, tag, path):
         log.info('{}[{}] docker build -t {} {}'.format(
@@ -581,7 +581,8 @@ class HostRunner(ActionRunner):
     """
 
     def __init__(self, action, workspace, env, dry, skip_pull):
-        super(HostRunner, self).__init__(action, workspace, env, dry, skip_pull)
+        super(HostRunner, self).__init__(
+            action, workspace, env, dry, skip_pull)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
