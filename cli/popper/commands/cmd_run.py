@@ -140,8 +140,8 @@ def cli(ctx, action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
     for wfile in wfile_list:
         wfile = pu.find_default_wfile(wfile)
         log.info("Found and running workflow at " + wfile)
-        run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
-                     dry_run, parallel, with_dependencies, on_failure)
+        run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace,
+                     reuse, dry_run, parallel, with_dependencies, on_failure)
 
 
 def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
@@ -173,7 +173,9 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         log.warn("Please make sure that all the required images are "
                  "present locally.")
 
-    try:
+
+<< << << < ece0d6262c9aa868a891fdbe4521553ba66a0f00
+   try:
         pipeline.run(action, skip_clone, skip_pull, workspace, reuse, dry_run,
                      parallel, with_dependencies)
     except SystemExit as e:
@@ -182,8 +184,12 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
                          parallel, with_dependencies)
         else:
             raise
+== =====
+   pipeline.run(action, skip_clone, skip_pull, skip, workspace,
+                 reuse, dry_run, parallel, with_dependencies)
+>>>>>> > PEP8 fixes
 
-    if action:
+   if action:
         log.info('Action "{}" finished successfully.'.format(action))
     else:
         log.info('Workflow finished successfully.')

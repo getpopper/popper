@@ -150,8 +150,9 @@ class WorkflowRunner(object):
                     a, workspace, env,
                     dry_run, skip_pull)
 
-    def run(self, action, skip_clone, skip_pull, skip, workspace, reuse, dry_run,
-            parallel, with_dependencies, skip_secrets_prompt=False):
+    def run(self, action, skip_clone, skip_pull, skip, workspace,
+            reuse, dry_run, parallel, with_dependencies,
+            skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = workspace
 
@@ -287,7 +288,7 @@ class DockerRunner(ActionRunner):
 
         if 'docker://' in self.action['uses']:
             tag = self.action['uses'].replace('docker://', '')
-            if not ':' in tag:
+            if ':' not in tag:
                 tag += ":latest"
             build = False
             dockerfile_path = 'n/a'
