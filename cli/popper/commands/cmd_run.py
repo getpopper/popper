@@ -173,7 +173,7 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         log.warn("Please make sure that all the required images are "
                  "present locally.")
 
-   try:
+    try:
         pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse, dry_run,
                      parallel, with_dependencies)
     except SystemExit as e:
@@ -183,7 +183,7 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         else:
             raise
 
-   if action:
+    if action:
         log.info('Action "{}" finished successfully.'.format(action))
     else:
         log.info('Workflow finished successfully.')
