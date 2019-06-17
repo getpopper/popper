@@ -95,13 +95,13 @@ from popper import log as logging
 )
 @click.option(
     '--skip-clone',
-    help='Run a popper workflow without pulling container images.',
+    help='Skip pulling docker or singularity images.',
     required=False,
     is_flag=True
 )
 @click.option(
     '--skip-pull',
-    help='Run a popper workflow without cloning anything from github.',
+    help='Skip cloning actions from github.',
     required=False,
     is_flag=True
 )
