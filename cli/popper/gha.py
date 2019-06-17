@@ -348,12 +348,23 @@ class DockerRunner(ActionRunner):
 
         return False
 
+    def docker_image_exists(self, img):
+        if self.dry_run:
+            return True
+        images = self.docker_client.images.list(all=True)
+        filtered_images = [i for i in images if img in i.tags]
+        return filtered_images
+
     def docker_rm(self):
         if self.dry_run:
             return
         self.container.remove(force=True)
 
     def docker_create(self, img):
+        if not self.docker_image_exists(img):
+            log.fail('The required docker image {} was not found.'
+                     .format(img))
+
         log.info('{}[{}] docker create {} {}'.format(
             self.msg_prefix,
             self.action['name'], img, ' '.join(self.action.get('args', ''))
@@ -389,20 +400,16 @@ class DockerRunner(ActionRunner):
             '  args: {}'.format(self.action.get('args', None))
         )
 
-        try:
-            self.container = self.docker_client.containers.create(
-                image=img,
-                command=self.action.get('args', None),
-                name=self.cid,
-                volumes=volumes,
-                working_dir=env_vars['GITHUB_WORKSPACE'],
-                environment=env_vars,
-                entrypoint=self.action.get('runs', None),
-                detach=True
-            )
-        except docker.errors.ImageNotFound:
-            log.fail('The required docker image {} was not found.'
-                     .format(img))
+        self.container = self.docker_client.containers.create(
+            image=img,
+            command=self.action.get('args', None),
+            name=self.cid,
+            volumes=volumes,
+            working_dir=env_vars['GITHUB_WORKSPACE'],
+            environment=env_vars,
+            entrypoint=self.action.get('runs', None),
+            detach=True
+        )
 
     def docker_start(self):
         log.info('{}[{}] docker start '.format(self.msg_prefix,
@@ -461,7 +468,7 @@ class SingularityRunner(ActionRunner):
             singularityfile_path = os.path.join(self.action['repo_dir'],
                                                 self.action['action_dir'])
         self.image_name = self.pid + '.simg'
-        if not reuse:
+        if (not reuse) and (not self.skip_pull):
             if self.singularity_exists():
                 self.singularity_rm()
             if build:

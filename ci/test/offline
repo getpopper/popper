@@ -39,6 +39,9 @@ EOF
 
 ! popper run --skip-clone
 
+if [ -f "sample_action.simg" ]; then
+rm sample_action.simg
+fi
 # singularity container not present locally, fail workflow using --skip-pull
 cat <<EOF > main.workflow
 workflow "sample workflow" {
