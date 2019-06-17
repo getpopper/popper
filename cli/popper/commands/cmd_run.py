@@ -17,6 +17,12 @@ from popper import log as logging
 @click.argument(
     'action', required=False)
 @click.option(
+    '--on-failure',
+    help='The action to run if there is a failure.',
+    required=False,
+    default=None
+)
+@click.option(
     '--with-dependencies',
     help='Run the action with all its dependencies.',
     required=False,
@@ -90,7 +96,7 @@ from popper import log as logging
 @pass_context
 def cli(ctx, action, wfile, skip, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel,
-        log_file, with_dependencies):
+        log_file, with_dependencies, on_failure):
     """Executes one or more pipelines and reports on their status.
     """
     popper.scm.get_git_root_folder()
@@ -123,11 +129,11 @@ def cli(ctx, action, wfile, skip, workspace, reuse,
         wfile = pu.find_default_wfile(wfile)
         log.info("Found and running workflow at " + wfile)
         run_pipeline(action, wfile, skip, workspace, reuse,
-                     dry_run, parallel, with_dependencies)
+                     dry_run, parallel, with_dependencies, on_failure)
 
 
 def run_pipeline(action, wfile, skip, workspace, reuse,
-                 dry_run, parallel, with_dependencies):
+                 dry_run, parallel, with_dependencies, on_failure):
 
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
@@ -147,8 +153,15 @@ def run_pipeline(action, wfile, skip, workspace, reuse,
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    pipeline.run(action, skip, workspace, reuse, dry_run,
-                 parallel, with_dependencies)
+    try:
+        pipeline.run(action, skip, workspace, reuse, dry_run,
+                     parallel, with_dependencies)
+    except SystemExit as e:
+        if (e.code is not 0) and on_failure:
+            pipeline.run(on_failure, list(), workspace, reuse, dry_run,
+                         parallel, with_dependencies)
+        else:
+            raise
 
     if action:
         log.info('Action "{}" finished successfully.'.format(action))
