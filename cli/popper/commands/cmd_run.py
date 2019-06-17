@@ -174,12 +174,12 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
                  "present locally.")
 
     try:
-        pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse, dry_run,
-                     parallel, with_dependencies)
+        pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse,
+                     dry_run, parallel, with_dependencies)
     except SystemExit as e:
         if (e.code is not 0) and on_failure:
-            pipeline.run(on_failure, skip_clone, skip_pull, list(), workspace, reuse, dry_run,
-                         parallel, with_dependencies)
+            pipeline.run(on_failure, skip_clone, skip_pull, list(), workspace,
+                         reuse, dry_run, parallel, with_dependencies)
         else:
             raise
 
