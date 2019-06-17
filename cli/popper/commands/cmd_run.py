@@ -94,13 +94,19 @@ from popper import log as logging
     required=False
 )
 @click.option(
-    '--offline',
-    help='Run a popper workflow without network connectivity.',
+    '--skip-clone',
+    help='Run a popper workflow without pulling container images.',
+    required=False,
+    is_flag=True
+)
+@click.option(
+    '--skip-pull',
+    help='Run a popper workflow without cloning anything from github.',
     required=False,
     is_flag=True
 )
 @pass_context
-def cli(ctx, action, wfile, offline, skip, workspace, reuse,
+def cli(ctx, action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         recursive, quiet, debug, dry_run, parallel,
         log_file, with_dependencies, on_failure):
     """Executes one or more pipelines and reports on their status.
@@ -134,11 +140,11 @@ def cli(ctx, action, wfile, offline, skip, workspace, reuse,
     for wfile in wfile_list:
         wfile = pu.find_default_wfile(wfile)
         log.info("Found and running workflow at " + wfile)
-        run_pipeline(action, wfile, offline, skip, workspace, reuse,
+        run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
                      dry_run, parallel, with_dependencies, on_failure)
 
 
-def run_pipeline(action, wfile, offline, skip, workspace, reuse,
+def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
                  dry_run, parallel, with_dependencies, on_failure):
 
     # Initialize a Worklow. During initialization all the validation
@@ -159,12 +165,16 @@ def run_pipeline(action, wfile, offline, skip, workspace, reuse,
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    if offline:
-        log.warn("Running in Offline mode. Please make sure that all "
-                 "the dependencies are available locally.")
+    if skip_clone:
+        log.warn("Please make sure that all the required action repositories "
+                 "are available locally.")
+
+    if skip_pull:
+        log.warn("Please make sure that all the required images are "
+                 "present locally.")
 
     try:
-        pipeline.run(action, skip, workspace, reuse, dry_run,
+        pipeline.run(action, skip_clone, skip_pull, workspace, reuse, dry_run,
                      parallel, with_dependencies)
     except SystemExit as e:
         if (e.code is not 0) and on_failure:

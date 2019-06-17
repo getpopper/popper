@@ -57,7 +57,7 @@ class WorkflowRunner(object):
                             'Enter the value for {} : '.format(s))
                         os.environ[s] = val
 
-    def download_actions(self, wf, dry_run, offline):
+    def download_actions(self, wf, dry_run, skip_clone):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
@@ -79,7 +79,7 @@ class WorkflowRunner(object):
             if dry_run:
                 continue
 
-            if offline:
+            if skip_clone:
                 if not os.path.exists(repo_dir):
                     log.fail('Cannot find action folder locally.')
                 continue
@@ -95,41 +95,41 @@ class WorkflowRunner(object):
             scm.clone(url, usr, repo, repo_dir, version)
             cloned.add('{}/{}'.format(usr, repo))
 
-    def instantiate_runners(self, wf, workspace, env, dry_run, offline):
+    def instantiate_runners(self, wf, workspace, env, dry_run, skip_pull):
         """Factory of ActionRunner instances, one for each action"""
         for _, a in wf.actions.items():
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
                     a, workspace, env,
-                    dry_run, offline)
+                    dry_run, skip_pull)
                 continue
 
             if 'docker://' in a['uses']:
                 a['runner'] = DockerRunner(
                     a, workspace, env,
-                    dry_run, offline)
+                    dry_run, skip_pull)
                 continue
 
             if 'shub://' in a['uses']:
                 a['runner'] = SingularityRunner(
                     a, workspace, env,
-                    dry_run, offline)
+                    dry_run, skip_pull)
                 continue
 
             if './' in a['uses']:
                 if os.path.exists(os.path.join(a['uses'], 'Dockerfile')):
                     a['runner'] = DockerRunner(
                         a, workspace, env,
-                        dry_run, offline)
+                        dry_run, skip_pull)
                 elif os.path.exists(os.path.join(a['uses'],
                                                  'Singularity')):
                     a['runner'] = SingularityRunner(
                         a, workspace, env,
-                        dry_run, offline)
+                        dry_run, skip_pull)
                 else:
                     a['runner'] = HostRunner(
                         a, workspace, env,
-                        dry_run, offline)
+                        dry_run, skip_pull)
                 continue
 
             dockerfile_path = os.path.join(a['repo_dir'], a['action_dir'],
@@ -140,17 +140,17 @@ class WorkflowRunner(object):
             if os.path.exists(dockerfile_path):
                 a['runner'] = DockerRunner(
                     a, workspace, env,
-                    dry_run, offline)
+                    dry_run, skip_pull)
             elif os.path.exists(singularityfile_path):
                 a['runner'] = SingularityRunner(
                     a, workspace, env,
-                    dry_run, offline)
+                    dry_run, skip_pull)
             else:
                 a['runner'] = HostRunner(
                     a, workspace, env,
-                    dry_run, offline)
+                    dry_run, skip_pull)
 
-    def run(self, action, offline, skip, workspace, reuse, dry_run,
+    def run(self, action, skip_clone, skip_pull, skip, workspace, reuse, dry_run,
             parallel, with_dependencies, skip_secrets_prompt=False):
         """Run the pipeline or a specific action"""
         os.environ['WORKSPACE'] = workspace
@@ -193,8 +193,8 @@ class WorkflowRunner(object):
             env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
 
         self.check_secrets(new_wf, dry_run, skip_secrets_prompt)
-        self.download_actions(new_wf, dry_run, offline)
-        self.instantiate_runners(new_wf, workspace, env, dry_run, offline)
+        self.download_actions(new_wf, dry_run, skip_clone)
+        self.instantiate_runners(new_wf, workspace, env, dry_run, skip_pull)
 
         for s in new_wf.get_stages():
             self.run_stage(new_wf, s, reuse, parallel)
@@ -253,12 +253,12 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, dry_run, offline):
+    def __init__(self, action, workspace, env, dry_run, skip_pull):
         self.action = action
         self.workspace = workspace
         self.env = dict(env)
         self.dry_run = dry_run
-        self.offline = offline
+        self.skip_pull = skip_pull
         self.msg_prefix = "DRYRUN: " if dry_run else ""
 
         if not os.path.exists(self.workspace):
@@ -417,7 +417,7 @@ class DockerRunner(ActionRunner):
         return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
-        if not self.offline:
+        if not self.skip_pull:
             log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
                                                     self.action['name'], img))
             if self.dry_run:
@@ -495,7 +495,7 @@ class SingularityRunner(ActionRunner):
     def singularity_pull(self, image):
         """Pulls an docker or singularity images from hub.
         """
-        if not self.offline:
+        if not self.skip_pull:
             log.info('{}[{}] singularity pull {}'.format(
                 self.msg_prefix, self.action['name'], image)
             )
