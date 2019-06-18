@@ -1,0 +1,86 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+# docker image not present locally, fail workflow using --skip-pull
+if [[ "$(docker images -q debian:stretch-slim 2> /dev/null)" != "" ]]; then
+docker rmi -f debian:stretch-slim
+fi
+
+cat <<EOF > main.workflow
+workflow "sample workflow" {
+    resolves = ["sample action"]
+}
+
+action "sample action" {
+    uses = "docker://debian:stretch-slim"
+    args = ["ls"]
+}
+EOF
+
+! popper run --skip-pull
+
+# action repo not present locally, fail workflow using --skip-clone
+rm -rf /tmp/actions/github.com/actions/bin
+
+cat <<EOF > main.workflow
+workflow "sample workflow" {
+    resolves = ["sample action"]
+}
+
+action "sample action" {
+    uses = "actions/bin/sh@master"
+    args = ["echo Hello World"]
+}
+EOF
+
+! popper run --skip-clone
+
+if [ -f "sample_action.simg" ]; then
+rm sample_action.simg
+fi
+# singularity container not present locally, fail workflow using --skip-pull
+cat <<EOF > main.workflow
+workflow "sample workflow" {
+  resolves = ["sample action"]
+}
+
+action "sample action" {
+  uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
+}
+EOF
+
+! popper run --skip-pull
+
+
+# all actions, images, containers present locally, using --skip-clone, --skip-pull together.
+docker pull debian:stretch-slim
+git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
+singularity pull --name sample_action_three.simg shub://singularityhub/centos
+
+cat <<EOF > main.workflow
+workflow "sample workflow" {
+    resolves = ["sample action one", "sample action two", "sample action three"]
+}
+
+action "sample action one" {
+    uses = "docker://debian:stretch-slim"
+    args = ["ls"]
+}
+
+action "sample action two" {
+    uses = "actions/bin/sh@master"
+    args = ["echo Hello World"]
+}
+
+action "sample action three" {
+  uses = "shub://singularityhub/centos"
+  runs = ["ls", "-al"]
+}
+EOF
+
+popper run --skip-clone --skip-pull
