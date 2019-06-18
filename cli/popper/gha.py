@@ -431,7 +431,7 @@ class DockerRunner(ActionRunner):
             self.docker_client.images.pull(repository=img)
         else:
             if not self.docker_image_exists(img):
-                log.fail('The required docker image {} was not found.'
+                log.fail('The required docker image {} was not found locally.'
                          .format(img))
 
     def docker_build(self, tag, path):
@@ -513,8 +513,8 @@ class SingularityRunner(ActionRunner):
                 sclient.pull(image, name=self.image_name)
         else:
             if not self.singularity_exists():
-                log.fail('The required singularity image {} was not found.'
-                         .format(self.image_name))
+                log.fail('The required singularity image {} was not found '
+                         'locally.'.format(self.image_name))
 
     def singularity_build(self, path):
         """Builds an image from a recipefile.

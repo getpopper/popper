@@ -165,14 +165,6 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    if skip_clone:
-        log.warn("Please make sure that all the required action repositories "
-                 "are available locally.")
-
-    if skip_pull:
-        log.warn("Please make sure that all the required images are "
-                 "present locally.")
-
     try:
         pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse,
                      dry_run, parallel, with_dependencies)
