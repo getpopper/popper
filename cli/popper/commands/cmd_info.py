@@ -20,7 +20,7 @@ def cli(ctx, action, update_cache):
     action_metadata = metadata.get(action, None)
 
     if not action_metadata:
-        log.fail('Unable to find metadata for given pipeline.')
+        log.fail('Unable to find metadata for given action.')
 
     if not action_metadata['repo_readme']:
         log.fail('This repository does not have a README.md file.')
