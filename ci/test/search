@@ -5,21 +5,33 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
-! popper search gcloud 
+# cache not present initially, expected to be created through this.
+popper search gcloud
+test -f "$HOME/.cache/.popper_cache.yml"
 
+# test update cache feature
 popper search --update-cache figshare > output
 grep -q 'popperized/figshare/upload' output
 grep -q 'popperized/figshare/download' output
 grep -q 'popperized/figshare/publish' output
 grep -q 'popperized/figshare/create' output
-test -f "$HOME/.cache/.popper_cache.yml"
 
+# test include readme feature
 popper search --include-readme fig > output
 grep -q 'popperized/ansible' output
 grep -q 'actions/npm' output
 
-popper search --update-cache abc
+# test no actions found
+popper search abc > output
+grep -q 'No matching actions found.' output
 
+# test unable to find action metadata
 ! popper info abc
-popper info apex/actions/go
-popper info popperized/figshare/download | grep "Action for Figshare-files-download"
+
+# test info not found
+popper info apex/actions/go > output
+grep -q '404: Not Found' output
+
+# test successfull info 
+popper info popperized/figshare/download > output 
+grep -q 'Action for Figshare-files-download' output
