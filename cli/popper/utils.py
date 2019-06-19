@@ -10,12 +10,13 @@ import requests
 from popper.cli import log
 from popper import scm
 
-if os.environ.get('XDG_CACHE_HOME', None):
-    CACHE_FILE = os.path.join(
-        os.environ['XDG_CACHE_HOME'], '.popper_cache.yml')
-else:
-    CACHE_FILE = os.path.join(
-        os.environ['HOME'], '.cache', '.popper_cache.yml')
+
+def setup_cache():
+    xdg_cache_dir = os.environ.get(
+        'XDG_CACHE_HOME', os.path.join(os.environ['HOME'], '.cache'))
+    if not os.path.isdir(xdg_cache_dir):
+        os.makedirs(xdg_cache_dir)
+    return os.path.join(xdg_cache_dir, '.popper_cache.yml')
 
 
 def decode(line):
@@ -185,16 +186,15 @@ def fetch_metadata(update_cache):
     Returns:
         dict : All metadata related to the actions.
     """
+    cache_file = setup_cache()
+
     update = False
-    if (not os.path.isfile(CACHE_FILE)) or update_cache:
+    if (not os.path.isfile(cache_file)) or update_cache:
         update = True
 
     if not update:
         # Use metadata from cache and skip its update.
-        if not os.path.isfile(CACHE_FILE):
-            log.fail('Metadata cache does not exist.')
-
-        with open(CACHE_FILE, 'r') as cf:
+        with open(cache_file, 'r') as cf:
             metadata = yaml.load(cf, Loader=yaml.FullLoader)
 
     else:
@@ -221,7 +221,7 @@ def fetch_metadata(update_cache):
                 metadata[action] = fetch_repo_metadata(
                     user, repo, path_to_action, version)
 
-        with open(CACHE_FILE, 'w') as cf:
+        with open(cache_file, 'w') as cf:
             yaml.dump(dict(metadata), cf)
 
     return metadata
