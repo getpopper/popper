@@ -8,7 +8,7 @@ from popper.cli import log, pass_context
 
 
 @click.argument(
-    'keywords',
+    'keyword',
     required=True
 )
 @click.option(
@@ -23,9 +23,9 @@ from popper.cli import log, pass_context
 )
 @click.command('search', short_help='Search for actions on Github.')
 @pass_context
-def cli(ctx, keywords, update_cache, include_readme):
+def cli(ctx, keyword, update_cache, include_readme):
     metadata = pu.fetch_metadata(update_cache)
-    result = search(metadata, keywords, include_readme)
+    result = search(metadata, keyword, include_readme)
     log.info('Search Results : \n')
     if result:
         for action in result:
