@@ -212,12 +212,13 @@ def fetch_metadata(update_cache):
                 source_list,
                 show_eta=False,
                 bar_template='[%(bar)s] %(info)s | %(label)s',
-                show_percent=True) as bar:
+                show_percent=True,
+                width=30) as bar:
             for r in bar:
                 user, repo, path_to_action, version = r[0], r[1], r[2], r[3]
                 action = os.path.normpath(
                     os.path.join(user, repo, path_to_action))
-                bar.label = "Fetching action metadata from '{}'".format(action)
+                bar.label = "{}".format(action)
                 metadata[action] = fetch_repo_metadata(
                     user, repo, path_to_action, version)
 
