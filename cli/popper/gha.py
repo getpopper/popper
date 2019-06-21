@@ -50,7 +50,7 @@ class WorkflowRunner(object):
         for _, a in wf.actions.items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
-                    if os.environ.get('CI') == "true":
+                    if os.environ.get('CI') == 'true':
                         log.fail('Secret {} not defined'.format(s))
                     else:
                         val = getpass.getpass(
