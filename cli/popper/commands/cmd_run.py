@@ -121,19 +121,22 @@ def cli(ctx, action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
     if log_file:
         logging.add_log(log, log_file)
 
-    if os.environ.get('CI') == "true":
-        # If running in CI environment, manipulate the workflow files.
+    if os.environ.get('CI') == 'true':
+        log.info("Running in CI environment.")
+        if recursive:
+            log.warning('When CI variable is set, --recursive is ignored.')
         wfile_list = pu.find_recursive_wfile()
-        log.info("Running in CI environment..")
         wfile_list = workflows_from_commit_message(wfile_list)
     else:
-        # If running in a non-CI environment.
         if recursive:
+            if action:
+                log.fail(
+                    "An 'action' argument and the --recursive flag cannot be "
+                    "both given.")
             wfile_list = pu.find_recursive_wfile()
         else:
             wfile_list = [wfile]
 
-    # If now workflow files are left to process.
     if not wfile_list:
         log.fail("No workflow to execute.")
 
