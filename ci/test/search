@@ -35,3 +35,5 @@ grep -q '404: Not Found' output
 # test successfull info 
 popper info popperized/figshare/download > output 
 grep -q 'Action for Figshare-files-download' output
+
+echo "Test SEARCH passed."

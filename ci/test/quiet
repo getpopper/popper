@@ -5,54 +5,18 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
-mkdir actions
-mkdir actions/example
-
-export SECRET_KEY=1234
-
-cat <<EOF > actions/example/Singularity
-Bootstrap: docker
-From: ubuntu:14.04
-
-%runscript
-echo 'Entered runscript'
-echo \$F_NAME
-echo \$L_NAME
-echo \$SECRET_KEY
-sh -c \$@
-EOF
-
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = ["custom action"]
+cat <<EOF > main.workflow 
+workflow "sample" {
+    resolves = "test"
 }
 
-action "shub action" {
-  uses = "shub://singularityhub/centos"
-  runs = ["ls", "-al"]
-}
-
-action "public action" {
-  uses = "JayjeetAtGithub/actions-demo/wget@master"
-  args = ["github.com"]
-}
-
-action "custom action" {
-  uses = "./actions/example"
-  args = ["ls", "-al"]
-  secrets = ["SECRET_KEY"]
-  env = {
-    F_NAME = "first_name",
-    L_NAME = "last_name"
-  }
-  needs = [
-    "shub action",
-    "public action"
-  ]
+action "test" {
+    uses = "docker://busybox"
+    args = ["ls", "-ltr"]
 }
 EOF
 
-output_lines_without_quiet=$(popper run | wc -l)
-output_lines_with_quiet=$(popper run --quiet | wc -l)
+output_lines_without_quiet=$(popper run --runtime "$RUNTIME" | wc -l)
+output_lines_with_quiet=$(popper run --quiet --runtime "$RUNTIME" | wc -l)
 
 test "$output_lines_without_quiet" -gt "$output_lines_with_quiet"

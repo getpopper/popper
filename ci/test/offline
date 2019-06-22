@@ -21,10 +21,10 @@ action "sample action" {
 }
 EOF
 
-! popper run --skip-pull
+! popper run --skip-pull --runtime "$RUNTIME"
 
 # action repo not present locally, fail workflow using --skip-clone
-rm -rf /tmp/actions/github.com/actions/bin
+sudo rm -rf /tmp/actions/github.com/actions/bin
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -37,34 +37,17 @@ action "sample action" {
 }
 EOF
 
-! popper run --skip-clone
-
-if [ -f "sample_action.simg" ]; then
-rm sample_action.simg
-fi
-# singularity container not present locally, fail workflow using --skip-pull
-cat <<EOF > main.workflow
-workflow "sample workflow" {
-  resolves = ["sample action"]
-}
-
-action "sample action" {
-  uses = "shub://singularityhub/centos"
-  runs = ["ls", "-al"]
-}
-EOF
-
-! popper run --skip-pull
+! popper run --skip-clone --runtime "$RUNTIME"
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
+singularity pull --name sample_action_one.sif docker://debian:stretch-slim
 git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
-singularity pull --name sample_action_three.simg shub://singularityhub/centos
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
-    resolves = ["sample action one", "sample action two", "sample action three"]
+    resolves = ["sample action one", "sample action two"]
 }
 
 action "sample action one" {
@@ -76,14 +59,10 @@ action "sample action two" {
     uses = "actions/bin/sh@master"
     args = ["echo Hello World"]
 }
-
-action "sample action three" {
-  uses = "shub://singularityhub/centos"
-  runs = ["ls", "-al"]
-}
 EOF
 
-popper run --skip-clone --skip-pull > output
+popper run --skip-clone --skip-pull --runtime "$RUNTIME" > output
 grep -q "sample action one" output
 grep -q "sample action two" output
-grep -q "sample action three" output
+
+echo "Test OFFLINE passed."

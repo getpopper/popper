@@ -3,7 +3,7 @@ set -ex
 
 function cleanup {
   cd /tmp
-  rm -rf test_folder/
+  sudo rm -rf test_folder/
   mkdir test_folder
   cd test_folder
 }
@@ -104,4 +104,4 @@ test -d /tmp/test_folder/ansible
 test -d /tmp/test_folder/gnuplot
 cleanup
 
-echo "Popper add command ran successfully !"
+echo "Test ADD passed."

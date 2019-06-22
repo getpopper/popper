@@ -6,14 +6,14 @@ source ./common
 delete_dir /tmp/gha-demo
 git clone https://github.com/cplee/github-actions-demo /tmp/gha-demo
 pushd /tmp/gha-demo
-PHONY_SECRET=phony popper run --debug
+PHONY_SECRET=phony popper run --debug --runtime "$RUNTIME"
 popd
 
 # test with an action defined on the root of the repo
 delete_dir /tmp/npm
 git clone https://github.com/actions/npm /tmp/npm
 pushd /tmp/npm
-DOCKER_USERNAME=foo DOCKER_PASSWORD=bar popper run "Integration Test"
+DOCKER_USERNAME=foo DOCKER_PASSWORD=bar popper run --runtime "$RUNTIME" "Integration Test"
 popd
 
 # test with a remote action defined on the root of the repo
@@ -30,7 +30,7 @@ action "test" {
 }
 EOF
 
-ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run
+ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run --runtime "$RUNTIME"
 
 # test with actions hosted on gitlab
 cd $test_repo_path
@@ -67,7 +67,7 @@ action "test" {
 }
 EOF
 
-popper run --dry-run > output
+popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
@@ -75,15 +75,15 @@ grep -q "dependency three" output
 grep -q "dependency four" output
 
 # test --with-dependencies flag
-popper run --dry-run test > output
+popper run --dry-run --runtime "$RUNTIME" test > output
 grep -q "test" output
-popper run --dry-run --with-dependencies test > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" test > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
 grep -q "dependency four" output
-popper run --dry-run --with-dependencies 'dependency one' > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" 'dependency one' > output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
@@ -123,20 +123,20 @@ action "d" {
 }
 EOF
 
-! popper run --dry-run --with-dependencies
-popper run --dry-run --with-dependencies a1 > output
+! popper run --dry-run --with-dependencies --runtime "$RUNTIME"
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" a1 > output
 grep -q "a1" output
-popper run --dry-run --with-dependencies a2 > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" a2 > output
 grep -q "a2" output
-popper run --dry-run --with-dependencies b > output 
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" b > output 
 grep -q "a1"  output
 grep -q "a2" output 
 grep -q "b" output
-popper run --dry-run --with-dependencies c > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" c > output
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "c" output
-popper run --dry-run --with-dependencies d > output 
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" d > output 
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "b" output 
@@ -179,7 +179,7 @@ action "home" {
 }
 EOF
 
-popper run
+popper run --runtime "$RUNTIME"
 
 rm "$HOME/popperfile" ./popperfile
 
@@ -198,7 +198,7 @@ action "test" {
 }
 EOF
 
-popper run > output
+popper run --runtime "$RUNTIME" > output
 grep -q "Successfully ran 'ls'" output
 
 # test on-failure flag
@@ -222,11 +222,11 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup runs successfully.
-popper run --on-failure cleanup > output
+popper run --on-failure cleanup --runtime "$RUNTIME" > output
 grep -q "Cleaning up..." output
 
 # test action fails, clean action couldnt be found.
-! popper run --on-failure clean
+! popper run --on-failure clean --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -245,7 +245,7 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup action also fails.
-! popper run --on-failure cleanup
+! popper run --on-failure cleanup --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -264,7 +264,7 @@ action "cleanup" {
 EOF
 
 # test action fails, no --on-failure cleanup action.
-! popper run
+! popper run --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -283,7 +283,7 @@ action "cleanup" {
 EOF
 
 # test action runs sucessfully, cleanup action in not triggered
-popper run --on-failure cleanup > output
+popper run --on-failure cleanup --runtime "$RUNTIME" > output
 ! grep -q "Cleaning up..." output
 
 # test prevention of double cloning of actions, instantiation of runners etc.
@@ -303,7 +303,7 @@ action "cleanup" {
 }
 EOF
 
-popper run --on-failure cleanup
+popper run --on-failure cleanup --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -321,7 +321,7 @@ action "test2" {
 }
 EOF
 
-popper run > output
+popper run --runtime "$RUNTIME" > output
 grep -q "https://github.com/actions/docker@master" output
 ! grep -q "https://github.com/actions/bin@master" output
 
@@ -341,6 +341,6 @@ action "test2" {
 }
 EOF
 
-popper run --skip test1 > output
+popper run --skip test1 --runtime "$RUNTIME" > output
 ! grep -q "https://github.com/actions/docker@master" output
 grep -q "https://github.com/actions/bin@master" output

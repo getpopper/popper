@@ -1,7 +1,6 @@
 import logging
 import sys
 import os
-import datetime
 
 ACTION_INFO = 15
 logging.addLevelName(ACTION_INFO, 'ACTION_INFO')

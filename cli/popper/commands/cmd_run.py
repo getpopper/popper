@@ -105,10 +105,17 @@ from popper import log as logging
     required=False,
     is_flag=True
 )
+@click.option(
+    '--runtime',
+    help='Specify the runtime where to execute the workflow.',
+    type=click.Choice(['docker', 'singularity']),
+    required=False,
+    default='docker'
+)
 @pass_context
 def cli(ctx, action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
-        recursive, quiet, debug, dry_run, parallel,
-        log_file, with_dependencies, on_failure):
+        recursive, quiet, debug, dry_run, parallel, log_file,
+        with_dependencies, on_failure, runtime):
     """Executes one or more pipelines and reports on their status.
     """
     popper.scm.get_git_root_folder()
@@ -144,11 +151,12 @@ def cli(ctx, action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
         wfile = pu.find_default_wfile(wfile)
         log.info("Found and running workflow at " + wfile)
         run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace,
-                     reuse, dry_run, parallel, with_dependencies, on_failure)
+                     reuse, dry_run, parallel, with_dependencies, on_failure,
+                     runtime)
 
 
 def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
-                 dry_run, parallel, with_dependencies, on_failure):
+                 dry_run, parallel, with_dependencies, on_failure, runtime):
 
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
@@ -158,23 +166,27 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
     # Saving workflow instance for signal handling
     popper.cli.interrupt_params['parallel'] = parallel
 
-    if reuse:
-        log.warn("Using --reuse ignores any changes made to an action's logic "
-                 "or to an action block in the .workflow file.")
-
     if parallel:
         if sys.version_info[0] < 3:
             log.fail('--parallel is only supported on Python3')
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
+    if with_dependencies and (not action):
+        log.fail('`--with-dependencies` can be used only with '
+                 'action argument.')
+
+    if skip and action:
+        log.fail('`--skip` can\'t be used when action argument '
+                 'is passed.')
+
     try:
         pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse,
-                     dry_run, parallel, with_dependencies)
+                     dry_run, parallel, with_dependencies, runtime)
     except SystemExit as e:
-        if (e.code is not 0) and on_failure:
+        if (e.code != 0) and on_failure:
             pipeline.run(on_failure, skip_clone, skip_pull, list(), workspace,
-                         reuse, dry_run, parallel, with_dependencies)
+                         reuse, dry_run, parallel, with_dependencies, runtime)
         else:
             raise
 
@@ -220,5 +232,5 @@ def workflows_from_commit_message(workflows):
     else:
         workflows = workflow_list
 
-    print('Only running workflows: {}'.format(', '.join(workflows)))
+    log.info('Only running workflows: {}'.format(', '.join(workflows)))
     return workflows

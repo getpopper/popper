@@ -6,12 +6,17 @@ from collections import defaultdict
 import yaml
 import click
 import requests
+from spython.main.parse.parsers import DockerParser, SingularityParser
+from spython.main.parse.writers import SingularityWriter
+from spython.main import Client as sclient
 
 from popper.cli import log
 from popper import scm
 
 
 def setup_cache():
+    """Set up popper cache file path.
+    """
     xdg_cache_dir = os.environ.get(
         'XDG_CACHE_HOME', os.path.join(os.environ['HOME'], '.cache'))
     if not os.path.isdir(xdg_cache_dir):
@@ -266,3 +271,50 @@ def fetch_readme_for_repo(user, repo, path_to_action, version):
                        user, repo, version, path_to_action, 'README.md')
     r = make_gh_request(url, err=False)
     return r.text
+
+
+def convert_to_singularityfile(dockerfile, singularityfile, env):
+    parser = DockerParser(dockerfile)
+    for p in parser.recipe.files:
+        p[0] = p[0].strip('\"')
+        p[1] = p[1].strip('\"')
+        if os.path.isdir(p[0]):
+            p[0] += '/.'
+
+    parser.recipe.environ.extend(['{}={}'.format(k, v)
+                                  for k, v in env.items()])
+    writer = SingularityWriter(parser.recipe)
+    recipe = writer.convert()
+    with open(singularityfile, 'w') as sf:
+        sf.write(recipe)
+    return singularityfile
+
+
+def get_reciple_file(build_path, container, env):
+    dockerfile = os.path.join(build_path, 'Dockerfile')
+    singularityfile = os.path.join(
+        build_path, 'Singularity.{}'.format(container[:-4]))
+
+    if os.path.isfile(dockerfile):
+        return convert_to_singularityfile(dockerfile, singularityfile, env)
+    else:
+        log.fail('No Dockerfile was found.')
+
+
+def build_from_docker_image(image, env, container):
+    recipe = "Bootstrap: docker\n"
+    recipe += "From: {}".format(image.replace("docker://", ""))
+    recipe_file = "Singularity.{}".format(container[:-4])
+
+    with open(recipe_file, 'w') as st:
+        st.write(recipe)
+
+    parser = SingularityParser(recipe_file)
+    parser.recipe.environ = ['{}={}'.format(k, v) for k, v in env.items()]
+    writer = SingularityWriter(parser.recipe)
+    content = writer.convert(runscript="")
+
+    with open(recipe_file, 'w') as s:
+        s.write(content)
+
+    sclient.build(recipe=recipe_file, image=container)

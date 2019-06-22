@@ -4,6 +4,7 @@ import click
 
 from popper.cli import pass_context, log
 from popper.gha import WorkflowRunner
+from popper import scm as scm
 
 
 @click.command('add', short_help='Import workflow from remote repo.')
@@ -14,6 +15,6 @@ def cli(ctx, path):
     placed on the given path.
     """
     try:
-        WorkflowRunner.import_from_repo(path, os.getcwd())
+        WorkflowRunner.import_from_repo(path, scm.get_git_root_folder())
     except Exception as e:
         log.fail('Failed to import from {}:\n{}'.format(path, e))

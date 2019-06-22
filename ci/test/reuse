@@ -35,3 +35,67 @@ popper run
 
 # lastly, test reuse for a single action
 popper run --reuse 'show env'
+
+# test while reusing the container uses the updated args.
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  env = {
+    TOOL_NAME="popper"
+  }
+}
+EOF
+
+popper run > output
+grep -q "README.md" output
+grep -q "main.workflow" output
+
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = ["echo \$TOOL_NAME"]
+}
+EOF
+
+popper run --reuse > output
+grep  -q "popper" output
+! grep -q "README.md" output
+! grep -q "main.workflow" output
+
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = ["apt-get update && apt-get -y install jq"]
+}
+EOF
+
+popper run --runtime singularity
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = ["jq --version"]
+}
+EOF
+
+popper run --reuse --runtime singularity
+echo "Test REUSE passed."
