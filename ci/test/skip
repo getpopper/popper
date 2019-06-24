@@ -39,20 +39,40 @@ action "d" {
 }
 EOF
 
-popper run --dry-run a1
-popper run --dry-run a2
-popper run --dry-run b
-popper run --dry-run c
-popper run --dry-run d
+popper run --dry-run a1 | grep "a1"
+popper run --dry-run a2 | grep "a2"
+popper run --dry-run b | grep "b"
+popper run --dry-run c | grep "c"
+popper run --dry-run d | grep "d"
 
 ! popper run --dry-run --skip e1
 ! popper run --dry-run --skip a1 --skip a2
-popper run --dry-run --skip a1
-popper run --dry-run --skip a2
+popper run --dry-run --skip a1 > output
+grep -q "a2" output
+grep -q "b" output
+grep -q "c" output
+grep -q "d" output
+popper run --dry-run --skip a2 > output
+grep -q "a1" output
+grep -q "b" output
+grep -q "c" output
+grep -q "d" output
 ! popper run --dry-run --skip b --skip c
-popper run --dry-run --skip b 
-popper run --dry-run --skip c
-popper run --dry-run --skip d 
+popper run --dry-run --skip b > output
+grep -q "a1" output
+grep -q "a2" output
+grep -q "c" output
+grep -q "d" output
+popper run --dry-run --skip c > output
+grep -q "a1" output
+grep -q "a2" output
+grep -q "b" output
+grep -q "d" output
+popper run --dry-run --skip d > output
+grep -q "a1" output
+grep -q "a2" output
+grep -q "b" output
+grep -q "c" output
 
 cat <<EOF > main.workflow
 workflow "wf" {
