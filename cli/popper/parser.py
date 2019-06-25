@@ -271,28 +271,31 @@ class Workflow(object):
         Args:
             workflow (Workflow) : The workflow object to validate.
         """
-        def _traverse(entrypoint, visited, workflow):
+        def _traverse(entrypoint, reachable, workflow):
             for node in entrypoint:
-                visited.add(node)
+                reachable.add(node)
                 _traverse(workflow['action'][node].get(
-                    'next', []), visited, workflow)
+                    'next', []), reachable, workflow)
 
-        visited = set()
+        reachable = set()
         skipped = set(self._workflow['props'].get('skip_list', []))
         actions = set(map(lambda a: a[0], self._workflow['action'].items()))
 
-        _traverse(self._workflow['root'], visited, self._workflow)
+        _traverse(self._workflow['root'], reachable, self._workflow)
 
-        unreachable = actions - visited - skipped
-        if unreachable:
+        unreachable = actions - reachable
+        if unreachable - skipped:
             if skip:
                 log.fail('Actions {} are unreachable.'.format(
-                    ', '.join(unreachable))
+                    ', '.join(unreachable - skipped))
                 )
             else:
                 log.warn('Actions {} are unreachable.'.format(
                     ', '.join(unreachable))
                 )
+
+        for a in unreachable:
+            self._workflow['action'].pop(a)
 
     def skip_actions(self, skip_list):
         """Removes the actions to be skipped from the workflow graph and

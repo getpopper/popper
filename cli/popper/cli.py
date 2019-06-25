@@ -68,9 +68,9 @@ flist = None
 
 def signal_handler(sig, frame):
 
-    log.info('Caught Ctrl-C signal! Stopping running actions.')
+    log.info('\nCaught Ctrl-C signal! Stopping running actions.')
 
-    if interrupt_params['parallel']:
+    if interrupt_params.get('parallel', None) and flist:
         for future in flist:
             future.cancel()
 

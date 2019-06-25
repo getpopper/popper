@@ -67,13 +67,27 @@ action "test" {
 }
 EOF
 
-popper run --dry-run
+popper run --dry-run > output
+grep -q "test" output
+grep -q "dependency one" output
+grep -q "dependency two" output
+grep -q "dependency three" output
+grep -q "dependency four" output
 
 # test --with-dependencies flag
-popper run --dry-run test
-popper run --dry-run --with-dependencies test
-popper run --dry-run --with-dependencies 'dependency one'
-
+popper run --dry-run test > output
+grep -q "test" output
+popper run --dry-run --with-dependencies test > output
+grep -q "test" output
+grep -q "dependency one" output
+grep -q "dependency two" output
+grep -q "dependency three" output
+grep -q "dependency four" output
+popper run --dry-run --with-dependencies 'dependency one' > output
+grep -q "dependency one" output
+grep -q "dependency two" output
+grep -q "dependency three" output
+grep -q "dependency four" output
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -110,53 +124,24 @@ action "d" {
 EOF
 
 ! popper run --dry-run --with-dependencies
-popper run --dry-run --with-dependencies a1
-popper run --dry-run --with-dependencies a2
-popper run --dry-run --with-dependencies b
-popper run --dry-run --with-dependencies c
-popper run --dry-run --with-dependencies d
-
-cat <<EOF > main.workflow
-workflow "wf" {
-  resolves = "d"
-}
-
-action "a1" {
-  uses = "sh"
-  args = "ls"
-}
-
-action "a2" {
-  uses = "sh"
-  args = "ls"
-}
-
-action "b" {
-  needs = ["a1", "a2"]
-  uses = "sh"
-  args = "ls"
-}
-
-action "c" {
-  needs = ["a1", "a2"]
-  uses = "sh"
-  args = "ls"
-}
-
-action "d" {
-  needs = ["a2"]
-  uses = "sh"
-  args = "ls"
-}
-EOF
-
-popper run a1
-popper run a2
-popper run b
-popper run c
-popper run d
-popper run --with-dependencies b
-popper run --with-dependencies d
+popper run --dry-run --with-dependencies a1 > output
+grep -q "a1" output
+popper run --dry-run --with-dependencies a2 > output
+grep -q "a2" output
+popper run --dry-run --with-dependencies b > output 
+grep -q "a1"  output
+grep -q "a2" output 
+grep -q "b" output
+popper run --dry-run --with-dependencies c > output
+grep -q "a1" output 
+grep -q "a2" output 
+grep -q "c" output
+popper run --dry-run --with-dependencies d > output 
+grep -q "a1" output 
+grep -q "a2" output 
+grep -q "b" output 
+grep -q "c" output 
+grep -q "d" output
 
 # test bindings
 init_test_repo
@@ -213,7 +198,8 @@ action "test" {
 }
 EOF
 
-popper run --debug
+popper run > output
+grep -q "Successfully ran 'ls'" output
 
 # test on-failure flag
 init_test_repo
@@ -236,7 +222,8 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup runs successfully.
-popper run --on-failure cleanup
+popper run --on-failure cleanup > output
+grep -q "Cleaning up..." output
 
 # test action fails, clean action couldnt be found.
 ! popper run --on-failure clean
@@ -296,4 +283,64 @@ action "cleanup" {
 EOF
 
 # test action runs sucessfully, cleanup action in not triggered
+popper run --on-failure cleanup > output
+! grep -q "Cleaning up..." output
+
+# test prevention of double cloning of actions, instantiation of runners etc.
+cat <<EOF > main.workflow
+workflow "sample" {
+  resolves = ["test"]
+}
+
+action "test" {
+  uses = "actions/docker/cli@master"
+  args = ["verssion"]
+}
+
+action "cleanup" {
+  uses = "actions/bin/sh@master"
+  args = ["echo Cleaning up..."]
+}
+EOF
+
 popper run --on-failure cleanup
+
+cat <<EOF > main.workflow
+workflow "sample" {
+  resolves = ["test1"]
+}
+
+action "test1" {
+  uses = "actions/docker/cli@master"
+  args = ["version"]
+}
+
+action "test2" {
+  uses = "actions/bin/sh@master"
+  args = ["echo Cleaning up..."]
+}
+EOF
+
+popper run > output
+grep -q "https://github.com/actions/docker@master" output
+! grep -q "https://github.com/actions/bin@master" output
+
+cat <<EOF > main.workflow
+workflow "sample" {
+  resolves = ["test1", "test2"]
+}
+
+action "test1" {
+  uses = "actions/docker/cli@master"
+  args = ["version"]
+}
+
+action "test2" {
+  uses = "actions/bin/sh@master"
+  args = ["echo Cleaning up..."]
+}
+EOF
+
+popper run --skip test1 > output
+! grep -q "https://github.com/actions/docker@master" output
+grep -q "https://github.com/actions/bin@master" output
