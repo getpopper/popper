@@ -8,4 +8,4 @@ from popper.cli import pass_context, log
 @pass_context
 def cli(ctx):
     """Displays version of Popper and exit."""
-    log.info('popper version {}'.format(popper_version))
+    log.info('Popper version {}'.format(popper_version))

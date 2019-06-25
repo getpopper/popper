@@ -83,4 +83,7 @@ action "sample action three" {
 }
 EOF
 
-popper run --skip-clone --skip-pull
+popper run --skip-clone --skip-pull > output
+grep -q "sample action one" output
+grep -q "sample action two" output
+grep -q "sample action three" output
