@@ -2,6 +2,7 @@ from __future__ import unicode_literals
 import os
 import shutil
 import getpass
+import re
 import subprocess
 import multiprocessing as mp
 from copy import deepcopy
@@ -275,13 +276,16 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, dry, skip_pull):
         super(DockerRunner, self).__init__(
             action, workspace, env, dry, skip_pull)
-        self.cid = self.action['name'].replace(' ', '_')
+        self.cid = self.sanitized_name(self.action['name'])
         self.docker_client = docker.from_env()
         self.container = None
         if not find_executable('docker'):
             log.fail(
                 'Could not find the docker command.'
             )
+
+    def sanitized_name(self, name):
+        return re.sub('[^a-zA-Z0-9_.-]', '_', name)
 
     def run(self, reuse=False):
         build = True
