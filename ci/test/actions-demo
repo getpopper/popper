@@ -157,6 +157,8 @@ FROM alpine:3.9
 ENTRYPOINT ["echo", "'hello world!'"]
 EOF
 
+if [ "$RUNTIME" == "docker" ]; then
+
 cat <<EOF > main.workflow
 workflow "test bindings" {
   resolves = [
@@ -178,6 +180,27 @@ action "home" {
   runs = ["sh", "-c", "cat \$HOME/popperfile"]
 }
 EOF
+
+else
+
+cat <<EOF > main.workflow
+workflow "test bindings" {
+  resolves = [
+    "ws",
+    "home"
+  ]
+}
+action "ws" {
+  uses = "actions/bin/sh@master"
+  runs = ["sh", "-c", "cat \$GITHUB_WORKSPACE/popperfile"]
+}
+action "home" {
+  uses = "actions/bin/sh@master"
+  runs = ["sh", "-c", "cat \$HOME/popperfile"]
+}
+EOF
+
+fi
 
 popper run --runtime "$RUNTIME"
 
@@ -293,8 +316,8 @@ workflow "sample" {
 }
 
 action "test" {
-  uses = "actions/docker/cli@master"
-  args = ["verssion"]
+  uses = "actions/npm@master"
+  args = ["--verssion"]
 }
 
 action "cleanup" {
@@ -311,8 +334,8 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/docker/cli@master"
-  args = ["version"]
+  uses = "actions/npm@master"
+  args = ["--version"]
 }
 
 action "test2" {
@@ -322,7 +345,7 @@ action "test2" {
 EOF
 
 popper run --runtime "$RUNTIME" > output
-grep -q "https://github.com/actions/docker@master" output
+grep -q "https://github.com/actions/npm@master" output
 ! grep -q "https://github.com/actions/bin@master" output
 
 cat <<EOF > main.workflow
@@ -331,8 +354,8 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/docker/cli@master"
-  args = ["version"]
+  uses = "actions/npm@master"
+  args = ["--version"]
 }
 
 action "test2" {
@@ -342,5 +365,7 @@ action "test2" {
 EOF
 
 popper run --skip test1 --runtime "$RUNTIME" > output
-! grep -q "https://github.com/actions/docker@master" output
+! grep -q "https://github.com/actions/npm@master" output
 grep -q "https://github.com/actions/bin@master" output
+
+echo "Test ACTIONS-DEMO passed."
