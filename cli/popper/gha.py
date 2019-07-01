@@ -537,9 +537,10 @@ class SingularityRunner(ActionRunner):
     def singularity_build_from_recipe(self, build_path, container, env):
         """Build container from recipefile.
         """
+        filename = 'Singularity.{}'.format(container[:-4])
         log.info('{}[{}] singularity build {} {}'.format(
             self.msg_prefix, self.action['name'],
-            container, os.path.join(build_path, 'Singularity.{}'.format(container[:-4])))
+            container, os.path.join(build_path, filename))
         )
         if not self.dry_run:
             pu.build_from_recipe(build_path, container, env)
