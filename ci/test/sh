@@ -303,3 +303,5 @@ EOF
 count=$(popper run --parallel --debug | grep -c 'Action ran successfully !')
 test "$count" -eq 11
 fi
+
+echo "Tesh SH passed."

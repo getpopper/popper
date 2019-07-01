@@ -40,3 +40,5 @@ EOF
 
 popper run --wfile spack-workflow/main.workflow --runtime "$RUNTIME"
 sudo rm -rf spack-workflow
+
+echo "Test RUNTIME passed."
