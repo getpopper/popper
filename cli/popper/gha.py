@@ -536,16 +536,12 @@ class SingularityRunner(ActionRunner):
     def singularity_build_from_recipe(self, build_path, container, env):
         """Build container from recipefile.
         """
-        pwd = os.getcwd()
-        os.chdir(build_path)
-        recipefile = pu.get_reciple_file(build_path, container, env)
         log.info('{}[{}] singularity build {} {}'.format(
             self.msg_prefix, self.action['name'],
-            container, recipefile)
+            container, os.path.join(build_path, 'Singularity.{}'.format(container[:-4])))
         )
         if not self.dry_run:
-            s_client.build(recipe=recipefile, image=container, build_folder=pwd)
-        os.chdir(pwd)
+            pu.build_from_recipe(build_path, container, env)
 
     def singularity_start(self, container, env):
         """Starts the container to execute commands or run the runscript

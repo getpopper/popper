@@ -8,7 +8,7 @@ import click
 import requests
 from spython.main.parse.parsers import DockerParser, SingularityParser
 from spython.main.parse.writers import SingularityWriter
-from spython.main import Client as sclient
+from spython.main import Client as s_client
 
 from popper.cli import log
 from popper import scm
@@ -317,4 +317,12 @@ def build_from_docker_image(image, env, container):
     with open(recipe_file, 'w') as s:
         s.write(content)
 
-    sclient.build(recipe=recipe_file, image=container)
+    s_client.build(recipe=recipe_file, image=container)
+
+
+def build_from_recipe(build_path, container, env):
+    pwd = os.getcwd()
+    os.chdir(build_path)
+    recipefile = get_reciple_file(build_path, container, env)
+    s_client.build(recipe=recipefile, image=container, build_folder=pwd)
+    os.chdir(pwd)
