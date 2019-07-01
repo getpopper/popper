@@ -24,6 +24,7 @@ yaml.Dumper.ignore_aliases = lambda *args: True
 docker_client = docker.from_env()
 s_client = spython.main.Client
 
+
 class WorkflowRunner(object):
     """A GHA workflow runner.
     """
@@ -578,10 +579,11 @@ class SingularityRunner(ActionRunner):
         if not self.dry_run:
             # Before running, open up the .sif as sandbox.
             s_client.build(recipe=container, image=container[:-4],
-                          sandbox=True, force=True)
+                           sandbox=True, force=True)
 
             output = start(container[:-4], commands, bind=volumes,
-                           sudo=True, stream=True, writable=True, options=["--home", env['HOME']])
+                           sudo=True, stream=True, writable=True,
+                           options=['--home', volumes[0]])
 
             try:
                 for line in output:

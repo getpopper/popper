@@ -13,7 +13,7 @@ popd
 delete_dir /tmp/npm
 git clone https://github.com/actions/npm /tmp/npm
 pushd /tmp/npm
-DOCKER_USERNAME=foo DOCKER_PASSWORD=bar popper run --runtime "$RUNTIME" "Integration Test"
+DOCKER_USERNAME=foo DOCKER_PASSWORD=bar popper run --runtime "$RUNTIME" "Shell Lint"
 popd
 
 # test with a remote action defined on the root of the repo
