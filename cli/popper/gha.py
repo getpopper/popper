@@ -581,7 +581,7 @@ class SingularityRunner(ActionRunner):
                           sandbox=True, force=True)
 
             output = start(container[:-4], commands, bind=volumes,
-                           sudo=True, stream=True, writable=True)
+                           sudo=True, stream=True, writable=True, options=["--home", env['HOME']])
 
             try:
                 for line in output:
