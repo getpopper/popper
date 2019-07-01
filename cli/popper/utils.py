@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import threading
 from collections import defaultdict
@@ -326,3 +327,7 @@ def build_from_recipe(build_path, container, env):
     recipefile = get_reciple_file(build_path, container, env)
     s_client.build(recipe=recipefile, image=container, build_folder=pwd)
     os.chdir(pwd)
+
+
+def sanitized_name(name):
+    return re.sub('[^a-zA-Z0-9_.-]', '_', name)
