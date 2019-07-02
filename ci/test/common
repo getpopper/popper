@@ -5,7 +5,7 @@ export test_repo_path=/tmp/mypaper
 
 function delete_dir {
   set +e
-  if ! sudo rm -rf "$1"; then
+  if ! rm -rf "$1"; then
     # try to remove using docker
     docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf "$1"
   fi

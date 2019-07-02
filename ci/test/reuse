@@ -51,7 +51,7 @@ action "show env" {
 }
 EOF
 
-popper run > output
+popper run --runtime "$RUNTIME" > output
 grep -q "README.md" output
 grep -q "main.workflow" output
 
@@ -67,35 +67,9 @@ action "show env" {
 }
 EOF
 
-popper run --reuse > output
+popper run --reuse --runtime "$RUNTIME" > output
 grep  -q "popper" output
 ! grep -q "README.md" output
 ! grep -q "main.workflow" output
 
-
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = "show env"
-}
-
-action "show env" {
-  uses = "actions/bin/sh@master"
-  args = ["apt-get update && apt-get -y install jq"]
-}
-EOF
-
-popper run --runtime singularity
-
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = "show env"
-}
-
-action "show env" {
-  uses = "actions/bin/sh@master"
-  args = ["jq --version"]
-}
-EOF
-
-popper run --reuse --runtime singularity
 echo "Test REUSE passed."

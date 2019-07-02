@@ -259,7 +259,6 @@ class DockerRunner(ActionRunner):
         super(DockerRunner, self).__init__(
             action, workspace, env, dry, skip_pull)
         self.cid = pu.sanitized_name(self.action['name'])
-        self.docker_client = docker.from_env()
         self.container = None
         if not find_executable('docker'):
             log.fail(
@@ -435,8 +434,6 @@ class DockerRunner(ActionRunner):
 
 class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime.
-
-    TODO: Support docker in singularity.
     """
 
     def __init__(self, action, workspace, env, dry_run, skip_pull):
@@ -467,35 +464,24 @@ class SingularityRunner(ActionRunner):
             build_path = os.path.join(
                 self.action['repo_dir'], self.action['action_dir'])
 
-        env = self.action.get('env', {})
-
-        for s in self.action.get('secrets', []):
-            env.update({s: os.environ[s]})
-
-        for e, v in self.env.items():
-            env.update({e: v})
-
-        env['GITHUB_ACTION'] = self.action['name']
-        env['POPPER_ACTION'] = self.action['name']
-
         container = self.cid + '.sif'
 
         if (not reuse) and (not self.skip_pull):
             if self.singularity_exists(container):
                 self.singularity_rm(container)
             if build:
-                self.singularity_build_from_recipe(build_path, container, env)
+                self.singularity_build_from_recipe(build_path, container)
             else:
-                self.singularity_build_from_image(image, container, env)
+                self.singularity_build_from_image(image, container)
         else:
             if not self.singularity_exists(container):
                 if build:
                     self.singularity_build_from_recipe(
-                        build_path, container, env)
+                        build_path, container)
                 else:
-                    self.singularity_build_from_image(image, container, env)
+                    self.singularity_build_from_image(image, container)
 
-        e = self.singularity_start(container, env)
+        e = self.singularity_start(container)
 
         if e != 0:
             log.fail('Action {} failed!'.format(self.action['name']))
@@ -512,25 +498,24 @@ class SingularityRunner(ActionRunner):
         """
         if self.dry_run:
             return
-        if os.path.exists(container):
-            os.remove(container)
+        os.remove(container)
 
-    def singularity_build_from_image(self, image, container, env):
+    def singularity_build_from_image(self, image, container):
         """Build container from Docker image.
         """
         if not self.skip_pull:
-            log.info('{}[{}] singularity build {} {}'.format(
+            log.info('{}[{}] singularity pull {} {}'.format(
                 self.msg_prefix, self.action['name'], container, image)
             )
             if not self.dry_run:
-                pu.build_from_docker_image(image, env, container)
+                s_client.pull(image=image, name=container)
         else:
             if not self.singularity_exists(container):
                 log.fail(
                     'The required singularity container \'{}\' was not found '
                     'locally.'.format(container))
 
-    def singularity_build_from_recipe(self, build_path, container, env):
+    def singularity_build_from_recipe(self, build_path, container):
         """Build container from recipefile.
         """
         filename = 'Singularity.{}'.format(container[:-4])
@@ -539,12 +524,26 @@ class SingularityRunner(ActionRunner):
             container, os.path.join(build_path, filename))
         )
         if not self.dry_run:
-            pu.build_from_recipe(build_path, container, env)
+            pu.build_from_recipe(build_path, container)
 
-    def singularity_start(self, container, env):
+    def singularity_start(self, container):
         """Starts the container to execute commands or run the runscript
         with the supplied args inside the container.
         """
+        env = self.action.get('env', {})
+
+        for s in self.action.get('secrets', []):
+            env.update({s: os.environ[s]})
+
+        for e, v in self.env.items():
+            env.update({e: v})
+
+        env['GITHUB_ACTION'] = self.action['name']
+        env['POPPER_ACTION'] = self.action['name']
+
+        for k, v in env.items():
+            os.environ[k] = v
+
         volumes = [
             '{}:{}'.format(env['HOME'], env['HOME']),
             '{}:{}'.format(env['HOME'], '/github/home'),
@@ -574,23 +573,14 @@ class SingularityRunner(ActionRunner):
 
         log.info(info)
         if not self.dry_run:
-            # Before running, open up the .sif as sandbox.
-            s_client.build(recipe=container, image=container[:-4],
-                           sandbox=True, force=True)
-
-            output = start(container[:-4], commands, bind=volumes,
-                           sudo=True, stream=True, writable=True,
-                           options=['--home', volumes[0]])
-
+            output = start(container, commands, bind=volumes,
+                           stream=True, options=['--userns'])
             try:
                 for line in output:
                     log.action_info(line)
                 ecode = 0
             except subprocess.CalledProcessError as ex:
                 ecode = ex.returncode
-
-            # Pack the container into production .sif
-            s_client.build(recipe=container[:-4], image=container, force=True)
         else:
             ecode = 0
 

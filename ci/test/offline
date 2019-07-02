@@ -24,7 +24,7 @@ EOF
 ! popper run --skip-pull --runtime "$RUNTIME"
 
 # action repo not present locally, fail workflow using --skip-clone
-sudo rm -rf /tmp/actions/github.com/actions/bin
+delete_dir /tmp/actions/github.com/actions/bin
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {

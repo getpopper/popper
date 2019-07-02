@@ -5,14 +5,6 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
-export PHONY_SECRET=12345
-
-git clone https://github.com/cplee/github-actions-demo
-pushd github-actions-demo
-popper run --runtime "$RUNTIME"
-popd
-sudo rm -rf github-actions-demo
-
 mkdir spack-workflow
 cat <<EOF > spack-workflow/main.workflow
 workflow "Install and run LULESH" {
@@ -39,6 +31,6 @@ action "run lulesh" {
 EOF
 
 popper run --wfile spack-workflow/main.workflow --runtime "$RUNTIME"
-sudo rm -rf spack-workflow
+delete_dir spack-workflow
 
-echo "Test RUNTIME passed."
+echo "Test SAMPLES passed."

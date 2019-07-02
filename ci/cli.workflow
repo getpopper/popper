@@ -103,10 +103,10 @@ action "test offline" {
   runs = "offline"
 }
 
-action "test runtime" {
+action "test samples" {
   needs = "lint"
   uses = "./ci/test"
-  runs = "runtime"
+  runs = "samples"
 }
 
 action "end" {
@@ -128,7 +128,7 @@ action "end" {
     "test skip",
     "test sh",
     "test search",
-    "test runtime",
+    "test samples",
     "test offline"
   ]
 }

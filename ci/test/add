@@ -3,7 +3,7 @@ set -ex
 
 function cleanup {
   cd /tmp
-  sudo rm -rf test_folder/
+  rm -rf test_folder/
   mkdir test_folder
   cd test_folder
 }

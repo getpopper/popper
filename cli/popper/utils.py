@@ -274,7 +274,7 @@ def fetch_readme_for_repo(user, repo, path_to_action, version):
     return r.text
 
 
-def convert_to_singularityfile(dockerfile, singularityfile, env):
+def convert_to_singularityfile(dockerfile, singularityfile):
     parser = DockerParser(dockerfile)
     for p in parser.recipe.files:
         p[0] = p[0].strip('\"')
@@ -282,8 +282,6 @@ def convert_to_singularityfile(dockerfile, singularityfile, env):
         if os.path.isdir(p[0]):
             p[0] += '/.'
 
-    parser.recipe.environ.extend(['{}={}'.format(k, v)
-                                  for k, v in env.items()])
     writer = SingularityWriter(parser.recipe)
     recipe = writer.convert()
     with open(singularityfile, 'w') as sf:
@@ -291,40 +289,21 @@ def convert_to_singularityfile(dockerfile, singularityfile, env):
     return singularityfile
 
 
-def get_reciple_file(build_path, container, env):
+def get_reciple_file(build_path, container):
     dockerfile = os.path.join(build_path, 'Dockerfile')
     singularityfile = os.path.join(
         build_path, 'Singularity.{}'.format(container[:-4]))
 
     if os.path.isfile(dockerfile):
-        return convert_to_singularityfile(dockerfile, singularityfile, env)
+        return convert_to_singularityfile(dockerfile, singularityfile)
     else:
         log.fail('No Dockerfile was found.')
 
 
-def build_from_docker_image(image, env, container):
-    recipe = "Bootstrap: docker\n"
-    recipe += "From: {}".format(image.replace("docker://", ""))
-    recipe_file = "Singularity.{}".format(container[:-4])
-
-    with open(recipe_file, 'w') as st:
-        st.write(recipe)
-
-    parser = SingularityParser(recipe_file)
-    parser.recipe.environ = ['{}={}'.format(k, v) for k, v in env.items()]
-    writer = SingularityWriter(parser.recipe)
-    content = writer.convert(runscript="")
-
-    with open(recipe_file, 'w') as s:
-        s.write(content)
-
-    s_client.build(recipe=recipe_file, image=container)
-
-
-def build_from_recipe(build_path, container, env):
+def build_from_recipe(build_path, container):
     pwd = os.getcwd()
     os.chdir(build_path)
-    recipefile = get_reciple_file(build_path, container, env)
+    recipefile = get_reciple_file(build_path, container)
     s_client.build(recipe=recipefile, image=container, build_folder=pwd)
     os.chdir(pwd)
 
