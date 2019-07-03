@@ -13,6 +13,8 @@ from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 import yaml
 import docker
 import spython
+from spython.main.parse.parsers import DockerParser, SingularityParser
+from spython.main.parse.writers import SingularityWriter
 
 import popper.cli
 from popper.cli import log
@@ -486,6 +488,40 @@ class SingularityRunner(ActionRunner):
         if e != 0:
             log.fail('Action {} failed!'.format(self.action['name']))
 
+    @staticmethod
+    def convert(dockerfile, singularityfile):
+        parser = DockerParser(dockerfile)
+        for p in parser.recipe.files:
+            p[0] = p[0].strip('\"')
+            p[1] = p[1].strip('\"')
+            if os.path.isdir(p[0]):
+                p[0] += '/.'
+
+        writer = SingularityWriter(parser.recipe)
+        recipe = writer.convert()
+        with open(singularityfile, 'w') as sf:
+            sf.write(recipe)
+        return singularityfile
+
+    @staticmethod
+    def get_reciple_file(build_path, container):
+        dockerfile = os.path.join(build_path, 'Dockerfile')
+        singularityfile = os.path.join(
+            build_path, 'Singularity.{}'.format(container[:-4]))
+
+        if os.path.isfile(dockerfile):
+            return SingularityRunner.convert(dockerfile, singularityfile)
+        else:
+            log.fail('No Dockerfile was found.')
+
+    @staticmethod
+    def build_from_recipe(build_path, container):
+        pwd = os.getcwd()
+        os.chdir(build_path)
+        recipefile = SingularityRunner.get_reciple_file(build_path, container)
+        s_client.build(recipe=recipefile, image=container, build_folder=pwd)
+        os.chdir(pwd)
+
     def singularity_exists(self, container):
         """Check whether the container exists or not.
         """
@@ -524,7 +560,7 @@ class SingularityRunner(ActionRunner):
             container, os.path.join(build_path, filename))
         )
         if not self.dry_run:
-            pu.build_from_recipe(build_path, container)
+            SingularityRunner.build_from_recipe(build_path, container)
 
     def singularity_start(self, container):
         """Starts the container to execute commands or run the runscript

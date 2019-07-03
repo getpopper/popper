@@ -42,7 +42,9 @@ EOF
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
+if [ "$RUNTIME" == "singularity" ]; then
 singularity pull --name sample_action_one.sif docker://debian:stretch-slim
+fi
 git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
 
 cat <<EOF > main.workflow

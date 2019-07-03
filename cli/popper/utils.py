@@ -7,9 +7,6 @@ from collections import defaultdict
 import yaml
 import click
 import requests
-from spython.main.parse.parsers import DockerParser, SingularityParser
-from spython.main.parse.writers import SingularityWriter
-from spython.main import Client as s_client
 
 from popper.cli import log
 from popper import scm
@@ -272,40 +269,6 @@ def fetch_readme_for_repo(user, repo, path_to_action, version):
                        user, repo, version, path_to_action, 'README.md')
     r = make_gh_request(url, err=False)
     return r.text
-
-
-def convert_to_singularityfile(dockerfile, singularityfile):
-    parser = DockerParser(dockerfile)
-    for p in parser.recipe.files:
-        p[0] = p[0].strip('\"')
-        p[1] = p[1].strip('\"')
-        if os.path.isdir(p[0]):
-            p[0] += '/.'
-
-    writer = SingularityWriter(parser.recipe)
-    recipe = writer.convert()
-    with open(singularityfile, 'w') as sf:
-        sf.write(recipe)
-    return singularityfile
-
-
-def get_reciple_file(build_path, container):
-    dockerfile = os.path.join(build_path, 'Dockerfile')
-    singularityfile = os.path.join(
-        build_path, 'Singularity.{}'.format(container[:-4]))
-
-    if os.path.isfile(dockerfile):
-        return convert_to_singularityfile(dockerfile, singularityfile)
-    else:
-        log.fail('No Dockerfile was found.')
-
-
-def build_from_recipe(build_path, container):
-    pwd = os.getcwd()
-    os.chdir(build_path)
-    recipefile = get_reciple_file(build_path, container)
-    s_client.build(recipe=recipefile, image=container, build_folder=pwd)
-    os.chdir(pwd)
 
 
 def sanitized_name(name):

@@ -6,12 +6,10 @@ python:
 - "3.7"
 env:
 - RUNTIME=singularity POPPER_TEST_MODE=with-git
-- RUNTIME=singularity POPPER_TEST_MODE=without-git
-- RUNTIME=docker POPPER_TEST_MODE=with-git
 - RUNTIME=docker POPPER_TEST_MODE=without-git
 services: docker
 before_install:
-- scripts/install_singularity.sh
+- ci/scripts/install_scripts.sh
 - pip install git+https://github.com/virtuald/pyhcl.git@0.3.12#egg=pyhcl
 install:
 - pip install cli/
