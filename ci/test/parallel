@@ -9,280 +9,88 @@ PY_VERSION=$( (python --version) 2>&1)
 
 if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
-
+# workflow with actions expected to execute correctly.
 cat <<EOF > main.workflow
-workflow "test" {
-  resolves = ["ls cmds", "curl urls"]
+workflow "sample" {
+  resolves = ["stage_one"]
 }
 
-action "ls al" {
+action "one" {
   uses = "docker://busybox"
-  args = ["ls", "-al"]
+  args = ["echo", "Hello from busybox"]
 }
 
-action "ls ltr" {
-  uses = "docker://busybox"
-  args = ["ls", "-ltr"]
-}
-
-action "ls line count" {
-  uses = "docker://busybox"
-  args = ["sh", "-c", "ls | wc -l"]
-}
-
-action "ls d" {
-  uses = "docker://busybox"
-  args = ["ls", "-d"]
-}
-
-action "ls r" {
-  uses = "docker://busybox"
-  args = ["ls", "-r"]
-}
-
-action "ls R" {
-  uses = "docker://busybox"
-  args = ["ls", "-R"]
-}
-
-action "ls s" {
-  uses = "docker://busybox"
-  args = ["ls", "-s"]
-}
-
-action "ls t" {
-  uses = "docker://busybox"
-  args = ["ls", "-t"]
-}
-
-action "ls S" {
-  uses = "docker://busybox"
-  args = ["ls", "-S"]
-}
-
-action "ls X" {
-    uses = "docker://busybox"
-    args = ["ls", "-X"]
-}
-
-action "ls cmds" {
-  uses = "docker://busybox"
-  needs = [
-    "ls al",
-    "ls ltr",
-    "ls line count",
-    "ls d",
-    "ls r",
-    "ls R",
-    "ls s",
-    "ls t",
-    "ls S",
-    "ls X"
-  ]
-}
-
-
-action "curl github" {
-  uses = "actions/bin/curl@master"
-  args = ["github.com"]
-}
-
-action "curl google" {
+action "two" {
   uses = "actions/bin/curl@master"
   args = ["google.com"]
 }
 
-action "curl facebook" {
-  uses = "actions/bin/curl@master"
-  args = ["facebook.com"]
+action "three" {
+  uses = "actions/bin/sh@master"
+  args = ["echo Hello from sh"]
 }
 
-action "curl gitlab" {
-  uses = "actions/bin/curl@master"
-  args = ["gitlab.com"]
+action "four" {
+  uses = "actions/npm@master"
+  args = ["--version"]
 }
 
-action "curl bitbucket" {
-  uses = "actions/bin/curl@master"
-  args = ["bitbucket.org"]
-}
-
-action "curl medium" {
-  uses = "actions/bin/curl@master"
-  args = ["medium.com"]
-}
-
-action "curl twitter" {
-  uses = "actions/bin/curl@master"
-  args = ["twitter.com"]
-}
-
-action "curl youtube" {
-  uses = "actions/bin/curl@master"
-  args = ["youtube.com"]
-}
-
-action "curl do" {
-  uses = "actions/bin/curl@master"
-  args = ["digitalocean.com"]
-}
-
-action "curl urls" {
-    uses = "actions/bin/curl@master"
-    args = ["devfolio.co"]
-    needs = [
-        "curl google",
-        "curl facebook",
-        "curl gitlab",
-        "curl bitbucket",
-        "curl medium",
-        "curl youtube",
-        "curl do",
-        "curl twitter",
-        "curl github"
-    ]
+action "stage_one" {
+  uses = "docker://debian:buster-slim"
+  args = ["apt", "--version"]
+  needs = [
+    "one",
+    "two",
+    "three",
+    "four"
+  ]
 }
 EOF
 
-popper run --parallel |& tee out
+popper run --parallel --runtime "$RUNTIME" |& tee out
 counter="$(grep -c 'Action ran successfully !' out)"
-test "$counter" -eq 21
+test "$counter" -eq 5
 
+# workflow with actions expected to fail
 cat <<EOF > main.workflow
-workflow "test" {
-  resolves = ["ls cmds", "curl urls"]
+workflow "sample" {
+  resolves = ["stage_one"]
 }
 
-action "ls al" {
+action "one" {
   uses = "docker://busybox"
-  args = ["ls", "-al"]
+  args = ["echdo", "Hello from busybox"]
 }
 
-action "ls ltr" {
-  uses = "docker://busybox"
-  args = ["ls", "-ltr"]
-}
-
-action "ls line count" {
-  uses = "docker://busybox"
-  args = ["sh", "-c", "ls | wc -l"]
-}
-
-action "ls d" {
-  uses = "docker://busybox"
-  args = ["ls", "-dhdd"]
-}
-
-action "ls r" {
-  uses = "docker://busybox"
-  args = ["ls", "-tyygfsr"]
-}
-
-action "ls R" {
-  uses = "docker://busybox"
-  args = ["ls", "-R"]
-}
-
-action "ls s" {
-  uses = "docker://busybox"
-  args = ["ls", "-s"]
-}
-
-action "ls t" {
-  uses = "docker://busybox"
-  args = ["ls", "-gdtdt"]
-}
-
-action "ls S" {
-  uses = "docker://busybox"
-  args = ["ls", "-S"]
-}
-
-action "ls X" {
-    uses = "docker://busybox"
-    args = ["ls", "-X"]
-}
-
-action "ls cmds" {
-  uses = "docker://busybox"
-  needs = [
-    "ls al",
-    "ls ltr",
-    "ls line count",
-    "ls d",
-    "ls r",
-    "ls R",
-    "ls s",
-    "ls t",
-    "ls S",
-    "ls X"
-  ]
-}
-
-
-action "curl github" {
-  uses = "actions/bin/curl@master"
-  args = ["git77hub.com"]
-}
-
-action "curl google" {
+action "two" {
   uses = "actions/bin/curl@master"
   args = ["google.com"]
 }
 
-action "curl facebook" {
-  uses = "actions/bin/curl@master"
-  args = ["facebook.com"]
+action "three" {
+  uses = "actions/bin/sh@master"
+  args = ["echo Hello from sh"]
 }
 
-action "curl gitlab" {
-  uses = "actions/bin/curl@master"
-  args = ["gitlab.com"]
+action "four" {
+  uses = "actions/npm@master"
+  args = ["--vesrsion"]
 }
 
-action "curl bitbucket" {
-  uses = "actions/bin/curl@master"
-  args = ["bitbucket.org"]
-}
-
-action "curl medium" {
-  uses = "actions/bin/curl@master"
-  args = ["medyu67dfium.com"]
-}
-
-action "curl twitter" {
-  uses = "actions/bin/curl@master"
-  args = ["twitter.com"]
-}
-
-action "curl youtube" {
-  uses = "actions/bin/curl@master"
-  args = ["youtube.com"]
-}
-
-action "curl do" {
-  uses = "actions/bin/curl@master"
-  args = ["digitalocean.com"]
-}
-
-action "curl urls" {
-    uses = "actions/bin/curl@master"
-    args = ["devfolio.co"]
-    needs = [
-        "curl google",
-        "curl facebook",
-        "curl gitlab",
-        "curl bitbucket",
-        "curl medium",
-        "curl youtube",
-        "curl do",
-        "curl twitter",
-        "curl github"
-    ]
+action "stage_one" {
+  uses = "docker://debian:buster-slim"
+  args = ["apt", "--version"]
+  needs = [
+    "one",
+    "two",
+    "three",
+    "four"
+  ]
 }
 EOF
 
-! popper run --parallel
+! popper run --parallel --runtime "$RUNTIME"
 echo "Some actions failed as expected !"
-
 fi
+
+echo "Test PARALLEL passed."

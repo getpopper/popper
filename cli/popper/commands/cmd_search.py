@@ -1,6 +1,3 @@
-import os
-import sys
-
 import click
 
 from popper import utils as pu

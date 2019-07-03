@@ -1,9 +1,8 @@
 """Handle's all the parsing and validation
 functionality of `.workflow` files."""
 from __future__ import unicode_literals
-import os
 from copy import deepcopy
-from builtins import str, input, dict
+from builtins import str, dict
 
 import hcl
 

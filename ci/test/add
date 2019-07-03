@@ -104,4 +104,4 @@ test -d /tmp/test_folder/ansible
 test -d /tmp/test_folder/gnuplot
 cleanup
 
-echo "Popper add command ran successfully !"
+echo "Test ADD passed."

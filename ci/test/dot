@@ -67,3 +67,5 @@ grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
 # test with color
 popper dot --colors --wfile example-aws/dummy/main.workflow > dot_output
 grep ".*\"Verify EKS deployment\".*color=" dot_output
+
+echo "Test DOT passed."

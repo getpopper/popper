@@ -1,7 +1,8 @@
 import os
 import re
-import shutil
+
 import git
+
 from popper.cli import log
 
 repo = None

@@ -23,3 +23,5 @@ test -f main.workflow
 test -f actions/example/Dockerfile
 test -f actions/example/entrypoint.sh
 test -f actions/example/README.md
+
+echo "Test SCAFFOLD passed."

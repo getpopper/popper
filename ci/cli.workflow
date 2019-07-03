@@ -61,12 +61,6 @@ action "test dot" {
   runs = "dot"
 }
 
-action "test singularity" {
-  needs = "lint"
-  uses = "./ci/test"
-  runs = "singularized"
-}
-
 action "test interrupt" {
   needs = "lint"
   uses = "./ci/test"
@@ -109,6 +103,12 @@ action "test offline" {
   runs = "offline"
 }
 
+action "test samples" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "samples"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -118,17 +118,17 @@ action "end" {
     "test ci",
     "test dot",
     "test dry-run",
-    "test interrupt",
+    // "test interrupt",
     "test parallel",
     "test quiet",
     "test recursive",
     "test reuse",
     "test scaffold",
-    "test singularity",
     "test validate",
     "test skip",
     "test sh",
     "test search",
+    "test samples",
     "test offline"
   ]
 }
