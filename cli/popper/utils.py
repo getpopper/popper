@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import threading
 from collections import defaultdict
@@ -12,6 +13,8 @@ from popper import scm
 
 
 def setup_cache():
+    """Set up popper cache file path.
+    """
     xdg_cache_dir = os.environ.get(
         'XDG_CACHE_HOME', os.path.join(os.environ['HOME'], '.cache'))
     if not os.path.isdir(xdg_cache_dir):
@@ -266,3 +269,7 @@ def fetch_readme_for_repo(user, repo, path_to_action, version):
                        user, repo, version, path_to_action, 'README.md')
     r = make_gh_request(url, err=False)
     return r.text
+
+
+def sanitized_name(name):
+    return re.sub('[^a-zA-Z0-9_.-]', '_', name)

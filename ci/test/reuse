@@ -35,3 +35,41 @@ popper run
 
 # lastly, test reuse for a single action
 popper run --reuse 'show env'
+
+# test while reusing the container uses the updated args.
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = "ls"
+  env = {
+    TOOL_NAME="popper"
+  }
+}
+EOF
+
+popper run --runtime "$RUNTIME" > output
+grep -q "README.md" output
+grep -q "main.workflow" output
+
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "show env"
+}
+
+action "show env" {
+  uses = "actions/bin/sh@master"
+  args = ["echo \$TOOL_NAME"]
+}
+EOF
+
+popper run --reuse --runtime "$RUNTIME" > output
+grep  -q "popper" output
+! grep -q "README.md" output
+! grep -q "main.workflow" output
+
+echo "Test REUSE passed."

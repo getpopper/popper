@@ -28,7 +28,7 @@ do
     create_workflow "$i"
 done
 
-popper run --dry-run --recursive >> out
+popper run --dry-run --recursive --runtime "$RUNTIME" >> out
 mapfile -t files < <(grep "^Found .*" out | cut -f6 -d' ' | cut -d'/' -f4-)
 
 counter=0
@@ -49,3 +49,5 @@ counter=$(< success wc -l)
 
 echo "Ran $counter/5 cases successfully"
 test "$counter" -eq 5
+
+echo "Test RECURSIVE passed."
