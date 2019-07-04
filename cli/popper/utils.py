@@ -80,7 +80,7 @@ def threadsafe_generator(f):
     return g
 
 
-def find_default_wfile(wfile):
+def find_default_wfile(wfile=None):
     """
     Used to find `main.workflow` in $PWD or in `.github`
     And returns error if not found

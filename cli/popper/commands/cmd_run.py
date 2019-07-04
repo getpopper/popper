@@ -15,7 +15,10 @@ from popper import log as logging
 @click.command(
     'run', short_help='Run a workflow or action.')
 @click.argument(
-    'action', required=False)
+    'action_wfile',
+    required=False,
+    default=None
+)
 @click.option(
     '--debug',
     help=(
@@ -38,7 +41,8 @@ from popper import log as logging
     '--on-failure',
     help='Run the given action if there is a failure.',
     required=False,
-    default=None
+    default=list(),
+    multiple=True
 )
 @click.option(
     '--parallel',
@@ -94,15 +98,6 @@ from popper import log as logging
     is_flag=True
 )
 @click.option(
-    '--wfile',
-    help=(
-        'File containing the definition of the workflow. '
-        '[default: ./github/main.workflow OR ./main.workflow]'
-    ),
-    required=False,
-    default=None
-)
-@click.option(
     '--with-dependencies',
     help=(
         'When an action argument is given (first positional argument), '
@@ -120,50 +115,74 @@ from popper import log as logging
     default=popper.scm.get_git_root_folder()
 )
 @pass_context
-def cli(ctx, action, wfile, skip_clone, skip_pull, skip, reuse,
-        recursive, quiet, debug, dry_run, parallel, log_file,
-        with_dependencies, on_failure, runtime, workspace):
-    """Execute github actions workflows.
+def cli(ctx, **kwargs):
+    """Executes one or more pipelines and reports on their status.
     """
-    popper.scm.get_git_root_folder()
+    # Prepare the workflow file list.
+    if os.environ.get('CI') == 'true':
+        log.info('Running in CI environment...')
+        occurences = parse_commit_message()
+        if occurences:
+            for params in get_params(occurences):
+                kwargs.update(params)
+                if kwargs['recursive']:
+                    log.warn('When CI is set, --recursive is ignored.')
+                prepare_pipeline(**kwargs)
+        else:
+            for workflow in pu.find_recursive_wfile():
+                kwargs['action_wfile'] = workflow
+                prepare_pipeline(**kwargs)
+    else:
+        if kwargs['recursive']:
+            if kwargs['action_wfile']:
+                log.fail(
+                    "An 'action/workflow' argument and --recursive flag "
+                    "cannot be given together.")
+
+            for workflow in pu.find_recursive_wfile():
+                kwargs['action_wfile'] = workflow
+                prepare_pipeline(**kwargs)
+        else:
+            prepare_pipeline(**kwargs)
+
+
+def prepare_pipeline(**kwargs):
+    """Set parameters for the workflow execution.
+    """
+    # Set the logging levels.
     level = 'ACTION_INFO'
-    if quiet:
+    if kwargs['quiet']:
         level = 'INFO'
-    if debug:
+    if kwargs['debug']:
         level = 'DEBUG'
     log.setLevel(level)
-    if log_file:
-        logging.add_log(log, log_file)
+    if kwargs['log_file']:
+        logging.add_log(log, kwargs['log_file'])
 
-    if os.environ.get('CI') == 'true':
-        log.info("Running in CI environment.")
-        if recursive:
-            log.warning('When CI variable is set, --recursive is ignored.')
-        wfile_list = pu.find_recursive_wfile()
-        wfile_list = workflows_from_commit_message(wfile_list)
+    # pop the unnecessary kwargs
+    kwargs.pop('quiet')
+    kwargs.pop('debug')
+    kwargs.pop('log_file')
+    kwargs.pop('recursive')
+
+    # Determine whether workflow/action to run.
+    # if workflow argument is passed, the workflow is run.
+    # else if action argument is passed the action of the default
+    # workflow is run.
+    action_wfile = kwargs.pop('action_wfile')
+    if action_wfile and os.path.isfile(action_wfile):
+        wfile = action_wfile
+        action = None
     else:
-        if recursive:
-            if action:
-                log.fail(
-                    "An 'action' argument and the --recursive flag cannot be "
-                    "both given.")
-            wfile_list = pu.find_recursive_wfile()
-        else:
-            wfile_list = [wfile]
+        wfile = pu.find_default_wfile()
+        action = action_wfile
 
-    if not wfile_list:
-        log.fail("No workflow to execute.")
-
-    for wfile in wfile_list:
-        wfile = pu.find_default_wfile(wfile)
-        log.info("Found and running workflow at " + wfile)
-        run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace,
-                     reuse, dry_run, parallel, with_dependencies, on_failure,
-                     runtime)
+    # Run the workflow.
+    log.info("Found and running workflow at " + wfile)
+    run_pipeline(wfile, action, **kwargs)
 
 
-def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
-                 dry_run, parallel, with_dependencies, on_failure, runtime):
+def run_pipeline(wfile, action, **kwargs):
 
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
@@ -171,73 +190,65 @@ def run_pipeline(action, wfile, skip_clone, skip_pull, skip, workspace, reuse,
     pipeline = WorkflowRunner(wf)
 
     # Saving workflow instance for signal handling
-    popper.cli.interrupt_params['parallel'] = parallel
+    popper.cli.interrupt_params['parallel'] = kwargs['parallel']
 
-    if parallel:
+    if kwargs['parallel']:
         if sys.version_info[0] < 3:
             log.fail('--parallel is only supported on Python3')
         log.warn("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
-    if with_dependencies and (not action):
+    if kwargs['with_dependencies'] and (not action):
         log.fail('`--with-dependencies` can be used only with '
                  'action argument.')
 
-    if skip and action:
+    if kwargs['skip'] and action:
         log.fail('`--skip` can\'t be used when action argument '
                  'is passed.')
 
+    on_failure = kwargs.pop('on_failure')
+
     try:
-        pipeline.run(action, skip_clone, skip_pull, skip, workspace, reuse,
-                     dry_run, parallel, with_dependencies, runtime)
+        pipeline.run(action, **kwargs)
     except SystemExit as e:
         if (e.code != 0) and on_failure:
-            pipeline.run(on_failure, skip_clone, skip_pull, list(), workspace,
-                         reuse, dry_run, parallel, with_dependencies, runtime)
+            kwargs['skip'] = list()
+            action = on_failure
+            pipeline.run(action, **kwargs)
         else:
             raise
 
     if action:
         log.info('Action "{}" finished successfully.'.format(action))
     else:
-        log.info('Workflow finished successfully.')
+        log.info('Workflow "{}" finished successfully.'.format(wfile))
 
 
-def workflows_from_commit_message(workflows):
+def parse_commit_message():
+    """Parse `popper:run[]` keywords from head commit message.
+    """
     head_commit = scm.get_head_commit()
-
     if not head_commit:
-        return workflows
+        return None
 
     msg = head_commit.message
-
     if 'Merge' in msg:
         log.info("Merge detected. Reading message from merged commit.")
         if len(head_commit.parents) == 2:
             msg = head_commit.parents[1].message
 
-    if 'popper:skip[' in msg:
-        log.info("Found 'popper:skip' keyword.")
-        re_expr = r'popper:skip\[(.+?)\]'
-    elif 'popper:whitelist[' in msg:
-        log.info("Found 'popper:whitelist' keyword.")
-        re_expr = r'popper:whitelist\[(.+?)\]'
-    else:
-        return workflows
+    if 'popper:run[' not in msg:
+        return None
 
-    try:
-        workflow_list = re.search(re_expr, msg).group(1).split(',')
-    except AttributeError:
-        log.fail("Error parsing commit message keyword.")
+    pattern = r'popper:run\[(.+?)\]'
+    occurences = re.findall(pattern, msg)
+    return occurences
 
-    if 'skip' in re_expr:
-        for wf in workflow_list:
-            if wf in workflows:
-                workflows.remove(wf)
-            else:
-                log.warn('Workflow {} was not found.'.format(wf))
-    else:
-        workflows = workflow_list
 
-    log.info('Only running workflows: {}'.format(', '.join(workflows)))
-    return workflows
+def get_params(arg_list):
+    """Parse the keyword occurences and return the params.
+    """
+    for args in arg_list:
+        args = args.split(" ")
+        ci_context = cli.make_context('popper run', args)
+        yield ci_context.params

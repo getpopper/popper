@@ -55,7 +55,6 @@ cat <<EOF > a.workflow
 workflow "wf" {
   resolves = "a"
 }
-
 action "a" {
   uses = "sh"
   args = "ls"
@@ -66,7 +65,6 @@ cat <<EOF > b.workflow
 workflow "wf" {
   resolves = "a"
 }
-
 action "a" {
   uses = "sh"
   args = "ls"
@@ -77,7 +75,6 @@ cat <<EOF > c.workflow
 workflow "wf" {
   resolves = "a"
 }
-
 action "a" {
   uses = "sh"
   args = "ls"
@@ -87,9 +84,10 @@ EOF
 
 git init
 git add .
-git commit -m "popper:whitelist[/tmp/mypaper/myaction/a.workflow,/tmp/mypaper/myaction/b.workflow]"
-popper run --dry-run --runtime "$RUNTIME" | grep "Only running workflows: /tmp/mypaper/myaction/a.workflow, /tmp/mypaper/myaction/b.workflow"
-
+git commit -m "popper:run[/tmp/mypaper/myaction/a.workflow] popper:run[/tmp/mypaper/myaction/b.workflow]"
+popper run --dry-run --runtime "$RUNTIME" > output
+grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
+grep -q "Found and running workflow at /tmp/mypaper/myaction/b.workflow" output
 
 cd $test_repo_path
 cd myaction
@@ -98,7 +96,6 @@ cat <<EOF > d.workflow
 workflow "wf" {
   resolves = "a"
 }
-
 action "a" {
   uses = "sh"
   args = "ls"
@@ -106,13 +103,15 @@ action "a" {
 EOF
 
 git add .
-git commit -m "popper:skip[/tmp/mypaper/myaction/a.workflow,/tmp/mypaper/myaction/c.workflow"]
-popper run --dry-run --runtime "$RUNTIME" | grep "Only running workflows: /tmp/mypaper/myaction/b.workflow, /tmp/mypaper/myaction/d.workflow"
-
-
-git clone https://github.com/JayjeetAtGithub/test-merge-commits
-cd test-merge-commits
+git commit -m "Test commit popper:run[/tmp/mypaper/myaction/a.workflow --debug] popper:run[/tmp/mypaper/myaction/d.workflow --quiet]"
 popper run --dry-run --runtime "$RUNTIME" > output
-grep -q "Only running workflows: b.workflow" output
+grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
+grep -q "Found and running workflow at /tmp/mypaper/myaction/d.workflow" output
+
+
+git clone https://github.com/JayjeetAtGithub/test-repo-for-popper.git
+cd test-repo-for-popper
+popper run --dry-run --runtime "$RUNTIME" > output
+grep -q "Found and running workflow at b.workflow" output
 
 echo "Test CI passed."
