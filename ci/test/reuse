@@ -51,7 +51,7 @@ action "show env" {
 }
 EOF
 
-popper run --runtime "$RUNTIME" > output
+popper run > output
 grep -q "README.md" output
 grep -q "main.workflow" output
 
@@ -67,7 +67,7 @@ action "show env" {
 }
 EOF
 
-popper run --reuse --runtime "$RUNTIME" > output
+popper run --reuse > output
 grep  -q "popper" output
 ! grep -q "README.md" output
 ! grep -q "main.workflow" output

@@ -53,27 +53,21 @@ of the `uses` attribute of action blocks.
 > **NOTE**: As part of our roadmap, we plan to add support for Vagrant 
 > and Conda runtimes. Open a [new 
 > issue](https://github.com/systemslab/popper/issues/new) to request 
-> another runtime you would Popper to support.
+> another runtime you would want Popper to support.
 
 ### Singularity
 
-> **NOTE**: This feature requires Singularity 2.6+.
+> **NOTE**: This feature requires Singularity 3.2+.
 
-An action executes in a Singularity container when:
+To execute a workflow in Singularity runtime, you can do
 
-  * A singularity image is referenced. For example: `shub://myimage` 
-    will pull the container from the [singularity 
-    hub](https://singularity-hub.org).
+```bash
+popper run --runtime singularity
+```
 
-  * A `Singularity` file is found in the action folder. For 
-    example, if `./actions/mycontainer` is the value of the `uses` 
-    attribute in an action block, and a `Singularity` is found, 
-    Popper builds and executes a singularity container.
-
-  * A `Singularity` is found in the public repository of the given 
-    action. If an action resides in a public Git repository, and the 
-    path to the action contains a `Singularity` file, it will get 
-    executed in Singularity.
+When no `--runtime` option is supplied, Popper executes workflows in
+default runtime Docker.
+Currently, `--reuse` is not available for singularity runtime.
 
 ### Host
 

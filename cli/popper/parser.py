@@ -1,5 +1,3 @@
-"""Handle's all the parsing and validation
-functionality of `.workflow` files."""
 from __future__ import unicode_literals
 from copy import deepcopy
 from builtins import str, dict
@@ -268,7 +266,7 @@ class Workflow(object):
         in the workflow.
 
         Args:
-            workflow (Workflow) : The workflow object to validate.
+            skip (list) : The list actions to skip if applicable.
         """
         def _traverse(entrypoint, reachable, workflow):
             for node in entrypoint:
@@ -296,18 +294,19 @@ class Workflow(object):
         for a in unreachable:
             self._workflow['action'].pop(a)
 
-    def skip_actions(self, skip_list):
+    @staticmethod
+    def skip_actions(wf, skip_list):
         """Removes the actions to be skipped from the workflow graph and
         return a new `Workflow` object.
 
         Args:
-            workflow (Workflow) : The workflow object to operate upon.
+            wf (Workflow) : The workflow object to operate upon.
             skip_list (list) : List of actions to be skipped.
 
         Returns:
             Workflow : The updated workflow object.
         """
-        workflow = deepcopy(self)
+        workflow = deepcopy(wf)
         for sa_name in skip_list:
             sa_block = workflow.get_action(sa_name)
 
@@ -325,12 +324,16 @@ class Workflow(object):
         workflow.props['skip_list'] = list(skip_list)
         return workflow
 
-    def filter_action(self, action, with_dependencies):
+    @staticmethod
+    def filter_action(wf, action, with_dependencies):
         """Filters out all actions except the one passed in
         the argument from the workflow.
 
         Args:
+            wf (Workflow) : The workflow object to operate upon.
             action (str) : The action to run.
+            with_dependencies (bool) : Filter out action to
+            run with dependencies or not.
 
         Returns:
             Workflow : The updated workflow object.
@@ -349,7 +352,7 @@ class Workflow(object):
                 workflow.root.add(action)
 
         # The list of actions that needs to be preserved.
-        workflow = deepcopy(self)
+        workflow = deepcopy(wf)
 
         actions = set(map(lambda x: x[0], workflow.actions.items()))
 

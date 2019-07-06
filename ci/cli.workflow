@@ -118,7 +118,7 @@ action "end" {
     "test ci",
     "test dot",
     "test dry-run",
-    // "test interrupt",
+    "test interrupt",
     "test parallel",
     "test quiet",
     "test recursive",

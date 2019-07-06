@@ -1,5 +1,3 @@
-import os
-
 import click
 
 from popper.cli import pass_context, log
