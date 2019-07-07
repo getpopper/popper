@@ -1,4 +1,5 @@
 import os
+import stat
 from string import Template
 
 import click
@@ -6,11 +7,28 @@ import click
 from popper import scm, utils as pu
 from popper.cli import pass_context, log
 
-install_scripts = {
-    'singularity': """wget http://neurodeb.pirsquared.org/\
-pool/main/s/singularity-container/\
-singularity-container_2.6.1-2~nd16.04+1_amd64.deb && \
-sudo apt-get -f install ./singularity-container_2.6.1-2~nd16.04+1_amd64.deb"""}
+base_script_content = """
+#!/bin/bash
+set -ex
+"""
+
+install_scripts_content = {
+    'singularity': """
+sudo apt-get update
+sudo apt-get install -y build-essential libssl-dev uuid-dev libgpgme11-dev libseccomp-dev pkg-config squashfs-tools
+mkdir -p ${GOPATH}/src/github.com/sylabs
+cd ${GOPATH}/src/github.com/sylabs
+git clone https://github.com/sylabs/singularity.git
+cd singularity
+git checkout v3.2.0
+cd ${GOPATH}/src/github.com/sylabs/singularity
+./mconfig
+cd ./builddir
+make
+sudo make install
+singularity version
+cd $TRAVIS_BUILD_DIR
+"""}
 
 ci_files = {
     'travis': {
@@ -20,11 +38,11 @@ dist: xenial
 language: python
 python: 3.7
 services: docker
+$install_scripts
 install:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
 - pip install /tmp/popper/cli
-$install_scripts
 script: popper run
 """)
     },
@@ -39,10 +57,10 @@ jobs:
     - checkout
     - run:
         command: |
+        $install_scripts
         git clone https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
         pip install /tmp/popper/cli
-        $install_scripts
         popper run
 """)
     },
@@ -88,10 +106,10 @@ events.on("push", () => {
     popper.tasks = [
         "apt-get update",
         "apt-get install -y git",
+        $install_scripts
         "git clone https://github.com/systemslab/popper /tmp/popper",
         "export PYTHONUNBUFFERED=1",
         "pip install /tmp/popper/cli",
-        $install_scripts
         "popper run"
     ]
     popper.run()
@@ -102,26 +120,24 @@ events.on("push", () => {
 
 
 @click.command('ci', short_help='Generate CI service configuration files.')
-@click.option(
-    '--service',
-    help='Name of CI service for which config files get generated.',
+@click.argument(
+    'service',
     type=click.Choice(['travis', 'circle', 'jenkins', 'gitlab', 'brigade']),
     required=True
 )
 @click.option(
-    '--with-singularity',
-    help='Add singularity install scripts in generated config files.',
+    '--runtime',
+    help='Specify the runtime in which to execute the workflow.',
     required=False,
-    is_flag=True
+    type=click.Choice(['singularity']),
+    default=list(),
+    multiple=True
 )
 @pass_context
-def cli(ctx, service, with_singularity):
+def cli(ctx, service, runtime):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
-    if service not in ci_files:
-        log.fail("Unrecognized service " + service)
-
     project_root = scm.get_git_root_folder()
 
     if project_root != os.getcwd():
@@ -130,35 +146,50 @@ def cli(ctx, service, with_singularity):
             'Git project folder (where the .git/ folder is located).')
 
     for ci_file, ci_file_content in pu.get_items(ci_files[service]):
-        ci_file_content = ci_file_content
+
+        # Prepare and write the CI config file.
         ci_file = os.path.join(project_root, ci_file)
-        # Create parent folder
         if not os.path.isdir(os.path.dirname(ci_file)):
             os.makedirs(os.path.dirname(ci_file))
 
-        # Customize content
-        scripts = []
-        if with_singularity:
-            if service in ['jenkins', 'gitlab']:
+        install_script_cmd = ''
+        if runtime:
+            if service == 'jenkins' or service == 'gitlab':
                 log.fail(
-                    'Scaffolding of Singularity install script is not '
+                    'Scaffolding of custom install scripts is not '
                     'supported for Jenkins and Gitlab CI. Include it '
                     'manually depending upon the CI\'s OS.')
-            scripts.append(install_scripts['singularity'])
 
-        if scripts:
-            scripts = ' && '.join(scripts)
-            if service == 'travis':
-                scripts = '- ' + scripts
-            if service == 'brigade':
-                scripts = '"' + scripts + '",'
-        else:
-            scripts = ''
+            elif service == 'travis':
+                install_script_cmd = 'before_install: scripts/install_scripts.sh'
 
-        # Write content
+            elif service == 'circle':
+                install_script_cmd = 'bash scripts/install_scripts.sh'
+
+            elif service == 'brigade':
+                install_script_cmd = '"bash scripts/install_scripts.sh",'
+
         with open(ci_file, 'w') as f:
             f.write(reformat(ci_file_content.safe_substitute(
-                {'install_scripts': scripts})))
+                {'install_scripts': install_script_cmd})))
+
+        # Prepare and Write the install scripts.
+        if runtime:
+            runtime = set(runtime)
+            install_script_file = os.path.join(
+                project_root, 'scripts', 'install_scripts.sh')
+            script_content = base_script_content
+            for r in runtime:
+                script_content += install_scripts_content[r]
+
+            if not os.path.isdir(os.path.dirname(install_script_file)):
+                os.makedirs(os.path.dirname(install_script_file))
+
+            with open(install_script_file, 'w') as f:
+                f.write(script_content)
+
+            st = os.stat(install_script_file)
+            os.chmod(install_script_file, st.st_mode | stat.S_IEXEC)
 
     log.info('Wrote {} configuration successfully.'.format(service))
 
