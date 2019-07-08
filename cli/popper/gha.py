@@ -13,12 +13,13 @@ from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 import yaml
 import docker
 import spython
-from spython.main.parse.parsers import DockerParser, SingularityParser
+from spython.main.parse.parsers import DockerParser
 from spython.main.parse.writers import SingularityWriter
 
 import popper.cli
 from popper.cli import log
 from popper import scm, utils as pu
+from popper.parser import Workflow
 
 
 yaml.Dumper.ignore_aliases = lambda *args: True
@@ -32,12 +33,12 @@ class WorkflowRunner(object):
 
     def __init__(self, workflow):
 
-        self.actions_cache_path = os.path.join('/', 'tmp', 'actions')
         self.wf = workflow
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
-    def check_secrets(self, wf, dry_run, skip_secrets_prompt):
+    @staticmethod
+    def check_secrets(wf, dry_run, skip_secrets_prompt):
         """Checks whether the secrets defined in the action block is
         set in the execution environment or not.
 
@@ -59,10 +60,12 @@ class WorkflowRunner(object):
                             'Enter the value for {} : '.format(s))
                         os.environ[s] = val
 
-    def download_actions(self, wf, dry_run, skip_clone):
+    @staticmethod
+    def download_actions(wf, dry_run, skip_clone):
         """Clone actions that reference a repository."""
         cloned = set()
         infoed = False
+        actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
         for _, a in wf.actions.items():
             if ('docker://' in a['uses']
@@ -73,7 +76,7 @@ class WorkflowRunner(object):
                 a['uses'])
 
             repo_dir = os.path.join(
-                self.actions_cache_path, service, user, repo
+                actions_cache_path, service, user, repo
             )
 
             a['repo_dir'] = repo_dir
@@ -100,7 +103,8 @@ class WorkflowRunner(object):
             scm.clone(url, user, repo, repo_dir, version)
             cloned.add('{}/{}'.format(user, repo))
 
-    def instantiate_runners(self, runtime, wf, workspace, env,
+    @staticmethod
+    def instantiate_runners(runtime, wf, workspace, env,
                             dry_run, skip_pull):
         """Factory of ActionRunner instances, one for each action.
 
@@ -147,10 +151,10 @@ class WorkflowRunner(object):
         new_wf = deepcopy(self.wf)
 
         if skip:
-            new_wf = self.wf.skip_actions(skip)
+            new_wf = Workflow.skip_actions(self.wf, skip)
 
         if action:
-            new_wf = self.wf.filter_action(action, with_dependencies)
+            new_wf = Workflow.filter_action(self.wf, action, with_dependencies)
 
         new_wf.check_for_unreachable_actions(skip)
 
@@ -170,15 +174,16 @@ class WorkflowRunner(object):
         for e in dict(env):
             env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
 
-        self.check_secrets(new_wf, dry_run, skip_secrets_prompt)
-        self.download_actions(new_wf, dry_run, skip_clone)
-        self.instantiate_runners(
+        WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
+        WorkflowRunner.download_actions(new_wf, dry_run, skip_clone)
+        WorkflowRunner.instantiate_runners(
             runtime, new_wf, workspace, env, dry_run, skip_pull)
 
         for s in new_wf.get_stages():
-            self.run_stage(new_wf, s, reuse, parallel)
+            WorkflowRunner.run_stage(new_wf, s, reuse, parallel)
 
-    def run_stage(self, wf, stage, reuse=False, parallel=False):
+    @staticmethod
+    def run_stage(wf, stage, reuse=False, parallel=False):
         if parallel:
             with ProcessPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
@@ -451,6 +456,10 @@ class SingularityRunner(ActionRunner):
     def run(self, reuse=False):
         """Run the action.
         """
+        if reuse:
+            log.fail('Reusing containers in singularity runtime is '
+                     'currently not supported.')
+
         build = True
         if 'docker://' in self.action['uses']:
             image = self.action['uses']
@@ -468,20 +477,12 @@ class SingularityRunner(ActionRunner):
 
         container = self.cid + '.sif'
 
-        if (not reuse) and (not self.skip_pull):
-            if self.singularity_exists(container):
-                self.singularity_rm(container)
-            if build:
-                self.singularity_build_from_recipe(build_path, container)
-            else:
-                self.singularity_build_from_image(image, container)
+        if self.singularity_exists(container) and not self.skip_pull:
+            self.singularity_rm(container)
+        if build:
+            self.singularity_build_from_recipe(build_path, container)
         else:
-            if not self.singularity_exists(container):
-                if build:
-                    self.singularity_build_from_recipe(
-                        build_path, container)
-                else:
-                    self.singularity_build_from_image(image, container)
+            self.singularity_build_from_image(image, container)
 
         e = self.singularity_start(container)
 

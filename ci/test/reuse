@@ -37,6 +37,9 @@ popper run
 popper run --reuse 'show env'
 
 # test while reusing the container uses the updated args.
+
+if [ "$RUNTIME" != "singularity" ]; then
+
 cat <<EOF > main.workflow
 workflow "test" {
   resolves = "show env"
@@ -71,5 +74,35 @@ popper run --reuse --runtime "$RUNTIME" > output
 grep  -q "popper" output
 ! grep -q "README.md" output
 ! grep -q "main.workflow" output
+
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "check file"
+}
+
+action "check file" {
+  uses = "actions/bin/sh@master"
+  args = ["echo 'Hello from Popper 2.x !' > /usr/local/popper.file"]
+}
+EOF
+
+popper run --runtime "$RUNTIME"
+
+cat <<EOF > main.workflow
+workflow "test" {
+  resolves = "check file"
+}
+
+action "check file" {
+  uses = "actions/bin/sh@master"
+  args = ["cat /usr/local/popper.file"]
+}
+EOF
+
+popper run --reuse --runtime "$RUNTIME" > output
+grep -q "Hello from Popper 2.x !" output
+
+fi
 
 echo "Test REUSE passed."
