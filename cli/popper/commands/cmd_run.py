@@ -118,8 +118,8 @@ from popper import log as logging
 def cli(ctx, **kwargs):
     """Executes one or more pipelines and reports on their status.
     """
-    # Prepare the workflow file list.
     if os.environ.get('CI') == 'true':
+        # When CI is set,
         log.info('Running in CI environment...')
         occurences = parse_commit_message()
         if occurences:
@@ -127,28 +127,29 @@ def cli(ctx, **kwargs):
                 kwargs.update(params)
                 if kwargs['recursive']:
                     log.warn('When CI is set, --recursive is ignored.')
+                    kwargs['recursive'] = False
                 prepare_pipeline(**kwargs)
         else:
-            for workflow in pu.find_recursive_wfile():
-                kwargs['action_wfile'] = workflow
-                prepare_pipeline(**kwargs)
-    else:
-        if kwargs['recursive']:
-            if kwargs['action_wfile']:
-                log.fail(
-                    "An 'action/workflow' argument and --recursive flag "
-                    "cannot be given together.")
-
-            for workflow in pu.find_recursive_wfile():
-                kwargs['action_wfile'] = workflow
-                prepare_pipeline(**kwargs)
-        else:
+            # If no special keyword is found, we run all the workflows,
+            # recursively.
+            kwargs['recursive'] = True
             prepare_pipeline(**kwargs)
+    else:
+        # When CI is not set,
+        prepare_pipeline(**kwargs)
 
 
 def prepare_pipeline(**kwargs):
     """Set parameters for the workflow execution.
     """
+
+    def is_workflow(argument):
+        """Determine whether the action_wfile argument is
+        a workflow ref or an action ref."""
+        if argument:
+            return os.path.isfile(argument) and argument.endswith('.workflow')
+        return False
+
     # Set the logging levels.
     level = 'ACTION_INFO'
     if kwargs['quiet']:
@@ -159,31 +160,38 @@ def prepare_pipeline(**kwargs):
     if kwargs['log_file']:
         logging.add_log(log, kwargs['log_file'])
 
-    # pop the unnecessary kwargs
+    # Remove the unnecessary kwargs.
     kwargs.pop('quiet')
     kwargs.pop('debug')
     kwargs.pop('log_file')
-    kwargs.pop('recursive')
 
-    # Determine whether workflow/action to run.
-    # if workflow argument is passed, the workflow is run.
-    # else if action argument is passed the action of the default
-    # workflow is run.
+    # Run the workflow accordingly as recursive/CI and Non-CI.
+    recursive = kwargs.pop('recursive')
     action_wfile = kwargs.pop('action_wfile')
-    if action_wfile and os.path.isfile(action_wfile):
-        wfile = action_wfile
-        action = None
-    else:
-        wfile = pu.find_default_wfile()
-        action = action_wfile
 
-    # Run the workflow.
-    log.info("Found and running workflow at " + wfile)
-    run_pipeline(wfile, action, **kwargs)
+    if recursive:
+        for wfile in pu.find_recursive_wfile():
+            if is_workflow(action_wfile):
+                log.fail(
+                    'A workflow argument is invalid in CI/recursive mode.')
+            else:
+                run_pipeline(wfile, action_wfile, **kwargs)
+    else:
+        if is_workflow(action_wfile):
+            # If action_wfile is a workflow, just run it.
+            wfile = action_wfile
+            action = None
+        else:
+            # If it is a action, run it from the default workflow file.
+            wfile = pu.find_default_wfile()
+            action = action_wfile
+
+        run_pipeline(wfile, action, **kwargs)
 
 
 def run_pipeline(wfile, action, **kwargs):
 
+    log.info('Found and running workflow at ' + wfile)
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(wfile)
