@@ -111,13 +111,21 @@ from popper import log as logging
     required=False,
     is_flag=True
 )
+@click.option(
+    '--workspace',
+    help='Path to workspace folder.',
+    required=False,
+    show_default=False,
+    hidden=True,
+    default=popper.scm.get_git_root_folder()
+)
 @pass_context
 def cli(ctx, action, wfile, skip_clone, skip_pull, skip, reuse,
         recursive, quiet, debug, dry_run, parallel, log_file,
-        with_dependencies, on_failure, runtime):
+        with_dependencies, on_failure, runtime, workspace):
     """Execute github actions workflows.
     """
-    workspace = popper.scm.get_git_root_folder()
+    popper.scm.get_git_root_folder()
     level = 'ACTION_INFO'
     if quiet:
         level = 'INFO'
