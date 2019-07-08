@@ -47,11 +47,12 @@ and [Bitbucket](https://bitbucket.org), respectively.
 
 By default, actions in Popper workflows run in Docker, similarly to 
 how they run in the Github Actions platform. Popper adds the ability 
-of running actions in other runtimes by extending the interpretation 
-of the `uses` attribute of action blocks.
+of running actions in other runtimes by providing a `--runtime` flag
+to the `popper run` command.
 
-> **NOTE**: As part of our roadmap, we plan to add support for Vagrant 
-> and Conda runtimes. Open a [new 
+> **NOTE**: As part of our roadmap, we plan to add support for
+> [Vagrant](https://www.vagrantup.com/)
+> and [Podman](https://podman.io/) runtimes. Open a [new
 > issue](https://github.com/systemslab/popper/issues/new) to request 
 > another runtime you would want Popper to support.
 
