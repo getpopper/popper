@@ -114,7 +114,7 @@ def find_recursive_wfile():
         list of path of workflow files
     """
     wfile_list = list()
-    for root, dirs, files in os.walk('.'):
+    for root, _, files in os.walk('.'):
         for file in files:
             if file.endswith('.workflow'):
                 wfile = os.path.join(root, file)

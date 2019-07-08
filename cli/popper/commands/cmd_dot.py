@@ -66,7 +66,7 @@ def cli(ctx, wfile, skip, recursive, colors):
 
     for wfile in wfile_list:
         wf = Workflow(wfile)
-        wf.skip_actions(skip)
+        wf = Workflow.skip_actions(wf, skip)
         wf.check_for_unreachable_actions()
 
         node_attrs = (
