@@ -16,8 +16,7 @@ from popper import log as logging
     'run', short_help='Run a workflow or action.')
 @click.argument(
     'action_wfile',
-    required=False,
-    default=None
+    required=False
 )
 @click.option(
     '--debug',
@@ -40,9 +39,7 @@ from popper import log as logging
 @click.option(
     '--on-failure',
     help='Run the given action if there is a failure.',
-    required=False,
-    default=list(),
-    multiple=True
+    required=False
 )
 @click.option(
     '--parallel',
