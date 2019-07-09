@@ -171,6 +171,9 @@ def prepare_workflow_execution(**kwargs):
     # Run the workflow accordingly as recursive/CI and Non-CI.
     recursive = kwargs.pop('recursive')
     target = kwargs.pop('target')
+    with_dependencies = kwargs['with_dependencies']
+    skip = kwargs['skip']
+    on_failure = kwargs['on_failure']
 
     if recursive:
         if target or with_dependencies or skip or on_failure:
