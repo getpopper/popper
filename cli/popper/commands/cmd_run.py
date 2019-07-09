@@ -15,7 +15,7 @@ from popper import log as logging
 @click.command(
     'run', short_help='Run a workflow or action.')
 @click.argument(
-    'action_wfile',
+    'target',
     required=False
 )
 @click.option(
@@ -113,38 +113,43 @@ from popper import log as logging
 )
 @pass_context
 def cli(ctx, **kwargs):
-    """Executes one or more pipelines and reports on their status.
+    """Executes one or more workflows and reports on their status.
+
+    Here TARGET can be either path to a workflow file or an action name.
+    If TARGET is a workflow, the workflow is executed.
+    If TARGET is an action, the specified action from the default workflow
+    shall be executed.
     """
     if os.environ.get('CI') == 'true':
         # When CI is set,
         log.info('Running in CI environment...')
-        occurences = parse_commit_message()
-        if occurences:
-            for params in get_params(occurences):
-                kwargs.update(params)
+        popper_run_instances = parse_commit_message()
+        if popper_run_instances:
+            for args in get_args(popper_run_instances):
+                kwargs.update(args)
                 if kwargs['recursive']:
                     log.warn('When CI is set, --recursive is ignored.')
                     kwargs['recursive'] = False
-                prepare_pipeline(**kwargs)
+                prepare_workflow_execution(**kwargs)
         else:
             # If no special keyword is found, we run all the workflows,
             # recursively.
             kwargs['recursive'] = True
-            prepare_pipeline(**kwargs)
+            prepare_workflow_execution(**kwargs)
     else:
         # When CI is not set,
-        prepare_pipeline(**kwargs)
+        prepare_workflow_execution(**kwargs)
 
 
-def prepare_pipeline(**kwargs):
-    """Set parameters for the workflow execution.
-    """
+def prepare_workflow_execution(**kwargs):
+    """Set parameters for the workflow execution
+    and run the workflow."""
 
-    def is_workflow(argument):
-        """Determine whether the action_wfile argument is
-        a workflow ref or an action ref."""
-        if argument:
-            return os.path.isfile(argument) and argument.endswith('.workflow')
+    def is_workflow(target):
+        """Determine whether the target is
+        a workflow or an action."""
+        if target:
+            return os.path.isfile(target) and target.endswith('.workflow')
         return False
 
     # Set the logging levels.
@@ -164,35 +169,35 @@ def prepare_pipeline(**kwargs):
 
     # Run the workflow accordingly as recursive/CI and Non-CI.
     recursive = kwargs.pop('recursive')
-    action_wfile = kwargs.pop('action_wfile')
+    target = kwargs.pop('target')
 
     if recursive:
         for wfile in pu.find_recursive_wfile():
-            if is_workflow(action_wfile):
+            if is_workflow(target):
                 log.fail(
                     'A workflow argument is invalid in CI/recursive mode.')
             else:
-                run_pipeline(wfile, action_wfile, **kwargs)
+                run_workflow(wfile, target, **kwargs)
     else:
-        if is_workflow(action_wfile):
-            # If action_wfile is a workflow, just run it.
-            wfile = action_wfile
+        if is_workflow(target):
+            # If target is a workflow, just run it.
+            wfile = target
             action = None
         else:
             # If it is a action, run it from the default workflow file.
             wfile = pu.find_default_wfile()
-            action = action_wfile
+            action = target
 
-        run_pipeline(wfile, action, **kwargs)
+        run_workflow(wfile, action, **kwargs)
 
 
-def run_pipeline(wfile, action, **kwargs):
+def run_workflow(wfile, action, **kwargs):
 
     log.info('Found and running workflow at ' + wfile)
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(wfile)
-    pipeline = WorkflowRunner(wf)
+    wf_runner = WorkflowRunner(wf)
 
     # Saving workflow instance for signal handling
     popper.cli.interrupt_params['parallel'] = kwargs['parallel']
@@ -214,12 +219,12 @@ def run_pipeline(wfile, action, **kwargs):
     on_failure = kwargs.pop('on_failure')
 
     try:
-        pipeline.run(action, **kwargs)
+        wf_runner.run(action, **kwargs)
     except SystemExit as e:
         if (e.code != 0) and on_failure:
             kwargs['skip'] = list()
             action = on_failure
-            pipeline.run(action, **kwargs)
+            wf_runner.run(action, **kwargs)
         else:
             raise
 
@@ -246,14 +251,14 @@ def parse_commit_message():
         return None
 
     pattern = r'popper:run\[(.+?)\]'
-    occurences = re.findall(pattern, msg)
-    return occurences
+    popper_run_instances = re.findall(pattern, msg)
+    return popper_run_instances
 
 
-def get_params(arg_list):
-    """Parse the keyword occurences and return the params.
-    """
-    for args in arg_list:
+def get_args(popper_run_instances):
+    """Parse the argument strings from popper:run[..] instances
+    and return the args."""
+    for args in popper_run_instances:
         args = args.split(" ")
         ci_context = cli.make_context('popper run', args)
         yield ci_context.params
