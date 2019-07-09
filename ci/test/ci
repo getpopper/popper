@@ -84,10 +84,11 @@ EOF
 
 git init
 git add .
-git commit -m "popper:run[/tmp/mypaper/myaction/a.workflow] popper:run[/tmp/mypaper/myaction/b.workflow]"
+git commit -m "popper:run[/tmp/mypaper/myaction/a.workflow --recursive] popper:run[/tmp/mypaper/myaction/b.workflow]"
 popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/b.workflow" output
+! grep -q "Found and running workflow at /tmp/mypaper/myaction/c.workflow" output
 
 cd $test_repo_path
 cd myaction
@@ -107,7 +108,35 @@ git commit -m "Test commit popper:run[/tmp/mypaper/myaction/a.workflow --debug] 
 popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/d.workflow" output
+count=$(grep -wc "README.md" output)
+test $count -eq 1
 
+cd $test_repo_path
+cd myaction
+
+cat <<EOF > e.workflow
+workflow "wf" {
+  resolves = ["a1", "a2"]
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+git add .
+git commit -m "Test commit 2 popper:run[/tmp/mypaper/myaction/e.workflow --skip a1]"
+popper run --dry-run --runtime "$RUNTIME" > output
+grep -q "Found and running workflow at /tmp/mypaper/myaction/e.workflow" output
+cat output
+grep -q "a2" output
+! grep -q "a1" output
 
 git clone https://github.com/JayjeetAtGithub/test-repo-for-popper.git
 cd test-repo-for-popper
