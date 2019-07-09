@@ -109,7 +109,7 @@ popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/d.workflow" output
 count=$(grep -wc "README.md" output)
-test $count -eq 1
+test "$count" -eq 1
 
 cd $test_repo_path
 cd myaction
