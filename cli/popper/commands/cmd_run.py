@@ -145,12 +145,13 @@ def prepare_workflow_execution(**kwargs):
     """Set parameters for the workflow execution
     and run the workflow."""
 
-    def is_workflow(target):
-        """Determine whether the target is
-        a workflow or an action."""
-        if target:
-            return os.path.isfile(target) and target.endswith('.workflow')
-        return False
+    def inspect_target(target):
+        if os.path.isdir(target):
+            return os.path.join(target, pu.find_default_wfile()), None
+        elif os.path.isfile(target):
+            return target, None
+        else:
+            return pu.find_default_wfile(), target
 
     # Set the logging levels.
     level = 'ACTION_INFO'
@@ -172,22 +173,16 @@ def prepare_workflow_execution(**kwargs):
     target = kwargs.pop('target')
 
     if recursive:
-        for wfile in pu.find_recursive_wfile():
-            if is_workflow(target):
-                log.fail(
-                    'A workflow argument is invalid in CI/recursive mode.')
-            else:
-                run_workflow(wfile, target, **kwargs)
-    else:
-        if is_workflow(target):
-            # If target is a workflow, just run it.
-            wfile = target
-            action = None
-        else:
-            # If it is a action, run it from the default workflow file.
-            wfile = pu.find_default_wfile()
-            action = target
+        if target or with_dependencies or skip or on_failure:
+            # In recursive mode, these flags cannot be used.
+            log.fail('Any combination of [target] argument, '
+                     '--with-dependencies <action>, --skip <action>, '
+                     '--on-failure <action> is invalid in recursive mode.')
 
+        for wfile in pu.find_recursive_wfile():
+            run_workflow(wfile, target, **kwargs)
+    else:
+        wfile, action = inspect_target(target)
         run_workflow(wfile, action, **kwargs)
 
 
