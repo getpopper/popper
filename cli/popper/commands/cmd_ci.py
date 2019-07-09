@@ -15,7 +15,13 @@ set -ex
 install_scripts_content = {
     'singularity': """
 sudo apt-get update
-sudo apt-get install -y build-essential libssl-dev uuid-dev libgpgme11-dev libseccomp-dev pkg-config squashfs-tools
+sudo apt-get install -y build-essential \
+                        libssl-dev \
+                        uuid-dev \
+                        libgpgme11-dev \
+                        libseccomp-dev \
+                        pkg-config \
+                        squashfs-tools
 mkdir -p ${GOPATH}/src/github.com/sylabs
 cd ${GOPATH}/src/github.com/sylabs
 git clone https://github.com/sylabs/singularity.git
