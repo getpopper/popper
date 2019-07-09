@@ -7,7 +7,7 @@ cd "$test_repo_path"
 
 git clone https://github.com/popperized/spack
 pushd spack
-popper run --runtime "$RUNTIME"
+popper run .ci/test.workflow --runtime "$RUNTIME"
 popd
 
 echo "Test SAMPLES passed."

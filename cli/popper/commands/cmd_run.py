@@ -146,12 +146,11 @@ def prepare_workflow_execution(**kwargs):
     and run the workflow."""
 
     def inspect_target(target):
-        if not target:
-            return pu.find_default_wfile(), target
-        if os.path.isdir(target):
-            return os.path.join(target, pu.find_default_wfile()), None
-        elif os.path.isfile(target):
-            return target, None
+        if target:
+            if target.endswith('.workflow'):
+                return pu.find_default_wfile(target), None
+            else:
+                return pu.find_default_wfile(), target
         else:
             return pu.find_default_wfile(), target
 

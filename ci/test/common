@@ -2,6 +2,7 @@
 set -e
 
 export test_repo_path=/tmp/mypaper
+export CI=false
 
 function delete_dir {
   set +e
