@@ -635,6 +635,10 @@ class HostRunner(ActionRunner):
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
+        if reuse:
+            log.fail('--reuse flag is not supported for actions running '
+                     'on the host.')
+
         root = scm.get_git_root_folder()
         if self.action['uses'] == 'sh':
             cmd = self.action.get('runs', [])
