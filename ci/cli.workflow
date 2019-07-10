@@ -128,7 +128,7 @@ action "end" {
     "test skip",
     "test sh",
     "test search",
-    // "test samples",
+    "test samples",
     "test offline"
   ]
 }
