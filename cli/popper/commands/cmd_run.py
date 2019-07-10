@@ -115,10 +115,38 @@ from popper import log as logging
 def cli(ctx, **kwargs):
     """Executes one or more workflows and reports on their status.
 
-    Here TARGET can be either path to a workflow file or an action name.
+    [TARGET] : It can be either path to a workflow file or an action name.
     If TARGET is a workflow, the workflow is executed.
     If TARGET is an action, the specified action from the default workflow
-    shall be executed.
+    will be executed.
+
+    Examples:
+
+    1. When no TARGET argument is passed, Popper will search for the
+    default workflow (.github/main.workflow or main.workflow) and
+    execute it if found.
+
+       $ popper run
+
+    2. When workflow file is passed as arguments, the specified workflow
+    will be executed.
+
+       $ popper run /path/to/file.workflow
+
+    3. When an action name is passed as argument, Popper will search for
+    the action in the default workflow and if found, only the action
+    will be executed.
+
+       $ popper run myaction
+
+    Note:
+
+    * An action argument or options that take action as argument
+    is not supported in recursive mode.
+
+    * When CI is set, popper run searches for special keywords of the form
+    `popper:run[...]`. If found, popper executes with the options given in
+    these run instances else popper executes all the workflows recursively.
     """
     if os.environ.get('CI') == 'true':
         # When CI is set,
