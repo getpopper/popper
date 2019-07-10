@@ -132,15 +132,15 @@ events.on("push", () => {
     required=True
 )
 @click.option(
-    '--runtime',
-    help='Specify the runtime in which to execute the workflow.',
+    '--install',
+    help='Specify the runtime dependencies to install.',
     required=False,
     type=click.Choice(['singularity']),
     default=list(),
     multiple=True
 )
 @pass_context
-def cli(ctx, service, runtime):
+def cli(ctx, service, install):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
@@ -159,7 +159,7 @@ def cli(ctx, service, runtime):
             os.makedirs(os.path.dirname(ci_file))
 
         install_script_cmd = ''
-        if runtime:
+        if install:
             if service == 'jenkins' or service == 'gitlab':
                 log.fail(
                     'Scaffolding of custom install scripts is not '
@@ -181,13 +181,13 @@ def cli(ctx, service, runtime):
                 {'install_scripts': install_script_cmd})))
 
         # Prepare and Write the install scripts.
-        if runtime:
-            runtime = set(runtime)
+        if install:
+            install = set(install)
             install_script_file = os.path.join(
                 project_root, 'scripts', 'install_scripts.sh')
             script_content = base_script_content
-            for r in runtime:
-                script_content += install_scripts_content[r]
+            for runtime in install:
+                script_content += install_scripts_content[runtime]
 
             if not os.path.isdir(os.path.dirname(install_script_file)):
                 os.makedirs(os.path.dirname(install_script_file))
