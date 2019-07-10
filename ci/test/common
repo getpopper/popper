@@ -2,10 +2,11 @@
 set -e
 
 export test_repo_path=/tmp/mypaper
+export CI=false
 
 function delete_dir {
   set +e
-  if ! rm -rf "$1"; then
+  if ! rm -rf "$1" 2> /dev/null; then
     # try to remove using docker
     docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf "$1"
   fi

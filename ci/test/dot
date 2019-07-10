@@ -43,9 +43,9 @@ grep "\"Deploy to EKS\" -> \"Verify EKS deployment\";" dot_output
 grep "\"Deploy branch filter\" -> \"Deploy to EKS\";" dot_output
 grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
 
-## Testing --wfile feature
+## Testing wfile argument feature
 cd "$test_repo_path"
-popper dot --wfile example-aws/dummy/main.workflow > dot_output
+popper dot example-aws/dummy/main.workflow > dot_output
 
 grep "digraph G .* graph" dot_output
 grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
@@ -65,7 +65,7 @@ grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
 ! grep ".*\"Verify EKS deployment\".*color=" dot_output
 
 # test with color
-popper dot --colors --wfile example-aws/dummy/main.workflow > dot_output
+popper dot --colors example-aws/dummy/main.workflow > dot_output
 grep ".*\"Verify EKS deployment\".*color=" dot_output
 
 echo "Test DOT passed."
