@@ -635,6 +635,10 @@ class HostRunner(ActionRunner):
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
+        if reuse:
+            log.fail('--reuse flag is not supported for actions running '
+                     'on the host.')
+
         root = scm.get_git_root_folder()
         if self.action['uses'] == 'sh':
             cmd = self.action.get('runs', [])
@@ -678,7 +682,7 @@ class HostRunner(ActionRunner):
 
             for line in iter(p.stdout.readline, ''):
                 line_decoded = pu.decode(line)
-                log.info(line_decoded[:-1])
+                log.action_info(line_decoded[:-1])
 
             p.wait()
             ecode = p.poll()
@@ -687,9 +691,9 @@ class HostRunner(ActionRunner):
         except CalledProcessError as ex:
             msg = "Command '{}' failed: {}".format(cmd, ex)
             ecode = ex.returncode
-            log.info(msg)
+            log.action_info(msg)
         finally:
-            log.info()
+            log.action_info()
 
         # remove variables that we added to the environment
         for i in self.action.get('env', {}):

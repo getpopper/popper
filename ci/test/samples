@@ -5,32 +5,9 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
-mkdir spack-workflow
-cat <<EOF > spack-workflow/main.workflow
-workflow "Install and run LULESH" {
-  on = "push"
-  resolves = "run lulesh"
-}
-
-action "install" {
-  uses = "popperized/spack@master"
-  args = "install lulesh~mpi cppflags=-static cflags=-static"
-}
-
-action "create view" {
-  needs = "install"
-  uses = "popperized/spack@master"
-  args = "view -d yes hard -i ./install/ lulesh~mpi "
-}
-
-action "run lulesh" {
-  needs = "create view"
-  uses = "docker://debian:buster-slim"
-  runs = ["sh", "-c", "install/bin/lulesh2.0 -s 100 -i 10"]
-}
-EOF
-
-popper run --wfile spack-workflow/main.workflow --runtime "$RUNTIME"
-delete_dir spack-workflow
+git clone https://github.com/popperized/spack
+pushd spack
+popper run .ci/test.workflow --runtime "$RUNTIME"
+popd
 
 echo "Test SAMPLES passed."
