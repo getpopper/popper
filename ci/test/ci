@@ -6,38 +6,47 @@ init_test_repo
 
 cd "$test_repo_path"
 
-popper ci --service travis
+popper ci travis
 test -f .travis.yml
 cat .travis.yml
 
-popper ci --service circle
+popper ci circle
 test -f .circleci/config.yml
 cat .circleci/config.yml
 
-popper ci --service jenkins
+popper ci jenkins
 test -f Jenkinsfile
 cat Jenkinsfile
 
-popper ci --service gitlab
+popper ci gitlab
 test -f .gitlab-ci.yml
 cat .gitlab-ci.yml
 
-popper ci --service brigade
+popper ci brigade
 test -f brigade.js
 cat brigade.js
 
-popper ci --service travis --with-singularity
+popper ci travis --install singularity
+test -f .travis.yml
+test -f scripts/install_scripts.sh
 cat .travis.yml
+cat scripts/install_scripts.sh
 
-popper ci --service circle --with-singularity
+popper ci circle --install singularity
+test -f .circleci/config.yml
+test -f scripts/install_scripts.sh
 cat .circleci/config.yml
+cat scripts/install_scripts.sh
 
-popper ci --service brigade --with-singularity
+popper ci brigade --install singularity
+test -f brigade.js
+test -f scripts/install_scripts.sh
 cat brigade.js
+cat scripts/install_scripts.sh
 
-! popper ci --service jenkins --with-singularity
+! popper ci jenkins --install singularity
 
-! popper ci --service gitlab --with-singularity
+! popper ci gitlab --install singularity
 
 
 # Test blacklisting/skip in CI environment
