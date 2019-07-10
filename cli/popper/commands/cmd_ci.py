@@ -167,7 +167,8 @@ def cli(ctx, service, runtime):
                     'manually depending upon the CI\'s OS.')
 
             elif service == 'travis':
-                install_script_cmd = 'before_install: scripts/install_scripts.sh'
+                install_script_cmd = ('before_install: scripts/'
+                                      'install_scripts.sh')
 
             elif service == 'circle':
                 install_script_cmd = 'bash scripts/install_scripts.sh'
