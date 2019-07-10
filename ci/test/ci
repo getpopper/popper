@@ -26,27 +26,27 @@ popper ci brigade
 test -f brigade.js
 cat brigade.js
 
-popper ci travis --runtime singularity
+popper ci travis --install singularity
 test -f .travis.yml
 test -f scripts/install_scripts.sh
 cat .travis.yml
 cat scripts/install_scripts.sh
 
-popper ci circle --runtime singularity
+popper ci circle --install singularity
 test -f .circleci/config.yml
 test -f scripts/install_scripts.sh
 cat .circleci/config.yml
 cat scripts/install_scripts.sh
 
-popper ci brigade --runtime singularity
+popper ci brigade --install singularity
 test -f brigade.js
 test -f scripts/install_scripts.sh
 cat brigade.js
 cat scripts/install_scripts.sh
 
-! popper ci jenkins --runtime singularity
+! popper ci jenkins --install singularity
 
-! popper ci gitlab --runtime singularity
+! popper ci gitlab --install singularity
 
 
 # Test blacklisting/skip in CI environment
