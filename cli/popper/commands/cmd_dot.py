@@ -5,8 +5,12 @@ from popper.cli import pass_context, log
 from popper.parser import Workflow
 
 
-@click.argument(
-    'wfile',
+@click.option(
+    '--wfile',
+    help=(
+        'File containing the definition of the workflow. '
+        '[default: ./github/main.workflow OR ./main.workflow]'
+    ),
     required=False,
     default=None
 )
