@@ -5,25 +5,29 @@ import git
 
 from popper.cli import log
 
-repo = None
-
 
 def init_repo_object():
-    global repo
-
-    if repo is not None:
-        return
-
+    """Function to initialize the global repo
+    object before every scm utility functions."""
+    repo = None
     try:
         repo = git.Repo(search_parent_directories=True)
     except git.exc.InvalidGitRepositoryError:
-        log.warn('Unable to find root of a Git repository.')
+        log.warning('Unable to find root of a Git repository.')
+    return repo
 
 
 def get_git_root_folder():
-    """Tries to find the root folder.
+    """Function to find the project root folder.
+
+    If the project is a git repository, the project root is the folder
+    containing the `.git` folder, else the $PWD is assumed to be the
+    project root.
+
+    Returns:
+        str: The path to the root of the project.
     """
-    init_repo_object()
+    repo = init_repo_object()
     if repo:
         root_folder_path = os.path.dirname(repo.git_dir)
     else:
@@ -32,30 +36,19 @@ def get_git_root_folder():
     return root_folder_path
 
 
-def infer_repo_name_from_root_folder():
-    """Finds the root folder of a local Github repository and returns it.
-
-    Returns:
-        repo_name (str): the name of the root folder.
-    """
-    init_repo_object()
-    if repo:
-        repo_name = repo.git_dir
-    else:
-        repo_name = os.getcwd()
-
-    return os.path.basename(repo_name)
-
-
 def get_name():
-    """Assuming $PWD is part of a Git repository, it tries to find the name of
+    """Function to find the name of the project repository.
+
+    Assuming $PWD is part of a Git repository, it tries to find the name of
     the repository by looking at the 'origin' git remote. If no 'origin' remote
     is defined, it returns the name of the parent folder.
+
+    Returns:
+        str: The name of the project repository.
     """
     url = get_remote_url()
-
     if not url:
-        return infer_repo_name_from_root_folder()
+        return os.path.basename(get_git_root_folder())
 
     if url.endswith('.git'):
         url = url[:-4]
@@ -64,24 +57,36 @@ def get_name():
 
 
 def get_user():
-    """Assuming $PWD is part of a Git repository, it tries to find the user (or
+    """Function to find the user of a project repository.
+
+    Assuming $PWD is part of a Git repository, it tries to find the user (or
     org) of the repository, as specified in the 'origin' git remote
     information. If the repository has not been pushed to a remote repo or if
-    'origin' is not the name of any remote repository, returns None.
+    'origin' is not the name of any remote repository, it returns "".
+
+    Returns:
+        str: The user (or org) of the repository or "".
     """
     url = get_remote_url()
     if url:
         if 'https://' in url:
             return os.path.basename(os.path.dirname(url))
         else:
-            return url.split(':')[1]
+            return url.split(':')[1].split('/')[0]
 
-    return None
+    return ""
 
 
 def get_ref():
-    """Returns the Git REF pointed by .git/HEAD"""
-    init_repo_object()
+    """Returns the Git REF pointed by .git/HEAD.
+
+    If the project folder is not a git repo,
+    'unknown' is returned.
+
+    Returns:
+        str: The head ref of the project repository or 'unknown'.
+    """
+    repo = init_repo_object()
     if repo:
         return "" if repo.head.is_detached else repo.head.ref.path
     else:
@@ -89,8 +94,16 @@ def get_ref():
 
 
 def get_sha():
-    """Runs git rev-parse --short HEAD and returns result"""
-    init_repo_object()
+    """Runs git rev-parse --short HEAD and returns result.
+
+    This function returns 'unknown' if the project folder
+    is not a git repo. It fails, when the project folder is a
+    git repo but doesn't have any commit.
+
+    Returns:
+        str: The sha of the head commit or 'unknown'.
+    """
+    repo = init_repo_object()
     if repo:
         try:
             return repo.git.rev_parse(repo.head.object.hexsha, short=True)
@@ -103,8 +116,15 @@ def get_sha():
 
 
 def get_head_commit():
-    """Returns the head commit object."""
-    init_repo_object()
+    """Returns the head commit object.
+
+    If project folder is not a git repository, None is returned.
+    Else, the head commit object is returned.
+
+    Returns:
+        git.objects.commit.Commit: The head commit object or None.
+    """
+    repo = init_repo_object()
     if repo:
         return repo.commit(get_sha())
     else:
@@ -112,8 +132,13 @@ def get_head_commit():
 
 
 def get_remote_url():
-    """Obtains remote origin URL, if possible. Otherwise it returns empty str.
+    """Obtains remote origin URL, if possible.
+    Otherwise it returns empty str.
+
+    Returns:
+        str: The remote origin url or "".
     """
+    repo = init_repo_object()
     url = ""
     if repo:
         if len(repo.remotes) > 0:
@@ -127,42 +152,43 @@ def get_remote_url():
     return url
 
 
-def clone(url, org, repo, repo_dir, version=None):
+def clone(url, org, repo, repo_dir, version='master'):
     """Clones a repository using Git. The URL for the repo is
-    https://github.com/ by default. To override this, other URLs can be given
-    by defining them in the 'action_urls' list specified in the .popper.yml
-    file.
+    https://github.com/ by default.
+
+    Args:
+        url (str): The remote git repository hosting service url.
+        org (str): The org/user to which the repo belongs.
+        repo (str): The repo name.
+        repo_dir (str): The path where to clone the repo.
+        version (str): The remote tag/branch to checkout.
+                       Default is 'master'.
     """
     if os.path.exists(repo_dir):
         cloned_repo = git.Repo(repo_dir)
-        cloned_repo.remotes.origin.pull(version)
-        return
-
-    if '@' in url:
-        url += ':'
+        cloned_repo.remotes.origin.pull()
     else:
-        url += '/'
+        if '@' in url:
+            url += ':'
+        else:
+            url += '/'
 
-    init_repo_object()
+        repo_url = '{}{}/{}'.format(url, org, repo)
+        cloned_repo = git.Repo.clone_from(repo_url, repo_dir)
 
-    repo_url = '{}{}/{}'.format(url, org, repo)
-
-    git_args = {'depth': 1}
-
-    if version:
-        git_args['branch'] = version
-
-    git.Repo.clone_from(repo_url, repo_dir, **git_args)
+    cloned_repo.git.checkout(version)
 
 
 def get_git_files():
     """Used to return a list of files that are being tracked by
     git.
 
+    If not a git tracked repository, None is returned.
+
     Returns:
-        files (list) : list of git tracked files
+        list: List of git tracked files or None.
     """
-    init_repo_object()
+    repo = init_repo_object()
     if repo:
         return repo.git.ls_files().split("\n")
     else:
@@ -173,14 +199,17 @@ def parse(url):
     """Method to parse the git url.
 
     Args:
-        url (str) : The url in string format.
+        url (str): The url in string format.
 
     Returns:
-        service_url, service, user, repo, action_dir, version
+        tuple(service_url, service, user, repo, action_dir, version)
     """
 
     if url.startswith('ssh://'):
         log.fail('The ssh protocol is not supported yet.')
+
+    if url.endswith('.git'):
+        url = url[:-4]
 
     pattern = re.compile(
         r'^(http://|https://|git@)?(?:(\w+\.\w+)(?:\/|\:))?'
