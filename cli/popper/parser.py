@@ -398,7 +398,6 @@ class Workflow(object):
 
     def inject_actions(self, injected_wfile):
         injected_wf = Workflow(injected_wfile)
-        print(injected_wf.actions)
         for act in injected_wf.actions.keys():
             if act not in ["pre", "post"]:
                 log.fail("Only actions named 'pre' or 'post' are allowed in injected workflow. Found '{}'.".format(act))
@@ -443,4 +442,3 @@ class Workflow(object):
 
                 self.actions[act] = injected_wf.actions[act]
 
-        print(self.actions)
