@@ -7,7 +7,7 @@ cd "$test_repo_path"
 
 cat <<EOF > main.workflow
 workflow "wf" {
-  resolves = "d"
+  resolves = "c"
 }
 
 action "a" {
