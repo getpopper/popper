@@ -21,7 +21,7 @@ from popper import log as logging
 @click.option(
     '--debug',
     help=(
-        'Generate detailed messages of what popper does (overrides --quiet)'),
+            'Generate detailed messages of what popper does (overrides --quiet)'),
     required=False,
     is_flag=True
 )
@@ -56,8 +56,8 @@ from popper import log as logging
 @click.option(
     '--recursive',
     help=(
-        'Run any .workflow file found recursively from current path. '
-        'Ignores flags --on-failure, --skip and --with-dependencies.'
+            'Run any .workflow file found recursively from current path. '
+            'Ignores flags --on-failure, --skip and --with-dependencies.'
     ),
     required=False,
     is_flag=True
@@ -110,6 +110,13 @@ from popper import log as logging
     show_default=False,
     hidden=True,
     default=popper.scm.get_git_root_folder()
+)
+@click.option(
+    '--inject-actions-from',
+    help='Path to a workflow file with pre/post actions defined to be injected in the main workflow.',
+    required=False,
+    hidden=True,
+    default=None
 )
 @pass_context
 def cli(ctx, **kwargs):
@@ -219,11 +226,16 @@ def prepare_workflow_execution(**kwargs):
 
 
 def run_workflow(wfile, action, **kwargs):
-
     log.info('Found and running workflow at ' + wfile)
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(wfile)
+
+    # check for injected actions
+    injected_wfile = kwargs.pop('inject_actions_from')
+    if injected_wfile:
+        wf.inject_actions(injected_wfile)
+
     wf_runner = WorkflowRunner(wf)
 
     # Saving workflow instance for signal handling

@@ -198,7 +198,7 @@ class Workflow(object):
             self._workflow['props'] = dict()
             self._workflow['resolves'] = wf_block['resolves']
 
-        del(self._workflow['workflow'])
+        del (self._workflow['workflow'])
 
         # Python 2 to 3 Compability
         try:
@@ -268,6 +268,7 @@ class Workflow(object):
         Args:
             skip (list) : The list actions to skip if applicable.
         """
+
         def _traverse(entrypoint, reachable, workflow):
             for node in entrypoint:
                 reachable.add(node)
@@ -394,3 +395,52 @@ class Workflow(object):
             workflow.actions.pop(a)
 
         return workflow
+
+    def inject_actions(self, injected_wfile):
+        injected_wf = Workflow(injected_wfile)
+        print(injected_wf.actions)
+        for act in injected_wf.actions.keys():
+            if act not in ["pre", "post"]:
+                log.fail("Only actions named 'pre' or 'post' are allowed in injected workflow. Found '{}'.".format(act))
+            else:
+                if act == "pre":
+                    # Adding `pre` before first action
+                    # so the wf becomes
+                    # action "pre"{
+                    #  ...
+                    #  ...
+                    # next = {'action#1'}
+                    # }
+                    # action "action#1"{
+                    #   needs = ["pre"]
+                    #   ...
+                    #   ...
+                    # }
+
+                    self.actions[next(iter(self.root))]["needs"] = ["pre"]
+                    injected_wf.actions[act]["next"] = {next(iter(self.root))}
+                    self.root.pop()
+                    self.root.add("pre")
+
+                else:
+                    for item in self.actions:
+                        if item == self.resolves[0]:
+                            # Adding `post` after last action
+                            # so the wf becomes
+                            # ...
+                            # action "last-action"{
+                            #  ...
+                            #  ...
+                            # next = {'post'}
+                            # }
+                            # action "post"{
+                            #   needs = ["last-action"]
+                            #   ...
+                            #   ...
+                            # }
+                            injected_wf.actions[act]["needs"] = [item]
+                            self.actions[item]["next"] = {act}
+
+                self.actions[act] = injected_wf.actions[act]
+
+        print(self.actions)
