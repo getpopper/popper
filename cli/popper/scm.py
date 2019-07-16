@@ -152,7 +152,7 @@ def get_remote_url():
     return url
 
 
-def clone(url, org, repo, repo_dir, version='master'):
+def clone(url, org, repo, repo_dir, version=None):
     """Clones a repository using Git. The URL for the repo is
     https://github.com/ by default.
 
@@ -162,11 +162,17 @@ def clone(url, org, repo, repo_dir, version='master'):
         repo (str): The repo name.
         repo_dir (str): The path where to clone the repo.
         version (str): The remote tag/branch to checkout.
-                       Default is 'master'.
+                       If version is None, we use the default
+                       remote branch as version.
     """
+    def get_default_branch(r):
+        if version:
+            return version
+        return r.remotes.origin.refs['HEAD'].ref.remote_head
+
     if os.path.exists(repo_dir):
         cloned_repo = git.Repo(repo_dir)
-        cloned_repo.remotes.origin.pull(version)
+        cloned_repo.remotes.origin.pull(get_default_branch(cloned_repo))
     else:
         if '@' in url:
             url += ':'
@@ -176,7 +182,7 @@ def clone(url, org, repo, repo_dir, version='master'):
         repo_url = '{}{}/{}'.format(url, org, repo)
         cloned_repo = git.Repo.clone_from(repo_url, repo_dir)
 
-    cloned_repo.git.checkout(version)
+    cloned_repo.git.checkout(get_default_branch(cloned_repo))
 
 
 def get_git_files():
