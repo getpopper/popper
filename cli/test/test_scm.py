@@ -6,6 +6,7 @@ import unittest
 import git
 
 from popper import scm
+from popper.cli import log
 
 
 class TestScmWithGit(unittest.TestCase):
@@ -13,6 +14,7 @@ class TestScmWithGit(unittest.TestCase):
     environment."""
 
     def setUp(self):
+        log.setLevel('CRITICAL')
         if os.path.exists('/tmp/test_folder'):
             shutil.rmtree('/tmp/test_folder')
         os.makedirs('/tmp/test_folder')
@@ -26,6 +28,7 @@ class TestScmWithGit(unittest.TestCase):
         os.chdir('/tmp/test_folder/github-actions-demo')
 
     def tearDown(self):
+        log.setLevel('NOTSET')
         os.chdir('/tmp')
         shutil.rmtree('/tmp/test_folder')
 
@@ -146,6 +149,7 @@ class TestScmWithoutGit(unittest.TestCase):
     environment."""
 
     def setUp(self):
+        log.setLevel('CRITICAL')
         if os.path.exists('/tmp/test_folder'):
             shutil.rmtree('/tmp/test_folder')
         os.makedirs('/tmp/test_folder')
@@ -160,6 +164,7 @@ class TestScmWithoutGit(unittest.TestCase):
         os.chdir('/tmp/test_folder/github-actions-demo')
 
     def tearDown(self):
+        log.setLevel('NOTSET')
         os.chdir('/tmp')
         shutil.rmtree('/tmp/test_folder')
 
