@@ -111,13 +111,7 @@ from popper import log as logging
     hidden=True,
     default=popper.scm.get_git_root_folder()
 )
-@click.option(
-    '--inject-actions-from',
-    help='Path to a workflow file with pre/post actions defined to be injected in the main workflow.',
-    required=False,
-    hidden=True,
-    default=None
-)
+
 @pass_context
 def cli(ctx, **kwargs):
     """Executes one or more workflows and reports on their status.
@@ -232,9 +226,9 @@ def run_workflow(wfile, action, **kwargs):
     wf = Workflow(wfile)
 
     # check for injected actions
-    injected_wfile = kwargs.pop('inject_actions_from')
-    if injected_wfile:
-        wf.inject_actions(injected_wfile)
+
+    pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
+    post_wfile = os.environ.get('POPPER_POST_WORKFLOW_PATH')
 
     wf_runner = WorkflowRunner(wf)
 
@@ -258,7 +252,18 @@ def run_workflow(wfile, action, **kwargs):
     on_failure = kwargs.pop('on_failure')
 
     try:
+        if pre_wfile:
+            pre_wf = Workflow(pre_wfile)
+            pre_wf_runner = WorkflowRunner(pre_wf)
+            pre_wf_runner.run(action, **kwargs)
+
         wf_runner.run(action, **kwargs)
+
+        if post_wfile:
+            post_wf = Workflow(post_wfile)
+            pre_wf_runner = WorkflowRunner(post_wf)
+            pre_wf_runner.run(action, **kwargs)
+
     except SystemExit as e:
         if (e.code != 0) and on_failure:
             kwargs['skip'] = list()

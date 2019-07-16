@@ -46,32 +46,25 @@ workflow "wf" {
   resolves = "post"
 }
 
-action "post" {
+action "post1" {
   uses = "sh"
-  args = "echo post-action"
+  args = "echo post1-action"
+}
+
+action "post2" {
+  needs= "post1"
+  uses = "sh"
+  args = "echo post2-action"
 }
 
 EOF
 
-cat <<EOF > inject-both.workflow
-workflow "wf" {
-  resolves = "post"
-}
-action "pre" {
-  uses = "sh"
-  args = "echo pre-action"
-}
 
-action "post" {
-  uses = "sh"
-  args = "echo post-action"
-}
+export POPPER_PRE_WORKFLOW_PATH="$PWD/inject-pre.workflow"
+export POPPER_POST_WORKFLOW_PATH="$PWD/inject-post.workflow"
 
-EOF
+popper run --dry-run main.workflow | grep "pre-action"
+popper run --dry-run main.workflow | grep "post2-action"
 
-popper run --dry-run main.workflow --inject-actions-from inject-pre.workflow  | grep "pre-action"
-popper run --dry-run main.workflow --inject-actions-from inject-post.workflow  | grep "post-action"
-popper run --dry-run main.workflow --inject-actions-from inject-both.workflow  | grep "pre-action"
-popper run --dry-run main.workflow --inject-actions-from inject-both.workflow  | grep "post-action"
 
 echo "Test INJECT ACTIONS passed."
