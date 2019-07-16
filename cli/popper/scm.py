@@ -166,7 +166,7 @@ def clone(url, org, repo, repo_dir, version='master'):
     """
     if os.path.exists(repo_dir):
         cloned_repo = git.Repo(repo_dir)
-        cloned_repo.remotes.origin.pull()
+        cloned_repo.remotes.origin.pull(version)
     else:
         if '@' in url:
             url += ':'
