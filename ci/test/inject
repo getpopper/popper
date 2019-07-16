@@ -43,7 +43,7 @@ EOF
 
 cat <<EOF > inject-post.workflow
 workflow "wf" {
-  resolves = "post"
+  resolves = "post2"
 }
 
 action "post1" {
