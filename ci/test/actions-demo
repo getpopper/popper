@@ -368,6 +368,7 @@ popper run --skip test1 --runtime "$RUNTIME" > output
 ! grep -q "https://github.com/actions/npm@master" output
 grep -q "https://github.com/actions/bin@master" output
 
+# Test environment variables
 cat <<EOF > main.workflow
 workflow "foo" {
   resolves = ["show workspace in container", "show workspace in host"]
@@ -375,12 +376,12 @@ workflow "foo" {
 
 action "show workspace in container" {
   uses = "actions/bin/sh@master"
-  args = "echo \$GITHUB_WORKSPACE"
+  args = ["echo \$GITHUB_WORKSPACE"]
 }
 
 action "show workspace in host" {
   uses = "sh"
-  args = "echo \$GITHUB_WORKSPACE"
+  args = ["echo \$GITHUB_WORKSPACE"]
 }
 EOF
 
