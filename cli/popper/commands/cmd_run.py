@@ -219,22 +219,18 @@ def run_workflow(**kwargs):
     wfile = kwargs.pop('wfile')
 
     try:
-<<<<<<< HEAD
         if pre_wfile:
             pre_wf = Workflow(pre_wfile)
             pre_wf_runner = WorkflowRunner(pre_wf)
-            pre_wf_runner.run(action, **kwargs)
+            pre_wf_runner.run(**kwargs)
 
-        wf_runner.run(action, **kwargs)
+        wf_runner.run(**kwargs)
 
         if post_wfile:
             post_wf = Workflow(post_wfile)
             pre_wf_runner = WorkflowRunner(post_wf)
-            pre_wf_runner.run(action, **kwargs)
+            pre_wf_runner.run(**kwargs)
 
-=======
-        wf_runner.run(**kwargs)
->>>>>>> Remove recursive flag.
     except SystemExit as e:
         if (e.code != 0) and on_failure:
             kwargs['skip'] = list()
