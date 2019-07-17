@@ -251,7 +251,7 @@ class ActionRunner(object):
             f = open(env['GITHUB_EVENT_PATH'], 'w')
             f.close()
 
-    def prepare_environment_vars(self):
+    def prepare_environment(self, set_env=False):
         env = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
@@ -263,7 +263,17 @@ class ActionRunner(object):
         env['GITHUB_ACTION'] = self.action['name']
         env['POPPER_ACTION'] = self.action['name']
 
+        if set_env:
+            for k, v in env.items():
+                os.environ[k] = v
+
         return env
+
+    def remove_environment(self):
+        env = self.prepare_environment()
+        env.pop('HOME')
+        for k, v in env.items():
+            os.environ.pop(k)
 
     def run(self, reuse=False):
         raise NotImplementedError(
@@ -378,8 +388,8 @@ class DockerRunner(ActionRunner):
         if self.dry_run:
             return
         
-        env = self.prepare_environment_vars()
-        
+        env = self.prepare_environment()
+
         volumes = [
             '/var/run/docker.sock:/var/run/docker.sock',
             '{}:{}'.format(env['HOME'], env['HOME']),
@@ -571,9 +581,7 @@ class SingularityRunner(ActionRunner):
         """Starts the container to execute commands or run the runscript
         with the supplied args inside the container.
         """
-        env = self.prepare_environment_vars()
-        for k, v in env.items():
-            os.environ[k] = v
+        env = self.prepare_environment(set_env=True)
 
         volumes = [
             '{}:{}'.format(env['HOME'], env['HOME']),
@@ -615,8 +623,7 @@ class SingularityRunner(ActionRunner):
         else:
             ecode = 0
         
-        for k, v in env.items():
-            os.environ.pop(k)
+        self.remove_environment()
         return ecode
 
 
@@ -657,9 +664,7 @@ class HostRunner(ActionRunner):
                     os.chdir(os.path.join(root, self.action['uses']))
                     cmd[0] = os.path.join(root, self.action['uses'], cmd[0])
 
-        env = self.prepare_environment_vars()
-        for k, v in env.items():
-            os.environ[k] = v
+        self.prepare_environment(set_env=True)
 
         log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
                                     ' '.join(cmd)))
@@ -693,10 +698,7 @@ class HostRunner(ActionRunner):
         finally:
             log.action_info()
 
-        # remove variables that we added to the environment
-        for k, v in env.items():
-            os.environ.pop(k)
-
+        self.remove_environment()
         os.chdir(self.cwd)
 
         if ecode != 0:
