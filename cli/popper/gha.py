@@ -142,7 +142,6 @@ class WorkflowRunner(object):
             reuse, dry_run, parallel, with_dependencies, runtime,
             skip_secrets_prompt=False):
         """Run the workflow or a specific action."""
-
         if scm.get_user():
             repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
         else:

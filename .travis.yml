@@ -14,4 +14,5 @@ before_install:
 install:
 - pip install cli/
 script:
+- python -m unittest discover --start-directory cli/
 - popper run
