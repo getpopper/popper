@@ -93,7 +93,7 @@ EOF
 
 git init
 git add .
-git commit -m "popper:run[/tmp/mypaper/myaction/a.workflow --recursive] popper:run[/tmp/mypaper/myaction/b.workflow]"
+git commit -m "popper:run[--wfile /tmp/mypaper/myaction/a.workflow] popper:run[--wfile /tmp/mypaper/myaction/b.workflow]"
 popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/b.workflow" output
@@ -113,7 +113,7 @@ action "a" {
 EOF
 
 git add .
-git commit -m "Test commit popper:run[/tmp/mypaper/myaction/a.workflow --debug] popper:run[/tmp/mypaper/myaction/d.workflow --quiet]"
+git commit -m "Test commit popper:run[--wfile /tmp/mypaper/myaction/a.workflow --debug] popper:run[--wfile /tmp/mypaper/myaction/d.workflow --quiet]"
 popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/d.workflow" output
@@ -140,16 +140,18 @@ action "a2" {
 EOF
 
 git add .
-git commit -m "Test commit 2 popper:run[/tmp/mypaper/myaction/e.workflow --skip a1]"
+git commit -m "Test commit 2 popper:run[--wfile /tmp/mypaper/myaction/e.workflow --skip a1]"
 popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/e.workflow" output
 cat output
 grep -q "a2" output
 ! grep -q "a1" output
 
-git clone https://github.com/JayjeetAtGithub/test-repo-for-popper.git
-cd test-repo-for-popper
+git clone https://github.com/JayjeetAtGithub/test-merge-commits.git
+cd test-merge-commits
 popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at b.workflow" output
+! grep -q "Found and running workflow at a.workflow" output
+! grep -q "Found and running workflow at c.workflow" output
 
 echo "Test CI passed."
