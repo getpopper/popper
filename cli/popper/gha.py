@@ -387,7 +387,7 @@ class DockerRunner(ActionRunner):
         ))
         if self.dry_run:
             return
-        
+
         env = self.prepare_environment()
 
         volumes = [
@@ -622,7 +622,7 @@ class SingularityRunner(ActionRunner):
                 ecode = ex.returncode
         else:
             ecode = 0
-        
+
         self.remove_environment()
         return ecode
 
