@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./common
+init_test_repo
+cd "$test_repo_path"
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "c"
+}
+
+action "a" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["b"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+cat <<EOF > inject-pre.workflow
+workflow "wf" {
+  resolves = "pre"
+}
+
+action "pre" {
+  uses = "sh"
+  args = "echo pre-action"
+}
+
+EOF
+
+
+cat <<EOF > inject-post.workflow
+workflow "wf" {
+  resolves = "post2"
+}
+
+action "post1" {
+  uses = "sh"
+  args = "echo post1-action"
+}
+
+action "post2" {
+  needs= "post1"
+  uses = "sh"
+  args = "echo post2-action"
+}
+
+EOF
+
+
+export POPPER_PRE_WORKFLOW_PATH="$PWD/inject-pre.workflow"
+export POPPER_POST_WORKFLOW_PATH="$PWD/inject-post.workflow"
+
+popper run --dry-run main.workflow | grep "pre-action"
+popper run --dry-run main.workflow | grep "post2-action"
+
+
+echo "Test INJECT ACTIONS passed."

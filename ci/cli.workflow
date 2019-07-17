@@ -109,6 +109,12 @@ action "test samples" {
   runs = "samples"
 }
 
+action "test inject" {
+  needs = "lint"
+  uses = "./ci/test"
+  runs = "inject"
+}
+
 action "end" {
   uses = "./ci/test"
   runs = "version"
@@ -129,6 +135,7 @@ action "end" {
     "test sh",
     "test search",
     "test samples",
-    "test offline"
+    "test offline",
+    "test inject"
   ]
 }
