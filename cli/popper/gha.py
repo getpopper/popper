@@ -251,6 +251,30 @@ class ActionRunner(object):
             f = open(env['GITHUB_EVENT_PATH'], 'w')
             f.close()
 
+    def prepare_environment(self, set_env=False):
+        env = self.action.get('env', {})
+
+        for s in self.action.get('secrets', []):
+            env.update({s: os.environ[s]})
+
+        for e, v in self.env.items():
+            env.update({e: v})
+
+        env['GITHUB_ACTION'] = self.action['name']
+        env['POPPER_ACTION'] = self.action['name']
+
+        if set_env:
+            for k, v in env.items():
+                os.environ[k] = v
+
+        return env
+
+    def remove_environment(self):
+        env = self.prepare_environment()
+        env.pop('HOME')
+        for k, v in env.items():
+            os.environ.pop(k)
+
     def run(self, reuse=False):
         raise NotImplementedError(
             "This method is required to be implemented in derived classes."
@@ -364,16 +388,7 @@ class DockerRunner(ActionRunner):
         if self.dry_run:
             return
 
-        env = self.action.get('env', {})
-
-        for s in self.action.get('secrets', []):
-            env.update({s: os.environ.get(s)})
-
-        for e, v in self.env.items():
-            env.update({e: v})
-
-        env['GITHUB_ACTION'] = self.action['name']
-        env['POPPER_ACTION'] = self.action['name']
+        env = self.prepare_environment()
 
         volumes = [
             '/var/run/docker.sock:/var/run/docker.sock',
@@ -566,19 +581,7 @@ class SingularityRunner(ActionRunner):
         """Starts the container to execute commands or run the runscript
         with the supplied args inside the container.
         """
-        env = self.action.get('env', {})
-
-        for s in self.action.get('secrets', []):
-            env.update({s: os.environ[s]})
-
-        for e, v in self.env.items():
-            env.update({e: v})
-
-        env['GITHUB_ACTION'] = self.action['name']
-        env['POPPER_ACTION'] = self.action['name']
-
-        for k, v in env.items():
-            os.environ[k] = v
+        env = self.prepare_environment(set_env=True)
 
         volumes = [
             '{}:{}'.format(env['HOME'], env['HOME']),
@@ -620,6 +623,7 @@ class SingularityRunner(ActionRunner):
         else:
             ecode = 0
 
+        self.remove_environment()
         return ecode
 
 
@@ -660,7 +664,7 @@ class HostRunner(ActionRunner):
                     os.chdir(os.path.join(root, self.action['uses']))
                     cmd[0] = os.path.join(root, self.action['uses'], cmd[0])
 
-        os.environ.update(self.action.get('env', {}))
+        self.prepare_environment(set_env=True)
 
         log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
                                     ' '.join(cmd)))
@@ -694,10 +698,7 @@ class HostRunner(ActionRunner):
         finally:
             log.action_info()
 
-        # remove variables that we added to the environment
-        for i in self.action.get('env', {}):
-            os.environ.pop(i)
-
+        self.remove_environment()
         os.chdir(self.cwd)
 
         if ecode != 0:
