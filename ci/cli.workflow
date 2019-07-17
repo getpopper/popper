@@ -37,12 +37,6 @@ action "test scaffold" {
   runs = "scaffold"
 }
 
-action "test recursive" {
-  needs = "lint"
-  uses = "./ci/test"
-  runs = "recursive"
-}
-
 action "test dry-run" {
   needs = "lint"
   uses = "./ci/test"
@@ -127,7 +121,6 @@ action "end" {
     "test interrupt",
     "test parallel",
     "test quiet",
-    "test recursive",
     "test reuse",
     "test scaffold",
     "test validate",
