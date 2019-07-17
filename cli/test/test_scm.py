@@ -14,7 +14,7 @@ class TestScm(unittest.TestCase):
     environment."""
 
     def setUp(self):
-        
+
         if os.environ.get('POPPER_TEST_MODE') == 'with-git':
             self.with_git = True
         else:
@@ -60,7 +60,8 @@ class TestScm(unittest.TestCase):
     def test_get_remote_url(self):
         url = scm.get_remote_url()
         if self.with_git:
-            self.assertEqual(url, 'https://github.com/cplee/github-actions-demo')
+            self.assertEqual(
+                url, 'https://github.com/cplee/github-actions-demo')
         else:
             self.assertEqual(url, '')
 
@@ -82,7 +83,8 @@ class TestScm(unittest.TestCase):
         head_commit_object = scm.get_head_commit()
         if self.with_git:
             hexsha = head_commit_object.hexsha
-            self.assertEqual(hexsha, 'c3c8022de1513425aebbf4d98ea7b63f00a50da6')
+            self.assertEqual(
+                hexsha, 'c3c8022de1513425aebbf4d98ea7b63f00a50da6')
         else:
             self.assertIsNone(head_commit_object)
 
