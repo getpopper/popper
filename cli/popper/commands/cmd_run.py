@@ -111,6 +111,7 @@ from popper import log as logging
     hidden=True,
     default=popper.scm.get_git_root_folder()
 )
+
 @pass_context
 def cli(ctx, **kwargs):
     """Executes one or more workflows and reports on their status.
@@ -219,11 +220,16 @@ def prepare_workflow_execution(**kwargs):
 
 
 def run_workflow(wfile, action, **kwargs):
-
     log.info('Found and running workflow at ' + wfile)
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(wfile)
+
+    # check for injected actions
+
+    pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
+    post_wfile = os.environ.get('POPPER_POST_WORKFLOW_PATH')
+
     wf_runner = WorkflowRunner(wf)
 
     # Saving workflow instance for signal handling
@@ -246,7 +252,18 @@ def run_workflow(wfile, action, **kwargs):
     on_failure = kwargs.pop('on_failure')
 
     try:
+        if pre_wfile:
+            pre_wf = Workflow(pre_wfile)
+            pre_wf_runner = WorkflowRunner(pre_wf)
+            pre_wf_runner.run(action, **kwargs)
+
         wf_runner.run(action, **kwargs)
+
+        if post_wfile:
+            post_wf = Workflow(post_wfile)
+            pre_wf_runner = WorkflowRunner(post_wf)
+            pre_wf_runner.run(action, **kwargs)
+
     except SystemExit as e:
         if (e.code != 0) and on_failure:
             kwargs['skip'] = list()

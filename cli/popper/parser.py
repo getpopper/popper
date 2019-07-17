@@ -198,7 +198,7 @@ class Workflow(object):
             self._workflow['props'] = dict()
             self._workflow['resolves'] = wf_block['resolves']
 
-        del(self._workflow['workflow'])
+        del (self._workflow['workflow'])
 
         # Python 2 to 3 Compability
         try:
@@ -268,6 +268,7 @@ class Workflow(object):
         Args:
             skip (list) : The list actions to skip if applicable.
         """
+
         def _traverse(entrypoint, reachable, workflow):
             for node in entrypoint:
                 reachable.add(node)
