@@ -10,11 +10,10 @@ from popper.cli import log
 
 
 class TestScm(unittest.TestCase):
-    """Unit tests for popper.scm module in git
-    environment."""
+    """Unit tests for popper.scm module.
+    """
 
     def setUp(self):
-
         if os.environ.get('POPPER_TEST_MODE') == 'with-git':
             self.with_git = True
         else:
