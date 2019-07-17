@@ -21,7 +21,7 @@ from popper import log as logging
 @click.option(
     '--debug',
     help=(
-            'Generate detailed messages of what popper does (overrides --quiet)'),
+        'Generate detailed messages of what popper does (overrides --quiet)'),
     required=False,
     is_flag=True
 )
@@ -56,8 +56,8 @@ from popper import log as logging
 @click.option(
     '--recursive',
     help=(
-            'Run any .workflow file found recursively from current path. '
-            'Ignores flags --on-failure, --skip and --with-dependencies.'
+        'Run any .workflow file found recursively from current path. '
+        'Ignores flags --on-failure, --skip and --with-dependencies.'
     ),
     required=False,
     is_flag=True
