@@ -262,7 +262,7 @@ class ActionRunner(object):
 
         env['GITHUB_ACTION'] = self.action['name']
         env['POPPER_ACTION'] = self.action['name']
-        
+
         return env
 
     def run(self, reuse=False):
@@ -659,7 +659,7 @@ class HostRunner(ActionRunner):
 
         env = self.prepare_environment_vars()
         for k, v in env.items():
-            self.environ[k] = v
+            os.environ[k] = v
 
         log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
                                     ' '.join(cmd)))
