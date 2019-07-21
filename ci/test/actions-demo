@@ -322,7 +322,7 @@ action "test" {
 
 action "cleanup" {
   uses = "actions/bin/sh@master"
-  args = ["echo Cleaning up..."]
+  runs = ["sh", "-c", "echo Cleaning up..."]
 }
 EOF
 
@@ -340,7 +340,7 @@ action "test1" {
 
 action "test2" {
   uses = "actions/bin/sh@master"
-  args = ["echo Cleaning up..."]
+  runs = ["sh", "-c", "echo Cleaning up..."]
 }
 EOF
 
@@ -360,7 +360,7 @@ action "test1" {
 
 action "test2" {
   uses = "actions/bin/sh@master"
-  args = ["echo Cleaning up..."]
+  runs = ["sh", "-c", "echo Cleaning up..."]
 }
 EOF
 
@@ -376,7 +376,7 @@ workflow "foo" {
 
 action "show workspace in container" {
   uses = "actions/bin/sh@master"
-  args = ["echo \$GITHUB_WORKSPACE"]
+  runs = ["sh", "-c", "echo \$GITHUB_WORKSPACE"]
 }
 
 action "show workspace in host" {

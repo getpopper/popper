@@ -33,7 +33,7 @@ workflow "sample workflow" {
 
 action "sample action" {
     uses = "actions/bin/sh@master"
-    args = ["echo Hello World"]
+    runs = ["sh", "-c", "echo Hello World"]
 }
 EOF
 
@@ -59,7 +59,7 @@ action "sample action one" {
 
 action "sample action two" {
     uses = "actions/bin/sh@master"
-    args = ["echo Hello World"]
+    runs = ["sh", "-c", "echo Hello World"]
 }
 EOF
 

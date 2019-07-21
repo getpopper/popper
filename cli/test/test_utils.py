@@ -178,3 +178,16 @@ class TestUtils(unittest.TestCase):
                 '.cache',
                 '.popper_cache.yml'
             ))
+    
+    def test_of_type(self):
+        param = [u"hello", u"world"]
+        self.assertEqual(pu.of_type(param, ['los']), True)
+
+        param = u"hello world"
+        self.assertEqual(pu.of_type(param, ['los']), False)
+
+        param = {
+            "org": "systemslab",
+            "project": "popper"
+        }
+        self.assertEqual(pu.of_type(param, ['str', 'dict']), True)

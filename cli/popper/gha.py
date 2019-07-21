@@ -34,6 +34,7 @@ class WorkflowRunner(object):
     def __init__(self, workflow):
 
         self.wf = workflow
+        self.wf.parse()
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
@@ -50,7 +51,7 @@ class WorkflowRunner(object):
         """
         if dry_run or skip_secrets_prompt:
             return
-        for _, a in wf.actions.items():
+        for _, a in wf.action.items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI') == 'true':
@@ -67,7 +68,7 @@ class WorkflowRunner(object):
         infoed = False
         actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
-        for _, a in wf.actions.items():
+        for _, a in wf.action.items():
             if ('docker://' in a['uses']
                     or './' in a['uses'] or a['uses'] == 'sh'):
                 continue
@@ -115,7 +116,7 @@ class WorkflowRunner(object):
             runtime argument.
             Same is the case when the `uses` attribute is equal to 'sh'.
         """
-        for _, a in wf.actions.items():
+        for _, a in wf.action.items():
 
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(a, workspace, env, dry_run, skip_pull)
@@ -186,7 +187,7 @@ class WorkflowRunner(object):
         if parallel:
             with ProcessPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
-                    ex.submit(wf.get_runner(a).run, reuse):
+                    ex.submit(wf.action[a]['runner'].run, reuse):
                         a for a in stage
                 }
                 popper.cli.flist = flist
@@ -194,8 +195,8 @@ class WorkflowRunner(object):
                     future.result()
                     log.info('Action ran successfully !')
         else:
-            for action in stage:
-                wf.get_runner(action).run(reuse)
+            for a in stage:
+                wf.action[a]['runner'].run(reuse)
 
     @staticmethod
     def import_from_repo(action_ref, project_root):
