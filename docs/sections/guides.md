@@ -49,13 +49,13 @@ action "validate results" {
 ```
 
 The above runs every script within a Docker container, whose image is 
-the one associated to the [`actions/bin/sh`][shaction] action. As you 
-would expect, this workflow will fail to run since the 
-`actions/bin/sh` image is a lightweight one (contains only Bash 
-utilities), thus some of the dependencies that the scripts need are 
-not be available in this image. In cases like this, we need to either 
-[use an existing action][search] that has all the dependencies we 
-need, or [create an action ourselves][create].
+the one associated to the `actions/bin/sh` action (see corresponding 
+Github repository [here][shaction]). As you would expect, this 
+workflow fails to run since the `actions/bin/sh` image is a 
+lightweight one (contains only Bash utilities), and the dependencies 
+that the scripts need are not be available in this image. In cases 
+like this, we need to either [use an existing action][search] that has 
+all the dependencies we need, or [create an action ourselves][create].
 
 In this particular example, these scripts depend on CURL and Python. 
 Thankfully, actions for these already exist, so we can make use of 
@@ -95,9 +95,12 @@ action "validate results" {
 }
 ```
 
-> **NOTE**: The `download-data.sh` contained just one line invoking 
-> CURL, so we make that call directly on the action and remove the 
-> bash script.
+The above workflow runs correctly anywhere where Github Actions 
+workflow can run.
+
+> _**NOTE**: The `download-data.sh` contained just one line invoking 
+> CURL, so we make that call directly in the action block and remove 
+> the bash script._
 
 ### When no container runtime is available
 
@@ -149,9 +152,9 @@ likely break the portability of the workflow. In this particular
 example, if the workflow above runs on a machine without CURL or on 
 Python 2.7, it will fail.
 
-> **NOTE**: The `uses = "sh"` special value is not supported by the 
+> _**NOTE**: The `uses = "sh"` special value is not supported by the 
 > Github Actions platform. This workflow will fail to run on GitHub's 
-> infrastructure and can only be executed using Popper.
+> infrastructure and can only be executed using Popper._
 
 [shaction]: https://github.com/actions/bin/tree/master/sh
 [search]: https://medium.com/getpopper/searching-for-existing-github-actions-has-never-been-easier-268c463f0257
