@@ -6,11 +6,8 @@
 Popper
 ======
 
-Popper is a workflow execution engine based on Github Actions (GHA) that allows 
-you to execute GHA workflows locally on your machine. Popper workflows are 
-defined in HCL syntax and behave like GHA workflows. The main difference with 
-respect to GHA workflows is that, through some extensions to the GHA syntax, a 
-Popper workflow can execute actions in other runtimes in addition to Docker.
+Popper is a Github Actions (GHA) workflow execution engine that allows you to 
+execute GHA workflows locally on your machine and on CI services.
 
 
 .. toctree::
@@ -26,12 +23,12 @@ Popper workflow can execute actions in other runtimes in addition to Docker.
 .. toctree::
    :maxdepth: 2
 
-   sections/extensions.md
+   sections/guides.md
 
 .. toctree::
    :maxdepth: 2
 
-   sections/examples.md
+   sections/extensions.md
 
 .. toctree::
    :maxdepth: 2

@@ -275,7 +275,7 @@ The above commit message specifies that only the workflow `a` will be executed a
 While `.workflow` files are relatively simple to read, it is nice to 
 have a way of quickly visualizing the steps contained in a workflow. 
 Popper provides the option of generating a graph for a workflow. To 
-generate a graph for this pipeline, execute the following:
+generate a graph for a pipeline, execute the following:
 
 ```bash
 popper dot
