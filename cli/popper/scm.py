@@ -13,7 +13,11 @@ def init_repo_object():
     try:
         repo = git.Repo(search_parent_directories=True)
     except git.exc.InvalidGitRepositoryError:
-        log.warning('Unable to find root of a Git repository.')
+        # Optimistically assume that this is due to .git/ folder not being
+        # found, in which case all the methods in this module assume
+        # os.getcwd() as the root of a project. This path will then be the
+        # relative path used by actions (GITHUB_WORKSPACE variable).
+        pass
     return repo
 
 

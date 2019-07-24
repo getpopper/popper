@@ -48,8 +48,35 @@ There are two main branches of the codebase:
     the older version of the CLI tool which supported workflows being defined in 
     YAML format. This is documented 
     [here](https://popper.readthedocs.io/en/v1.1.2/sections/cli_features.html#the-popper-yml-configuration-file).
-  * [`master`](). This tracks the latest 2.x series, which adopted Github 
-    actions workflows as the main supported format.
+  * [`master`](./). This tracks the latest 2.x series, which adopted 
+    Github actions workflows as the main supported format.
+
+### Install Popper from Source
+
+To install Popper in "development mode", we suggest the following 
+approach:
+
+```bash
+cd $HOME/
+
+# create virtualenv
+virtualenv $HOME/venvs/popper
+source $HOME/venvs/popper/bin/activate
+
+# clone popper
+git clone git@github.com:systemslab/popper
+cd popper
+
+# install popper from source
+pip install -e cli/
+```
+
+the `-e` flag passed to `pip` tells it to install the package from the 
+source folder, and if you modify the logic in the popper source code 
+you will see the effects when you invoke the `popper` command. So with 
+the above approach you have both (1) popper installed in your machine 
+and (2) an environment where you can modify popper and test the 
+results of such modifications.
 
 ## How to contribute changes
 

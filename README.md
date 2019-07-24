@@ -13,45 +13,43 @@
 
 Popper is a [Github Actions](https://github.com/features/actions) 
 (GHA) workflow execution engine that allows you to execute GHA 
-workflows locally on your machine and CI services. In addition to 
-running a GHA workflow locally, the goal of this project is to provide 
-the following functionality:
+workflows locally on your machine or on CI services. The goal of this 
+project is to provide the following functionality:
 
   * **Continuous integration**. Generate configuration files for 
-    distinct CI services, allowing users to execute Github Action 
-    workflows on these services (Travis, Jenkins, Gitlab and Circle 
-    supported). [See here for 
-    more](https://medium.com/getpopper/waiting-for-your-github-actions-invite-wait-no-longer-cf310b8c630c).
+    distinct CI services, allowing users to execute "push" 
+    event-triggered Github Action workflows on these services (Travis, 
+    Jenkins, Gitlab and Circle supported). [See here for more][ci].
   * **Other Runtimes**. We are working in adding support for 
     transparently running workflows in other runtimes such as 
-    [Vagrant](https://www.vagrantup.com/), 
-    [Singularity](https://sylabs.io/), [cri-o](https://cri-o.io) and 
-    others (see [this 
-    project](https://github.com/systemslab/popper/projects/12) for 
-    more).
-  * **Action and workflow search**. Provide with a searchable catalog 
-    of publicly available actions (and workflows) so that you do not 
-    need to re-invent the wheel.
-  * **Scaffolding**. Aid in the implementation of new actions and 
-    workflows.
-  * **Action library**. As part of our efforts, we maintain a list of 
-    actions available at <https://github.com/popperized>.
+    [Vagrant](https://vagrantup.com/), 
+    [Singularity](https://sylabs.io/), [Podman](https://podman.io) and 
+    others (see [this project][popper2] for more).
+  * **Action and workflow search**. Provide with a [searchable 
+    catalog][search] of publicly available actions and workflows so 
+    that users do not need to re-invent the wheel.
+  * **Scaffolding**. Aid in the implementation of [new actions and 
+    workflows][scaffold].
+  * **Action library**. Provide with a list of reusable actions 
+    <https://github.com/popperized>.
 
 -----
 
 This repository contains:
 
-  * [`cli/`](cli/). The codebase of the CLI tool.
-  * [`docs/`](docs/). General 
-    [documentation](https://popper.readthedocs.io/en/latest/) 
-    containing guides, CLI documentation and pointers to other 
-    resources.
-  * [`gh-pages`](https://github.com/systemslab/popper/tree/gh-pages) 
-    branch. Contents of our [landing page](http://falsifiable.us).
+  * [`cli/`](cli/). The codebase of the command-line tool.
+  * [`docs/`](docs/). General [documentation][docs] containing guides, 
+    CLI documentation and pointers to other resources.
+  * [`gh-pages`][gh-pages] branch. Contents of our [landing 
+    page](http://falsifiable.us).
 
 ## Installation
 
-We have a [`pip`](https://pypi.python.org/pypi) package available. To
+To run workflows, you need to have a container runtime installed 
+([Docker][docker] and [Singularity][singularity] are currently 
+supported). To install Popper you can use 
+[`pip`](https://pypi.python.org/pypi). We recommend to install in a 
+virtual environment (see [here][venv] for more on `virtualenv`). To 
 install:
 
 ```bash
@@ -65,8 +63,7 @@ commands:
 popper --help
 ```
 
-For a quickstart guide on how to use the CLI, look 
-[here](https://popper.readthedocs.io/en/latest/sections/getting_started.html).
+For a Quickstart guide on how to use Popper, look [here][quickstart].
 
 ## Contributing
 
@@ -83,3 +80,14 @@ repository](CODE_OF_CONDUCT.md). By participating or contributing to
 Popper, you're expected to uphold this code. If you encounter 
 unacceptable behavior, please immediately [email 
 us](mailto:ivo@cs.ucsc.edu).
+
+[singularity]: https://github.com/sylabs/singularity
+[docker]: https://get.docker.com
+[quickstart]: https://popper.readthedocs.io/en/latest/sections/getting_started.html
+[venv]: https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv
+[ci]: https://medium.com/getpopper/waiting-for-your-github-actions-invite-wait-no-longer-cf310b8c630c
+[popper2]: https://github.com/systemslab/popper/projects/12
+[search]: https://medium.com/getpopper/searching-for-existing-github-actions-has-never-been-easier-268c463f0257
+[docs]: https://popper.readthedocs.io/en/latest/
+[gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
+[scaffold]: https://popper.readthedocs.io/en/v2.3.0/sections/getting_started.html#create-a-workflow
