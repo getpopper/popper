@@ -14,6 +14,33 @@ Popper, you're expected to uphold this code. If you encounter
 unacceptable behavior, please immediately [email 
 us](mailto:ivo@cs.ucsc.edu).
 
+## Install from source
+
+To install Popper in "development mode", we suggest the following 
+approach:
+
+```bash
+cd $HOME/
+
+# create virtualenv
+python -m virtualenv $HOME/virtualenvs/popper
+source $HOME/virtualenvs/popper/bin/activate
+
+# clone popper
+git clone git@github.com:systemslab/popper
+cd popper
+
+# install popper from source
+pip install -e cli/
+```
+
+The `-e` flag passed to `pip` tells it to install the package from the 
+source folder, and if you modify the logic in the popper source code 
+you will see the effects when you invoke the `popper` command. So with 
+the above approach you have both (1) popper installed in your machine 
+and (2) an environment where you can modify popper and test the 
+results of such modifications.
+
 ## Contributing CLI features
 
 To contribute new CLI features:
@@ -29,42 +56,9 @@ To contribute new CLI features:
 
 ## Contributing example pipelines
 
-We invite anyone to implement (and document) Popper pipelines 
-demonstrating the use of a DevOps tool, or how to apply Popper in a 
-particular domain. Implementing a new example is done in two parts.
-
-### Implement the pipeline
-
-A popper pipeline is implemented by following the convention. See the 
-[Concepts](concepts.html) and [Examples](examples.html) section for 
-more.
-
-Once a pipeline has been implemented, it needs to be uploaded to 
-github, gitlab or any other repo publicly available. We use the 
-organization <https://github.com/popperized> to host examples 
-developed by the Popper team and collaborators. Pipelines on this 
-organization are available by default to the [`popper 
-search`](cli_features.html#searching-and-importing-existing-pipelines) 
-command, so users can add it easily to their repos (using `popper 
-add`). To add a repository containing one or more pipelines to this 
-organization, please first create the repository on GitHub under an 
-organization you own and then do one of the following:
-
-  * Transfer ownership of the repo to the `popperized` organization.
-  * [Open an issue][ghnew] requesting the repository to be forked or 
-    mirrored. **NOTE**: forks and mirrors need to be updated manually 
-    in order to reflect changes done on the base/upstream repository.
-
-### Document the pipeline
-
-We encourage contributors to document pipelines by adding them to our 
-[list of examples](examples.html). To add new documentation:
-
- 1. Fork the [official repo][poppergh].
- 2. Add a new item on the 
-    [`docs/sections/examples.md`](https://github.com/systemslab/popper/blob/master/docs/sections/examples.md) 
-    file.
- 3. Open pull request against the `master` branch.
+We invite anyone to implement and document Github Action workflows. To 
+add an example, you can fork an open a PR on the 
+<https://github.com/popperized/popper-examples> repository.
 
 [ghnew]: https://github.com/systemslab/popper/issues/new
 [poppergh]: https://github.com/systemslab/popper

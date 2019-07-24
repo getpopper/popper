@@ -3,8 +3,10 @@
 This section describes the extensions Popper brings on top of Github 
 Actions.
 
-> **NOTE**: These extensions are not supported by the official Github 
-> Actions platform.
+> **NOTE**: These extensions are **not** supported by the official 
+> Github Actions platform. Workflows using these extensions will fail 
+> to run on Github's infrastructure and can only be executed using 
+> Popper.
 
 ## Downloading actions from arbitrary Git repositories
 
@@ -18,9 +20,8 @@ action "IDENTIFIER" {
 ```
 
 The `uses` attribute references Docker images, filesystem paths or 
-github repositories (see [syntax 
-documentation](https://developer.github.com/actions/managing-workflows/workflow-configuration-options/#using-a-dockerfile-image-in-an-action) 
-for more). In the case where an action references a public repository, 
+github repositories (see [syntax documentation][gha-syntax-doc] for 
+more). In the case where an action references a public repository, 
 Popper extends the syntax in the following way:
 
 ```
@@ -28,7 +29,7 @@ Popper extends the syntax in the following way:
 ```
 
 The `{url}` can reference any Git repository, allowing workflows to 
-reference to actions outside of Github. For example:
+reference actions outside of Github. For example:
 
 ```
 action "myaction on gitlab" {
@@ -40,14 +41,15 @@ action "another one on bitbucket" {
 }
 ```
 
-The above references actions hosted on [Gitlab](https://gitlab.com) 
-and [Bitbucket](https://bitbucket.org), respectively.
+The above shows an example of a workflow referencing actions hosted on 
+[Gitlab](https://gitlab.com) and [Bitbucket](https://bitbucket.org), 
+respectively.
 
 ## Other Runtimes
 
 By default, actions in Popper workflows run in Docker, similarly to 
 how they run in the Github Actions platform. Popper adds the ability 
-of running actions in other runtimes by providing a `--runtime` flag
+of running actions in other runtimes by providing a `--runtime` flag 
 to the `popper run` command.
 
 > **NOTE**: As part of our roadmap, we plan to add support for
@@ -58,48 +60,31 @@ to the `popper run` command.
 
 ### Singularity
 
-> **NOTE**: This feature requires Singularity 3.2+.
-
-To execute a workflow in Singularity runtime, you can do
+Popper can execute a workflow in systems where Singularity 3.2+ is 
+available. To execute a workflow in Singularity containers:
 
 ```bash
 popper run --runtime singularity
 ```
 
-When no `--runtime` option is supplied, Popper executes workflows in
-default runtime Docker.
-Currently, `--reuse` is not available for singularity runtime.
+When no `--runtime` option is supplied, Popper executes workflows in 
+Docker.
+
+#### Limitations
+
+  * The use of `ARG` in `Dockerfile`s is not supported by Singularity.
+  * Currently, the `--reuse` functionality of the `popper run` command 
+    is not available when running in Singularity.
 
 ### Host
 
-There are situations where a container engine is not available and 
-cannot be installed. In these cases, actions can execute directly on 
-the host where the `popper` command is running. If an action folder 
-does not contain a `Dockerfile` or `Singularity` file (be it a local 
-path or the path in a public repository), the action will be executed 
-on the host. Popper looks for an `entrypoint.sh` file and executes it 
-if found, otherwise an error is thrown. Alternatively, if the action 
-block specifies a `runs` attribute, the script corresponding to it is 
-executed. For example:
-
-```hcl
-action "run on host" {
-  uses = "./myactions/onhost"
-}
-
-action "another execution on host" {
-  uses = "./myactions/onhost"
-  runs = "myscript"
-}
-```
-
-In the above example, the `run on host` action is executed by looking 
-for an `entrypoint.sh` file on the `./myactions/onhost/` folder. The 
-`another execution on host` action will instead execute the `myscript` 
-script (located in `./myactions/onhost/`).
-
-Another way of executing actions on the host is to use the special 
-`sh` value for the `uses` attribute. For example:
+There are situations where a container runtime is not available and 
+cannot be installed. In these cases, an action can execute directly on 
+the host where the `popper` command is running by making use of the 
+special `sh` value for the `uses` attribute. This value instructs 
+Popper to execute the command (given in the `args` attribute) or 
+script (specified in the `runs` attribute) directly on the host. For 
+example:
 
 ```hcl
 action "run on host" {
@@ -109,21 +94,21 @@ action "run on host" {
 
 action "another execution on host" {
   uses = "sh"
-  runs = "myscript"
+  runs = "./path/to/my/script.sh"
   args = "args"
 }
 ```
 
-The above args `ls -la` on the root of the repository folder (the
-repository storing the `.workflow` file). This option allows users to
-execute arbitrary commands or scripts contained in the repository
-without having to define an action folder. The downside of this
-approach is that, depending on the command being executed, the
-workflow might not be portable.
+In the first example action above, the `ls -la` command is executed on 
+the root of the repository folder (the repository storing the 
+`.workflow` file). In the second one shows how to execute a script. 
+The obvious downside of running actions on the host is that, depending 
+on the command being executed, the workflow might not be portable.
 
-> **NOTE**: The working directory for actions that run on the host
-> depends on how the action is defined. If an action folder is present,
-> the `$PWD` is set to the action folder. If `uses='sh'` is used, the
-> `$PWD` is set to the root of the project. Thus, to ensure portability,
-> scripts should use paths relative to the root of the folder. If absolute
-> paths are needed, the `$GITHUB_WORKSPACE` variable can be used.
+> **NOTE**: The working directory (the value of `$PWD` when a command 
+> or script is executed) is the root of the project. Thus, to ensure 
+> portability, scripts should make use of paths relative to the root 
+> of the folder. If absolute paths are needed, the `$GITHUB_WORKSPACE` 
+> variable can be used.
+
+[gha-syntax-doc]: https://developer.github.com/actions/managing-workflows/workflow-configuration-options/#using-a-dockerfile-image-in-an-action
