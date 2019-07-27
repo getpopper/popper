@@ -197,40 +197,6 @@ class WorkflowRunner(object):
             for action in stage:
                 wf.get_runner(action).run(reuse)
 
-    @staticmethod
-    def import_from_repo(action_ref, project_root):
-        url, service, user, repo, action_dir, version = scm.parse(action_ref)
-
-        cloned_project_dir = os.path.join("/tmp", service, user, repo)
-
-        scm.clone(url, user, repo, cloned_project_dir, version)
-
-        if not action_dir:
-            ptw_one = os.path.join(cloned_project_dir, "main.workflow")
-            ptw_two = os.path.join(cloned_project_dir, ".github/main.workflow")
-            if os.path.isfile(ptw_one):
-                path_to_workflow = ptw_one
-            elif os.path.isfile(ptw_two):
-                path_to_workflow = ptw_two
-            else:
-                log.fail("Unable to find main.workflow file")
-        else:
-            path_to_workflow = os.path.join(
-                cloned_project_dir, action_dir)
-            if not os.path.basename(path_to_workflow).endswith('.workflow'):
-                path_to_workflow = os.path.join(
-                    path_to_workflow, 'main.workflow')
-            if not os.path.isfile(path_to_workflow):
-                log.fail("Unable to find a main.workflow file")
-
-        if '.github/' in path_to_workflow:
-            path_to_copy = os.path.dirname(os.path.dirname(path_to_workflow))
-        else:
-            path_to_copy = os.path.dirname(path_to_workflow)
-
-        copy_tree(path_to_copy, project_root)
-        log.info("Successfully imported from {}".format(action_ref))
-
 
 class ActionRunner(object):
     """An action runner.
