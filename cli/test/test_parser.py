@@ -290,6 +290,15 @@ class TestParser(unittest.TestCase):
         self.assertSetEqual(changed_wf.action['e']['next'], {'end'})
         self.assertSetEqual(changed_wf.action['b']['next'], set())
 
+        changed_wf = Workflow.skip_actions(wf, ['d', 'a'])
+        self.assertEqual(changed_wf.action, {
+            'a': {'uses': 'sh', 'args': ['ls'], 'name': 'a', 'next': set()}, 
+            'b': {'uses': 'sh', 'args': ['ls'], 'name': 'b', 'next': {'e'}}, 
+            'c': {'uses': 'sh', 'args': ['ls'], 'name': 'c', 'next': set()}, 
+            'd': {'needs': [], 'uses': 'sh', 'args': ['ls'], 'name': 'd', 'next': set()}, 
+            'e': {'needs': ['b'], 'uses': 'sh', 'args': ['ls'], 'name': 'e', 'next': {'end'}}, 
+            'end': {'needs': ['e'], 'uses': 'sh', 'args': ['ls'], 'name': 'end'}})
+
     def test_filter_action(self):
         self.create_workflow_file("""
         workflow "example" {
