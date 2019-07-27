@@ -158,6 +158,100 @@ class TestParser(unittest.TestCase):
         wf = Workflow('/tmp/test_folder/a.workflow')
         self.assertRaises(SystemExit, wf.validate_action_blocks)
 
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            args = "ls"
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            uses = 1
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            uses = "sh"
+            needs = 1
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            uses = "sh"
+            args = [1, 2, 3, 4]
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            uses = "sh"
+            runs = [1, 2, 3, 4]
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            uses = "sh"
+            secrets = {
+                SECRET_A = 1234,
+                SECRET_B =  5678
+            }
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
+        self.create_workflow_file("""
+        workflow "sample workflow" {
+            resolves = "a"
+        }
+
+        action "a" {
+            uses = "sh"
+            env = [
+                "SECRET_A", "SECRET_B"
+            ]
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        self.assertRaises(SystemExit, wf.validate_action_blocks)
+
     def test_normalize(self):
         self.create_workflow_file("""
         workflow "sample workflow" {
