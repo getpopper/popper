@@ -61,12 +61,6 @@ action "test interrupt" {
   runs = "interrupt"
 }
 
-action "test add" {
-  needs = "lint"
-  uses = "./ci/test"
-  runs = "add"
-}
-
 action "test quiet" {
   needs = "lint"
   uses = "./ci/test"
@@ -114,7 +108,6 @@ action "end" {
   runs = "version"
   needs = [
     "test actions-demo",
-    "test add",
     "test ci",
     "test dot",
     "test dry-run",
