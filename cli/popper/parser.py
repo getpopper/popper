@@ -11,6 +11,7 @@ from popper import utils as pu
 VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
+
 class Workflow(object):
     """Represent's a immutable workflow.
     """
@@ -129,11 +130,11 @@ class Workflow(object):
 
         if not workflow_block.get('resolves', None):
             log.fail('[resolves] attribute must be present in a '
-            'workflow block.')
+                     'workflow block.')
 
         if not pu.of_type(workflow_block['resolves'], ['str', 'los']):
             log.fail('[resolves] attribute must be a string or a list '
-            'of strings.')
+                     'of strings.')
 
         if workflow_block.get('on', None):
             if not pu.of_type(workflow_block['on'], ['str']):
