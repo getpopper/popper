@@ -44,6 +44,8 @@ class Workflow(object):
         executed in parallel.
         """
         def resolve_intersections(stage):
+            """Removes actions from a stage that creates
+            conflict between the selected stage candidates."""
             actions_to_remove = set()
             for a in stage:
                 if self.action[a].get('next', None):
@@ -108,6 +110,8 @@ class Workflow(object):
         self.find_root(self.resolves, self.root)
 
     def validate_workflow_block(self):
+        """Validate the syntax of the workflow block.
+        """
         workflow_block_cnt = len(
             self.parsed_workflow.get(
                 'workflow', dict()).items())
@@ -134,6 +138,8 @@ class Workflow(object):
                 log.fail('[on] attribute mist be a string.')
 
     def validate_action_blocks(self):
+        """Validate the syntax of the action blocks.
+        """
         self.check_duplicate_actions()
         if not self.parsed_workflow.get('action', None):
             log.fail('Atleast one action block must be present.')
@@ -183,6 +189,16 @@ class Workflow(object):
         return params
 
     def normalize(self):
+        """Takes properties from the `self.parsed_workflow` dict and
+        makes them native to the `Workflow` class. Also it normalizes
+        some of the attributes of a parsed workflow according to
+        the Github defined specifications.
+
+        For example, it changes `args`, `runs` and `secrets` attribute,
+        if provided as a string to a list of string by splitting around
+        whitespace. Also, it changes parameters like `uses` and `resolves`,
+        if provided as a string to a list.
+        """
         for wf_name, wf_block in self.parsed_workflow['workflow'].items():
 
             self.name = wf_name
