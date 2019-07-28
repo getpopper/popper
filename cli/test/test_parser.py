@@ -377,15 +377,16 @@ class TestParser(unittest.TestCase):
         wf = Workflow('/tmp/test_folder/a.workflow')
         wf.parse()
         changed_wf = Workflow.skip_actions(wf, ['b'])
-        self.assertSetEqual(changed_wf.action['a']['next'], {'e'})
-        self.assertSetEqual(changed_wf.action['e']['next'], {'end'})
-        self.assertSetEqual(changed_wf.action['c']['next'], {'d'})
-        self.assertSetEqual(changed_wf.action['d']['next'], {'e'})
-        self.assertSetEqual(changed_wf.action['e']['next'], {'end'})
-        self.assertSetEqual(changed_wf.action['b']['next'], set())
+        self.assertDictEqual(changed_wf.action, {
+            'a': {'uses': 'sh', 'args': ['ls'], 'name': 'a', 'next': {'e'}}, 
+            'b': {'uses': 'sh', 'args': ['ls'], 'name': 'b', 'next': set()}, 
+            'c': {'uses': 'sh', 'args': ['ls'], 'name': 'c', 'next': {'d'}}, 
+            'd': {'needs': ['c'], 'uses': 'sh', 'args': ['ls'], 'name': 'd', 'next': {'e'}}, 
+            'e': {'needs': ['d', 'a'], 'uses': 'sh', 'args': ['ls'], 'name': 'e', 'next': {'end'}}, 
+            'end': {'needs': ['e'], 'uses': 'sh', 'args': ['ls'], 'name': 'end'}})
 
         changed_wf = Workflow.skip_actions(wf, ['d', 'a'])
-        self.assertEqual(changed_wf.action, {
+        self.assertDictEqual(changed_wf.action, {
             'a': {'uses': 'sh', 'args': ['ls'], 'name': 'a', 'next': set()},
             'b': {'uses': 'sh', 'args': ['ls'], 'name': 'b', 'next': {'e'}},
             'c': {'uses': 'sh', 'args': ['ls'], 'name': 'c', 'next': set()},
@@ -435,22 +436,22 @@ class TestParser(unittest.TestCase):
         wf = Workflow('/tmp/test_folder/a.workflow')
         wf.parse()
         changed_wf = Workflow.filter_action(wf, 'e')
-        self.assertEqual(changed_wf.root, {'e'})
-        self.assertEqual(
+        self.assertSetEqual(changed_wf.root, {'e'})
+        self.assertDictEqual(
             changed_wf.action, {
                 'e': {
                     'needs': [], 'uses': 'sh', 'args': ['ls'], 'name': 'e', 'next': set()}})
 
         changed_wf = Workflow.filter_action(wf, 'd')
-        self.assertEqual(changed_wf.root, {'d'})
-        self.assertEqual(
+        self.assertSetEqual(changed_wf.root, {'d'})
+        self.assertDictEqual(
             changed_wf.action, {
                 'd': {
                     'needs': [], 'uses': 'sh', 'args': ['ls'], 'name': 'd', 'next': set()}})
 
         changed_wf = Workflow.filter_action(wf, 'e', with_dependencies=True)
-        self.assertEqual(changed_wf.root, {'b', 'a', 'c'})
-        self.assertEqual(changed_wf.action, {
+        self.assertSetEqual(changed_wf.root, {'b', 'a', 'c'})
+        self.assertDictEqual(changed_wf.action, {
             'a': {'uses': 'sh', 'args': ['ls'], 'name': 'a', 'next': {'e'}},
             'b': {'uses': 'sh', 'args': ['ls'], 'name': 'b', 'next': {'e'}},
             'c': {'uses': 'sh', 'args': ['ls'], 'name': 'c', 'next': {'d'}},
@@ -458,8 +459,8 @@ class TestParser(unittest.TestCase):
             'e': {'needs': ['d', 'b', 'a'], 'uses': 'sh', 'args': ['ls'], 'name': 'e', 'next': set()}})
 
         changed_wf = Workflow.filter_action(wf, 'd', with_dependencies=True)
-        self.assertEqual(changed_wf.root, {'c'})
-        self.assertEqual(
+        self.assertSetEqual(changed_wf.root, {'c'})
+        self.assertDictEqual(
             changed_wf.action, {
                 'c': {
                     'uses': 'sh', 'args': ['ls'], 'name': 'c', 'next': {'d'}}, 'd': {
@@ -507,7 +508,7 @@ class TestParser(unittest.TestCase):
         wf = Workflow('/tmp/test_folder/a.workflow')
         wf.parse()
         changed_wf = Workflow.skip_actions(wf, ['d', 'a', 'b'])
-        self.assertEqual(changed_wf.action, {
+        self.assertDictEqual(changed_wf.action, {
             'a': {'uses': 'sh', 'args': ['ls'], 'name': 'a', 'next': set()},
             'b': {'uses': 'sh', 'args': ['ls'], 'name': 'b', 'next': set()},
             'c': {'uses': 'sh', 'args': ['ls'], 'name': 'c', 'next': set()},

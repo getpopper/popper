@@ -276,7 +276,7 @@ class Workflow(object):
                     ', '.join(unreachable - skipped))
                 )
             else:
-                log.warn('Actions {} are unreachable.'.format(
+                log.warning('Actions {} are unreachable.'.format(
                     ', '.join(unreachable))
                 )
 

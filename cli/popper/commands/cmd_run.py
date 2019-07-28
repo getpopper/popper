@@ -203,7 +203,7 @@ def run_workflow(**kwargs):
     if kwargs['parallel']:
         if sys.version_info[0] < 3:
             log.fail('--parallel is only supported on Python3')
-        log.warn("Using --parallel may result in interleaved output. "
+        log.warning("Using --parallel may result in interleaved output. "
                  "You may use --quiet flag to avoid confusion.")
 
     if kwargs['with_dependencies'] and (not kwargs['action']):
