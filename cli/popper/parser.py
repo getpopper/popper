@@ -128,10 +128,12 @@ class Workflow(object):
                     'Invalid workflow attribute \'{}\' was found.'.format(key))
 
         if not workflow_block.get('resolves', None):
-            log.fail('[resolves] attribute must be present in a workflow block.')
+            log.fail('[resolves] attribute must be present in a '
+            'workflow block.')
 
         if not pu.of_type(workflow_block['resolves'], ['str', 'los']):
-            log.fail('[resolves] block must be a string or a list of strings.')
+            log.fail('[resolves] attribute must be a string or a list '
+            'of strings.')
 
         if workflow_block.get('on', None):
             if not pu.of_type(workflow_block['on'], ['str']):
@@ -148,7 +150,7 @@ class Workflow(object):
             for key in a_block.keys():
                 if key not in VALID_ACTION_ATTRS:
                     log.fail(
-                        'Invalid action attributes \'{}\' was found.'.format(key))
+                        'Invalid action attribute \'{}\' found.'.format(key))
 
             if not a_block.get('uses', None):
                 log.fail('[uses] attribute must be present in action block.')
@@ -159,17 +161,20 @@ class Workflow(object):
             if a_block.get('needs', None):
                 if not pu.of_type(a_block['needs'], ['str', 'los']):
                     log.fail(
-                        '[needs] attribute must be a string or a list of strings.')
+                        '[needs] attribute must be a string or a list '
+                        'of strings.')
 
             if a_block.get('args', None):
                 if not pu.of_type(a_block['args'], ['str', 'los']):
                     log.fail(
-                        '[args] attribute must be a string or a list of strings.')
+                        '[args] attribute must be a string or a list '
+                        'of strings.')
 
             if a_block.get('runs', None):
                 if not pu.of_type(a_block['runs'], ['str', 'los']):
                     log.fail(
-                        '[runs] attribute must be a string or a list of strings.')
+                        '[runs] attribute must be a string or a list '
+                        'of strings.')
 
             if a_block.get('env', None):
                 if not pu.of_type(a_block['env'], ['dict']):
@@ -178,7 +183,8 @@ class Workflow(object):
             if a_block.get('secrets', None):
                 if not pu.of_type(a_block['secrets'], ['str', 'los']):
                     log.fail(
-                        '[secrets] attribute must be a string or a list of strings.')
+                        '[secrets] attribute must be a string or a list '
+                        'of strings.')
 
     @staticmethod
     def format_command(params):
