@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import threading
+from builtins import str
 
 import yaml
 import click
@@ -266,3 +267,40 @@ def sanitized_name(name):
         str: The sanitized action name.
     """
     return re.sub('[^a-zA-Z0-9_.-]', '_', name)
+
+
+def of_type(param, valid_types):
+    """Function to check the type of a parameter.
+
+    It tries to match the type of the parameter with the
+    types passed through `valid_types` list.
+
+    Args:
+        param: A value of any type.
+        valid_types (list): A list of acceptable types.
+
+    Returns:
+        bool: True/False, depending upon whether the type of
+        the passed param matches with any of the valid types.
+    """
+    # Python 2/3 compability.
+    try:
+        basestring
+    except BaseException:
+        basestring = str
+
+    for t in valid_types:
+        if t == 'str':
+            if isinstance(param, basestring):
+                return True
+
+        if t == 'dict':
+            if isinstance(param, dict):
+                return True
+
+        if t == 'los':
+            if isinstance(param, list):
+                res = list(map(lambda a: isinstance(a, basestring), param))
+                return False not in res
+
+    return False
