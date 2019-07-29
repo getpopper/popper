@@ -579,7 +579,9 @@ class SingularityRunner(ActionRunner):
         log.info(info)
         if not self.dry_run:
             output = start(container, commands, bind=volumes,
-                           stream=True, options=['--userns'])
+                           stream=True, options=[
+                               '--userns',
+                               '--pwd', env['GITHUB_WORKSPACE']])
             try:
                 for line in output:
                     log.action_info(line)
