@@ -66,7 +66,7 @@ workflow "test" {
 
 action "show env" {
   uses = "actions/bin/sh@master"
-  args = ["echo \$TOOL_NAME"]
+  runs = ["sh", "-c", "echo \$TOOL_NAME"]
 }
 EOF
 
@@ -83,11 +83,11 @@ workflow "test" {
 
 action "check file" {
   uses = "actions/bin/sh@master"
-  args = ["echo 'Hello from Popper 2.x !' > /usr/local/popper.file"]
+  runs = ["sh", "-c", "echo 'Hello from Popper 2.x !' > /usr/local/popper.file"]
 }
 EOF
 
-popper run --runtime "$RUNTIME"
+popper run --runtime "$RUNTIME" > output
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -96,7 +96,7 @@ workflow "test" {
 
 action "check file" {
   uses = "actions/bin/sh@master"
-  args = ["cat /usr/local/popper.file"]
+  runs = ["sh", "-c", "cat /usr/local/popper.file"]
 }
 EOF
 

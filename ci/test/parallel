@@ -27,7 +27,7 @@ action "two" {
 
 action "three" {
   uses = "actions/bin/sh@master"
-  args = ["echo Hello from sh"]
+  runs = ["sh", "-c", "echo Hello from sh"]
 }
 
 action "four" {
@@ -69,7 +69,7 @@ action "two" {
 
 action "three" {
   uses = "actions/bin/sh@master"
-  args = ["echo Hello from sh"]
+  runs = ["sh", "-c", "echo Hello from sh"]
 }
 
 action "four" {
