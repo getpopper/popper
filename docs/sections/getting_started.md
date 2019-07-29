@@ -1,10 +1,9 @@
 # Getting Started
 
-Popper is a workflow execution engine based on [Github 
-Actions](https://github.com/features/actions) written in Python. With 
-Popper, you can execute workflows locally on your machine without 
-having to use Github's platform. To get started, we first need to 
-install the CLI tool using [Pip](https://pip.pypa.io/en/stable/):
+Popper is a workflow execution engine based on [Github Actions][gha] 
+written in Python. With Popper, you can execute workflows locally on 
+your machine without having to use Github's platform. To get started, 
+we first need to install the CLI tool using [Pip][pip]:
 
 ```bash
 pip install popper
@@ -15,9 +14,6 @@ Show which version you installed:
 ```bash
 popper version
 ```
-
-> **NOTE**: Any version greater than 2.0 is currently officially 
-> supported.
 
 To get a list of available commands:
 
@@ -31,35 +27,18 @@ Create a project repository (if you are not familiar with Git, look
 [here](https://www.learnenough.com/git-tutorial)):
 
 ```bash
-mkdir mypaper
-cd mypaper
+mkdir myproject
+cd myproject
 git init
-echo '# mypaper' > README.md
+echo '# myproject' > README.md
 git add .
 git commit -m 'first commit'
 ```
 
-## Link to GitHub repository
-
-First, create a repository [on 
-Github](https://help.github.com/articles/create-a-repo/). Once your 
-Github repository has been created, register it as a remote repository 
-on your local repository:
-
-```bash
-git remote add origin git@github.com:<user>/<repo>
-```
-
-where `<user>` is your username and `<repo>` is the name of the 
-repository you have created. Then, push your local commits:
-
-```bash
-git push -u origin master
-```
-
 ## Create a workflow
 
-We need to create a `.workflow` file:
+First, we create an example `.workflow` file with a pre-defined 
+workflow:
 
 ```bash
 popper scaffold
@@ -72,15 +51,11 @@ generated:
 ```bash
 git add .
 git commit -m 'Adding example workflow.'
-git push
 ```
 
 To learn more about how to modify this workflow in order to fit your 
-needs, please take a look at the [official 
-documentation](https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/), 
-read [this 
-tutorial](https://scotch.io/bar-talk/introducing-github-actions#toc-how-it-works) 
-or take a look at [some examples](examples.html).
+needs, please take a look at the [official documentation][ghadocs], 
+read [this tutorial][ghatut], or take a look at [some examples][ex].
 
 ## Run your workflow
 
@@ -92,12 +67,27 @@ popper run
 
 You should see the output of actions printed to the terminal.
 
+## Link to GitHub repository
+
+Create a repository [on Github][gh-create]. Once your Github 
+repository has been created, register it as a remote repository on 
+your local repository:
+
+```bash
+git remote add origin git@github.com:<user>/<repo>
+```
+
+where `<user>` is your username and `<repo>` is the name of the 
+repository you have created. Then, push your local commits:
+
+```bash
+git push -u origin master
+```
+
 ## Continuously Run Your Workflow on Travis
 
-For this, we need to [login to Travis 
-CI](https://docs.travis-ci.com/user/getting-started/#Prerequisites) 
-using our Github credentials. Once this is done, we [activate the 
-project](https://docs.travis-ci.com/user/getting-started/#To-get-started-with-Travis-CI) 
+For this, we need to [login to Travis CI][cisetup] using our Github 
+credentials. Once this is done, we [activate the project][ciactivate] 
 so it is continuously validated.
 
 Generate `.travis.yml` file:
@@ -120,3 +110,12 @@ git push
 ```
 
 Go to the TravisCI website to see your experiments being executed.
+
+[pip]: https://pip.pypa.io/en/stable/
+[ghadocs]: https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/
+[ghatut]: https://scotch.io/bar-talk/introducing-github-actions#toc-how-it-works
+[ex]: https://github.com/popperized/popper-examples
+[gh-create]: https://help.github.com/articles/create-a-repo/
+[cisetup]: https://docs.travis-ci.com/user/getting-started/#Prerequisites
+[ciactivate]: https://docs.travis-ci.com/user/getting-started/#To-get-started-with-Travis-CI
+[gha]: https://github.com/features/actions
