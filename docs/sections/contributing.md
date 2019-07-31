@@ -31,7 +31,7 @@ git clone git@github.com:systemslab/popper
 cd popper
 
 # install popper from source
-pip install -e cli/
+pip install -e cli[dev]
 ```
 
 The `-e` flag passed to `pip` tells it to install the package from the 

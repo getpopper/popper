@@ -25,7 +25,7 @@ setup(
         'docker'
     ],
     extras_require={
-        'test': ['requests-mock']
+        'dev': ['requests-mock']
     },
     entry_points='''
         [console_scripts]
