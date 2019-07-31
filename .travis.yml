@@ -11,9 +11,9 @@ services: docker
 before_install:
 - ci/scripts/install_scripts.sh
 - pip install git+https://github.com/virtuald/pyhcl.git@0.3.12#egg=pyhcl
-install:
 - pip install coverage
-- pip install cli[dev]
+install:
+- pip install -e cli[dev]
 script:
 - coverage run -m unittest discover --start-directory cli/
 - popper run
