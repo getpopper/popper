@@ -24,9 +24,9 @@ setup(
         'futures; python_version == "2.7"',
         'docker'
     ],
-    tests_require = [
-        'requests-mock',
-    ],
+    extras_require={
+        'test': ['requests-mock']
+    },
     entry_points='''
         [console_scripts]
         popper=popper.cli:cli
