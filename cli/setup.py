@@ -14,7 +14,6 @@ setup(
     packages=['popper', 'popper.commands'],
     include_package_data=True,
     install_requires=[
-        'requests-mock',
         'requests',
         'GitPython',
         'future; python_version == "2.7"',
@@ -25,6 +24,9 @@ setup(
         'futures; python_version == "2.7"',
         'docker'
     ],
+    extras_require={
+        'dev': ['requests-mock']
+    },
     entry_points='''
         [console_scripts]
         popper=popper.cli:cli
