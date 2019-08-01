@@ -93,7 +93,7 @@ so it is continuously validated.
 Generate `.travis.yml` file:
 
 ```bash
-popper ci --service travis
+popper ci travis
 ```
 
 And commit the file:
