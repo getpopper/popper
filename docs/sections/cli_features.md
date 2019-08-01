@@ -142,7 +142,7 @@ The `ci` subcommand generates configuration files for multiple CI
 systems. The syntax of this command is the following:
 
 ```bash
-popper ci --service <name>
+popper ci <service-name>
 ```
 
 Where `<name>` is the name of CI system (see `popper ci --help` to get 
@@ -172,7 +172,7 @@ Once the project is registered on Travis, we proceed to generate a
 
 ```bash
 cd my-popper-repo/
-popper ci --service travis
+popper ci travis
 ```
 
 And commit the file:
@@ -209,7 +209,7 @@ what we do for TravisCI (see above):
 
     ```bash
     cd my-popper-repo/
-    popper ci --service circle
+    popper ci circle
     git add .circleci
     git commit -m 'Adds CircleCI config files'
     git push
@@ -223,7 +223,7 @@ above), i.e. generate config files and add them to the repo:
 
 ```bash
 cd my-popper-repo/
-popper ci --service gitlab
+popper ci gitlab
 git add .gitlab-ci.yml
 git commit -m 'Adds GitLab-CI config file'
 git push
@@ -239,7 +239,7 @@ done in a similar way:
 
 ```bash
 cd my-popper-repo/
-popper ci --service jenkins
+popper ci jenkins
 git add Jenkinsfile
 git commit -m 'Adds Jenkinsfile'
 git push
