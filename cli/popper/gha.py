@@ -449,6 +449,8 @@ class SingularityRunner(ActionRunner):
             log.fail(
                 'Could not find the singularity command.'
             )
+        if not os.path.exists('/tmp/singularity'):
+            os.makedirs('/tmp/singularity')
 
         if reuse:
             log.fail('Reusing containers in singularity runtime is '
@@ -457,28 +459,30 @@ class SingularityRunner(ActionRunner):
         build = True
         if 'docker://' in self.action['uses']:
             image = self.action['uses']
+            print(image)
             build = False
 
         elif './' in self.action['uses']:
-            image = 'action/' + os.path.basename(self.action['uses'])
+            image = 'action/' + self.action['uses']
+            print(image)
             build_path = os.path.join(
                 scm.get_git_root_folder(), self.action['uses'])
 
         else:
-            image = '/'.join(self.action['uses'].split('/')[:2])
+            image = '/'.join(self.action['uses'].split('/'))
+            print(image)
             build_path = os.path.join(
                 self.action['repo_dir'], self.action['action_dir'])
 
-        container = self.cid + '.sif'
+        container = pu.sanitized_name(image) + '.sif'
+        container_path = os.path.join('/tmp/singularity', container)
 
-        if self.singularity_exists(container) and not self.skip_pull:
-            self.singularity_rm(container)
         if build:
-            self.singularity_build_from_recipe(build_path, container)
+            self.singularity_build_from_recipe(build_path, container, container_path)
         else:
-            self.singularity_build_from_image(image, container)
+            self.singularity_build_from_image(image, container, container_path)
 
-        e = self.singularity_start(container)
+        e = self.singularity_start(container_path)
 
         if e != 0:
             log.fail('Action {} failed!'.format(self.action['name']))
@@ -514,24 +518,24 @@ class SingularityRunner(ActionRunner):
         pwd = os.getcwd()
         os.chdir(build_path)
         recipefile = SingularityRunner.get_recipe_file(build_path, container)
-        s_client.build(recipe=recipefile, image=container, build_folder=pwd)
+        s_client.build(recipe=recipefile, image=container, build_folder='/tmp/singularity')
         os.chdir(pwd)
 
-    def singularity_exists(self, container):
+    def singularity_exists(self, container_path):
         """Check whether the container exists or not.
         """
         if self.dry_run:
             return
-        return os.path.exists(container)
+        return os.path.exists(container_path)
 
-    def singularity_rm(self, container):
+    def singularity_rm(self, container_path):
         """Removes the container.
         """
         if self.dry_run:
             return
-        os.remove(container)
+        os.remove(container_path)
 
-    def singularity_build_from_image(self, image, container):
+    def singularity_build_from_image(self, image, container, container_path):
         """Build container from Docker image.
         """
         if not self.skip_pull:
@@ -539,14 +543,15 @@ class SingularityRunner(ActionRunner):
                 self.msg_prefix, self.action['name'], container, image)
             )
             if not self.dry_run:
-                s_client.pull(image=image, name=container)
+                if not self.singularity_exists(container_path):
+                    s_client.pull(image=image, name=container, pull_folder='/tmp/singularity')
         else:
-            if not self.singularity_exists(container):
+            if not self.singularity_exists(container_path):
                 log.fail(
                     'The required singularity container \'{}\' was not found '
-                    'locally.'.format(container))
+                    'locally.'.format(container_path))
 
-    def singularity_build_from_recipe(self, build_path, container):
+    def singularity_build_from_recipe(self, build_path, container, container_path):
         """Build container from recipefile.
         """
         filename = 'Singularity.{}'.format(container[:-4])
@@ -555,9 +560,10 @@ class SingularityRunner(ActionRunner):
             container, os.path.join(build_path, filename))
         )
         if not self.dry_run:
-            SingularityRunner.build_from_recipe(build_path, container)
+            if not self.singularity_exists(container_path):
+                SingularityRunner.build_from_recipe(build_path, container)
 
-    def singularity_start(self, container):
+    def singularity_start(self, container_path):
         """Starts the container to execute commands or run the runscript
         with the supplied args inside the container.
         """
@@ -580,19 +586,19 @@ class SingularityRunner(ActionRunner):
         if runs:
             info = '{}[{}] singularity exec {} {}'.format(
                 self.msg_prefix, self.action['name'],
-                container, runs)
+                container_path, runs)
             commands = runs
             start = s_client.execute
         else:
             info = '{}[{}] singularity run {} {}'.format(
                 self.msg_prefix, self.action['name'],
-                container, args)
+                container_path, args)
             commands = args
             start = s_client.run
 
         log.info(info)
         if not self.dry_run:
-            output = start(container, commands, bind=volumes,
+            output = start(container_path, commands, bind=volumes,
                            stream=True, options=[
                                '--userns',
                                '--pwd', env['GITHUB_WORKSPACE']])
@@ -626,7 +632,11 @@ class HostRunner(ActionRunner):
 
         cmd = self.host_prepare()
         self.prepare_environment(set_env=True)
-        self.host_start(cmd)
+        e = self.host_start(cmd)
+        self.remove_environment()
+
+        if e != 0:
+            log.fail("Action '{}' failed.".format(self.action['name']))
 
     def host_prepare(self):
         root = scm.get_git_root_folder()
@@ -658,7 +668,7 @@ class HostRunner(ActionRunner):
                                     ' '.join(cmd)))
 
         if self.dry_run:
-            return
+            return 0
 
         ecode = 0
 
@@ -686,8 +696,5 @@ class HostRunner(ActionRunner):
         finally:
             log.action_info()
 
-        self.remove_environment()
         os.chdir(self.cwd)
-
-        if ecode != 0:
-            log.fail("Action '{}' failed.".format(self.action['name']))
+        return ecode
