@@ -266,7 +266,7 @@ def sanitized_name(name):
     Returns:
         str: The sanitized action name.
     """
-    return re.sub('[^a-zA-Z0-9_.-]', '_', name)
+    return "popper_{}".format(re.sub('[^a-zA-Z0-9_.-]', '_', name))
 
 
 def of_type(param, valid_types):

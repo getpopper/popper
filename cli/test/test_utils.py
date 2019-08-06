@@ -44,15 +44,15 @@ class TestUtils(unittest.TestCase):
     def test_sanitized_name(self):
         name = "test action"
         santizied_name = pu.sanitized_name(name)
-        self.assertEqual(santizied_name, "test_action")
+        self.assertEqual(santizied_name, "popper_test_action")
 
         name = "test@action"
         santizied_name = pu.sanitized_name(name)
-        self.assertEqual(santizied_name, "test_action")
+        self.assertEqual(santizied_name, "popper_test_action")
 
         name = "test(action)"
         santizied_name = pu.sanitized_name(name)
-        self.assertEqual(santizied_name, "test_action_")
+        self.assertEqual(santizied_name, "popper_test_action_")
 
     def touch_file(self, path):
         open(path, 'w').close()

@@ -105,8 +105,7 @@ class WorkflowRunner(object):
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, env,
-                            dry_run, skip_pull):
+    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull):
         """Factory of ActionRunner instances, one for each action.
 
         Note:
@@ -116,6 +115,7 @@ class WorkflowRunner(object):
             runtime argument.
             Same is the case when the `uses` attribute is equal to 'sh'.
         """
+        env = WorkflowRunner.get_workflow_env(wf, workspace)
         for _, a in wf.action.items():
 
             if a['uses'] == 'sh':
@@ -139,15 +139,35 @@ class WorkflowRunner(object):
                 a['runner'] = SingularityRunner(
                     a, workspace, env, dry_run, skip_pull)
 
-    def run(self, action, skip_clone, skip_pull, skip, workspace,
-            reuse, dry_run, parallel, with_dependencies, runtime,
-            skip_secrets_prompt=False):
-        """Run the workflow or a specific action."""
+    @staticmethod
+    def get_workflow_env(wf, workspace):
         if scm.get_user():
             repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
         else:
             repo_id = 'unknown'
 
+        env = {
+            'HOME': os.environ['HOME'],
+            'GITHUB_WORKFLOW': wf.name,
+            'GITHUB_ACTION': '',
+            'GITHUB_ACTOR': 'popper',
+            'GITHUB_REPOSITORY': repo_id,
+            'GITHUB_EVENT_NAME': wf.on,
+            'GITHUB_EVENT_PATH': '/tmp/github_event.json',
+            'GITHUB_WORKSPACE': workspace,
+            'GITHUB_SHA': scm.get_sha(),
+            'GITHUB_REF': scm.get_ref()
+        }
+
+        for e in dict(env):
+            env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
+
+        return env
+
+    def run(self, action, skip_clone, skip_pull, skip, workspace,
+            reuse, dry_run, parallel, with_dependencies, runtime,
+            skip_secrets_prompt=False):
+        """Run the workflow or a specific action."""
         new_wf = deepcopy(self.wf)
 
         if skip:
@@ -158,26 +178,10 @@ class WorkflowRunner(object):
 
         new_wf.check_for_unreachable_actions(skip)
 
-        env = {
-            'HOME': os.environ['HOME'],
-            'GITHUB_WORKFLOW': new_wf.name,
-            'GITHUB_ACTION': '',
-            'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': repo_id,
-            'GITHUB_EVENT_NAME': new_wf.on,
-            'GITHUB_EVENT_PATH': '/tmp/github_event.json',
-            'GITHUB_WORKSPACE': workspace,
-            'GITHUB_SHA': scm.get_sha(),
-            'GITHUB_REF': scm.get_ref()
-        }
-
-        for e in dict(env):
-            env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
-
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, env, dry_run, skip_pull)
+            runtime, new_wf, workspace, dry_run, skip_pull)
 
         for s in new_wf.get_stages():
             WorkflowRunner.run_stage(new_wf, s, reuse, parallel)
@@ -206,16 +210,18 @@ class ActionRunner(object):
     def __init__(self, action, workspace, env, dry_run, skip_pull):
         self.action = action
         self.workspace = workspace
-        self.env = dict(env)
+        self.env = env
         self.dry_run = dry_run
         self.skip_pull = skip_pull
         self.msg_prefix = "DRYRUN: " if dry_run else ""
+        self.setup_necessary_files()
 
+    def setup_necessary_files(self):
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
-        if not os.path.exists(env['GITHUB_EVENT_PATH']):
-            f = open(env['GITHUB_EVENT_PATH'], 'w')
+        if not os.path.exists(self.env['GITHUB_EVENT_PATH']):
+            f = open(self.env['GITHUB_EVENT_PATH'], 'w')
             f.close()
 
     def prepare_environment(self, set_env=False):
@@ -257,12 +263,13 @@ class DockerRunner(ActionRunner):
             action, workspace, env, dry, skip_pull)
         self.cid = pu.sanitized_name(self.action['name'])
         self.container = None
+
+    def run(self, reuse=False):
         if not find_executable('docker'):
             log.fail(
                 'Could not find the docker command.'
             )
 
-    def run(self, reuse=False):
         build = True
 
         if 'docker://' in self.action['uses']:
@@ -340,7 +347,10 @@ class DockerRunner(ActionRunner):
             return True
         images = docker_client.images.list(all=True)
         filtered_images = [i for i in images if img in i.tags]
-        return filtered_images
+        if filtered_images:
+            return True
+
+        return False
 
     def docker_rm(self):
         if self.dry_run:
@@ -428,15 +438,16 @@ class SingularityRunner(ActionRunner):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 dry_run, skip_pull)
         self.cid = pu.sanitized_name(self.action['name'])
-        if not find_executable('singularity'):
-            log.fail(
-                'Could not find the singularity command.'
-            )
         s_client.quiet = True
 
     def run(self, reuse=False):
         """Run the action.
         """
+        if not find_executable('singularity'):
+            log.fail(
+                'Could not find the singularity command.'
+            )
+
         if reuse:
             log.fail('Reusing containers in singularity runtime is '
                      'currently not supported.')
@@ -486,7 +497,7 @@ class SingularityRunner(ActionRunner):
         return singularityfile
 
     @staticmethod
-    def get_reciple_file(build_path, container):
+    def get_recipe_file(build_path, container):
         dockerfile = os.path.join(build_path, 'Dockerfile')
         singularityfile = os.path.join(
             build_path, 'Singularity.{}'.format(container[:-4]))
@@ -500,7 +511,7 @@ class SingularityRunner(ActionRunner):
     def build_from_recipe(build_path, container):
         pwd = os.getcwd()
         os.chdir(build_path)
-        recipefile = SingularityRunner.get_reciple_file(build_path, container)
+        recipefile = SingularityRunner.get_recipe_file(build_path, container)
         s_client.build(recipe=recipefile, image=container, build_folder=pwd)
         os.chdir(pwd)
 
@@ -611,6 +622,11 @@ class HostRunner(ActionRunner):
             log.fail('--reuse flag is not supported for actions running '
                      'on the host.')
 
+        cmd = self.host_prepare()
+        self.prepare_environment(set_env=True)
+        self.host_start(cmd)
+
+    def host_prepare(self):
         root = scm.get_git_root_folder()
         if self.action['uses'] == 'sh':
             cmd = self.action.get('runs', [])
@@ -633,8 +649,9 @@ class HostRunner(ActionRunner):
                     os.chdir(os.path.join(root, self.action['uses']))
                     cmd[0] = os.path.join(root, self.action['uses'], cmd[0])
 
-        self.prepare_environment(set_env=True)
+        return cmd
 
+    def host_start(self, cmd):
         log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
                                     ' '.join(cmd)))
 
