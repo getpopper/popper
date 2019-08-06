@@ -191,7 +191,7 @@ class Workflow(object):
     def format_command(params):
         """A static method that formats the `runs` and `args`
         attributes into a list of strings."""
-        if isinstance(params, str):
+        if pu.of_type(params, ['str']):
             return params.split(" ")
         return params
 
@@ -215,14 +215,14 @@ class Workflow(object):
             self.action = self.parsed_workflow['action']
             self.props = dict()
 
-            if isinstance(self.resolves, str):
+            if pu.of_type(self.resolves, ['str']):
                 self.resolves = [self.resolves]
 
         for a_name, a_block in self.action.items():
             a_block['name'] = a_name
 
             if a_block.get('needs', None):
-                if isinstance(a_block['needs'], str):
+                if pu.of_type(a_block['needs'], ['str']):
                     a_block['needs'] = [a_block['needs']]
 
             if a_block.get('args', None):
