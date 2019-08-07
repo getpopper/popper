@@ -299,6 +299,8 @@ class DockerRunner(ActionRunner):
             tag = '{}/{}:{}'.format(user, repo, version)
             dockerfile_path = os.path.join(self.action['repo_dir'],
                                            self.action['action_dir'])
+
+        tag = tag.lower()
         log.debug('docker tag: {}'.format(tag))
         log.debug('dockerfile path: {}'.format(dockerfile_path))
 
