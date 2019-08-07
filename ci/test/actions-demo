@@ -389,4 +389,18 @@ popper run --runtime "$RUNTIME" > output
 count=$(grep -wc "/tmp/mypaper" output)
 test "$count" -eq 2
 
+# Test Docker image references
+cat <<EOF > main.workflow
+workflow "a" {
+  resolves = "b"
+}
+
+action "b" {
+  uses = "JayjeetAtGithub/bin/sh@master"
+  args = "ls"
+}
+EOF
+
+popper run --runtime docker
+
 echo "Test ACTIONS-DEMO passed."
