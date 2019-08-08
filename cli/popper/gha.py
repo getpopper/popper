@@ -459,18 +459,15 @@ class SingularityRunner(ActionRunner):
         build = True
         if 'docker://' in self.action['uses']:
             image = self.action['uses']
-            print(image)
             build = False
 
         elif './' in self.action['uses']:
             image = 'action/' + self.action['uses']
-            print(image)
             build_path = os.path.join(
                 scm.get_git_root_folder(), self.action['uses'])
 
         else:
             image = '/'.join(self.action['uses'].split('/'))
-            print(image)
             build_path = os.path.join(
                 self.action['repo_dir'], self.action['action_dir'])
 
