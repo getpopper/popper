@@ -43,7 +43,10 @@ EOF
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
 if [ "$RUNTIME" == "singularity" ]; then
-singularity pull --name popper_sample_action_one.sif docker://debian:stretch-slim
+rm -rf /tmp/singularity
+mkdir /tmp/singularity
+singularity pull --name popper_docker___debian_stretch-slim.sif docker://debian:stretch-slim
+mv popper_docker___debian_stretch-slim.sif /tmp/singularity/popper_docker___debian_stretch-slim.sif
 fi
 git clone https://github.com/actions/bin /tmp/actions/github.com/actions/bin
 

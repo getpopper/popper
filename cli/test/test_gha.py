@@ -303,7 +303,8 @@ class TestDockerRunner(unittest.TestCase):
         ]
         runner.docker_pull('debian:buster-slim')
         runner.docker_create('debian:buster-slim')
-        runner.docker_start()
+        e = runner.docker_start()
+        self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
         res = self.docker_client.containers.list(filters={'status': 'running'})
         self.assertListEqual(res, [])
@@ -395,6 +396,7 @@ class TestSingularityRunner(unittest.TestCase):
 
     def setUp(self):
         os.makedirs('/tmp/test_folder')
+        os.makedirs('/tmp/singularity')
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
         workflow = """
@@ -417,6 +419,7 @@ class TestSingularityRunner(unittest.TestCase):
     def tearDown(self):
         os.chdir('/tmp')
         shutil.rmtree('/tmp/test_folder')
+        shutil.rmtree('/tmp/singularity')
         log.setLevel('NOTSET')
 
     @unittest.skipIf(
@@ -447,13 +450,18 @@ class TestSingularityRunner(unittest.TestCase):
     def test_singularity_build_from_image(self):
         runner = self.wf.action['sample action']['runner']
         runner.singularity_build_from_image(
-            'docker://debian:buster-slim', 'testimg.sif')
-        self.assertEqual(os.path.exists('testimg.sif'), True)
-        os.remove('testimg.sif')
+            'docker://debian:buster-slim',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
+        self.assertEqual(os.path.exists('/tmp/singularity/testimg.sif'), True)
+        os.remove('/tmp/singularity/testimg.sif')
         runner.skip_pull = True
-        self.assertRaises(SystemExit,
-                          runner.singularity_build_from_image,
-                          'docker://debian:buster-slim', 'testimg.sif')
+        self.assertRaises(
+            SystemExit,
+            runner.singularity_build_from_image,
+            'docker://debian:buster-slim',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
 
     @unittest.skipIf(
         os.environ['RUNTIME'] != 'singularity',
@@ -466,10 +474,12 @@ class TestSingularityRunner(unittest.TestCase):
             '/tmp/test_folder/bin')
         os.chdir('/tmp/test_folder/bin/sh')
         runner.singularity_build_from_recipe(
-            '/tmp/test_folder/bin/sh', 'testimg.sif')
+            '/tmp/test_folder/bin/sh',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
         self.assertEqual(os.path.exists(
-            '/tmp/test_folder/bin/sh/testimg.sif'), True)
-        os.remove('/tmp/test_folder/bin/sh/testimg.sif')
+            '/tmp/singularity/testimg.sif'), True)
+        os.remove('/tmp/singularity/testimg.sif')
         os.chdir('/tmp/test_folder')
 
     @unittest.skipIf(
@@ -499,8 +509,11 @@ class TestSingularityRunner(unittest.TestCase):
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         runner.singularity_build_from_image(
-            'docker://debian:buster-slim', 'testimg.sif')
-        runner.singularity_start('testimg.sif')
+            'docker://debian:buster-slim',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
+        e = runner.singularity_start('/tmp/singularity/testimg.sif')
+        self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
 
 
@@ -571,10 +584,9 @@ class TestHostRunner(unittest.TestCase):
     def test_host_start(self):
         runner = self.wf.action['sample action']['runner']
         runner.prepare_environment(set_env=True)
-        runner.host_start([
+        e = runner.host_start([
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ])
+        self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
-        self.assertRaises(KeyError, runner.host_start, ['bls'])
-        runner.prepare_environment(set_env=True)
-        self.assertRaises(SystemExit, runner.host_start, ['bls'])
+        runner.remove_environment()
