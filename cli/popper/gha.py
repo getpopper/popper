@@ -475,7 +475,8 @@ class SingularityRunner(ActionRunner):
         container_path = os.path.join('/tmp/singularity', container)
 
         if build:
-            self.singularity_build_from_recipe(build_path, container, container_path)
+            self.singularity_build_from_recipe(
+                build_path, container, container_path)
         else:
             self.singularity_build_from_image(image, container, container_path)
 
@@ -515,7 +516,10 @@ class SingularityRunner(ActionRunner):
         pwd = os.getcwd()
         os.chdir(build_path)
         recipefile = SingularityRunner.get_recipe_file(build_path, container)
-        s_client.build(recipe=recipefile, image=container, build_folder='/tmp/singularity')
+        s_client.build(
+            recipe=recipefile,
+            image=container,
+            build_folder='/tmp/singularity')
         os.chdir(pwd)
 
     def singularity_exists(self, container_path):
@@ -541,14 +545,18 @@ class SingularityRunner(ActionRunner):
             )
             if not self.dry_run:
                 if not self.singularity_exists(container_path):
-                    s_client.pull(image=image, name=container, pull_folder='/tmp/singularity')
+                    s_client.pull(
+                        image=image,
+                        name=container,
+                        pull_folder='/tmp/singularity')
         else:
             if not self.singularity_exists(container_path):
                 log.fail(
                     'The required singularity container \'{}\' was not found '
                     'locally.'.format(container_path))
 
-    def singularity_build_from_recipe(self, build_path, container, container_path):
+    def singularity_build_from_recipe(
+            self, build_path, container, container_path):
         """Build container from recipefile.
         """
         filename = 'Singularity.{}'.format(container[:-4])

@@ -450,13 +450,18 @@ class TestSingularityRunner(unittest.TestCase):
     def test_singularity_build_from_image(self):
         runner = self.wf.action['sample action']['runner']
         runner.singularity_build_from_image(
-            'docker://debian:buster-slim', 'testimg.sif', '/tmp/singularity/testimg.sif')
+            'docker://debian:buster-slim',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
         self.assertEqual(os.path.exists('/tmp/singularity/testimg.sif'), True)
         os.remove('/tmp/singularity/testimg.sif')
         runner.skip_pull = True
-        self.assertRaises(SystemExit,
-                          runner.singularity_build_from_image,
-                          'docker://debian:buster-slim', 'testimg.sif', '/tmp/singularity/testimg.sif')
+        self.assertRaises(
+            SystemExit,
+            runner.singularity_build_from_image,
+            'docker://debian:buster-slim',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
 
     @unittest.skipIf(
         os.environ['RUNTIME'] != 'singularity',
@@ -469,7 +474,9 @@ class TestSingularityRunner(unittest.TestCase):
             '/tmp/test_folder/bin')
         os.chdir('/tmp/test_folder/bin/sh')
         runner.singularity_build_from_recipe(
-            '/tmp/test_folder/bin/sh', 'testimg.sif', '/tmp/singularity/testimg.sif')
+            '/tmp/test_folder/bin/sh',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
         self.assertEqual(os.path.exists(
             '/tmp/singularity/testimg.sif'), True)
         os.remove('/tmp/singularity/testimg.sif')
@@ -502,7 +509,9 @@ class TestSingularityRunner(unittest.TestCase):
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         runner.singularity_build_from_image(
-            'docker://debian:buster-slim', 'testimg.sif', '/tmp/singularity/testimg.sif')
+            'docker://debian:buster-slim',
+            'testimg.sif',
+            '/tmp/singularity/testimg.sif')
         e = runner.singularity_start('/tmp/singularity/testimg.sif')
         self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
