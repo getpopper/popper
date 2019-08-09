@@ -32,9 +32,9 @@ class WorkflowRunner(object):
     """
 
     def __init__(self, workflow):
-
         self.wf = workflow
         self.wf.parse()
+        self.wid = pu.get_id(os.getuid(), self.wf.workflow_path)
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
@@ -62,11 +62,14 @@ class WorkflowRunner(object):
                         os.environ[s] = val
 
     @staticmethod
-    def download_actions(wf, dry_run, skip_clone):
+    def download_actions(wf, dry_run, skip_clone, wid):
         """Clone actions that reference a repository."""
+        actions_cache = os.path.join(
+            pu.setup_base_cache(), 'actions', wid
+        )
+
         cloned = set()
         infoed = False
-        actions_cache_path = os.path.join('/', 'tmp', 'actions')
 
         for _, a in wf.action.items():
             if ('docker://' in a['uses']
@@ -77,7 +80,7 @@ class WorkflowRunner(object):
                 a['uses'])
 
             repo_dir = os.path.join(
-                actions_cache_path, service, user, repo
+                actions_cache, service, user, repo
             )
 
             a['repo_dir'] = repo_dir
@@ -105,7 +108,7 @@ class WorkflowRunner(object):
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull):
+    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid):
         """Factory of ActionRunner instances, one for each action.
 
         Note:
@@ -119,7 +122,8 @@ class WorkflowRunner(object):
         for _, a in wf.action.items():
 
             if a['uses'] == 'sh':
-                a['runner'] = HostRunner(a, workspace, env, dry_run, skip_pull)
+                a['runner'] = HostRunner(
+                    a, workspace, env, dry_run, skip_pull, wid)
                 continue
 
             if a['uses'].startswith('./'):
@@ -128,16 +132,16 @@ class WorkflowRunner(object):
                                  'Dockerfile')):
 
                     a['runner'] = HostRunner(
-                        a, workspace, env, dry_run, skip_pull)
+                        a, workspace, env, dry_run, skip_pull, wid)
                     continue
 
             if runtime == 'docker':
                 a['runner'] = DockerRunner(
-                    a, workspace, env, dry_run, skip_pull)
+                    a, workspace, env, dry_run, skip_pull, wid)
 
             elif runtime == 'singularity':
                 a['runner'] = SingularityRunner(
-                    a, workspace, env, dry_run, skip_pull)
+                    a, workspace, env, dry_run, skip_pull, wid)
 
     @staticmethod
     def get_workflow_env(wf, workspace):
@@ -167,7 +171,8 @@ class WorkflowRunner(object):
     def run(self, action, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, runtime,
             skip_secrets_prompt=False):
-        """Run the workflow or a specific action."""
+        """Run the workflow or a specific action.
+        """
         new_wf = deepcopy(self.wf)
 
         if skip:
@@ -179,15 +184,17 @@ class WorkflowRunner(object):
         new_wf.check_for_unreachable_actions(skip)
 
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
-        WorkflowRunner.download_actions(new_wf, dry_run, skip_clone)
+        WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, dry_run, skip_pull)
+            runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
 
         for s in new_wf.get_stages():
             WorkflowRunner.run_stage(new_wf, s, reuse, parallel)
 
     @staticmethod
     def run_stage(wf, stage, reuse=False, parallel=False):
+        """Runs actions in a stage either parallely or
+        sequentially."""
         if parallel:
             with ProcessPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
@@ -207,16 +214,31 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull):
+    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
         self.action = action
         self.workspace = workspace
         self.env = env
         self.dry_run = dry_run
         self.skip_pull = skip_pull
+        self.wid = wid
         self.msg_prefix = "DRYRUN: " if dry_run else ""
         self.setup_necessary_files()
 
+    def check_executable(self, command):
+        """Check whether the required executable dependencies
+        are installed in the system or not.
+
+        Args:
+            command (str): The command to check for.
+        """
+        if not find_executable(command):
+            log.fail(
+                'Could not find the {} command.'.format(command)
+            )
+
     def setup_necessary_files(self):
+        """Setup necessary files and folders for an action.
+        """
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
 
@@ -225,6 +247,17 @@ class ActionRunner(object):
             f.close()
 
     def prepare_environment(self, set_env=False):
+        """Prepare the environment variables to be
+        set while running an action.
+
+        Args:
+            set_env (bool): If True, the environment gets
+                            added to the current shell.
+                            Default value is False.
+
+        Returns:
+            dict: The environment variables dict.
+        """
         env = self.action.get('env', {})
 
         for s in self.action.get('secrets', []):
@@ -243,10 +276,12 @@ class ActionRunner(object):
         return env
 
     def remove_environment(self):
+        """Removes the runtime environment variables.
+        """
         env = self.prepare_environment()
         env.pop('HOME')
         for k, v in env.items():
-            os.environ.pop(k)
+            os.environ.pop(k, None)
 
     def run(self, reuse=False):
         raise NotImplementedError(
@@ -255,29 +290,32 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    """Runs a Github Action in Docker runtime.
+    """Run a Github Action in Docker runtime.
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull):
+    def __init__(self, action, workspace, env, dry, skip_pull, wid):
         super(DockerRunner, self).__init__(
-            action, workspace, env, dry, skip_pull)
-        self.cid = pu.sanitized_name(self.action['name'])
+            action, workspace, env, dry, skip_pull, wid)
+        self.cid = pu.sanitized_name(self.action['name'], wid)
         self.container = None
 
-    def run(self, reuse=False):
-        if not find_executable('docker'):
-            log.fail(
-                'Could not find the docker command.'
-            )
+    def get_build_resources(self):
+        """Parse the `uses` attribute and get the build resources
+        from them.
 
+        Returns:
+            (bool, str, str): pull/build, image ref, the build source
+        """
         build = True
+        image = None
+        build_source = None
 
         if 'docker://' in self.action['uses']:
-            tag = self.action['uses'].replace('docker://', '')
-            if ':' not in tag:
-                tag += ":latest"
+            image = self.action['uses'].replace('docker://', '')
+            if ':' not in image:
+                image += ":latest"
             build = False
-            dockerfile_path = 'n/a'
+
         elif './' in self.action['uses']:
             action_dir = os.path.basename(
                 self.action['uses'].replace('./', ''))
@@ -290,35 +328,44 @@ class DockerRunner(ActionRunner):
                 if action_dir:
                     repo_id += '/'
 
-            tag = repo_id + action_dir + ':' + self.env['GITHUB_SHA']
+            image = repo_id + action_dir + ':' + self.env['GITHUB_SHA']
 
-            dockerfile_path = os.path.join(
+            build_source = os.path.join(
                 scm.get_git_root_folder(), self.action['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(self.action['uses'])
-            tag = '{}/{}:{}'.format(user, repo, version)
-            dockerfile_path = os.path.join(self.action['repo_dir'],
-                                           self.action['action_dir'])
+            image = '{}/{}:{}'.format(user, repo, version)
+            build_source = os.path.join(self.action['repo_dir'],
+                                        self.action['action_dir'])
 
-        tag = tag.lower()
-        log.debug('docker tag: {}'.format(tag))
-        log.debug('dockerfile path: {}'.format(dockerfile_path))
+        image = image.lower()
+        return (build, image, build_source)
+
+    def run(self, reuse=False):
+        """Parent function to handle the execution of an
+        action.
+
+        Args:
+            reuse (bool): Whether to reuse existent containers or not.
+        """
+        self.check_executable('docker')
+        build, image, build_source = self.get_build_resources()
 
         if not reuse:
             if self.docker_exists():
                 self.docker_rm()
             if build:
-                self.docker_build(tag, dockerfile_path)
+                self.docker_build(image, build_source)
             else:
-                self.docker_pull(tag)
-            self.docker_create(tag)
+                self.docker_pull(image)
+            self.docker_create(image)
         else:
             if not self.docker_exists():
                 if build:
-                    self.docker_build(tag, dockerfile_path)
+                    self.docker_build(image, build_source)
                 else:
-                    self.docker_pull(tag)
-                self.docker_create(tag)
+                    self.docker_pull(image)
+                self.docker_create(image)
             else:
                 self.container.commit(self.cid, 'reuse')
                 self.docker_rm()
@@ -326,12 +373,18 @@ class DockerRunner(ActionRunner):
 
         if self.container is not None:
             popper.cli.docker_list.append(self.container)
+
         e = self.docker_start()
 
         if e != 0:
             log.fail("Action '{}' failed!".format(self.action['name']))
 
     def docker_exists(self):
+        """Check whether the container exists or not.
+
+        Returns:
+            bool: Whether the container exists or not.
+        """
         if self.dry_run:
             return True
         containers = docker_client.containers.list(
@@ -345,6 +398,14 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_image_exists(self, img):
+        """Check whether a docker image exists or not.
+
+        Args:
+            img (str): The image to check for.
+
+        Returns:
+            bool: Whether the image exists or not.
+        """
         if self.dry_run:
             return True
         images = docker_client.images.list(all=True)
@@ -355,11 +416,18 @@ class DockerRunner(ActionRunner):
         return False
 
     def docker_rm(self):
+        """Remove the docker container.
+        """
         if self.dry_run:
             return
         self.container.remove(force=True)
 
     def docker_create(self, img):
+        """Create a docker container from an image.
+
+        Args:
+            img (str): The image to use for building the container.
+        """
         log.info('{}[{}] docker create {} {}'.format(
             self.msg_prefix,
             self.action['name'], img, ' '.join(self.action.get('args', ''))
@@ -380,14 +448,6 @@ class DockerRunner(ActionRunner):
                            '/github/workflow/event.json')
         ]
 
-        log.debug(
-            'Invoking docker_create() method\n' +
-            '  img: {}\n'.format(img) +
-            '  cmd: {}\n'.format(self.action.get('args', None)) +
-            '  vol: {}\n'.format(volumes) +
-            '  args: {}'.format(self.action.get('args', None))
-        )
-
         self.container = docker_client.containers.create(
             image=img,
             command=self.action.get('args', None),
@@ -400,6 +460,11 @@ class DockerRunner(ActionRunner):
         )
 
     def docker_start(self):
+        """Start the container process.
+
+        Returns:
+            int: The returncode of the container process.
+        """
         log.info('{}[{}] docker start '.format(self.msg_prefix,
                                                self.action['name']))
         if self.dry_run:
@@ -412,6 +477,11 @@ class DockerRunner(ActionRunner):
         return self.container.wait()['StatusCode']
 
     def docker_pull(self, img):
+        """Pull an image from Dockerhub.
+
+        Args:
+            img (str): The image reference to pull.
+        """
         if not self.skip_pull:
             log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
                                                     self.action['name'], img))
@@ -424,61 +494,97 @@ class DockerRunner(ActionRunner):
                     'The required docker image \'{}\' was not found '
                     'locally.' .format(img))
 
-    def docker_build(self, tag, path):
+    def docker_build(self, img, path):
+        """Build a docker image from a Dockerfile.
+
+        Args:
+            img (str): The name of the image to build.
+            path (str): The path to the Dockerfile and other resources.
+        """
         log.info('{}[{}] docker build -t {} {}'.format(
-            self.msg_prefix, self.action['name'], tag, path))
+            self.msg_prefix, self.action['name'], img, path))
         if self.dry_run:
             return
-        docker_client.images.build(path=path, tag=tag, rm=True, pull=True)
+        docker_client.images.build(path=path, tag=img, rm=True, pull=True)
 
 
 class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime.
     """
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull):
+    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry_run, skip_pull)
-        self.cid = pu.sanitized_name(self.action['name'])
+                                                dry_run, skip_pull, wid)
         s_client.quiet = True
 
-    def run(self, reuse=False):
-        """Run the action.
+    @staticmethod
+    def setup_singularity_cache(wid):
+        """Setup the singularity cache directory based
+        on the workflow id.
+
+        Args:
+            wid (str): The workflow id.
+
+        Returns:
+            str: The path to the cache dir.
         """
-        if not find_executable('singularity'):
-            log.fail(
-                'Could not find the singularity command.'
-            )
-        if not os.path.exists('/tmp/singularity'):
-            os.makedirs('/tmp/singularity')
+        singularity_cache = os.path.join(
+            pu.setup_base_cache(), 'singularity', wid)
+        if not os.path.exists(singularity_cache):
+            os.makedirs(singularity_cache)
+        return singularity_cache
 
-        if reuse:
-            log.fail('Reusing containers in singularity runtime is '
-                     'currently not supported.')
+    def get_build_resources(self):
+        """Parse the `uses` attribute and get the build
+        resources from them.
 
+        Args:
+            (bool, str, str): pull/build, image ref, the build source.
+        """
         build = True
+        image = None
+        build_source = None
+
         if 'docker://' in self.action['uses']:
             image = self.action['uses']
             build = False
 
         elif './' in self.action['uses']:
             image = 'action/' + self.action['uses']
-            build_path = os.path.join(
+            build_source = os.path.join(
                 scm.get_git_root_folder(), self.action['uses'])
 
         else:
-            image = '/'.join(self.action['uses'].split('/'))
-            build_path = os.path.join(
+            image = self.action['uses']
+            build_source = os.path.join(
                 self.action['repo_dir'], self.action['action_dir'])
 
-        container = pu.sanitized_name(image) + '.sif'
-        container_path = os.path.join('/tmp/singularity', container)
+        return (build, image, build_source)
+
+    def run(self, reuse=False):
+        """Parent function to handle the execution
+        of the action.
+
+        Args:
+            reuse (bool): Whether to reuse containers or not.
+        """
+        self.check_executable('singularity')
+        singularity_cache = SingularityRunner.setup_singularity_cache(self.wid)
+
+        if reuse:
+            log.fail('Reusing containers in singularity runtime is '
+                     'currently not supported.')
+
+        build, image, build_source = self.get_build_resources()
+
+        container_path = os.path.join(
+            singularity_cache, pu.sanitized_name(image, self.wid) + '.sif'
+        )
 
         if build:
-            self.singularity_build_from_recipe(
-                build_path, container, container_path)
+            self.singularity_build_from_recipe(build_source, container_path)
         else:
-            self.singularity_build_from_image(image, container, container_path)
+            self.singularity_build_from_image(image, container_path)
 
         e = self.singularity_start(container_path)
 
@@ -487,6 +593,15 @@ class SingularityRunner(ActionRunner):
 
     @staticmethod
     def convert(dockerfile, singularityfile):
+        """Convert a Dockerfile to a Singularity recipe file.
+
+        Args:
+            dockerfile (str): The path to the Dockerfile.
+            singularityfile (str): The path to the Singularity recipe.
+
+        Returns:
+            str: The Singularity recipefile path.
+        """
         parser = DockerParser(dockerfile)
         for p in parser.recipe.files:
             p[0] = p[0].strip('\"')
@@ -501,10 +616,24 @@ class SingularityRunner(ActionRunner):
         return singularityfile
 
     @staticmethod
-    def get_recipe_file(build_path, container):
-        dockerfile = os.path.join(build_path, 'Dockerfile')
+    def get_recipe_file(build_source, wid):
+        """Get the Singularity recipe file from the build source.
+
+        Finds out a Dockerfile from the build source and
+        converts it to Singularity recipe. If no Dockerfile is
+        found, it simply fails.
+
+        Args:
+            build_source (str): The path to the build source.
+            wid (str): The workflow id to use while naming the
+                        Singularity recipefile.
+
+        Returns:
+            str: The path to the Singularity recipefile.
+        """
+        dockerfile = os.path.join(build_source, 'Dockerfile')
         singularityfile = os.path.join(
-            build_path, 'Singularity.{}'.format(container[:-4]))
+            build_source, 'Singularity.{}'.format(wid))
 
         if os.path.isfile(dockerfile):
             return SingularityRunner.convert(dockerfile, singularityfile)
@@ -512,33 +641,59 @@ class SingularityRunner(ActionRunner):
             log.fail('No Dockerfile was found.')
 
     @staticmethod
-    def build_from_recipe(build_path, container):
+    def build_from_recipe(build_source, build_dest, container, wid):
+        """Helper function to build the singularity image.
+
+        Args:
+            build_source (str): The source dir from where to build the
+                                container image.
+            build_dest (str): The destination dir where to put the built
+                              container image.
+            container (str): The name of the container image.
+            wid (str): The workflow id.
+        """
         pwd = os.getcwd()
-        os.chdir(build_path)
-        recipefile = SingularityRunner.get_recipe_file(build_path, container)
+        os.chdir(build_source)
+        recipefile = SingularityRunner.get_recipe_file(build_source, wid)
         s_client.build(
             recipe=recipefile,
             image=container,
-            build_folder='/tmp/singularity')
+            build_folder=build_dest)
         os.chdir(pwd)
 
     def singularity_exists(self, container_path):
         """Check whether the container exists or not.
+
+        Args:
+            container_path (str): The path where to check for
+            the container.
+
+        Returns:
+            bool: Whether the container already exists or not.
         """
         if self.dry_run:
             return
         return os.path.exists(container_path)
 
     def singularity_rm(self, container_path):
-        """Removes the container.
+        """Remove the container.
+
+        Args:
+            container_path (str): The path to the container to remove.
         """
         if self.dry_run:
             return
         os.remove(container_path)
 
-    def singularity_build_from_image(self, image, container, container_path):
-        """Build container from Docker image.
+    def singularity_build_from_image(self, image, container_path):
+        """Build a container from Docker image.
+
+        Args:
+            image (str): The docker image to build the container from.
+            container_path (str): The path of the built container.
         """
+        container = os.path.basename(container_path)
+
         if not self.skip_pull:
             log.info('{}[{}] singularity pull {} {}'.format(
                 self.msg_prefix, self.action['name'], container, image)
@@ -548,7 +703,7 @@ class SingularityRunner(ActionRunner):
                     s_client.pull(
                         image=image,
                         name=container,
-                        pull_folder='/tmp/singularity')
+                        pull_folder=os.path.dirname(container_path))
         else:
             if not self.singularity_exists(container_path):
                 log.fail(
@@ -556,21 +711,41 @@ class SingularityRunner(ActionRunner):
                     'locally.'.format(container_path))
 
     def singularity_build_from_recipe(
-            self, build_path, container, container_path):
-        """Build container from recipefile.
+            self, build_source, container_path):
+        """Builds a container image from a recipefile.
+
+        Args:
+            build_source (str): The path to the build source,
+            which contains all the resources required to build the
+            Docker image.
+
+            container_path (str): The path of the built container.
         """
-        filename = 'Singularity.{}'.format(container[:-4])
+        container = os.path.basename(container_path)
+        recipefile = os.path.join(
+            build_source,
+            'Singularity.{}'.format(self.wid))
+        build_dest = os.path.dirname(container_path)
+
         log.info('{}[{}] singularity build {} {}'.format(
             self.msg_prefix, self.action['name'],
-            container, os.path.join(build_path, filename))
+            container, recipefile)
         )
+
         if not self.dry_run:
             if not self.singularity_exists(container_path):
-                SingularityRunner.build_from_recipe(build_path, container)
+                SingularityRunner.build_from_recipe(
+                    build_source, build_dest, container, self.wid)
 
     def singularity_start(self, container_path):
         """Starts the container to execute commands or run the runscript
         with the supplied args inside the container.
+
+        Args:
+            container_path (str): The container image to run/execute.
+
+        Returns:
+            int: The container process returncode.
         """
         env = self.prepare_environment(set_env=True)
 
@@ -625,9 +800,9 @@ class HostRunner(ActionRunner):
     Run an Action on the Host Machine.
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull):
+    def __init__(self, action, workspace, env, dry, skip_pull, wid):
         super(HostRunner, self).__init__(
-            action, workspace, env, dry, skip_pull)
+            action, workspace, env, dry, skip_pull, wid)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
@@ -644,6 +819,11 @@ class HostRunner(ActionRunner):
             log.fail("Action '{}' failed.".format(self.action['name']))
 
     def host_prepare(self):
+        """Prepare the commands and environment to start execution.
+
+        Returns:
+            str: The command to execute.
+        """
         root = scm.get_git_root_folder()
         if self.action['uses'] == 'sh':
             cmd = self.action.get('runs', [])
@@ -669,6 +849,13 @@ class HostRunner(ActionRunner):
         return cmd
 
     def host_start(self, cmd):
+        """Start the execution of the command on the host machine.
+
+        Args:
+            cmd (str): The command to execute.
+        Returns:
+            int: The returncode of the process.
+        """
         log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
                                     ' '.join(cmd)))
 
