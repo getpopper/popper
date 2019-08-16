@@ -7,7 +7,7 @@ cd "$test_repo_path"
 
 # cache not present initially, expected to be created through this.
 popper search gcloud
-test -f "$HOME/.cache/.popper_cache.yml"
+test -f "$HOME/.cache/.popper/search/.popper_search_cache.yml"
 
 # test update cache feature
 popper search --update-cache figshare > output
