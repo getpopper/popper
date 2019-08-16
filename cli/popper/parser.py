@@ -17,12 +17,12 @@ class Workflow(object):
     """
 
     def __init__(self, wfile):
-
         # Read and parse the workflow file.
         with open(wfile, 'r') as fp:
             self.parsed_workflow = hcl.load(fp)
             fp.seek(0)
             self.workflow_content = fp.readlines()
+            self.workflow_path = wfile
 
     def get_action(self, action):
         """Returns an action from a workflow."""

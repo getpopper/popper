@@ -43,16 +43,16 @@ class TestUtils(unittest.TestCase):
 
     def test_sanitized_name(self):
         name = "test action"
-        santizied_name = pu.sanitized_name(name)
-        self.assertEqual(santizied_name, "popper_test_action")
+        santizied_name = pu.sanitized_name(name, '1234')
+        self.assertEqual(santizied_name, "popper_test_action_1234")
 
         name = "test@action"
-        santizied_name = pu.sanitized_name(name)
-        self.assertEqual(santizied_name, "popper_test_action")
+        santizied_name = pu.sanitized_name(name, '1234')
+        self.assertEqual(santizied_name, "popper_test_action_1234")
 
         name = "test(action)"
-        santizied_name = pu.sanitized_name(name)
-        self.assertEqual(santizied_name, "popper_test_action_")
+        santizied_name = pu.sanitized_name(name, '1234')
+        self.assertEqual(santizied_name, "popper_test_action__1234")
 
     def touch_file(self, path):
         open(path, 'w').close()
@@ -138,7 +138,7 @@ class TestUtils(unittest.TestCase):
             'master/README.md',
             text='Ansible Readme')
 
-        cache_file = pu.setup_cache()
+        cache_file = pu.setup_search_cache()
         if os.path.exists(cache_file):
             os.remove(cache_file)
         meta = pu.fetch_metadata()
@@ -165,19 +165,29 @@ class TestUtils(unittest.TestCase):
                              }
                          })
 
-    def test_setup_cache(self):
-        cache_file_path = pu.setup_cache()
+    def test_setup_base_cache(self):
+        cache_dir = pu.setup_base_cache()
         try:
-            self.assertEqual(cache_file_path, os.path.join(
-                os.environ['XDG_CACHE_HOME'],
-                '.popper_cache.yml'
-            ))
+            self.assertEqual(cache_dir, os.environ['XDG_CACHE_HOME'])
         except KeyError:
-            self.assertEqual(cache_file_path, os.path.join(
+            self.assertEqual(
+                cache_dir,
+                os.path.join(
+                    os.environ['HOME'],
+                    '.cache/.popper'))
+
+        os.environ['POPPER_CACHE_DIR'] = '/tmp/popper'
+        cache_dir = pu.setup_base_cache()
+        self.assertEqual(cache_dir, '/tmp/popper')
+        os.environ.pop('POPPER_CACHE_DIR')
+
+    def test_setup_search_cache(self):
+        search_cache_dir = pu.setup_search_cache()
+        self.assertEqual(
+            search_cache_dir,
+            os.path.join(
                 os.environ['HOME'],
-                '.cache',
-                '.popper_cache.yml'
-            ))
+                '.cache/.popper/search/.popper_search_cache.yml'))
 
     def test_of_type(self):
         param = [u"hello", u"world"]
@@ -191,3 +201,16 @@ class TestUtils(unittest.TestCase):
             "project": "popper"
         }
         self.assertEqual(pu.of_type(param, ['str', 'dict']), True)
+
+    def test_write_file(self):
+        content = "Hello world"
+        pu.write_file('testfile1.txt', content)
+        pu.write_file('testfile2.txt')
+        with open('testfile1.txt', 'r') as f:
+            self.assertEqual(f.read(), "Hello world")
+        with open('testfile2.txt', 'r') as f:
+            self.assertEqual(f.read(), '')
+
+    def test_get_id(self):
+        id = pu.get_id('abcd', 1234, 'efgh')
+        self.assertEqual(id, 'cbae02068489f7577862718287862a3b')
