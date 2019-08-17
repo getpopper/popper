@@ -48,7 +48,7 @@ action "stage_one" {
 EOF
 
 popper run --parallel --runtime "$RUNTIME" |& tee out
-counter="$(grep -c 'Action ran successfully !' out)"
+counter="$(grep -c "Action '[a-zA-Z_]*' ran successfully !" out)"
 test "$counter" -eq 5
 
 # workflow with actions expected to fail

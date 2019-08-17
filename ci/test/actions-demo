@@ -403,4 +403,36 @@ EOF
 
 popper run --runtime docker
 
+# Test implementation of handling exit code 78
+cat <<EOF > main.workflow
+workflow "sample" {
+  resolves = "end"
+}
+
+action "a" {
+  uses = "docker://debian:buster-slim"
+  args = "whoami"
+}
+
+action "b" {
+  uses = "JayjeetAtGithub/test-exit-code-78@master"
+  args = "whoami"
+}
+
+action "c" {
+  uses = "actions/bin/sh@master"
+  args = "whoami"
+}
+
+action "end" {
+  needs = ["a", "b", "c"]
+  uses = "sh"
+  args = "whoami"
+}
+EOF
+
+popper run --runtime "$RUNTIME" > output
+grep -q "Action 'b' ran successfully !" output
+! grep -q "Action 'end' ran successfully !" output
+
 echo "Test ACTIONS-DEMO passed."

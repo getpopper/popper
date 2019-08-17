@@ -58,6 +58,7 @@ class PopperCLI(click.MultiCommand):
 def cli(ctx):
     """Popper command line interface."""
     signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGUSR1, signal_handler)
 
 
 docker_list = list()
@@ -67,8 +68,6 @@ flist = None
 
 
 def signal_handler(sig, frame):
-
-    log.info('\nCaught Ctrl-C signal! Stopping running actions.')
 
     if interrupt_params.get('parallel', None) and flist:
         for future in flist:
