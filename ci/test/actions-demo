@@ -409,23 +409,13 @@ workflow "sample" {
   resolves = "end"
 }
 
-action "a" {
-  uses = "docker://debian:buster-slim"
-  args = "whoami"
-}
-
 action "b" {
   uses = "JayjeetAtGithub/test-exit-code-78@master"
   args = "whoami"
 }
 
-action "c" {
-  uses = "actions/bin/sh@master"
-  args = "whoami"
-}
-
 action "end" {
-  needs = ["a", "b", "c"]
+  needs = ["b"]
   uses = "sh"
   args = "whoami"
 }
