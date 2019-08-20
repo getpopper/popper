@@ -1,4 +1,5 @@
 import os
+import signal
 import shutil
 import unittest
 try:
@@ -253,6 +254,19 @@ class TestActionRunner(unittest.TestCase):
         self.assertRaises(SystemExit,
                           self.runner.check_executable,
                           'abcd')
+
+    def test_handle_exit(self):
+        self.flag = 0
+
+        def signal_handler(sig, frame):
+            self.flag = 1
+
+        signal.signal(signal.SIGUSR1, signal_handler)
+        self.assertRaises(SystemExit, self.runner.handle_exit, 1)
+        self.runner.handle_exit(0)
+        self.assertEqual(self.flag, 0)
+        self.runner.handle_exit(78)
+        self.assertEqual(self.flag, 1)
 
     def test_prepare_environment(self):
         env = self.runner.prepare_environment()

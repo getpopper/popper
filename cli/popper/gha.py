@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import os
+import signal
 import getpass
 import subprocess
 import multiprocessing as mp
@@ -204,7 +205,6 @@ class WorkflowRunner(object):
                 popper.cli.flist = flist
                 for future in as_completed(flist):
                     future.result()
-                    log.info('Action ran successfully !')
         else:
             for a in stage:
                 wf.action[a]['runner'].run(reuse)
@@ -223,6 +223,24 @@ class ActionRunner(object):
         self.wid = wid
         self.msg_prefix = "DRYRUN: " if dry_run else ""
         self.setup_necessary_files()
+
+    def handle_exit(self, ecode):
+        """Exit handler for the action.
+
+        Args:
+            ecode (int): The exit code of the action's process.
+        """
+        if ecode == 0:
+            log.info(
+                "Action '{}' ran successfully !".format(
+                    self.action['name']))
+        elif ecode == 78:
+            log.info(
+                "Action '{}' ran successfully !".format(
+                    self.action['name']))
+            os.kill(os.getpid(), signal.SIGUSR1)
+        else:
+            log.fail("Action '{}' failed !".format(self.action['name']))
 
     def check_executable(self, command):
         """Check whether the required executable dependencies
@@ -375,9 +393,7 @@ class DockerRunner(ActionRunner):
             popper.cli.docker_list.append(self.container)
 
         e = self.docker_start()
-
-        if e != 0:
-            log.fail("Action '{}' failed!".format(self.action['name']))
+        self.handle_exit(e)
 
     def docker_exists(self):
         """Check whether the container exists or not.
@@ -587,9 +603,7 @@ class SingularityRunner(ActionRunner):
             self.singularity_build_from_image(image, container_path)
 
         e = self.singularity_start(container_path)
-
-        if e != 0:
-            log.fail('Action {} failed!'.format(self.action['name']))
+        self.handle_exit(e)
 
     @staticmethod
     def convert(dockerfile, singularityfile):
@@ -814,9 +828,7 @@ class HostRunner(ActionRunner):
         self.prepare_environment(set_env=True)
         e = self.host_start(cmd)
         self.remove_environment()
-
-        if e != 0:
-            log.fail("Action '{}' failed.".format(self.action['name']))
+        self.handle_exit(e)
 
     def host_prepare(self):
         """Prepare the commands and environment to start execution.
