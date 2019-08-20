@@ -224,7 +224,7 @@ action "sh" {
 }
 EOF
 
-count=$(popper run --parallel --debug | grep -c 'Action ran successfully !')
+count=$(popper run --parallel --debug | grep -c "Action '[a-zA-Z0-9_]*' ran successfully !")
 test "$count" -eq 11
 
 cat <<EOF > main.workflow
@@ -300,7 +300,7 @@ action "sh" {
 }
 EOF
 
-count=$(popper run --parallel --debug | grep -c 'Action ran successfully !')
+count=$(popper run --parallel --debug | grep -c "Action '[a-zA-Z0-9_]*' ran successfully !")
 test "$count" -eq 11
 fi
 
