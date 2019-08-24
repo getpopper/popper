@@ -368,3 +368,12 @@ def write_file(path, content=''):
     f = open(path, 'w')
     f.write(content)
     f.close()
+
+
+vagrantfile_content = """
+Vagrant.configure("2") do |config|
+    config.vm.box = "ailispaw/barge"
+    config.vm.synced_folder "{}", "{}"
+    config.vm.synced_folder "{}", "{}"
+end
+"""
