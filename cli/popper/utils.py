@@ -368,3 +368,40 @@ def write_file(path, content=''):
     f = open(path, 'w')
     f.write(content)
     f.close()
+
+
+BuildFromImageTemplate = """
+Vagrant.configure("2") do |config|
+    config.vm.box = "ailispaw/barge"
+    config.vm.synced_folder "{}", "{}"
+    config.vm.synced_folder "{}", "{}"
+    config.vm.provision "docker" do |d|
+        d.run "{}",
+        has_ssh: true,
+        daemonize: false,
+        restart: "no",
+        args: "{}",
+        image: "{}",
+        cmd: "{}"
+    end
+end
+"""
+
+BuildFromSourceTemplate = """
+Vagrant.configure("2") do |config|
+    config.vm.box = "ailispaw/barge"
+    config.vm.synced_folder "{}", "{}"
+    config.vm.synced_folder "{}", "{}"
+    config.vm.provision "docker" do |d|
+        d.build_image "{}",
+        args: "{}"
+        d.run "{}",
+        has_ssh: true,
+        daemonize: false,
+        restart: "no",
+        args: "{}",
+        image: "{}",
+        cmd: "{}"
+    end
+end
+"""

@@ -1,8 +1,10 @@
 import difflib
 import os
 import signal
+import shutil
 import sys
 
+import vagrant
 import click
 from click.exceptions import ClickException
 
@@ -62,6 +64,7 @@ def cli(ctx):
 
 
 docker_list = list()
+vagrant_list = list()
 process_list = list()
 interrupt_params = dict()
 flist = None
@@ -83,5 +86,9 @@ def signal_handler(sig, frame):
     for container in docker_list:
         log.info("Stopping container '{}'".format(container.name))
         container.stop(timeout=1)
+
+    for box_path in vagrant_list:
+        log.info("Stopping box '{}'".format(box_path))
+        vagrant.Vagrant(root=box_path).halt(force=True)
 
     sys.exit(0)

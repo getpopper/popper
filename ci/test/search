@@ -19,7 +19,7 @@ grep -q 'popperized/figshare/create' output
 # test include readme feature
 popper search --include-readme fig > output
 grep -q 'popperized/ansible' output
-grep -q 'actions/npm' output
+grep -q 'popperized/figshare/download' output
 
 # test no actions found
 popper search abc > output

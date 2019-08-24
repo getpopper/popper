@@ -5,6 +5,25 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
+
+# action repo not present locally, fail workflow using --skip-clone
+delete_dir "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/actions/bin"
+
+cat <<EOF > main.workflow
+workflow "sample workflow" {
+    resolves = ["sample action"]
+}
+
+action "sample action" {
+    uses = "actions/bin/sh@master"
+    runs = ["ls"]
+}
+EOF
+
+! popper run --skip-clone --runtime "$RUNTIME"
+
+if [ "$RUNTIME" != "vagrant" ]; then
+
 # docker image not present locally, fail workflow using --skip-pull
 if [[ "$(docker images -q debian:stretch-slim 2> /dev/null)" != "" ]]; then
 docker rmi -f debian:stretch-slim
@@ -22,22 +41,6 @@ action "sample action" {
 EOF
 
 ! popper run --skip-pull --runtime "$RUNTIME"
-
-# action repo not present locally, fail workflow using --skip-clone
-delete_dir "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/actions/bin"
-
-cat <<EOF > main.workflow
-workflow "sample workflow" {
-    resolves = ["sample action"]
-}
-
-action "sample action" {
-    uses = "actions/bin/sh@master"
-    runs = ["sh", "-c", "echo Hello World"]
-}
-EOF
-
-! popper run --skip-clone --runtime "$RUNTIME"
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
@@ -69,5 +72,7 @@ EOF
 popper run --skip-clone --skip-pull --runtime "$RUNTIME" > output
 grep -q "sample action one" output
 grep -q "sample action two" output
+
+fi
 
 echo "Test OFFLINE passed."

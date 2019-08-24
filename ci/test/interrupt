@@ -5,6 +5,10 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
+if [ "$RUNTIME" == "vagrant" ]; then
+exit 0
+fi
+
 # Fetch the version of python
 PY_VERSION=$( (python --version) 2>&1)
 

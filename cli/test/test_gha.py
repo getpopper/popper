@@ -10,6 +10,7 @@ import multiprocessing as mp
 
 import docker
 import git
+import vagrant
 
 from popper.cli import log
 from popper.parser import Workflow
@@ -17,6 +18,7 @@ from popper.gha import (WorkflowRunner,
                         ActionRunner,
                         DockerRunner,
                         SingularityRunner,
+                        VagrantRunner,
                         HostRunner)
 import popper.utils as pu
 from concurrent.futures import ThreadPoolExecutor, as_completed
@@ -139,6 +141,10 @@ class TestWorkflowRunner(unittest.TestCase):
         WorkflowRunner.instantiate_runners(
             'docker', wf, '/tmp/test_folder', False, False, '12345')
         self.assertIsInstance(wf.action['a']['runner'], DockerRunner)
+
+        WorkflowRunner.instantiate_runners(
+            'vagrant', wf, '/tmp/test_folder', False, False, '12345')
+        self.assertIsInstance(wf.action['a']['runner'], VagrantRunner)
 
     def test_download_actions(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
@@ -294,6 +300,24 @@ class TestActionRunner(unittest.TestCase):
         env = self.runner.prepare_environment(set_env=True)
         self.assertEqual(set(env.keys()).issubset(set(os.environ)), True)
         self.runner.remove_environment()
+
+    def test_prepare_volumes(self):
+        env = self.runner.prepare_environment()
+        volumes = self.runner.prepare_volumes(env)
+        self.assertEqual(volumes, [
+            '{}:{}'.format(os.environ['HOME'], os.environ['HOME']),
+            '{}:/github/home'.format(os.environ['HOME']),
+            '/tmp/test_folder:/tmp/test_folder',
+            '/tmp/test_folder:/github/workspace',
+            '/tmp/github_event.json:/github/workflow/event.json'])
+        volumes = self.runner.prepare_volumes(env, include_docker_socket=True)
+        self.assertEqual(volumes, [
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '{}:{}'.format(os.environ['HOME'], os.environ['HOME']),
+            '{}:/github/home'.format(os.environ['HOME']),
+            '/tmp/test_folder:/tmp/test_folder',
+            '/tmp/test_folder:/github/workspace',
+            '/tmp/github_event.json:/github/workflow/event.json'])
 
     def test_remove_environment(self):
         env = self.runner.prepare_environment(set_env=True)
@@ -627,6 +651,251 @@ class TestSingularityRunner(unittest.TestCase):
         self.assertEqual(os.path.exists(cache_path), False)
         SingularityRunner.setup_singularity_cache('12345')
         self.assertEqual(os.path.exists(cache_path), True)
+
+
+class TestVagrantRunner(unittest.TestCase):
+
+    def setUp(self):
+        os.makedirs('/tmp/test_folder')
+        os.chdir('/tmp/test_folder')
+        log.setLevel('CRITICAL')
+        workflow = """
+        workflow "sample" {
+            resolves = "sample action"
+        }
+
+        action "sample action" {
+            uses = "actions/bin/sh@master"
+            args = ["echo", "Hello"]
+        }
+        """
+        pu.write_file('/tmp/test_folder/a.workflow', workflow)
+        self.wf = Workflow('/tmp/test_folder/a.workflow')
+        self.wf.parse()
+        WorkflowRunner.download_actions(self.wf, False, False, '12345')
+        WorkflowRunner.instantiate_runners(
+            'vagrant', self.wf, '/tmp/test_folder', False, False, '12345')
+        self.runner = self.wf.action['sample action']['runner']
+        VagrantRunner.setup_vagrant_cache('12345')
+
+    def tearDown(self):
+        os.chdir('/tmp')
+        shutil.rmtree('/tmp/test_folder')
+        log.setLevel('NOTSET')
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_setup_vagrant_cache(self):
+        cache_path = os.path.join(
+            os.environ['HOME'],
+            '.cache/.popper/vagrant/12345')
+        shutil.rmtree(cache_path)
+        self.assertEqual(os.path.exists(cache_path), False)
+        VagrantRunner.setup_vagrant_cache('12345')
+        self.assertEqual(os.path.exists(cache_path), True)
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_get_build_resources(self):
+        res = self.runner.get_build_resources()
+        self.assertTupleEqual(
+            res,
+            (True,
+             'actions/bin:master',
+             os.environ['HOME'] +
+             '/.cache/.popper/actions/12345/github.com/actions/bin/sh'))
+        self.runner.action['uses'] = 'docker://debian:buster-slim'
+        res = self.runner.get_build_resources()
+        self.assertTupleEqual(res,
+                              (False, 'debian:buster-slim', None))
+        self.runner.action['uses'] = './actions/jshint'
+        res = self.runner.get_build_resources()
+        self.assertTupleEqual(
+            res, (True, 'jshint:unknown', '/tmp/test_folder/./actions/jshint'))
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_vagrant_rm(self):
+        os.makedirs('/tmp/test_folder/test_vm')
+        vagrantfile_content = """
+        Vagrant.configure("2") do |config|
+            config.vm.box = "ailispaw/barge"
+            config.vm.provision "docker" do |d|
+                d.run "abcd",
+                has_ssh: true,
+                daemonize: false,
+                restart: "no",
+                image: "debian:buster-slim"
+            end
+        end
+        """
+        pu.write_file(
+            '/tmp/test_folder/test_vm/Vagrantfile',
+            vagrantfile_content)
+        v = vagrant.Vagrant(root='/tmp/test_folder/test_vm')
+        v.up()
+        self.runner.vagrant_rm('/tmp/test_folder/test_vm')
+        self.assertEqual(os.path.exists('/tmp/test_folder/test_vm'), False)
+        self.assertRaises(FileNotFoundError, v.status)
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_vagrant_exists(self):
+        os.makedirs('/tmp/test_folder/test_vm')
+        vagrantfile_content = """
+        Vagrant.configure("2") do |config|
+            config.vm.box = "ailispaw/barge"
+            config.vm.provision "docker" do |d|
+                d.run "abcd",
+                has_ssh: true,
+                daemonize: false,
+                restart: "no",
+                image: "debian:buster-slim"
+            end
+        end
+        """
+        pu.write_file(
+            '/tmp/test_folder/test_vm/Vagrantfile',
+            vagrantfile_content)
+        v = vagrant.Vagrant(root='/tmp/test_folder/test_vm')
+        v.up()
+        self.assertEqual(self.runner.vagrant_exists(
+            '/tmp/test_folder/test_vm'), True)
+        self.runner.vagrant_rm('/tmp/test_folder/test_vm')
+        self.assertEqual(self.runner.vagrant_exists(
+            '/tmp/test_folder/test_vm'), False)
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_disable_synced_folders(self):
+        os.makedirs('/tmp/test_folder/test_vm')
+        vagrantfile_content = """
+        Vagrant.configure("2") do |config|
+            config.vm.box = "ailispaw/barge"
+            config.vm.synced_folder "/a/b", "/c/d"
+            config.vm.provision "docker" do |d|
+                d.run "abcd",
+                has_ssh: true,
+                daemonize: false,
+                restart: "no",
+                image: "debian:buster-slim"
+            end
+        end
+        """
+        pu.write_file(
+            '/tmp/test_folder/test_vm/Vagrantfile',
+            vagrantfile_content)
+        self.runner.disable_synced_folders('/tmp/test_folder/test_vm')
+        f = open('/tmp/test_folder/test_vm/Vagrantfile', 'r+')
+        updated_content = f.read()
+        f.close()
+        self.assertEqual(
+            'config.vm.synced_folder "/a/b", "/c/d"' in updated_content,
+            False)
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_vagrant_build_from_image(self):
+        os.makedirs('/tmp/test_folder/test_vm')
+        self.runner.vagrant_build_from_image(
+            'debian:stable-slim', {
+                'GITHUB_WORKSPACE': '/tmp/paper', 'HOME': '/home/bargee'},
+            '-e A=a B=b', '/tmp/test_folder/test_vm')
+        self.assertEqual(os.path.exists(
+            '/tmp/test_folder/test_vm/Vagrantfile'), True)
+        f = open('/tmp/test_folder/test_vm/Vagrantfile')
+        content = f.read()
+        f.close()
+        expected_content = """
+        Vagrant.configure("2") do |config|
+            config.vm.box = "ailispaw/barge"
+            config.vm.synced_folder "/Users/jayjeetchakraborty", "/home/bargee"
+            config.vm.synced_folder "/tmp/test_folder", "/tmp/paper"
+            config.vm.provision "docker" do |d|
+                d.run "popper_sample_action_12345",
+                has_ssh: true,
+                daemonize: false,
+                restart: "no",
+                args: "-e A=a B=b",
+                image: "debian:stable-slim",
+                cmd: "echo Hello"
+            end
+        end
+        """
+        self.assertEqual(
+            content.replace(
+                " ", ""), expected_content.replace(
+                " ", ""))
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_vagrant_build_from_dockerfile(self):
+        self.runner.vagrant_build_from_dockerfile(
+            '/tmp/mydockerfilehere',
+            'debian:stable-slim',
+            {
+                'GITHUB_WORKSPACE': '/tmp/paper',
+                'HOME': '/home/bargee'},
+            '-e A=a B=b',
+            '/tmp/test_folder/test_vm')
+        self.assertEqual(os.path.exists(
+            '/tmp/test_folder/test_vm/Vagrantfile'), True)
+        f = open('/tmp/test_folder/test_vm/Vagrantfile')
+        content = f.read()
+        f.close()
+        expected_content = """
+        Vagrant.configure("2") do |config|
+            config.vm.box = "ailispaw/barge"
+            config.vm.synced_folder "/Users/jayjeetchakraborty", "/home/bargee"
+            config.vm.synced_folder "/tmp/test_folder", "/tmp/paper"
+            config.vm.provision "docker" do |d|
+                d.build_image "/tmp/mydockerfilehere",
+                args: "-t debian:stable-slim"
+                d.run "popper_sample_action_12345",
+                has_ssh: true,
+                daemonize: false,
+                restart: "no",
+                args: "-e A=a B=b",
+                image: "debian:stable-slim",
+                cmd: "echo Hello"
+            end
+        end
+        """
+        self.assertEqual(
+            content.replace(
+                " ", ""), expected_content.replace(
+                " ", ""))
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'vagrant',
+        'Skipping vagrant tests...')
+    def test_vagrant_up(self):
+        os.makedirs('/tmp/test_folder/test_vm')
+        vagrantfile_content = """
+        Vagrant.configure("2") do |config|
+            config.vm.box = "ailispaw/barge"
+            config.vm.provision "docker" do |d|
+                d.run "popper_sample_action_12345",
+                has_ssh: true,
+                daemonize: false,
+                restart: "no",
+                image: "debian:buster-slim"
+            end
+        end
+        """
+        pu.write_file(
+            '/tmp/test_folder/test_vm/Vagrantfile',
+            vagrantfile_content)
+        e = self.runner.vagrant_up('/tmp/test_folder/test_vm')
+        self.assertEqual(e, 0)
+        self.runner.vagrant_rm('/tmp/test_folder/test_vm')
 
 
 class TestHostRunner(unittest.TestCase):

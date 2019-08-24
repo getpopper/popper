@@ -12,7 +12,7 @@ test -f actions/example/Dockerfile
 test -f actions/example/entrypoint.sh
 test -f actions/example/README.md
 
-popper run
+popper run --runtime "$RUNTIME"
 
 mkdir -p pipelines/mypipe
 cd pipelines/mypipe

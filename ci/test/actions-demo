@@ -172,12 +172,12 @@ action "did" {
   args = "build -t helloworld docker-helloworld"
 }
 action "ws" {
-  uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "cat \$GITHUB_WORKSPACE/popperfile"]
+  uses = "docker://debian:buster-slim"
+  args = ["sh", "-c", "cat \$GITHUB_WORKSPACE/popperfile"]
 }
 action "home" {
-  uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "cat \$HOME/popperfile"]
+  uses = "docker://debian:buster-slim"
+  args = ["sh", "-c", "cat \$HOME/popperfile"]
 }
 EOF
 
@@ -191,12 +191,12 @@ workflow "test bindings" {
   ]
 }
 action "ws" {
-  uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "cat \$GITHUB_WORKSPACE/popperfile"]
+  uses = "docker://debian:buster-slim"
+  args = ["sh", "-c", "cat \$GITHUB_WORKSPACE/popperfile"]
 }
 action "home" {
-  uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "cat \$HOME/popperfile"]
+  uses = "docker://debian:buster-slim"
+  args = ["sh", "-c", "cat \$HOME/popperfile"]
 }
 EOF
 
@@ -321,12 +321,13 @@ action "test" {
 }
 
 action "cleanup" {
-  uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "echo Cleaning up..."]
+  uses = "docker://debian:buster-slim"
+  args = ["echo", "Cleaning up..."]
 }
 EOF
 
-popper run --on-failure cleanup --runtime "$RUNTIME"
+popper run --on-failure cleanup --runtime "$RUNTIME" > output
+grep -q "Cleaning up..." output
 
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -340,7 +341,7 @@ action "test1" {
 
 action "test2" {
   uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "echo Cleaning up..."]
+  args = ["ls"]
 }
 EOF
 
@@ -360,34 +361,13 @@ action "test1" {
 
 action "test2" {
   uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "echo Cleaning up..."]
+  args = ["ls"]
 }
 EOF
 
 popper run --skip test1 --runtime "$RUNTIME" > output
 ! grep -q "https://github.com/actions/npm@master" output
 grep -q "https://github.com/actions/bin@master" output
-
-# Test environment variables
-cat <<EOF > main.workflow
-workflow "foo" {
-  resolves = ["show workspace in container", "show workspace in host"]
-}
-
-action "show workspace in container" {
-  uses = "actions/bin/sh@master"
-  runs = ["sh", "-c", "echo \$GITHUB_WORKSPACE"]
-}
-
-action "show workspace in host" {
-  uses = "sh"
-  args = ["echo \$GITHUB_WORKSPACE"]
-}
-EOF
-
-popper run --runtime "$RUNTIME" > output
-count=$(grep -wc "/tmp/mypaper" output)
-test "$count" -eq 2
 
 # Test Docker image references
 cat <<EOF > main.workflow
@@ -396,12 +376,14 @@ workflow "a" {
 }
 
 action "b" {
-  uses = "JayjeetAtGithub/bin/sh@master"
+  uses = "actions/bin/sh@master"
   args = "ls"
 }
 EOF
 
 popper run --runtime docker
+
+if [ "$RUNTIME" != "vagrant" ]; then
 
 # Test implementation of handling exit code 78
 cat <<EOF > main.workflow
@@ -425,4 +407,5 @@ popper run --runtime "$RUNTIME" > output
 grep -q "Action 'b' ran successfully !" output
 ! grep -q "Action 'end' ran successfully !" output
 
+fi
 echo "Test ACTIONS-DEMO passed."
