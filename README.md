@@ -12,9 +12,9 @@
 </p>
 
 Popper is a [Github Actions](https://github.com/features/actions) 
-(GHA) execution engine that allows you to run GHA workflows locally on 
-your machine and on CI services. The goal of this project is to 
-provide the following functionality:
+(GHA) execution engine that allows you to run GHA workflows (in [HCL 
+syntax][hcl-to-yml]) locally on your machine and on CI services. The 
+goal of this project is to provide the following functionality:
 
   * **Continuous integration**. Generate configuration files for 
     distinct CI services, allowing users to execute GHA workflows on 
@@ -26,7 +26,8 @@ provide the following functionality:
     to the list (see [here for more][runtimedocs]).
   * **Action search**. Provide with a [searchable 
     catalog][search] of publicly available actions so that users can 
-    easily find what already exists (do not re-invent the wheel!).
+    easily find which actions already exist (do not re-invent the 
+    wheel!).
   * **Scaffolding**. Aid in the implementation of [new actions and 
     workflows][scaffold].
   * **Action library**. Provide with a list of reusable actions and 
@@ -91,3 +92,4 @@ us](mailto:ivo@cs.ucsc.edu).
 [gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
 [scaffold]: https://popper.readthedocs.io/en/latest/sections/getting_started.html#create-a-workflow
 [runtimedocs]: https://popper.readthedocs.io/en/latest/sections/extensions.html#other-runtimes
+[hcl-to-yml]: 
