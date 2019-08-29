@@ -1,12 +1,13 @@
-# Extensions
+# Workflow Language
 
-This section describes the extensions Popper brings on top of Github 
-Actions.
+This section introduces the Github Actions Workflow Language HCL 
+Syntax.
 
-> **NOTE**: These extensions are **not** supported by the official 
-> Github Actions platform. Workflows using these extensions will fail 
-> to run on Github's infrastructure and can only be executed using 
-> Popper.
+> **NOTE**: This language is **NOT** supported by the official Github 
+> Actions platform. The HCL syntax was deprecated in 09/30/2019 (see 
+> [official announcement][]).
+
+## Workflow
 
 ## Downloading actions from arbitrary Git repositories
 

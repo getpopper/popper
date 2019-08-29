@@ -24,6 +24,8 @@ cd $HOME/
 
 # create virtualenv
 python -m virtualenv $HOME/virtualenvs/popper
+
+# load virtualenv
 source $HOME/virtualenvs/popper/bin/activate
 
 # clone popper
@@ -40,6 +42,10 @@ you will see the effects when you invoke the `popper` command. So with
 the above approach you have both (1) popper installed in your machine 
 and (2) an environment where you can modify popper and test the 
 results of such modifications.
+
+> **NOTE**: The virtual environment created above needs to be reloaded 
+> every time you open a new terminal window (`source` commmand), 
+> otherwise the `popper` command will not be found by your shell.
 
 ## Contributing CLI features
 

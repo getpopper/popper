@@ -7,8 +7,8 @@ Popper
 ======
 
 Popper is a Github Actions (GHA) workflow execution engine that allows you to 
-execute GHA workflows locally on your machine and on CI services.
-
+execute GHA workflows (in HCL syntax) locally on your machine and on CI 
+services.
 
 .. toctree::
    :maxdepth: 2
@@ -24,11 +24,6 @@ execute GHA workflows locally on your machine and on CI services.
    :maxdepth: 2
 
    sections/guides.md
-
-.. toctree::
-   :maxdepth: 2
-
-   sections/extensions.md
 
 .. toctree::
    :maxdepth: 2
