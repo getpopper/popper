@@ -18,6 +18,11 @@ services.
 .. toctree::
    :maxdepth: 2
 
+   sections/gha_workflows.md
+
+.. toctree::
+   :maxdepth: 2
+
    sections/cli_features.md
 
 .. toctree::
