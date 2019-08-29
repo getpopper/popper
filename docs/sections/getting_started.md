@@ -1,29 +1,24 @@
 # Getting Started
 
 Popper is a workflow execution engine based on [Github Actions][gha] 
-(GHA) written in Python. With Popper, you can execute workflows 
-written in [HCL syntax][hcl-to-yml] locally on your machine without 
-having to use Github's platform.
+(GHA) written in Python. With Popper, you can execute [HCL 
+syntax][ghalang] workflows locally on your machine without having 
+to use Github's platform.
 
 ## Installation
 
-### Pip
-
-We provide a `pip` package. To install:
+We provide a [`pip`][pip] package for Popper. To install simply run:
 
 ```bash
 pip install popper
 ```
 
-### Virtualenv
-
 Depending on your Python distribution or specific environment 
-configuration, using Pip might not be possible (e.g. you need 
+configuration, using [Pip][pip] might not be possible (e.g. you need 
 administrator privileges) or using `pip` directly might incorrectly 
-install Popper (e.g. we have experienced issues with Conda packages).
-
-We highly recommend to install Popper in a Python virtual environment 
-using [virtualenv][venv]. We assume that `virtualenv` is installed in 
+install Popper. We **highly recommend** to install Popper in a Python 
+virtual environment using [virtualenv][venv]. The following 
+installation instructions assume that `virtualenv` is installed in 
 your environment (see [here for more][venv-install]). Once 
 `virtualenv` is available in your machine, we proceed to create a 
 folder where we will place the Popper virtual environment:
@@ -122,8 +117,9 @@ git commit -m 'Adding example workflow.'
 ```
 
 To learn more about how to modify this workflow in order to fit your 
-needs, please take a look at the [official documentation][ghadocs], 
-read [this tutorial][ghatut], or take a look at [some examples][ex].
+needs, please take a look at the [workflow language 
+documentation](gha_workflows.md) read [this tutorial][ghatut], or take 
+a look at [some examples][ex].
 
 ## Run your workflow
 
@@ -179,8 +175,9 @@ git push
 
 Go to the TravisCI website to see your experiments being executed.
 
+[ghalang]: https://github.com/actions/workflow-parser/blob/master/language.md
 [pip]: https://pip.pypa.io/en/stable/
-[ghadocs]: https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/
+[wfdocs]: gha_workflows.md
 [ghatut]: https://scotch.io/bar-talk/introducing-github-actions#toc-how-it-works
 [ex]: https://github.com/popperized/popper-examples
 [gh-create]: https://help.github.com/articles/create-a-repo/
