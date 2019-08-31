@@ -19,10 +19,6 @@ grep "\"lint\" -> \"branch-filter\";" dot_output
 grep "\"test-and-deploy\" -> \"install\";" dot_output
 grep "\"test\" -> \"branch-filter\";" dot_output
 
-cd "$test_repo_path"
-git clone https://github.com/actions/example-aws.git
-cd example-aws/
-
 ## Testing --recursive feature
 # Move main.workflow to somewhere else to test --recursive flag
 mkdir dummy
@@ -30,42 +26,32 @@ mv .github/main.workflow dummy/.
 popper dot --recursive > dot_output
 
 grep "digraph G .* graph" dot_output
-grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
-grep "\"Build and Deploy\" -> \"Login to ECR\";" dot_output
-grep "\"Build and Deploy\" -> \"Build Docker image\";" dot_output
-grep "\"Build Docker image\" -> \"Tag image for ECR\";" dot_output
-grep "\"Tag image for ECR\" -> \"Push image to ECR\";" dot_output
-grep "\"Login to ECR\" -> \"Push image to ECR\";" dot_output
-grep "\"Store Kube Credentials\" -> \"Deploy to EKS\";" dot_output
-grep "\"Push image to ECR\" -> \"Deploy branch filter\";" dot_output
-grep "\"Push image to ECR\" -> \"Store Kube Credentials\";" dot_output
-grep "\"Deploy to EKS\" -> \"Verify EKS deployment\";" dot_output
-grep "\"Deploy branch filter\" -> \"Deploy to EKS\";" dot_output
-grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
+grep "\"branch-filter\" -> \"deploy\";" dot_output
+grep "\"install\" -> \"lint\";" dot_output
+grep "\"install\" -> \"test\";" dot_output
+grep "\"lint\" -> \"branch-filter\";" dot_output
+grep "\"test-and-deploy\" -> \"install\";" dot_output
+grep "\"test\" -> \"branch-filter\";" dot_output
 
 ## Testing wfile argument feature
 cd "$test_repo_path"
-popper dot --wfile example-aws/dummy/main.workflow > dot_output
+rm -rf github-actions-demo
+git clone https://github.com/cplee/github-actions-demo.git
+popper dot --wfile github-actions-demo/.github/main.workflow > dot_output
 
 grep "digraph G .* graph" dot_output
-grep "\"Verify EKS deployment\" -> \"List Public IP\";" dot_output
-grep "\"Build and Deploy\" -> \"Login to ECR\";" dot_output
-grep "\"Build and Deploy\" -> \"Build Docker image\";" dot_output
-grep "\"Build Docker image\" -> \"Tag image for ECR\";" dot_output
-grep "\"Tag image for ECR\" -> \"Push image to ECR\";" dot_output
-grep "\"Login to ECR\" -> \"Push image to ECR\";" dot_output
-grep "\"Store Kube Credentials\" -> \"Deploy to EKS\";" dot_output
-grep "\"Push image to ECR\" -> \"Deploy branch filter\";" dot_output
-grep "\"Push image to ECR\" -> \"Store Kube Credentials\";" dot_output
-grep "\"Deploy to EKS\" -> \"Verify EKS deployment\";" dot_output
-grep "\"Deploy branch filter\" -> \"Deploy to EKS\";" dot_output
-grep "\"Push image to ECR\" -> \"Verify EKS deployment\";" dot_output
+grep "\"branch-filter\" -> \"deploy\";" dot_output
+grep "\"install\" -> \"lint\";" dot_output
+grep "\"install\" -> \"test\";" dot_output
+grep "\"lint\" -> \"branch-filter\";" dot_output
+grep "\"test-and-deploy\" -> \"install\";" dot_output
+grep "\"test\" -> \"branch-filter\";" dot_output
 
 # test no color
-! grep ".*\"Verify EKS deployment\".*color=" dot_output
+! grep ".*\"test-and-deploy\".*color=" dot_output
 
 # test with color
-popper dot --colors --wfile example-aws/dummy/main.workflow > dot_output
-grep ".*\"Verify EKS deployment\".*color=" dot_output
+popper dot --colors --wfile github-actions-demo/.github/main.workflow > dot_output
+grep ".*\"test-and-deploy\".*color=" dot_output
 
 echo "Test DOT passed."
