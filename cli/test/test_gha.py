@@ -805,7 +805,7 @@ class TestVagrantRunner(unittest.TestCase):
         os.makedirs('/tmp/test_folder/test_vm')
         self.runner.vagrant_build_from_image(
             'debian:stable-slim', {
-                'GITHUB_WORKSPACE': '/tmp/paper', 'HOME': '/home/bargee'},
+                'GITHUB_WORKSPACE': '/tmp/test_folder', 'HOME': '/home/bargee'},
             '-e A=a B=b', '/tmp/test_folder/test_vm')
         self.assertEqual(os.path.exists(
             '/tmp/test_folder/test_vm/Vagrantfile'), True)
@@ -815,8 +815,8 @@ class TestVagrantRunner(unittest.TestCase):
         expected_content = """
         Vagrant.configure("2") do |config|
             config.vm.box = "ailispaw/barge"
-            config.vm.synced_folder "/Users/jayjeetchakraborty", "/home/bargee"
-            config.vm.synced_folder "/tmp/test_folder", "/tmp/paper"
+            config.vm.synced_folder "{}", "/home/bargee"
+            config.vm.synced_folder "/tmp/test_folder", "/tmp/test_folder"
             config.vm.provision "docker" do |d|
                 d.run "popper_sample_action_12345",
                 has_ssh: true,
@@ -827,7 +827,7 @@ class TestVagrantRunner(unittest.TestCase):
                 cmd: "echo Hello"
             end
         end
-        """
+        """.format(os.environ['HOME'])
         self.assertEqual(
             content.replace(
                 " ", ""), expected_content.replace(
@@ -841,7 +841,7 @@ class TestVagrantRunner(unittest.TestCase):
             '/tmp/mydockerfilehere',
             'debian:stable-slim',
             {
-                'GITHUB_WORKSPACE': '/tmp/paper',
+                'GITHUB_WORKSPACE': '/tmp/test_folder',
                 'HOME': '/home/bargee'},
             '-e A=a B=b',
             '/tmp/test_folder/test_vm')
@@ -853,8 +853,8 @@ class TestVagrantRunner(unittest.TestCase):
         expected_content = """
         Vagrant.configure("2") do |config|
             config.vm.box = "ailispaw/barge"
-            config.vm.synced_folder "/Users/jayjeetchakraborty", "/home/bargee"
-            config.vm.synced_folder "/tmp/test_folder", "/tmp/paper"
+            config.vm.synced_folder "{}", "/home/bargee"
+            config.vm.synced_folder "/tmp/test_folder", "/tmp/test_folder"
             config.vm.provision "docker" do |d|
                 d.build_image "/tmp/mydockerfilehere",
                 args: "-t debian:stable-slim"
@@ -867,7 +867,7 @@ class TestVagrantRunner(unittest.TestCase):
                 cmd: "echo Hello"
             end
         end
-        """
+        """.format(os.environ['HOME'])
         self.assertEqual(
             content.replace(
                 " ", ""), expected_content.replace(
