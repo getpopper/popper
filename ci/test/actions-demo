@@ -312,25 +312,6 @@ popper run --on-failure cleanup --runtime "$RUNTIME" > output
 # test prevention of double cloning of actions, instantiation of runners etc.
 cat <<EOF > main.workflow
 workflow "sample" {
-  resolves = ["test"]
-}
-
-action "test" {
-  uses = "actions/npm@master"
-  args = ["--verssion"]
-}
-
-action "cleanup" {
-  uses = "docker://debian:buster-slim"
-  args = ["echo", "Cleaning up..."]
-}
-EOF
-
-popper run --on-failure cleanup --runtime "$RUNTIME" > output
-grep -q "Cleaning up..." output
-
-cat <<EOF > main.workflow
-workflow "sample" {
   resolves = ["test1"]
 }
 
