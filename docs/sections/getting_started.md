@@ -54,7 +54,7 @@ python -m venv $HOME/virtualenvs/popper
 We then load the environment we just created above:
 
 ```bash
-source $HOME/virtualenvs/popper
+source $HOME/virtualenvs/popper/bin/activate
 ```
 
 Finally, we install Popper in this environment using `pip`:
