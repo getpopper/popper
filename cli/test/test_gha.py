@@ -43,7 +43,7 @@ class TestWorkflowRunner(unittest.TestCase):
         }
 
         action "a" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = ["ls -ltr"]
             secrets = ["SECRET_ONE", "SECRET_TWO"]
         }
@@ -61,7 +61,7 @@ class TestWorkflowRunner(unittest.TestCase):
         }
 
         action "a" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = ["ls -ltr"]
             secrets = ["SECRET_ONE", "SECRET_TWO"]
         }
@@ -126,7 +126,7 @@ class TestWorkflowRunner(unittest.TestCase):
         }
 
         action "a" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
         }
         """)
         wf = Workflow('/tmp/test_folder/a.workflow')
@@ -147,7 +147,7 @@ class TestWorkflowRunner(unittest.TestCase):
         }
 
         action "a" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
         }
 
         action "b" {
@@ -234,7 +234,7 @@ class TestActionRunner(unittest.TestCase):
         }
 
         action "sample action" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = ["echo", "Hello"]
         }
         """
@@ -323,7 +323,7 @@ class TestDockerRunner(unittest.TestCase):
         }
 
         action "sample action" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = ["echo", "Hello"]
         }
         """
@@ -351,9 +351,9 @@ class TestDockerRunner(unittest.TestCase):
         self.assertTupleEqual(
             res,
             (True,
-             'actions/bin:master',
+             'popperized/bin:master',
              os.environ['HOME'] +
-             '/.cache/.popper/actions/12345/github.com/actions/bin/sh'))
+             '/.cache/.popper/actions/12345/github.com/popperized/bin/sh'))
         self.runner.action['uses'] = 'docker://debian:buster-slim'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res,
@@ -462,7 +462,7 @@ class TestSingularityRunner(unittest.TestCase):
         }
 
         action "sample action" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = ["echo", "Hello"]
         }
         """
@@ -535,11 +535,11 @@ class TestSingularityRunner(unittest.TestCase):
         os.chdir(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/actions/12345/github.com/actions/bin/sh'))
+                '.cache/.popper/actions/12345/github.com/popperized/bin/sh'))
         self.runner.singularity_build_from_recipe(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/actions/12345/github.com/actions/bin/sh'),
+                '.cache/.popper/actions/12345/github.com/popperized/bin/sh'),
             os.path.join(
                 os.environ['HOME'],
                 '.cache/.popper/singularity/12345/testimg.sif'))
@@ -556,16 +556,16 @@ class TestSingularityRunner(unittest.TestCase):
     def test_get_recipe_file(self):
         os.chdir(
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com/actions/bin/sh')
+            '/.cache/.popper/actions/12345/github.com/popperized/bin/sh')
         file = SingularityRunner.get_recipe_file(os.getcwd(), '12345')
         self.assertEqual(
             file,
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com/actions/bin/sh/' +
+            '/.cache/.popper/actions/12345/github.com/popperized/bin/sh/' +
             'Singularity.12345')
         os.remove(
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com/actions/bin/sh/' +
+            '/.cache/.popper/actions/12345/github.com/popperized/bin/sh/' +
             'Dockerfile')
         self.assertRaises(
             SystemExit,
@@ -600,10 +600,10 @@ class TestSingularityRunner(unittest.TestCase):
         self.assertTupleEqual(
             res,
             (True,
-             'actions/bin/sh@master',
+             'popperized/bin/sh@master',
              os.path.join(
                  os.environ['HOME'],
-                 '.cache/.popper/actions/12345/github.com/actions/bin/sh')))
+                 '.cache/.popper/actions/12345/github.com/popperized/bin/sh')))
         self.runner.action['uses'] = 'docker://debian:buster-slim'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res,

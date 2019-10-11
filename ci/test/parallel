@@ -21,12 +21,12 @@ action "one" {
 }
 
 action "two" {
-  uses = "actions/bin/curl@master"
+  uses = "popperized/bin/curl@master"
   args = ["google.com"]
 }
 
 action "three" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   runs = ["sh", "-c", "echo Hello from sh"]
 }
 
@@ -63,12 +63,12 @@ action "one" {
 }
 
 action "two" {
-  uses = "actions/bin/curl@master"
+  uses = "popperized/bin/curl@master"
   args = ["google.com"]
 }
 
 action "three" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   runs = ["sh", "-c", "echo Hello from sh"]
 }
 

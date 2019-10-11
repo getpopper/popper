@@ -7,7 +7,7 @@ cd "$test_repo_path"
 
 ## `--dry-run` test for DockerRunner
 
-git clone https://github.com/cplee/github-actions-demo
+git clone https://github.com/JayjeetAtGithub/github-actions-demo
 cd github-actions-demo
 git checkout c824a5a
 

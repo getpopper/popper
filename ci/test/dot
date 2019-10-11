@@ -6,7 +6,7 @@ init_test_repo
 cd "$test_repo_path"
 
 ## Testing default file feature
-git clone https://github.com/cplee/github-actions-demo.git
+git clone https://github.com/JayjeetAtGithub/github-actions-demo.git
 cd github-actions-demo
 
 popper dot > dot_output
@@ -36,7 +36,7 @@ grep "\"test\" -> \"branch-filter\";" dot_output
 ## Testing wfile argument feature
 cd "$test_repo_path"
 rm -rf github-actions-demo
-git clone https://github.com/cplee/github-actions-demo.git
+git clone https://github.com/JayjeetAtGithub/github-actions-demo.git
 popper dot --wfile github-actions-demo/.github/main.workflow > dot_output
 
 grep "digraph G .* graph" dot_output

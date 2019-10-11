@@ -260,7 +260,7 @@ class TestParser(unittest.TestCase):
 
         action "a" {
             needs = "b"
-            uses = "actions/bin/npm@master"
+            uses = "popperized/bin/npm@master"
             args = "npm --version"
             secrets = "SECRET_KEY"
         }
@@ -669,12 +669,12 @@ class TestParser(unittest.TestCase):
         }
 
         action "reachable" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = "ls"
         }
 
         action "unreachable" {
-            uses = "actions/bin/sh@master"
+            uses = "popperized/bin/sh@master"
             args = ["ls -ltr"]
         }
         """)

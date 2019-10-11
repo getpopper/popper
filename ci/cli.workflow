@@ -3,7 +3,7 @@ workflow "cli tests" {
   resolves = "end"
 }
 action "lint" {
-  uses = "actions/bin/shellcheck@master"
+  uses = "popperized/bin/shellcheck@master"
   args = "./ci/test/*"
 }
 

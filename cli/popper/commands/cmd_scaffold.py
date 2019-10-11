@@ -20,7 +20,7 @@ workflow "example" {
 }
 
 action "github official action" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = ["ls"]
 }
 
