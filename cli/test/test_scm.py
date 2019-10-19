@@ -26,7 +26,7 @@ class TestScm(unittest.TestCase):
         os.chdir('/tmp/test_folder')
         scm.clone(
             'https://github.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             os.path.join(os.getcwd(), 'github-actions-demo')
         )
@@ -52,7 +52,7 @@ class TestScm(unittest.TestCase):
     def test_get_user(self):
         user = scm.get_user()
         if self.with_git:
-            self.assertEqual(user, 'JayjeetAtGithub')
+            self.assertEqual(user, 'popperized')
         else:
             self.assertEqual(user, '')
 
@@ -60,7 +60,7 @@ class TestScm(unittest.TestCase):
         url = scm.get_remote_url()
         if self.with_git:
             self.assertEqual(
-                url, 'https://github.com/JayjeetAtGithub/github-actions-demo')
+                url, 'https://github.com/popperized/github-actions-demo')
         else:
             self.assertEqual(url, '')
 
@@ -108,7 +108,7 @@ class TestScm(unittest.TestCase):
         os.chdir('/tmp/test_folder/test_clone')
         scm.clone(
             'https://github.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             os.path.join(os.getcwd(), 'gad'),
             'develop'
@@ -117,7 +117,7 @@ class TestScm(unittest.TestCase):
         self.assertEqual(repo.active_branch.name, 'develop')
         scm.clone(
             'https://github.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             os.path.join(os.getcwd(), 'gad'),
             'master'
@@ -126,48 +126,48 @@ class TestScm(unittest.TestCase):
         self.assertEqual(repo.active_branch.name, 'master')
 
     def test_parse(self):
-        test_url = ("ssh://git@github.com:JayjeetAtGithub"
+        test_url = ("ssh://git@github.com:popperized"
                     "/github-actions-demo.git")
         self.assertRaises(SystemExit, scm.parse, test_url)
-        test_url = "https://github.com/JayjeetAtGithub@master"
+        test_url = "https://github.com/popperized@master"
         self.assertRaises(SystemExit, scm.parse, test_url)
         test_url = "github.com"
         self.assertRaises(SystemExit, scm.parse, test_url)
         test_url = "@master"
         self.assertRaises(SystemExit, scm.parse, test_url)
-        test_url = "http://gitlab.com/JayjeetAtGithub/github-actions-demo.git"
+        test_url = "http://gitlab.com/popperized/github-actions-demo.git"
         parts = scm.parse(test_url)
         self.assertTupleEqual(parts, (
             'http://gitlab.com',
             'gitlab.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             '', None))
-        test_url = ("https://github.com/JayjeetAtGithub"
+        test_url = ("https://github.com/popperized"
                     "/github-actions-demo@master")
         parts = scm.parse(test_url)
         self.assertTupleEqual(parts, (
             'https://github.com',
             'github.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             '',
             'master'))
-        test_url = "github.com/JayjeetAtGithub/github-actions-demo"
+        test_url = "github.com/popperized/github-actions-demo"
         parts = scm.parse(test_url)
         self.assertTupleEqual(parts, (
             'https://github.com',
             'github.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             '',
             None))
-        test_url = "JayjeetAtGithub/github-actions-demo/path/to/action@develop"
+        test_url = "popperized/github-actions-demo/path/to/action@develop"
         parts = scm.parse(test_url)
         self.assertTupleEqual(parts, (
             'https://github.com',
             'github.com',
-            'JayjeetAtGithub',
+            'popperized',
             'github-actions-demo',
             'path/to/action',
             'develop'))
