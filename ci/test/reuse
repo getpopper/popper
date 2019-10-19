@@ -11,7 +11,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -46,7 +46,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
     TOOL_NAME="popper"
@@ -65,7 +65,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   runs = ["sh", "-c", "echo \$TOOL_NAME"]
 }
 EOF
@@ -82,7 +82,7 @@ workflow "test" {
 }
 
 action "check file" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   runs = ["sh", "-c", "echo 'Hello from Popper 2.x !' > /usr/local/popper.file"]
 }
 EOF
@@ -95,7 +95,7 @@ workflow "test" {
 }
 
 action "check file" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   runs = ["sh", "-c", "cat /usr/local/popper.file"]
 }
 EOF

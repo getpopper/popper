@@ -68,7 +68,7 @@ workflow "env workflow" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = ["env"]
 }
 ```

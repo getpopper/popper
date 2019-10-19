@@ -3,7 +3,7 @@ workflow "cli tests" {
   resolves = "end"
 }
 action "lint" {
-  uses = "actions/bin/shellcheck@master"
+  uses = "popperized/bin/shellcheck@master"
   args = "./ci/test/*"
 }
 
@@ -91,12 +91,6 @@ action "test offline" {
   runs = "offline"
 }
 
-action "test samples" {
-  needs = "lint"
-  uses = "./ci/test"
-  runs = "samples"
-}
-
 action "test inject" {
   needs = "lint"
   uses = "./ci/test"
@@ -120,7 +114,6 @@ action "end" {
     "test skip",
     "test sh",
     "test search",
-    "test samples",
     "test offline",
     "test inject"
   ]

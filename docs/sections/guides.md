@@ -28,19 +28,19 @@ workflow "co2 emissions" {
 }
 
 action "download data" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = ["scripts/download-data.sh"]
 }
 
 action "run analysis" {
   needs = "download data"
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = ["workflows/minimal-python/scripts/get_mean_by_group.py", "5"]
 }
 
 action "validate results" {
   needs = "run analysis"
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = [
     "workflows/minimal-python/scripts/validate_output.py",
     "workflows/minimal-python/data/global_per_capita_mean.csv"
@@ -49,9 +49,9 @@ action "validate results" {
 ```
 
 The above runs every script within a Docker container, whose image is 
-the one associated to the `actions/bin/sh` action (see corresponding 
+the one associated to the `popperized/bin/sh` action (see corresponding 
 Github repository [here][shaction]). As you would expect, this 
-workflow fails to run since the `actions/bin/sh` image is a 
+workflow fails to run since the `popperized/bin/sh` image is a 
 lightweight one (contains only Bash utilities), and the dependencies 
 that the scripts need are not be available in this image. In cases 
 like this, we need to either [use an existing action][search] that has 
@@ -67,7 +67,7 @@ workflow "co2 emissions" {
 }
 
 action "download data" {
-  uses = "actions/bin/curl@master"
+  uses = "popperized/bin/curl@master"
   args = [
     "--create-dirs",
     "-Lo workflows/minimal-python/data/global.csv",
@@ -156,6 +156,6 @@ Python 2.7, it will fail.
 > Github Actions platform. This workflow will fail to run on GitHub's 
 > infrastructure and can only be executed using Popper._
 
-[shaction]: https://github.com/actions/bin/tree/master/sh
+[shaction]: https://github.com/popperized/bin/tree/master/sh
 [search]: https://medium.com/getpopper/searching-for-existing-github-actions-has-never-been-easier-268c463f0257
 [create]: https://developer.github.com/actions/creating-github-actions/
