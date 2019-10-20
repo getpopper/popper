@@ -92,4 +92,4 @@ us](mailto:ivo@cs.ucsc.edu).
 [gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
 [scaffold]: https://popper.readthedocs.io/en/latest/sections/getting_started.html#create-a-workflow
 [runtimedocs]: https://popper.readthedocs.io/en/latest/sections/extensions.html#other-runtimes
-[hcl-to-yml]: 
+[hcl-to-yml]: https://help.github.com/en/articles/about-github-actions#migrating-github-actions-from-hcl-to-yaml-syntax
