@@ -33,7 +33,7 @@ def get_git_root_folder():
     """
     repo = init_repo_object()
     if repo:
-        root_folder_path = os.path.dirname(repo.git_dir)
+        root_folder_path = repo.working_tree_dir
     else:
         root_folder_path = os.getcwd()
 
