@@ -54,8 +54,7 @@ of running actions in other runtimes by providing a `--runtime` flag
 to the `popper run` command.
 
 > **NOTE**: As part of our roadmap, we plan to add support for
-> [Vagrant](https://www.vagrantup.com/)
-> and [Podman](https://podman.io/) runtimes. Open a [new
+> [Podman](https://podman.io/) runtime. Open a [new
 > issue](https://github.com/systemslab/popper/issues/new) to request 
 > another runtime you would want Popper to support.
 
@@ -76,6 +75,25 @@ Docker.
   * The use of `ARG` in `Dockerfile`s is not supported by Singularity.
   * Currently, the `--reuse` functionality of the `popper run` command 
     is not available when running in Singularity.
+
+### Vagrant
+
+Popper also supports executing workflows inside Vagrant VM's.
+It spawns a VM provisioned with Docker and with the help of [docker-py](https://docker-py.readthedocs.io/en/stable/index.html#)
+connects to the Docker Daemon inside the VM and hence executes actions inside
+Docker containers within the VM. To execute a workflow in Vagrant runtime:
+
+```bash
+popper run --runtime vagrant
+```
+
+#### Limitations
+
+  * Currently, concurrent execution of two or more workflows is
+    not supported in Vagrant runtime as because we only support
+    connecting the docker client to the default docker daemon port `2375`
+    and hence only one daemon can listen at the port at a time.
+
 
 ### Host
 
