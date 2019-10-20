@@ -21,9 +21,8 @@ goal of this project is to provide the following functionality:
     Travis, Jenkins, Gitlab or Circle. [See here for more][ci].
   * **Other Runtimes**. In addition to Docker, Popper can execute 
     workflows in other container runtimes. We currently support 
-    [Singularity](https://sylabs.io/) and are working on adding 
-    [Podman](https://podman.io) and [Vagrant](https://vagrantup.com/) 
-    to the list (see [here for more][runtimedocs]).
+    [Singularity](https://sylabs.io/) and [Vagrant](https://vagrantup.com/)
+    and are working on adding [Podman](https://podman.io) to the list (see [here for more][runtimedocs]).
   * **Action search**. Provide with a [searchable 
     catalog][search] of publicly available actions so that users can 
     easily find which actions already exist (do not re-invent the 
@@ -46,7 +45,7 @@ This repository contains:
 ## Installation
 
 To run workflows, you need to have a container runtime installed 
-([Docker][docker] and [Singularity][singularity] are currently 
+([Docker][docker], [Singularity][singularity] and [Vagrant](https://vagrantup.com/) are currently
 supported). To install Popper you can use 
 [`pip`](https://pypi.python.org/pypi). We recommend to install in a 
 virtual environment (see [here][venv] for more on `virtualenv`). To 
