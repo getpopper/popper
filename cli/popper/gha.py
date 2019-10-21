@@ -829,6 +829,13 @@ class VagrantRunner(DockerRunner):
     running = False
     vbox_path = None
     lock = threading.Lock()
+    vagrantfile_content = """
+    Vagrant.configure("2") do |config|
+        config.vm.box = "ailispaw/barge"
+        config.vm.synced_folder "{}", "{}"
+        config.vm.synced_folder "{}", "{}"
+    end
+    """
 
     def __init__(self, action, workspace, env, dry, skip_pull, wid):
         super(VagrantRunner, self).__init__(
@@ -865,7 +872,7 @@ class VagrantRunner(DockerRunner):
             return
         if not os.path.exists(vagrant_box_path):
             os.makedirs(vagrant_box_path)
-        vagrantfile_content = pu.vagrantfile_content.format(
+        vagrantfile_content = VagrantRunner.vagrantfile_content.format(
             os.environ['HOME'], os.environ['HOME'],
             self.workspace, self.workspace)
         pu.write_file(os.path.join(
