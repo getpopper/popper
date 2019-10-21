@@ -79,7 +79,8 @@ Docker.
 ### Vagrant
 
 Popper also supports executing workflows inside Vagrant VM's.
-It spawns a VM provisioned with Docker and with the help of [docker-py](https://docker-py.readthedocs.io/en/stable/index.html#)
+It spawns a VM provisioned with Docker and with the help of
+[docker-py](https://docker-py.readthedocs.io/en/stable/index.html#)
 connects to the Docker Daemon inside the VM and hence executes actions inside
 Docker containers within the VM. To execute a workflow in Vagrant runtime:
 
@@ -90,9 +91,11 @@ popper run --runtime vagrant
 #### Limitations
 
   * Currently, concurrent execution of two or more workflows is
-    not supported in Vagrant runtime as because we only support
-    connecting the docker client to the default docker daemon port `2375`
-    and hence only one daemon can listen at the port at a time.
+    not supported in Vagrant runtime as because the docker-daemon
+    in the VM can listen only on port `2375` and hence, at a
+    time if two or more VM's run each with a docker-daemon within
+    themselves, the docker client gets confused about which daemon
+    to connect to and give weird results.
 
 
 ### Host
