@@ -24,7 +24,7 @@ EOF
 ! popper run --skip-pull --runtime "$RUNTIME"
 
 # action repo not present locally, fail workflow using --skip-clone
-delete_dir "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/actions/bin"
+delete_dir "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -32,7 +32,7 @@ workflow "sample workflow" {
 }
 
 action "sample action" {
-    uses = "actions/bin/sh@master"
+    uses = "popperized/bin/sh@master"
     runs = ["sh", "-c", "echo Hello World"]
 }
 EOF
@@ -48,7 +48,7 @@ mkdir "$HOME/.cache/.popper/singularity/b5a7c82838362d0281518262189f203e"
 singularity pull --name popper_docker___debian_stretch-slim_b5a7c82838362d0281518262189f203e.sif docker://debian:stretch-slim
 mv popper_docker___debian_stretch-slim_b5a7c82838362d0281518262189f203e.sif "$HOME/.cache/.popper/singularity/b5a7c82838362d0281518262189f203e/popper_docker___debian_stretch-slim_b5a7c82838362d0281518262189f203e.sif"
 fi
-git clone https://github.com/actions/bin "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/actions/bin"
+git clone https://github.com/popperized/bin "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -61,7 +61,7 @@ action "sample action one" {
 }
 
 action "sample action two" {
-    uses = "actions/bin/sh@master"
+    uses = "popperized/bin/sh@master"
     runs = ["sh", "-c", "echo Hello World"]
 }
 EOF

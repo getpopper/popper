@@ -25,12 +25,12 @@ workflow "test three" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 
 action "show env one" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -47,7 +47,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -61,7 +61,7 @@ weeeorkflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -75,7 +75,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -89,7 +89,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -103,7 +103,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -117,7 +117,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -132,7 +132,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -147,7 +147,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -165,12 +165,12 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -184,7 +184,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
   attr1 = "attr1"
   attr2 = "attr2"
@@ -200,7 +200,7 @@ workflow "test" {
 }
 
 acccction "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -214,7 +214,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -228,7 +228,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 
@@ -260,7 +260,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -274,7 +274,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   needs = 12
   args = "ls"
 }
@@ -289,12 +289,12 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 
 action "show env again" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   needs = ["show env"]
   args = "ls"
 }
@@ -309,7 +309,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   runs = 123
 }
 EOF
@@ -323,7 +323,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
 }
 EOF
 
@@ -336,7 +336,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = {
     FIRST_NAME  = "Mona"
     MIDDLE_NAME = "Lisa"
@@ -354,7 +354,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
@@ -368,7 +368,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
   env = [1, 2]
 }
@@ -383,7 +383,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
     F_NAME = "F_NAME",
@@ -401,7 +401,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
   secrets = "123"
 }
@@ -418,7 +418,7 @@ workflow "test" {
 }
 
 action "show env" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
     F_NAME = "F_NAME",
@@ -437,12 +437,12 @@ workflow "test" {
 }
 
 action "reachable" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 
 action "unreachable" {
-  uses = "actions/bin/sh@master"
+  uses = "popperized/bin/sh@master"
   args = "ls"
 }
 EOF
