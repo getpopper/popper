@@ -109,7 +109,11 @@ class WorkflowRunner(object):
                 continue
 
             log.info('{}[popper]{} - {}/{}/{}@{}'.format(BOLD_CYAN,
-                                                         RESET, url, user, repo, version))
+                                                         RESET,
+                                                         url,
+                                                         user,
+                                                         repo,
+                                                         version))
             scm.clone(url, user, repo, repo_dir, version)
             cloned.add('{}/{}'.format(user, repo))
 
