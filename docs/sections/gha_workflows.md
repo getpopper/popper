@@ -90,12 +90,9 @@ popper run --runtime vagrant
 
 #### Limitations
 
-  * Currently, concurrent execution of two or more workflows is
-    not supported in Vagrant runtime as because the docker-daemon
-    in the VM can listen only on port `2375` and hence, at a
-    time if two or more VM's run each with a docker-daemon within
-    themselves, the docker client gets confused about which daemon
-    to connect to and give weird results.
+  * Currently, only one workflow can be executed at the time in
+    Vagrant runtime, since popper assumes that there is only one
+    VM running at any given point in time.
 
 
 ### Host

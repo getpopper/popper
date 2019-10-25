@@ -44,7 +44,7 @@ This repository contains:
 
 ## Installation
 
-To run workflows, you need to have a container runtime installed 
+To run workflows, you need to have Git and a container runtime installed
 ([Docker][docker], [Singularity][singularity] and [Vagrant](https://vagrantup.com/) are currently
 supported). To install Popper you can use 
 [`pip`](https://pypi.python.org/pypi). We recommend to install in a 
