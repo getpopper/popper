@@ -5,6 +5,17 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
+# generate the workfow id
+cat <<EOF > id.py
+import os
+import hashlib
+identifier = str(os.getuid()) + "_main.workflow"
+id = str(hashlib.md5(identifier.encode()).hexdigest())
+print(id)
+EOF
+
+ID=$(python id.py 2>&1)
+
 cat <<EOF > main.workflow
 workflow "test" {
   resolves = "show env"
@@ -20,18 +31,18 @@ popper run
 
 docker ps -a | grep 'popper_show_env'
 
-docker cp ./main.workflow popper_show_env_b5a7c82838362d0281518262189f203e:/
+docker cp ./main.workflow popper_show_env_"$ID":/
 
 popper run --reuse
 
 # the file we copied above should still be there
-docker cp popper_show_env_b5a7c82838362d0281518262189f203e:/main.workflow main.workflow
+docker cp popper_show_env_"$ID":/main.workflow main.workflow
 
 # now we re-run without --reuse so a new container is created
 popper run
 
 # so the file shouldn't be there
-! docker cp popper_show_env_b5a7c82838362d0281518262189f203e:/main.workflow /tmp/main.workflow
+! docker cp popper_show_env_"$ID":/main.workflow /tmp/main.workflow
 
 # lastly, test reuse for a single action
 popper run --reuse 'show env'

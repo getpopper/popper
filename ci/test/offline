@@ -5,6 +5,32 @@ source ./common
 init_test_repo
 cd "$test_repo_path"
 
+# generate the workfow id
+cat <<EOF > id.py
+import os
+import hashlib
+identifier = str(os.getuid()) + "_main.workflow"
+id = str(hashlib.md5(identifier.encode()).hexdigest())
+print(id)
+EOF
+
+ID=$(python id.py 2>&1)
+
+if [ "$RUNTIME" == "vagrant" ]; then
+mkdir -p "$HOME/.cache/.popper/vagrant/$ID"
+cd "$HOME/.cache/.popper/vagrant/$ID"
+cat <<EOF > Vagrantfile
+Vagrant.configure("2") do |config|
+    config.vm.box = "ailispaw/barge"
+    config.vm.synced_folder "$HOME", "$HOME"
+    config.vm.synced_folder "/tmp/mypaper", "/tmp/mypaper"
+end
+EOF
+vagrant up
+export DOCKER_HOST=tcp://0.0.0.0:2375
+export DOCKER_API_VERSION=1.22
+fi
+
 # docker image not present locally, fail workflow using --skip-pull
 if [[ "$(docker images -q debian:stretch-slim 2> /dev/null)" != "" ]]; then
 docker rmi -f debian:stretch-slim
@@ -24,7 +50,7 @@ EOF
 ! popper run --skip-pull --runtime "$RUNTIME"
 
 # action repo not present locally, fail workflow using --skip-clone
-delete_dir "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/popperized/bin"
+delete_dir "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -43,12 +69,12 @@ EOF
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
 if [ "$RUNTIME" == "singularity" ]; then
-rm -rf "$HOME/.cache/.popper/singularity/b5a7c82838362d0281518262189f203e"
-mkdir "$HOME/.cache/.popper/singularity/b5a7c82838362d0281518262189f203e"
-singularity pull --name popper_docker___debian_stretch-slim_b5a7c82838362d0281518262189f203e.sif docker://debian:stretch-slim
-mv popper_docker___debian_stretch-slim_b5a7c82838362d0281518262189f203e.sif "$HOME/.cache/.popper/singularity/b5a7c82838362d0281518262189f203e/popper_docker___debian_stretch-slim_b5a7c82838362d0281518262189f203e.sif"
+rm -rf "$HOME/.cache/.popper/singularity/$ID"
+mkdir "$HOME/.cache/.popper/singularity/$ID"
+singularity pull --name popper_docker___debian_stretch-slim_"$ID".sif docker://debian:stretch-slim
+mv popper_docker___debian_stretch-slim_"$ID".sif "$HOME/.cache/.popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
 fi
-git clone https://github.com/popperized/bin "$HOME/.cache/.popper/actions/b5a7c82838362d0281518262189f203e/github.com/popperized/bin"
+git clone https://github.com/popperized/bin "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -69,5 +95,13 @@ EOF
 popper run --skip-clone --skip-pull --runtime "$RUNTIME" > output
 grep -q "sample action one" output
 grep -q "sample action two" output
+
+
+if [ "$RUNTIME" == "vagrant" ]; then
+vagrant destroy -f
+export DOCKER_HOST=
+rm -rf "$HOME/.cache/.popper/vagrant/$ID"
+fi
+
 
 echo "Test OFFLINE passed."

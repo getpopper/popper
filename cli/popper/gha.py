@@ -1,19 +1,25 @@
 from __future__ import unicode_literals
 import os
+import shutil
 import signal
+import time
 import getpass
+import threading
 import subprocess
 import multiprocessing as mp
 from copy import deepcopy
 from builtins import dict
 from distutils.dir_util import copy_tree
 from distutils.spawn import find_executable
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import (ProcessPoolExecutor,
+                                ThreadPoolExecutor,
+                                as_completed)
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
 import yaml
 import docker
 import spython
+import vagrant
 from spython.main.parse.parsers import DockerParser
 from spython.main.parse.writers import SingularityWriter
 
@@ -24,7 +30,6 @@ from popper.parser import Workflow
 
 
 yaml.Dumper.ignore_aliases = lambda *args: True
-docker_client = docker.from_env()
 s_client = spython.main.Client
 
 
@@ -144,6 +149,10 @@ class WorkflowRunner(object):
                 a['runner'] = SingularityRunner(
                     a, workspace, env, dry_run, skip_pull, wid)
 
+            elif runtime == 'vagrant':
+                a['runner'] = VagrantRunner(
+                    a, workspace, env, dry_run, skip_pull, wid)
+
     @staticmethod
     def get_workflow_env(wf, workspace):
         if scm.get_user():
@@ -190,14 +199,18 @@ class WorkflowRunner(object):
             runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
 
         for s in new_wf.get_stages():
-            WorkflowRunner.run_stage(new_wf, s, reuse, parallel)
+            WorkflowRunner.run_stage(runtime, new_wf, s, reuse, parallel)
 
     @staticmethod
-    def run_stage(wf, stage, reuse=False, parallel=False):
+    def run_stage(runtime, wf, stage, reuse=False, parallel=False):
         """Runs actions in a stage either parallely or
         sequentially."""
+        if runtime == 'singularity':
+            Executor = ProcessPoolExecutor
+        else:
+            Executor = ThreadPoolExecutor
         if parallel:
-            with ProcessPoolExecutor(max_workers=mp.cpu_count()) as ex:
+            with Executor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(wf.action[a]['runner'].run, reuse):
                         a for a in stage
@@ -264,6 +277,23 @@ class ActionRunner(object):
             f = open(self.env['GITHUB_EVENT_PATH'], 'w')
             f.close()
 
+    def prepare_volumes(self, env, include_docker_socket=False):
+        """Prepare volume bindings for the container runtimes.
+        """
+        volumes = [
+            '/var/run/docker.sock:/var/run/docker.sock',
+            '{}:{}'.format(env['HOME'], env['HOME']),
+            '{}:{}'.format(env['HOME'], '/github/home'),
+            '{}:{}'.format(env['GITHUB_WORKSPACE'],
+                           env['GITHUB_WORKSPACE']),
+            '{}:{}'.format(env['GITHUB_WORKSPACE'], '/github/workspace'),
+            '{}:{}'.format(env['GITHUB_EVENT_PATH'],
+                           '/github/workflow/event.json')
+        ]
+        if include_docker_socket:
+            return volumes
+        return volumes[1:]
+
     def prepare_environment(self, set_env=False):
         """Prepare the environment variables to be
         set while running an action.
@@ -314,6 +344,7 @@ class DockerRunner(ActionRunner):
     def __init__(self, action, workspace, env, dry, skip_pull, wid):
         super(DockerRunner, self).__init__(
             action, workspace, env, dry, skip_pull, wid)
+        self.d_client = docker.from_env()
         self.cid = pu.sanitized_name(self.action['name'], wid)
         self.container = None
 
@@ -403,7 +434,7 @@ class DockerRunner(ActionRunner):
         """
         if self.dry_run:
             return True
-        containers = docker_client.containers.list(
+        containers = self.d_client.containers.list(
             all=True, filters={'name': self.cid})
 
         filtered_containers = [c for c in containers if c.name == self.cid]
@@ -424,7 +455,7 @@ class DockerRunner(ActionRunner):
         """
         if self.dry_run:
             return True
-        images = docker_client.images.list(all=True)
+        images = self.d_client.images.list(all=True)
         filtered_images = [i for i in images if img in i.tags]
         if filtered_images:
             return True
@@ -452,19 +483,9 @@ class DockerRunner(ActionRunner):
             return
 
         env = self.prepare_environment()
+        volumes = self.prepare_volumes(env, include_docker_socket=True)
 
-        volumes = [
-            '/var/run/docker.sock:/var/run/docker.sock',
-            '{}:{}'.format(env['HOME'], env['HOME']),
-            '{}:{}'.format(env['HOME'], '/github/home'),
-            '{}:{}'.format(env['GITHUB_WORKSPACE'],
-                           env['GITHUB_WORKSPACE']),
-            '{}:{}'.format(env['GITHUB_WORKSPACE'], '/github/workspace'),
-            '{}:{}'.format(env['GITHUB_EVENT_PATH'],
-                           '/github/workflow/event.json')
-        ]
-
-        self.container = docker_client.containers.create(
+        self.container = self.d_client.containers.create(
             image=img,
             command=self.action.get('args', None),
             name=self.cid,
@@ -503,7 +524,7 @@ class DockerRunner(ActionRunner):
                                                     self.action['name'], img))
             if self.dry_run:
                 return
-            docker_client.images.pull(repository=img)
+            self.d_client.images.pull(repository=img)
         else:
             if not self.docker_image_exists(img):
                 log.fail(
@@ -521,7 +542,7 @@ class DockerRunner(ActionRunner):
             self.msg_prefix, self.action['name'], img, path))
         if self.dry_run:
             return
-        docker_client.images.build(path=path, tag=img, rm=True, pull=True)
+        self.d_client.images.build(path=path, tag=img, rm=True, pull=True)
 
 
 class SingularityRunner(ActionRunner):
@@ -762,16 +783,7 @@ class SingularityRunner(ActionRunner):
             int: The container process returncode.
         """
         env = self.prepare_environment(set_env=True)
-
-        volumes = [
-            '{}:{}'.format(env['HOME'], env['HOME']),
-            '{}:{}'.format(env['HOME'], '/github/home'),
-            '{}:{}'.format(env['GITHUB_WORKSPACE'],
-                           env['GITHUB_WORKSPACE']),
-            '{}:{}'.format(env['GITHUB_WORKSPACE'], '/github/workspace'),
-            '{}:{}'.format(env['GITHUB_EVENT_PATH'],
-                           '/github/workflow/event.json')
-        ]
+        volumes = self.prepare_volumes(env)
 
         args = self.action.get('args', None)
         runs = self.action.get('runs', None)
@@ -807,6 +819,168 @@ class SingularityRunner(ActionRunner):
 
         self.remove_environment()
         return ecode
+
+
+class VagrantRunner(DockerRunner):
+    """
+    Run an Action in Vagrant runtime.
+    """
+    actions = set()
+    running = False
+    vbox_path = None
+    lock = threading.Lock()
+    vagrantfile_content = """
+    Vagrant.configure("2") do |config|
+        config.vm.box = "ailispaw/barge"
+        config.vm.synced_folder "{}", "{}"
+        config.vm.synced_folder "{}", "{}"
+    end
+    """
+
+    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+        super(VagrantRunner, self).__init__(
+            action, workspace, env, dry, skip_pull, wid
+        )
+        self.cid = pu.sanitized_name(self.action['name'], wid)
+        VagrantRunner.actions.add(self.action['name'])
+
+    @staticmethod
+    def setup_vagrant_cache(wid):
+        """Setup the vagrant cache directory based
+        on the workflow id.
+
+        Args:
+            wid (str): The workflow id.
+
+        Returns:
+            str: The path to the cache dir.
+        """
+        vagrant_cache = os.path.join(
+            pu.setup_base_cache(), 'vagrant', wid)
+        if not os.path.exists(vagrant_cache):
+            os.makedirs(vagrant_cache)
+        return vagrant_cache
+
+    def vagrant_write_vagrantfile(self, vagrant_box_path):
+        """Bootstrap the Vagrantfile required to start
+        the VM.
+
+        Args:
+            vagrant_box_path (str): The path to Vagrant VM's root.
+        """
+        if self.dry_run:
+            return
+        if not os.path.exists(vagrant_box_path):
+            os.makedirs(vagrant_box_path)
+        vagrantfile_content = VagrantRunner.vagrantfile_content.format(
+            os.environ['HOME'], os.environ['HOME'],
+            self.workspace, self.workspace)
+        pu.write_file(os.path.join(
+            vagrant_box_path, 'Vagrantfile'), vagrantfile_content)
+
+    def vagrant_exists(self, vagrant_box_path):
+        """Check whether a vagrant VM already exists in
+        running state in the specified path.
+
+        Args:
+            vagrant_box_path (str): The path to Vagrant VM's root.
+
+        Returns:
+            bool: Whether the VM exists in running state or not.
+        """
+        if self.dry_run:
+            return True
+        vg_file_path = os.path.join(vagrant_box_path, 'Vagrantfile')
+        if os.path.exists(vg_file_path):
+            if vagrant.Vagrant(vagrant_box_path).status()[
+                    0].state == 'running':
+                return True
+        return False
+
+    def vagrant_start(self, vagrant_box_path):
+        """Start a Vagrant VM at the specified path.
+
+        Args:
+            vagrant_box_path (str): The path to Vagrant VM's root.
+        """
+        if self.dry_run:
+            return
+        if not self.vagrant_exists(vagrant_box_path):
+            v = vagrant.Vagrant(root=vagrant_box_path)
+            log.info("[+] Starting Virtual machine....")
+            v.up()
+            popper.cli.vagrant_list.append(vagrant_box_path)
+            time.sleep(5)
+
+    def vagrant_stop(self, vagrant_box_path):
+        """Stop the Vagrant VM running at the specified path.
+
+        Args:
+            vagrant_box_path (str): The path to Vagrant VM's root.
+        """
+        if self.dry_run:
+            return
+        log.info("[-] Stopping VM....")
+        vagrant.Vagrant(root=vagrant_box_path).halt()
+        time.sleep(5)
+
+    def run(self, reuse=False):
+        """Parent function to handle the execution
+        of the action.
+
+        Args:
+            reuse (bool): Whether to reuse containers or not.
+        """
+        self.check_executable('vagrant')
+        self.check_executable('virtualbox')
+
+        VagrantRunner.lock.acquire()
+        if not VagrantRunner.running:
+            VagrantRunner.vbox_path = VagrantRunner.setup_vagrant_cache(
+                self.wid)
+            self.vagrant_write_vagrantfile(VagrantRunner.vbox_path)
+            self.vagrant_start(VagrantRunner.vbox_path)
+            VagrantRunner.running = True
+        VagrantRunner.lock.release()
+
+        self.d_client = docker.DockerClient(
+            base_url='tcp://0.0.0.0:2375',
+            version='1.22',
+            timeout=120)
+
+        build, image, build_source = self.get_build_resources()
+        if not reuse:
+            if self.docker_exists():
+                self.docker_rm()
+            if build:
+                self.docker_build(image, build_source)
+            else:
+                self.docker_pull(image)
+            self.docker_create(image)
+        else:
+            if not self.docker_exists():
+                if build:
+                    self.docker_build(image, build_source)
+                else:
+                    self.docker_pull(image)
+                self.docker_create(image)
+            else:
+                self.container.commit(self.cid, 'reuse')
+                self.docker_rm()
+                self.docker_create('{}:reuse'.format(self.cid))
+
+        if self.container is not None:
+            popper.cli.docker_list.append(self.container)
+
+        e = self.docker_start()
+        VagrantRunner.actions.remove(self.action['name'])
+
+        # If all the actions are done, stop the VM
+        if len(VagrantRunner.actions) == 0 and e != 78:
+            self.vagrant_stop(VagrantRunner.vbox_path)
+            VagrantRunner.running = False
+
+        self.handle_exit(e)
 
 
 class HostRunner(ActionRunner):
