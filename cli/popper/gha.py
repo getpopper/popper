@@ -27,9 +27,6 @@ yaml.Dumper.ignore_aliases = lambda *args: True
 docker_client = docker.from_env()
 s_client = spython.main.Client
 
-BOLD_CYAN = '[01;36m'
-RESET = '[0m'
-
 
 class WorkflowRunner(object):
     """A GHA workflow runner.
@@ -101,19 +98,14 @@ class WorkflowRunner(object):
                 continue
 
             if not infoed:
-                log.info('{}[popper]{} Cloning action repositories'.format(
-                    BOLD_CYAN, RESET))
+                log.info('Cloning action repositories', action="popper")
                 infoed = True
 
             if '{}/{}'.format(user, repo) in cloned:
                 continue
 
-            log.info('{}[popper]{} - {}/{}/{}@{}'.format(BOLD_CYAN,
-                                                         RESET,
-                                                         url,
-                                                         user,
-                                                         repo,
-                                                         version))
+            log.info(' - {}/{}/{}@{}'.format(url, user, repo, version), 
+                action="popper")
             scm.clone(url, user, repo, repo_dir, version)
             cloned.add('{}/{}'.format(user, repo))
 
@@ -241,19 +233,15 @@ class ActionRunner(object):
         """
         if ecode == 0:
             log.info(
-                "Action{} '{}'{} ran successfully !".format(
-                    BOLD_CYAN, self.action['name'], RESET))
+                "ran successfully !", prefix="Action", 
+                action=self.action['name'])
         elif ecode == 78:
             log.info(
-                "Action{} '{}'{} ran successfully !".format(
-                    BOLD_CYAN, self.action['name'], RESET))
+                "ran successfully !", prefix="Action", 
+                action=self.action['name'])
             os.kill(os.getpid(), signal.SIGUSR1)
         else:
-            log.fail(
-                "Action {}'{}'{} failed !".format(
-                    BOLD_CYAN,
-                    self.action['name'],
-                    RESET))
+            log.fail("Action '{}' failed !".format(self.action['name']))
 
     def check_executable(self, command):
         """Check whether the required executable dependencies
@@ -457,17 +445,9 @@ class DockerRunner(ActionRunner):
         Args:
             img (str): The image to use for building the container.
         """
-        log.info(
-            '{}{}[{}]{} docker create {} {}'.format(
-                self.msg_prefix,
-                BOLD_CYAN,
-                self.action['name'],
-                RESET,
-                img,
-                ' '.join(
-                    self.action.get(
-                        'args',
-                        ''))))
+        log.info('docker create {} {}'.format(
+            img, ' '.join(self.action.get('args', ''))
+        ), prefix=self.msg_prefix, action= self.action['name'])
         if self.dry_run:
             return
 
@@ -501,8 +481,8 @@ class DockerRunner(ActionRunner):
         Returns:
             int: The returncode of the container process.
         """
-        log.info('{}{}[{}]{} docker start '.format(self.msg_prefix, BOLD_CYAN,
-                                                   self.action['name'], RESET))
+        log.info('docker start ', prefix=self.msg_prefix, 
+            action=self.action['name'])
         if self.dry_run:
             return 0
         self.container.start()
@@ -519,13 +499,8 @@ class DockerRunner(ActionRunner):
             img (str): The image reference to pull.
         """
         if not self.skip_pull:
-            log.info(
-                '{}{}[{}]{} docker pull {}'.format(
-                    self.msg_prefix,
-                    BOLD_CYAN,
-                    self.action['name'],
-                    RESET,
-                    img))
+            log.info('docker pull {}'.format(img), 
+                prefix=self.msg_prefix, action=self.action['name'])
             if self.dry_run:
                 return
             docker_client.images.pull(repository=img)
@@ -542,8 +517,8 @@ class DockerRunner(ActionRunner):
             img (str): The name of the image to build.
             path (str): The path to the Dockerfile and other resources.
         """
-        log.info('{}{}[{}]{} docker build -t {} {}'.format(
-            self.msg_prefix, BOLD_CYAN, self.action['name'], RESET, img, path))
+        log.info('docker build -t {} {}'.format(
+            img, path), prefix=self.msg_prefix, action=self.action['name'])
         if self.dry_run:
             return
         docker_client.images.build(path=path, tag=img, rm=True, pull=True)
@@ -734,14 +709,9 @@ class SingularityRunner(ActionRunner):
         container = os.path.basename(container_path)
 
         if not self.skip_pull:
-            log.info(
-                '{}{}[{}]{} singularity pull {} {}'.format(
-                    self.msg_prefix,
-                    BOLD_CYAN,
-                    self.action['name'],
-                    RESET,
-                    container,
-                    image))
+            log.info('singularity pull {} {}'.format(
+                container, image), prefix=self.msg_prefix, action=self.action['name']
+            )
             if not self.dry_run:
                 if not self.singularity_exists(container_path):
                     s_client.pull(
@@ -771,9 +741,9 @@ class SingularityRunner(ActionRunner):
             'Singularity.{}'.format(self.wid))
         build_dest = os.path.dirname(container_path)
 
-        log.info('{}{}[{}]{} singularity build {} {}'.format(
-            self.msg_prefix, BOLD_CYAN, self.action['name'], RESET,
-            container, recipefile)
+        log.info('singularity build {} {}'.format(
+            container, recipefile),
+            prefix=self.msg_prefix, action=self.action['name']
         )
 
         if not self.dry_run:
@@ -808,19 +778,18 @@ class SingularityRunner(ActionRunner):
         ecode = None
 
         if runs:
-            info = '{}{}[{}]{} singularity exec {} {}'.format(
-                self.msg_prefix, BOLD_CYAN, self.action['name'], RESET,
+            info = 'singularity exec {} {}'.format(
                 container_path, runs)
             commands = runs
             start = s_client.execute
         else:
-            info = '{}{}[{}]{} singularity run {} {}'.format(
-                self.msg_prefix, BOLD_CYAN, self.action['name'], RESET,
+            info = 'singularity run {} {}'.format(
                 container_path, args)
             commands = args
             start = s_client.run
 
-        log.info(info)
+        log.info(info, prefix=self.msg_prefix, 
+            action=self.action['name'])
         if not self.dry_run:
             output = start(container_path, commands, bind=volumes,
                            stream=True, options=[
@@ -898,13 +867,8 @@ class HostRunner(ActionRunner):
         Returns:
             int: The returncode of the process.
         """
-        log.info(
-            '{}{}[{}]{} {}'.format(
-                self.msg_prefix,
-                BOLD_CYAN,
-                self.action['name'],
-                RESET,
-                ' '.join(cmd)))
+        log.info(' '.join(cmd), prefix=self.msg_prefix, 
+            action=self.action['name'])
 
         if self.dry_run:
             return 0
