@@ -5,6 +5,12 @@ import os
 ACTION_INFO = 15
 logging.addLevelName(ACTION_INFO, 'ACTION_INFO')
 
+# Log Colors
+BOLD_CYAN = '[01;36m'
+RESET = '[0m'
+BOLD_YELLOW = '[01;33m'
+BOLD_RED = '[01;31m'
+
 
 class PopperFormatter(logging.Formatter):
     """
@@ -26,11 +32,6 @@ class PopperFormatter(logging.Formatter):
     In order of Level. The format of the logs is given in log_format dict.
     The log colors used are based on ANSI Escape Codes
     """
-    # Log Colors
-    BOLD_CYAN = '[01;36m'
-    RESET = '[0m'
-    BOLD_YELLOW = '[01;33m'
-    BOLD_RED = '[01;31m'
 
     log_format = {
         'DEBUG':       '{}%(levelname)s: %(msg)s {}'.format(BOLD_CYAN, RESET),
@@ -68,12 +69,6 @@ class PopperLogger(logging.Logger):
     """
     A Logger so that we can add popper fail and action_info log methods
     """
-    
-    # Log Colors
-    BOLD_CYAN = '[01;36m'
-    RESET = '[0m'
-    BOLD_YELLOW = '[01;33m'
-    BOLD_RED = '[01;31m'
 
     def fail(self, msg='', *args, **kwargs):
         """
@@ -106,17 +101,11 @@ class PopperLogger(logging.Logger):
         """
         Logs a message with severity 'INFO'
         """
-        # Log Colors
-        BOLD_CYAN = '[01;36m'
-        RESET = '[0m'
-        BOLD_YELLOW = '[01;33m'
-        BOLD_RED = '[01;31m'
-        
         m = ""
         if 'prefix' in kwargs:
             m = kwargs.get("prefix") + " "
             kwargs.pop("prefix")
-        
+
         if 'action' in kwargs:
             m += "[" + BOLD_YELLOW + kwargs.get("action") + RESET + "] : "
             kwargs.pop("action")

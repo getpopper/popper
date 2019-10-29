@@ -104,8 +104,8 @@ class WorkflowRunner(object):
             if '{}/{}'.format(user, repo) in cloned:
                 continue
 
-            log.info(' - {}/{}/{}@{}'.format(url, user, repo, version), 
-                action="popper")
+            log.info('- {}/{}/{}@{}'.format(url, user, repo, version),
+                     action="popper")
             scm.clone(url, user, repo, repo_dir, version)
             cloned.add('{}/{}'.format(user, repo))
 
@@ -233,11 +233,11 @@ class ActionRunner(object):
         """
         if ecode == 0:
             log.info(
-                "ran successfully !", prefix="Action", 
+                "ran successfully !", prefix="Action",
                 action=self.action['name'])
         elif ecode == 78:
             log.info(
-                "ran successfully !", prefix="Action", 
+                "ran successfully !", prefix="Action",
                 action=self.action['name'])
             os.kill(os.getpid(), signal.SIGUSR1)
         else:
@@ -447,7 +447,7 @@ class DockerRunner(ActionRunner):
         """
         log.info('docker create {} {}'.format(
             img, ' '.join(self.action.get('args', ''))
-        ), prefix=self.msg_prefix, action= self.action['name'])
+        ), prefix=self.msg_prefix, action=self.action['name'])
         if self.dry_run:
             return
 
@@ -481,8 +481,8 @@ class DockerRunner(ActionRunner):
         Returns:
             int: The returncode of the container process.
         """
-        log.info('docker start ', prefix=self.msg_prefix, 
-            action=self.action['name'])
+        log.info('docker start ', prefix=self.msg_prefix,
+                 action=self.action['name'])
         if self.dry_run:
             return 0
         self.container.start()
@@ -499,8 +499,8 @@ class DockerRunner(ActionRunner):
             img (str): The image reference to pull.
         """
         if not self.skip_pull:
-            log.info('docker pull {}'.format(img), 
-                prefix=self.msg_prefix, action=self.action['name'])
+            log.info('docker pull {}'.format(img),
+                     prefix=self.msg_prefix, action=self.action['name'])
             if self.dry_run:
                 return
             docker_client.images.pull(repository=img)
@@ -710,8 +710,8 @@ class SingularityRunner(ActionRunner):
 
         if not self.skip_pull:
             log.info('singularity pull {} {}'.format(
-                container, image), prefix=self.msg_prefix, action=self.action['name']
-            )
+                     container, image), prefix=self.msg_prefix,
+                     action=self.action['name'])
             if not self.dry_run:
                 if not self.singularity_exists(container_path):
                     s_client.pull(
@@ -788,8 +788,8 @@ class SingularityRunner(ActionRunner):
             commands = args
             start = s_client.run
 
-        log.info(info, prefix=self.msg_prefix, 
-            action=self.action['name'])
+        log.info(info, prefix=self.msg_prefix,
+                 action=self.action['name'])
         if not self.dry_run:
             output = start(container_path, commands, bind=volumes,
                            stream=True, options=[
@@ -867,8 +867,8 @@ class HostRunner(ActionRunner):
         Returns:
             int: The returncode of the process.
         """
-        log.info(' '.join(cmd), prefix=self.msg_prefix, 
-            action=self.action['name'])
+        log.info(' '.join(cmd), prefix=self.msg_prefix,
+                 action=self.action['name'])
 
         if self.dry_run:
             return 0
