@@ -111,6 +111,12 @@ from popper import log as logging
     hidden=True,
     default=popper.scm.get_git_root_folder()
 )
+@click.option(
+    '--no-color',
+    help='Set no color in the logs',
+    required=False,
+    is_flag=True,
+)
 @pass_context
 def cli(ctx, **kwargs):
     """Runs a Github Action Workflow.
@@ -185,7 +191,7 @@ def prepare_workflow_execution(recursive=False, **kwargs):
 
 
 def run_workflow(**kwargs):
-
+    
     kwargs['wfile'] = pu.find_default_wfile(kwargs['wfile'])
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Worklow. During initialization all the validation

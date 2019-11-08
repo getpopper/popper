@@ -102,13 +102,22 @@ class PopperLogger(logging.Logger):
         Logs a message with severity 'INFO'
         """
         m = ""
+
         if 'prefix' in kwargs:
-            m = kwargs.get("prefix") + " "
+            m += kwargs.get("prefix") + " "
             kwargs.pop("prefix")
 
         if 'action' in kwargs:
-            m += "[" + BOLD_YELLOW + kwargs.get("action") + RESET + "] : "
-            kwargs.pop("action")
+            if 'no_color' in kwargs:
+                if  kwargs['no_color'] :
+                    m += "[" + kwargs.get("action") + "] : "
+                else:
+                    m += "[" + BOLD_YELLOW + kwargs.get("action") + RESET + "] : "
+                kwargs.pop("no_color")
+                kwargs.pop("action")
+            else:
+                m += "[" + BOLD_YELLOW + kwargs.get("action") + RESET + "] : "
+                kwargs.pop("action")
 
         msg = m + msg
         super(PopperLogger, self).info(msg, *args, **kwargs)

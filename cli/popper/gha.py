@@ -40,7 +40,7 @@ class WorkflowRunner(object):
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
     @staticmethod
-    def check_secrets(wf, dry_run, skip_secrets_prompt):
+    def check_secrets(wf, dry_run, no_color, skip_secrets_prompt):
         """Checks whether the secrets defined in the action block is
         set in the execution environment or not.
 
@@ -63,7 +63,7 @@ class WorkflowRunner(object):
                         os.environ[s] = val
 
     @staticmethod
-    def download_actions(wf, dry_run, skip_clone, wid):
+    def download_actions(wf, dry_run, skip_clone, no_color, wid):
         """Clone actions that reference a repository."""
         actions_cache = os.path.join(
             pu.setup_base_cache(), 'actions', wid
@@ -98,19 +98,19 @@ class WorkflowRunner(object):
                 continue
 
             if not infoed:
-                log.info('Cloning action repositories', action="popper")
+                log.info('Cloning action repositories', action="popper", no_color=no_color)
                 infoed = True
 
             if '{}/{}'.format(user, repo) in cloned:
                 continue
 
             log.info('- {}/{}/{}@{}'.format(url, user, repo, version),
-                     action="popper")
+                     action="popper", no_color=no_color)
             scm.clone(url, user, repo, repo_dir, version)
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid):
+    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, no_color, wid):
         """Factory of ActionRunner instances, one for each action.
 
         Note:
@@ -125,7 +125,7 @@ class WorkflowRunner(object):
 
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, no_color, wid)
                 continue
 
             if a['uses'].startswith('./'):
@@ -134,16 +134,16 @@ class WorkflowRunner(object):
                                  'Dockerfile')):
 
                     a['runner'] = HostRunner(
-                        a, workspace, env, dry_run, skip_pull, wid)
+                        a, workspace, env, dry_run, skip_pull, no_color, wid)
                     continue
 
             if runtime == 'docker':
                 a['runner'] = DockerRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, no_color, wid)
 
             elif runtime == 'singularity':
                 a['runner'] = SingularityRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, no_color, wid)
 
     @staticmethod
     def get_workflow_env(wf, workspace):
@@ -172,9 +172,10 @@ class WorkflowRunner(object):
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, runtime,
-            skip_secrets_prompt=False):
+            no_color, skip_secrets_prompt=False):
         """Run the workflow or a specific action.
         """
+        # log.info('no_color : {}'.format(no_color))
         new_wf = deepcopy(self.wf)
 
         if skip:
@@ -185,10 +186,10 @@ class WorkflowRunner(object):
 
         new_wf.check_for_unreachable_actions(skip)
 
-        WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
-        WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
+        WorkflowRunner.check_secrets(new_wf, dry_run, no_color, skip_secrets_prompt)
+        WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, no_color, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
+            runtime, new_wf, workspace, dry_run, skip_pull, no_color, self.wid)
 
         for s in new_wf.get_stages():
             WorkflowRunner.run_stage(new_wf, s, reuse, parallel)
@@ -215,12 +216,13 @@ class ActionRunner(object):
     """An action runner.
     """
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
+    def __init__(self,  action, workspace, env, dry_run, skip_pull, no_color, wid):
         self.action = action
         self.workspace = workspace
         self.env = env
         self.dry_run = dry_run
         self.skip_pull = skip_pull
+        self.no_color = no_color
         self.wid = wid
         self.msg_prefix = "DRYRUN: " if dry_run else ""
         self.setup_necessary_files()
@@ -234,11 +236,11 @@ class ActionRunner(object):
         if ecode == 0:
             log.info(
                 "ran successfully !", prefix="Action",
-                action=self.action['name'])
+                action=self.action['name'], no_color=self.no_color)
         elif ecode == 78:
             log.info(
                 "ran successfully !", prefix="Action",
-                action=self.action['name'])
+                action=self.action['name'], no_color=self.no_color)
             os.kill(os.getpid(), signal.SIGUSR1)
         else:
             log.fail("Action '{}' failed !".format(self.action['name']))
@@ -312,11 +314,12 @@ class DockerRunner(ActionRunner):
     """Run a Github Action in Docker runtime.
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull, no_color, wid):
         super(DockerRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid)
+            action, workspace, env, dry, skip_pull, no_color, wid)
         self.cid = pu.sanitized_name(self.action['name'], wid)
         self.container = None
+        self.no_color = no_color
 
     def get_build_resources(self):
         """Parse the `uses` attribute and get the build resources
@@ -447,7 +450,7 @@ class DockerRunner(ActionRunner):
         """
         log.info('docker create {} {}'.format(
             img, ' '.join(self.action.get('args', ''))
-        ), prefix=self.msg_prefix, action=self.action['name'])
+        ), prefix=self.msg_prefix, action=self.action['name'], no_color=self.no_color)
         if self.dry_run:
             return
 
@@ -482,7 +485,7 @@ class DockerRunner(ActionRunner):
             int: The returncode of the container process.
         """
         log.info('docker start ', prefix=self.msg_prefix,
-                 action=self.action['name'])
+                 action=self.action['name'], no_color=self.no_color)
         if self.dry_run:
             return 0
         self.container.start()
@@ -500,7 +503,8 @@ class DockerRunner(ActionRunner):
         """
         if not self.skip_pull:
             log.info('docker pull {}'.format(img),
-                     prefix=self.msg_prefix, action=self.action['name'])
+                     prefix=self.msg_prefix, action=self.action['name'],
+                     no_color=self.no_color)
             if self.dry_run:
                 return
             docker_client.images.pull(repository=img)
@@ -518,7 +522,8 @@ class DockerRunner(ActionRunner):
             path (str): The path to the Dockerfile and other resources.
         """
         log.info('docker build -t {} {}'.format(
-            img, path), prefix=self.msg_prefix, action=self.action['name'])
+                 img, path), prefix=self.msg_prefix, action=self.action['name'],                 
+                 no_color= self.no_color)
         if self.dry_run:
             return
         docker_client.images.build(path=path, tag=img, rm=True, pull=True)
@@ -528,10 +533,11 @@ class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime.
     """
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry_run, skip_pull, no_color, wid):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry_run, skip_pull, wid)
+                                                dry_run, skip_pull, no_color, wid)
         s_client.quiet = True
+        self.no_color= no_color
 
     @staticmethod
     def setup_singularity_cache(wid):
@@ -711,7 +717,8 @@ class SingularityRunner(ActionRunner):
         if not self.skip_pull:
             log.info('singularity pull {} {}'.format(
                      container, image), prefix=self.msg_prefix,
-                     action=self.action['name'])
+                     action=self.action['name'], 
+                     no_color= self.no_color)
             if not self.dry_run:
                 if not self.singularity_exists(container_path):
                     s_client.pull(
@@ -742,9 +749,9 @@ class SingularityRunner(ActionRunner):
         build_dest = os.path.dirname(container_path)
 
         log.info('singularity build {} {}'.format(
-            container, recipefile),
-            prefix=self.msg_prefix, action=self.action['name']
-        )
+                 container, recipefile),
+                 prefix=self.msg_prefix, action=self.action['name'],
+                 no_color= self.no_color)
 
         if not self.dry_run:
             if not self.singularity_exists(container_path):
@@ -789,7 +796,8 @@ class SingularityRunner(ActionRunner):
             start = s_client.run
 
         log.info(info, prefix=self.msg_prefix,
-                 action=self.action['name'])
+                 action=self.action['name'],
+                 no_color= self.no_color)
         if not self.dry_run:
             output = start(container_path, commands, bind=volumes,
                            stream=True, options=[
@@ -813,10 +821,11 @@ class HostRunner(ActionRunner):
     Run an Action on the Host Machine.
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull, no_color, wid):
         super(HostRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid)
+            action, workspace, env, dry, skip_pull, no_color, wid)
         self.cwd = os.getcwd()
+        self.no_color = no_color
 
     def run(self, reuse=False):
         if reuse:
@@ -868,7 +877,7 @@ class HostRunner(ActionRunner):
             int: The returncode of the process.
         """
         log.info(' '.join(cmd), prefix=self.msg_prefix,
-                 action=self.action['name'])
+                 action=self.action['name'], no_color=self.no_color)
 
         if self.dry_run:
             return 0
