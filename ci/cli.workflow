@@ -2,6 +2,7 @@ workflow "cli tests" {
   on = "push"
   resolves = "end"
 }
+
 action "lint" {
   uses = "popperized/bin/shellcheck@master"
   args = "./ci/test/*"
@@ -9,97 +10,97 @@ action "lint" {
 
 action "test ci" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "ci"
+  uses = "sh"
+  args = "ci/test/ci"
 }
 
 action "test reuse" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "reuse"
+  uses = "sh"
+  args = "ci/test/reuse"
 }
 
 action "test actions-demo" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "actions-demo"
+  uses = "sh"
+  args = "ci/test/actions-demo"
 }
 
 action "test validate" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "validate"
+  uses = "sh"
+  args = "ci/test/validate"
 }
 
 action "test scaffold" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "scaffold"
+  uses = "sh"
+  args = "ci/test/scaffold"
 }
 
 action "test dry-run" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "dry-run"
+  uses = "sh"
+  args = "ci/test/dry-run"
 }
 
 action "test parallel" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "parallel"
+  uses = "sh"
+  args = "ci/test/parallel"
 }
 
 action "test dot" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "dot"
+  uses = "sh"
+  args = "ci/test/dot"
 }
 
 action "test interrupt" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "interrupt"
+  uses = "sh"
+  args = "ci/test/interrupt"
 }
 
 action "test quiet" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "quiet"
+  uses = "sh"
+  args = "ci/test/quiet"
 }
 
 action "test sh" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "sh"
+  uses = "sh"
+  args = "ci/test/sh"
 }
 
 action "test skip" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "skip"
+  uses = "sh"
+  args = "ci/test/skip"
 }
 
 action "test search" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "search"
+  uses = "sh"
+  args = "ci/test/search"
 }
 
 action "test offline" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "offline"
+  uses = "sh"
+  args = "ci/test/offline"
 }
 
 action "test inject" {
   needs = "lint"
-  uses = "./ci/test"
-  runs = "inject"
+  uses = "sh"
+  args = "ci/test/inject"
 }
 
 action "end" {
-  uses = "./ci/test"
-  runs = "version"
+  uses = "sh"
+  args = "ci/test/version"
   needs = [
     "test actions-demo",
     "test ci",
