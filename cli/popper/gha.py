@@ -11,8 +11,7 @@ from copy import deepcopy
 from builtins import dict
 from distutils.dir_util import copy_tree
 from distutils.spawn import find_executable
-from concurrent.futures import (ProcessPoolExecutor,
-                                ThreadPoolExecutor,
+from concurrent.futures import (ThreadPoolExecutor,
                                 as_completed)
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
