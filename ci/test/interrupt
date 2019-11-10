@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 # shellcheck source=./ci/test/common
-source ./common
+source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
@@ -23,7 +23,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --runtime $RUNTIME" 5
+send_sigint "popper run --no-color --runtime $RUNTIME" 5
 
 # give popper some time to remove containers
 sleep 5
@@ -85,7 +85,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --parallel --runtime $RUNTIME" 2
+send_sigint "popper run --no-color --parallel --runtime $RUNTIME" 2
 
 sleep 30
 
@@ -122,7 +122,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint 'popper run' 5
+send_sigint 'popper run --no-color' 5
 
 sleep 15
 
@@ -188,7 +188,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint 'popper run --parallel' 15
+send_sigint 'popper run --no-color --parallel' 15
 
 sleep 15
 

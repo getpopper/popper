@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 # shellcheck source=./ci/test/common
-source ./common
+source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
@@ -39,38 +39,38 @@ action "d" {
 }
 EOF
 
-! popper run a1 --skip a2
+! popper run --no-color a1 --skip a2
 
-popper run --dry-run --runtime "$RUNTIME" a1 | grep "a1"
-popper run --dry-run --runtime "$RUNTIME" a2 | grep "a2"
-popper run --dry-run --runtime "$RUNTIME" b | grep "b"
-popper run --dry-run --runtime "$RUNTIME" c | grep "c"
-popper run --dry-run --runtime "$RUNTIME" d | grep "d"
+popper run --no-color --dry-run --runtime "$RUNTIME" a1 | grep "a1"
+popper run --no-color --dry-run --runtime "$RUNTIME" a2 | grep "a2"
+popper run --no-color --dry-run --runtime "$RUNTIME" b | grep "b"
+popper run --no-color --dry-run --runtime "$RUNTIME" c | grep "c"
+popper run --no-color --dry-run --runtime "$RUNTIME" d | grep "d"
 
-! popper run --dry-run --skip e1
-! popper run --dry-run --skip a1 --skip a2
-popper run --dry-run --runtime "$RUNTIME" --skip a1 > output
+! popper run --no-color --dry-run --skip e1
+! popper run --no-color --dry-run --skip a1 --skip a2
+popper run --no-color --dry-run --runtime "$RUNTIME" --skip a1 > output
 grep -q "a2" output
 grep -q "b" output
 grep -q "c" output
 grep -q "d" output
-popper run --dry-run --runtime "$RUNTIME" --skip a2 > output
+popper run --no-color --dry-run --runtime "$RUNTIME" --skip a2 > output
 grep -q "a1" output
 grep -q "b" output
 grep -q "c" output
 grep -q "d" output
-! popper run --dry-run --runtime "$RUNTIME" --skip b --skip c
-popper run --dry-run --runtime "$RUNTIME" --skip b > output
+! popper run --no-color --dry-run --runtime "$RUNTIME" --skip b --skip c
+popper run --no-color --dry-run --runtime "$RUNTIME" --skip b > output
 grep -q "a1" output
 grep -q "a2" output
 grep -q "c" output
 grep -q "d" output
-popper run --dry-run --runtime "$RUNTIME" --skip c > output
+popper run --no-color --dry-run --runtime "$RUNTIME" --skip c > output
 grep -q "a1" output
 grep -q "a2" output
 grep -q "b" output
 grep -q "d" output
-popper run --dry-run --runtime "$RUNTIME" --skip d > output
+popper run --no-color --dry-run --runtime "$RUNTIME" --skip d > output
 grep -q "a1" output
 grep -q "a2" output
 grep -q "b" output
@@ -110,7 +110,7 @@ action "d" {
 }
 EOF
 
-! popper run --dry-run --runtime "$RUNTIME"
+! popper run --no-color --dry-run --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -146,6 +146,6 @@ action "d" {
 }
 EOF
 
-! popper run --dry-run --runtime "$RUNTIME"
+! popper run --no-color --dry-run --runtime "$RUNTIME"
 
 echo "Test SKIP passed."

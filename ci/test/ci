@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 # shellcheck source=./ci/test/common
-source ./common
+source ./ci/test/common
 init_test_repo
 
 cd "$test_repo_path"
@@ -94,7 +94,7 @@ EOF
 git init
 git add .
 git commit -m "popper:run[--wfile /tmp/mypaper/myaction/a.workflow] popper:run[--wfile /tmp/mypaper/myaction/b.workflow]"
-popper run --dry-run --runtime "$RUNTIME" > output
+popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/b.workflow" output
 ! grep -q "Found and running workflow at /tmp/mypaper/myaction/c.workflow" output
@@ -114,7 +114,7 @@ EOF
 
 git add .
 git commit -m "Test commit popper:run[--wfile /tmp/mypaper/myaction/a.workflow --debug] popper:run[--wfile /tmp/mypaper/myaction/d.workflow --quiet]"
-popper run --dry-run --runtime "$RUNTIME" > output
+popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/d.workflow" output
 count=$(grep -wc "README.md" output)
@@ -141,7 +141,7 @@ EOF
 
 git add .
 git commit -m "Test commit 2 popper:run[--wfile /tmp/mypaper/myaction/e.workflow --skip a1]"
-popper run --dry-run --runtime "$RUNTIME" > output
+popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/e.workflow" output
 cat output
 grep -q "a2" output
@@ -149,7 +149,7 @@ grep -q "a2" output
 
 git clone https://github.com/JayjeetAtGithub/test-merge-commits.git
 cd test-merge-commits
-popper run --dry-run --runtime "$RUNTIME" > output
+popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at b.workflow" output
 ! grep -q "Found and running workflow at a.workflow" output
 ! grep -q "Found and running workflow at c.workflow" output

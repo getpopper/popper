@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 # shellcheck source=./ci/test/common
-source ./common
+source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
@@ -47,7 +47,7 @@ action "stage_one" {
 }
 EOF
 
-popper run --parallel --runtime "$RUNTIME" |& tee out
+popper run --no-color --parallel --runtime "$RUNTIME" |& tee out
 counter="$(grep -c "Action '[a-zA-Z_]*' ran successfully !" out)"
 test "$counter" -eq 5
 
@@ -89,7 +89,7 @@ action "stage_one" {
 }
 EOF
 
-! popper run --parallel --runtime "$RUNTIME"
+! popper run --no-color --parallel --runtime "$RUNTIME"
 echo "Some actions failed as expected !"
 fi
 

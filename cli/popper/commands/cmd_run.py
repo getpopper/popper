@@ -71,7 +71,7 @@ from popper import log as logging
 @click.option(
     '--runtime',
     help='Specify runtime for executing the workflow [default: docker].',
-    type=click.Choice(['docker', 'singularity']),
+    type=click.Choice(['docker', 'singularity', 'vagrant']),
     required=False,
     default='docker'
 )
