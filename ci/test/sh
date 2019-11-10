@@ -5,8 +5,6 @@ source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
-PY_VERSION=$( (python --version) 2>&1)
-
 ## Serial Executions
 
 cat <<EOF > main.workflow
@@ -68,8 +66,6 @@ popper run
 
 
 ## Parallel Executions
-
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 cat <<EOF > script1
 #!/bin/bash
@@ -302,6 +298,5 @@ EOF
 
 count=$(popper run --parallel --debug | grep -c "Action '[a-zA-Z0-9_]*' ran successfully !")
 test "$count" -eq 11
-fi
 
 echo "Tesh SH passed."
