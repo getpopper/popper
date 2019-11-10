@@ -205,12 +205,8 @@ class WorkflowRunner(object):
     def run_stage(runtime, wf, stage, reuse=False, parallel=False):
         """Runs actions in a stage either parallely or
         sequentially."""
-        if runtime == 'singularity':
-            Executor = ProcessPoolExecutor
-        else:
-            Executor = ThreadPoolExecutor
         if parallel:
-            with Executor(max_workers=mp.cpu_count()) as ex:
+            with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(wf.action[a]['runner'].run, reuse):
                         a for a in stage
@@ -548,7 +544,7 @@ class DockerRunner(ActionRunner):
 class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime.
     """
-
+    lock = threading.Lock()
     def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 dry_run, skip_pull, wid)
@@ -687,6 +683,7 @@ class SingularityRunner(ActionRunner):
             container (str): The name of the container image.
             wid (str): The workflow id.
         """
+        SingularityRunner.lock.acquire()
         pwd = os.getcwd()
         os.chdir(build_source)
         recipefile = SingularityRunner.get_recipe_file(build_source, wid)
@@ -695,6 +692,7 @@ class SingularityRunner(ActionRunner):
             image=container,
             build_folder=build_dest)
         os.chdir(pwd)
+        SingularityRunner.lock.release()
 
     def singularity_exists(self, container_path):
         """Check whether the container exists or not.
