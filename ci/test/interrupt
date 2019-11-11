@@ -5,9 +5,6 @@ source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
-# Fetch the version of python
-PY_VERSION=$( (python --version) 2>&1)
-
 
 ##############################
 # Docker & Singularity - Serial
@@ -39,8 +36,6 @@ fi
 ##############################
 # Docker & Singularity - Parallel
 ##############################
-
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -96,7 +91,6 @@ else
   test -z "$(singularity instance list | tail -n +2)"
 fi
 
-fi
 
 #########################
 # HostRunner - Serial
@@ -134,7 +128,6 @@ rm running_procs
 ##############################
 # HostRunner - Parallel
 ##############################
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
 
 mkdir -p actions/sleep
 
@@ -195,7 +188,5 @@ sleep 15
 ps aux > running_procs
 test "$(grep -c sleep running_procs)" -eq 0
 rm running_procs
-
-fi
 
 echo "Test INTERRUPT passed."
