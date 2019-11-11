@@ -553,7 +553,8 @@ class DockerRunner(ActionRunner):
 class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime.
     """
-
+    
+    lock = threading.Lock()
     def __init__(self, action, workspace, env, dry_run, skip_pull, no_color, wid):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 dry_run, skip_pull, no_color, wid)
@@ -693,6 +694,7 @@ class SingularityRunner(ActionRunner):
             container (str): The name of the container image.
             wid (str): The workflow id.
         """
+        SingularityRunner.lock.acquire()
         pwd = os.getcwd()
         os.chdir(build_source)
         recipefile = SingularityRunner.get_recipe_file(build_source, wid)
@@ -701,6 +703,7 @@ class SingularityRunner(ActionRunner):
             image=container,
             build_folder=build_dest)
         os.chdir(pwd)
+        SingularityRunner.lock.release()
 
     def singularity_exists(self, container_path):
         """Check whether the container exists or not.

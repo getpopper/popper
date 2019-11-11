@@ -40,10 +40,7 @@ alternatives that cover most of these alternatives:
 # - pip install virtualenv (pip)
 virtualenv $HOME/virtualenvs/popper
 
-# 2) virtualenv installed via Python 2.7 built-in module
-python -m virtualenv $HOME/virtualenvs/popper
-
-# 3) virtualenv installed via Python 3.6+ built-in module
+# 2) virtualenv installed via Python 3.6+ built-in module
 python -m venv $HOME/virtualenvs/popper
 ```
 
