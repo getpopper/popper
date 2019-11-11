@@ -5,10 +5,6 @@ source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
-PY_VERSION=$( (python --version) 2>&1)
-
-if [[ $PY_VERSION != *"Python 2.7"* ]]; then
-
 # workflow with actions expected to execute correctly.
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -91,6 +87,5 @@ EOF
 
 ! popper run --no-color --parallel --runtime "$RUNTIME"
 echo "Some actions failed as expected !"
-fi
 
 echo "Test PARALLEL passed."

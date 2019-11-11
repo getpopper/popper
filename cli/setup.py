@@ -17,12 +17,10 @@ setup(
         'python-vagrant',
         'requests',
         'GitPython',
-        'future; python_version == "2.7"',
         'spython',
         'click',
         'pyhcl',
         'pyyaml',
-        'futures; python_version == "2.7"',
         'docker'
     ],
     extras_require={

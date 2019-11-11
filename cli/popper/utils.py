@@ -317,15 +317,9 @@ def of_type(param, valid_types):
         bool: True/False, depending upon whether the type of
         the passed param matches with any of the valid types.
     """
-    # Python 2/3 compability.
-    try:
-        basestring
-    except BaseException:
-        basestring = str
-
     for t in valid_types:
         if t == 'str':
-            if isinstance(param, basestring):
+            if isinstance(param, str):
                 return True
 
         if t == 'dict':
@@ -334,7 +328,7 @@ def of_type(param, valid_types):
 
         if t == 'los':
             if isinstance(param, list):
-                res = list(map(lambda a: isinstance(a, basestring), param))
+                res = list(map(lambda a: isinstance(a, str), param))
                 return False not in res
 
     return False
