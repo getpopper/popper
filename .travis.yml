@@ -15,6 +15,6 @@ install:
 - pip install cli/[dev]
 script:
 - coverage run -m unittest discover --start-directory cli/
-- popper run
+- popper run --no-color
 after_success:
 - bash <(curl -s https://codecov.io/bash)

@@ -6,14 +6,14 @@ source ./ci/test/common
 delete_dir /tmp/gha-demo
 git clone https://github.com/popperized/github-actions-demo /tmp/gha-demo
 pushd /tmp/gha-demo
-PHONY_SECRET=phony popper run --no-color --debug --runtime "$RUNTIME"
+PHONY_SECRET=phony popper run --debug --runtime "$RUNTIME"
 popd
 
 # test with an action defined on the root of the repo
 delete_dir /tmp/spack
 git clone https://github.com/popperized/spack /tmp/spack
 pushd /tmp/spack
-popper run --no-color --wfile .ci/test.workflow --runtime "$RUNTIME"
+popper run --wfile .ci/test.workflow --runtime "$RUNTIME"
 popd
 
 # test with a remote action defined on the root of the repo
@@ -30,7 +30,7 @@ action "test" {
 }
 EOF
 
-ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run --no-color --runtime "$RUNTIME"
+ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run --runtime "$RUNTIME"
 
 # test with actions hosted on gitlab
 cd $test_repo_path
@@ -67,7 +67,7 @@ action "test" {
 }
 EOF
 
-popper run --no-color --dry-run --runtime "$RUNTIME" > output
+popper run --dry-run --runtime "$RUNTIME" > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
@@ -75,15 +75,15 @@ grep -q "dependency three" output
 grep -q "dependency four" output
 
 # test --with-dependencies flag
-popper run --no-color --dry-run --runtime "$RUNTIME" test > output
+popper run --dry-run --runtime "$RUNTIME" test > output
 grep -q "test" output
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" test > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" test > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
 grep -q "dependency four" output
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" 'dependency one' > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" 'dependency one' > output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
@@ -123,20 +123,20 @@ action "d" {
 }
 EOF
 
-! popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME"
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" a1 > output
+! popper run --dry-run --with-dependencies --runtime "$RUNTIME"
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" a1 > output
 grep -q "a1" output
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" a2 > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" a2 > output
 grep -q "a2" output
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" b > output 
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" b > output 
 grep -q "a1"  output
 grep -q "a2" output 
 grep -q "b" output
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" c > output
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" c > output
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "c" output
-popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" d > output 
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" d > output 
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "b" output 
@@ -202,7 +202,7 @@ EOF
 
 fi
 
-popper run --no-color --runtime "$RUNTIME"
+popper run --runtime "$RUNTIME"
 
 rm "$HOME/popperfile" ./popperfile
 
@@ -221,7 +221,7 @@ action "test" {
 }
 EOF
 
-popper run --no-color --runtime "$RUNTIME" > output
+popper run --runtime "$RUNTIME" > output
 grep -q "Successfully ran 'ls'" output
 
 # test on-failure flag
@@ -245,11 +245,11 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup runs successfully.
-popper run --no-color --on-failure cleanup --runtime "$RUNTIME" > output
+popper run --on-failure cleanup --runtime "$RUNTIME" > output
 grep -q "Cleaning up..." output
 
 # test action fails, clean action couldnt be found.
-! popper run --no-color --on-failure clean --runtime "$RUNTIME"
+! popper run --on-failure clean --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -268,7 +268,7 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup action also fails.
-! popper run --no-color --on-failure cleanup --runtime "$RUNTIME"
+! popper run --on-failure cleanup --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -287,7 +287,7 @@ action "cleanup" {
 EOF
 
 # test action fails, no --on-failure cleanup action.
-! popper run --no-color --runtime "$RUNTIME"
+! popper run --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -306,7 +306,7 @@ action "cleanup" {
 EOF
 
 # test action runs sucessfully, cleanup action in not triggered
-popper run --no-color --on-failure cleanup --runtime "$RUNTIME" > output
+popper run --on-failure cleanup --runtime "$RUNTIME" > output
 ! grep -q "Cleaning up..." output
 
 # test prevention of double cloning of actions, instantiation of runners etc.
@@ -326,7 +326,7 @@ action "cleanup" {
 }
 EOF
 
-popper run --no-color --on-failure cleanup --runtime "$RUNTIME"
+popper run --on-failure cleanup --runtime "$RUNTIME"
 
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -344,7 +344,7 @@ action "test2" {
 }
 EOF
 
-popper run --no-color --runtime "$RUNTIME" > output
+popper run --runtime "$RUNTIME" > output
 grep -q "https://github.com/actions/npm@master" output
 ! grep -q "https://github.com/popperized/bin@master" output
 
@@ -364,7 +364,7 @@ action "test2" {
 }
 EOF
 
-popper run --no-color --skip test1 --runtime "$RUNTIME" > output
+popper run --skip test1 --runtime "$RUNTIME" > output
 ! grep -q "https://github.com/actions/npm@master" output
 grep -q "https://github.com/popperized/bin@master" output
 
@@ -385,7 +385,7 @@ action "show workspace in host" {
 }
 EOF
 
-popper run --no-color --runtime "$RUNTIME" > output
+popper run --runtime "$RUNTIME" > output
 count=$(grep -wc "/tmp/mypaper" output)
 test "$count" -eq 2
 
@@ -401,7 +401,7 @@ action "b" {
 }
 EOF
 
-popper run --no-color --runtime docker
+popper run --runtime docker
 
 # Test implementation of handling exit code 78
 cat <<EOF > main.workflow
@@ -421,7 +421,7 @@ action "end" {
 }
 EOF
 
-popper run --no-color --runtime "$RUNTIME" > output
+popper run --runtime "$RUNTIME" > output
 grep -q "Action 'b' ran successfully !" output
 ! grep -q "Action 'end' ran successfully !" output
 
