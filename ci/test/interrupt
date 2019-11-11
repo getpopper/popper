@@ -20,7 +20,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --no-color --runtime $RUNTIME" 5
+send_sigint "--no-color --runtime $RUNTIME" 5
 
 # give popper some time to remove containers
 sleep 5
@@ -188,7 +188,5 @@ sleep 15
 ps aux > running_procs
 test "$(grep -c sleep running_procs)" -eq 0
 rm running_procs
-
-fi
 
 echo "Test INTERRUPT passed."
