@@ -346,12 +346,8 @@ class DockerRunner(ActionRunner):
 
     def __init__(self, action, workspace, env, dry, skip_pull, no_color, wid):
         super(DockerRunner, self).__init__(
-<<<<<<< HEAD
             action, workspace, env, dry, skip_pull, no_color, wid)
-=======
-            action, workspace, env, dry, skip_pull, wid)
         self.d_client = docker.from_env()
->>>>>>> bc9d4c72ea47409ee8b23ea212e7a60b601aa568
         self.cid = pu.sanitized_name(self.action['name'], wid)
         self.container = None
         self.no_color = no_color
