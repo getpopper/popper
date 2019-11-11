@@ -11,7 +11,8 @@ from copy import deepcopy
 from builtins import dict
 from distutils.dir_util import copy_tree
 from distutils.spawn import find_executable
-from concurrent.futures import (ThreadPoolExecutor,
+from concurrent.futures import (ProcessPoolExecutor,
+                                ThreadPoolExecutor,
                                 as_completed)
 from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 
@@ -206,8 +207,12 @@ class WorkflowRunner(object):
     def run_stage(runtime, wf, stage, reuse=False, parallel=False):
         """Runs actions in a stage either parallely or
         sequentially."""
+        if runtime == 'singularity':
+            Executor = ProcessPoolExecutor
+        else:
+            Executor = ThreadPoolExecutor
         if parallel:
-            with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
+            with Executor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(wf.action[a]['runner'].run, reuse):
                         a for a in stage

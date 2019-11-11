@@ -13,7 +13,7 @@ git checkout c824a5a
 
 export PHONY_SECRET=foo
 
-dry_num_lines=$(popper run --dry-run --runtime "$RUNTIME" | grep -c 'DRYRUN')
+dry_num_lines=$(popper run --no-color --dry-run --runtime "$RUNTIME" | grep -c 'DRYRUN')
 
 # 5 actions, at least one line per action
 test "$dry_num_lines" -gt 5
