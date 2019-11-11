@@ -45,13 +45,13 @@ git commit -m 'adding my first workflow'
 To run the workflow:
 
 ```bash
-popper run
+popper run --no-color
 ```
 
 or to execute all the workflows in a project:
 
 ```bash
-popper run --recursive
+popper run --no-color --recursive
 ```
 
 ## Environment Variables
@@ -256,7 +256,7 @@ selected (as opposed to `Auto-discover Pipelines`).
 
 ### Specifying which workflows to run via commit messages
 
-When a CI service executes a popper workflow by invoking `popper run` on the CI server, it does so without passing any flags and hence we cannot specify which workflow to skip or execute. To make this more flexible, popper provides the ability to control which workflows to be executed by looking for special keywords in commit messages.
+When a CI service executes a popper workflow by invoking `popper run --no-color` on the CI server, it does so without passing any flags and hence we cannot specify which workflow to skip or execute. To make this more flexible, popper provides the ability to control which workflows to be executed by looking for special keywords in commit messages.
 
 The `popper:whitelist[<list-of-workflows>]` keyword can be used in a commit message to specify which workflows to execute among all the workflows present in the project. For example,
 

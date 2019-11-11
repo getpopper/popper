@@ -126,22 +126,22 @@ def cli(ctx, **kwargs):
     By default, Popper searches for a workflow in .github/main.workflow
     or main.workflow and executes it if found.
 
-       $ popper run
+       $ popper run --no-color
 
     When an action name is passed as argument, the specified action
     from .github/main.workflow or main.workflow is executed.
 
-       $ popper run myaction
+       $ popper run --no-color myaction
 
     When an action name is passed as argument and a workflow file
     is passed through the `--wfile` option, the specified action from
     the specified workflow is executed.
 
-       $ popper run --wfile /path/to/main.workflow myaction
+       $ popper run --no-color --wfile /path/to/main.workflow myaction
 
     Note:
 
-    * When CI is set, popper run searches for special keywords of the form
+    * When CI is set, popper run --no-color searches for special keywords of the form
     `popper:run[...]`. If found, popper executes with the options given in
     these run instances else popper executes all the workflows recursively.
     """
@@ -276,5 +276,5 @@ def get_args(popper_run_instances):
     and return the args."""
     for args in popper_run_instances:
         args = args.split(" ")
-        ci_context = cli.make_context('popper run', args)
+        ci_context = cli.make_context('popper run --no-color', args)
         yield ci_context.params
