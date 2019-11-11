@@ -48,7 +48,7 @@ examples.
 
 ### How to apply the Popper protocol for applications that take large quantities of computer time?
 
-The `popper run` takes an optional `action` argument that can be used 
+The `popper run --no-color` takes an optional `action` argument that can be used 
 to execute a workflow up to a certain step. See 
 [here](cli_features.html).
 

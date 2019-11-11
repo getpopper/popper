@@ -51,7 +51,7 @@ respectively.
 By default, actions in Popper workflows run in Docker, similarly to 
 how they run in the Github Actions platform. Popper adds the ability 
 of running actions in other runtimes by providing a `--runtime` flag 
-to the `popper run` command.
+to the `popper run --no-color` command.
 
 > **NOTE**: As part of our roadmap, we plan to add support for
 > [Podman](https://podman.io/) runtime. Open a [new
@@ -64,7 +64,7 @@ Popper can execute a workflow in systems where Singularity 3.2+ is
 available. To execute a workflow in Singularity containers:
 
 ```bash
-popper run --runtime singularity
+popper run --no-color --runtime singularity
 ```
 
 When no `--runtime` option is supplied, Popper executes workflows in 
@@ -73,7 +73,7 @@ Docker.
 #### Limitations
 
   * The use of `ARG` in `Dockerfile`s is not supported by Singularity.
-  * Currently, the `--reuse` functionality of the `popper run` command 
+  * Currently, the `--reuse` functionality of the `popper run --no-color` command 
     is not available when running in Singularity.
 
 ### Vagrant
@@ -85,7 +85,7 @@ connects to the Docker Daemon inside the VM and hence executes actions inside
 Docker containers within the VM. To execute a workflow in Vagrant runtime:
 
 ```bash
-popper run --runtime vagrant
+popper run --no-color --runtime vagrant
 ```
 
 #### Limitations

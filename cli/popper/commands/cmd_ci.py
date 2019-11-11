@@ -49,7 +49,7 @@ install:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
 - pip install /tmp/popper/cli
-script: popper run
+script: popper run --no-color
 """)
     },
     'circle': {
@@ -67,7 +67,7 @@ jobs:
         git clone https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
         pip install /tmp/popper/cli
-        popper run
+        popper run --no-color
 """)
     },
     'jenkins': {
@@ -77,7 +77,7 @@ stage ('Popper') {{ node {{
   sh "git clone https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
   sh "pip install /tmp/popper/cli"
-  sh "popper run"
+  sh "popper run --no-color"
 }}}}
 """)
     },
@@ -101,7 +101,7 @@ before_script:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - pip install /tmp/popper/cli
 popper:
-  script: popper run
+  script: popper run --no-color
 """)
     },
     'brigade': {
@@ -116,7 +116,7 @@ events.on("push", () => {
         "git clone https://github.com/systemslab/popper /tmp/popper",
         "export PYTHONUNBUFFERED=1",
         "pip install /tmp/popper/cli",
-        "popper run"
+        "popper run --no-color"
     ]
     popper.run()
 })

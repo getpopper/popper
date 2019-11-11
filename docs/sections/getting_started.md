@@ -123,7 +123,7 @@ a look at [some examples][ex].
 To execute the workflow you just created:
 
 ```bash
-popper run
+popper run --no-color
 ```
 
 You should see the output of actions printed to the terminal.
