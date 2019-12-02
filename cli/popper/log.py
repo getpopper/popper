@@ -70,6 +70,9 @@ class PopperLogger(logging.Logger):
     A Logger so that we can add popper fail and action_info log methods
     """
 
+    def RemoveHandler(self, fmt):
+        super(PopperLogger, self).removeHandler(fmt)
+
     def fail(self, msg='', *args, **kwargs):
         """
         Log a message with severity 'ERROR', and then exits.
