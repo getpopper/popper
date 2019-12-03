@@ -89,7 +89,6 @@ class PopperLogger(logging.Logger):
         self.addHandler(h1)
         self.addHandler(h2)
         self.setLevel('ACTION_INFO')
-        print(self.handlers)
         self.RemoveHandler(self.handlers[0])
         self.RemoveHandler(self.handlers[0])
 

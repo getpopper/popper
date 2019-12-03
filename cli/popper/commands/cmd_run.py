@@ -115,6 +115,7 @@ from popper import log as logging
     '--no-color',
     help='Set no color in the logs',
     required=False,
+    default=False,
     is_flag=True,
 )
 @pass_context
@@ -126,25 +127,29 @@ def cli(ctx, **kwargs):
     By default, Popper searches for a workflow in .github/main.workflow
     or main.workflow and executes it if found.
 
-       $ popper run --no-color
+       $ popper run
 
     When an action name is passed as argument, the specified action
     from .github/main.workflow or main.workflow is executed.
 
-       $ popper run --no-color myaction
+       $ popper run myaction
 
     When an action name is passed as argument and a workflow file
     is passed through the `--wfile` option, the specified action from
     the specified workflow is executed.
 
-       $ popper run --no-color --wfile /path/to/main.workflow myaction
+       $ popper run --wfile /path/to/main.workflow myaction
 
     Note:
 
-    * When CI is set, popper run --no-color searches for special keywords of the form
+    * When CI is set, popper run searches for special keywords of the form
     `popper:run[...]`. If found, popper executes with the options given in
     these run instances else popper executes all the workflows recursively.
     """
+    if kwargs['no_color']:
+        log.noColor()
+
+    kwargs.pop('no_color') 
     if os.environ.get('CI') == 'true':
         # When CI is set,
         log.info('Running in CI environment...')
@@ -191,7 +196,7 @@ def prepare_workflow_execution(recursive=False, **kwargs):
 
 
 def run_workflow(**kwargs):
-    
+
     kwargs['wfile'] = pu.find_default_wfile(kwargs['wfile'])
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Worklow. During initialization all the validation
@@ -276,5 +281,5 @@ def get_args(popper_run_instances):
     and return the args."""
     for args in popper_run_instances:
         args = args.split(" ")
-        ci_context = cli.make_context('popper run --no-color', args)
+        ci_context = cli.make_context('popper run', args)
         yield ci_context.params
