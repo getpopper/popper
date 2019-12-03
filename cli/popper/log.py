@@ -47,7 +47,7 @@ class PopperFormatter(logging.Formatter):
         'ACTION_INFO': '%(msg)s',
         'INFO': '%(msg)s',
         'WARNING': '%(levelname)s: %(msg)s',
-        'ERROR': '%(levelname)s: %(msg)s',
+        'ERROR': '%(levelname)s: %(message)s',
         'CRITICAL': '%(levelname)s: %(msg)s'
     }
 
@@ -69,6 +69,44 @@ class PopperLogger(logging.Logger):
     """
     A Logger so that we can add popper fail and action_info log methods
     """
+
+    def noColor(self):
+        print("HAHA")
+        formatter = PopperFormatter(False)
+
+        # INFO/ACTION_INFO goes to stdout
+        h1 = logging.StreamHandler(sys.stdout)
+        h1.addFilter(LevelFilter([logging.INFO, ACTION_INFO], False))
+        h1.setFormatter(formatter)
+
+        # anything goes to stdout
+        h2 = logging.StreamHandler(sys.stderr)
+        h2.addFilter(LevelFilter([logging.INFO, ACTION_INFO], True))
+        h2.setFormatter(formatter)
+
+        self.addHandler(h1)
+        self.addHandler(h2)
+        self.setLevel('ACTION_INFO')
+        print(self.handlers)
+        self.RemoveHandler(self.handlers[0])
+        self.RemoveHandler(self.handlers[0])
+
+    # def noColor(ctx, **kwargs):
+    #     if 'no-color' in kwargs:
+    #         log = logging.getLogger('popper')
+    #         ch = logging.StreamHandler()
+    #         ch.setLevel(logging.INFO)
+    #         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    #         ch.setFormatter(formatter)
+    #         print(ch)
+    #         log.addHandler(ch)
+    #         print(log.handlers)
+    #         log.RemoveHandler(log.handlers[0])
+    #         print(log.handlers)
+    #         # log.RemoveHandler(log.handlers[0])
+    #         # print(log.handlers)
+    #         print(log)
+    #         kwargs.pop('no-color')
 
     def RemoveHandler(self, fmt):
         super(PopperLogger, self).removeHandler(fmt)
