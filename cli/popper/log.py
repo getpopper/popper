@@ -47,7 +47,7 @@ class PopperFormatter(logging.Formatter):
         'ACTION_INFO': '%(msg)s',
         'INFO': '%(msg)s',
         'WARNING': '%(levelname)s: %(msg)s',
-        'ERROR': '%(levelname)s: %(message)s',
+        'ERROR': '%(levelname)s: %(msg)s',
         'CRITICAL': '%(levelname)s: %(msg)s'
     }
 
@@ -70,24 +70,24 @@ class PopperLogger(logging.Logger):
     A Logger so that we can add popper fail and action_info log methods
     """
 
-    Color = True
+    color = True
 
     def noColor(self):
-        self.Color = False
+        self.color = False
         formatter = PopperFormatter(False)
 
         # INFO/ACTION_INFO goes to stdout
-        h1 = logging.StreamHandler(sys.stdout)
-        h1.addFilter(LevelFilter([logging.INFO, ACTION_INFO], False))
-        h1.setFormatter(formatter)
+        new_Handler1 = logging.StreamHandler(sys.stdout)
+        new_Handler1.addFilter(LevelFilter([logging.INFO, ACTION_INFO], False))
+        new_Handler1.setFormatter(formatter)
 
         # anything goes to stdout
-        h2 = logging.StreamHandler(sys.stderr)
-        h2.addFilter(LevelFilter([logging.INFO, ACTION_INFO], True))
-        h2.setFormatter(formatter)
+        new_Handler2 = logging.StreamHandler(sys.stderr)
+        new_Handler2.addFilter(LevelFilter([logging.INFO, ACTION_INFO], True))
+        new_Handler2.setFormatter(formatter)
 
-        self.addHandler(h1)
-        self.addHandler(h2)
+        self.addHandler(new_Handler1)
+        self.addHandler(new_Handler2)
         self.setLevel('ACTION_INFO')
         self.RemoveHandler(self.handlers[0])
         self.RemoveHandler(self.handlers[0])
@@ -126,21 +126,17 @@ class PopperLogger(logging.Logger):
         """
         Logs a message with severity 'INFO'
         """
-        m = ""
+        msg_updated = msg
 
-        if self.Color:
+        if self.color:
             if (msg.find('[') != -1):
-                m = msg[0: msg.find("[") +1]
-                m += BOLD_CYAN
-                m += msg[msg.find("[")+1: msg.find("]")]
-                m += RESET
-                m += msg[msg.find("]"): ]
-            else:
-                m = msg
-        else:
-            m = msg
+                msg_updated = msg[0: msg.find("[") +1]
+                msg_updated += BOLD_CYAN
+                msg_updated += msg[msg.find("[")+1: msg.find("]")]
+                msg_updated += RESET
+                msg_updated += msg[msg.find("]"): ]
 
-        super(PopperLogger, self).info(m, *args, **kwargs)
+        super(PopperLogger, self).info(msg_updated, *args, **kwargs)
 
     def debug(self, msg='', *args, **kwargs):
         """
