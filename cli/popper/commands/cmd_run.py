@@ -185,7 +185,8 @@ def prepare_workflow_execution(recursive=False, **kwargs):
 
 
 def run_workflow(**kwargs):
-
+    """Runs the workflow for the set parameters.
+    """
     kwargs['wfile'] = pu.find_default_wfile(kwargs['wfile'])
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Worklow. During initialization all the validation

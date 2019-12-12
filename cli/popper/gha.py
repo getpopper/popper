@@ -153,6 +153,8 @@ class WorkflowRunner(object):
 
     @staticmethod
     def get_workflow_env(wf, workspace):
+        """Updates the Popper environment variable with Github environment
+        variables."""
         if scm.get_user():
             repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
         else:

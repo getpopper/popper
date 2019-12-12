@@ -13,7 +13,9 @@ from popper.cli import log, pass_context
 @click.command('info', short_help='Show details about an action.')
 @pass_context
 def cli(ctx, action, update_cache):
-
+    """Finds out the metadata for the given action. This command searches
+    for the Readme file in the repository of the action.
+    """
     metadata = pu.fetch_metadata(update_cache)
     action_metadata = metadata.get(action, None)
 

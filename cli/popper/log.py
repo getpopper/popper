@@ -116,11 +116,17 @@ class PopperLogger(logging.Logger):
 
 
 class LevelFilter(logging.Filter):
+    """
+    Filters the level that are to be accepted and rejected.
+    """
     def __init__(self, passlevels, reject):
         self.passlevels = passlevels
         self.reject = reject
 
     def filter(self, record):
+        """
+        Returns True and False according to the passlevels and reject value.
+        """
         if self.reject:
             return (record.levelno not in self.passlevels)
         else:
@@ -154,6 +160,9 @@ def setup_logging(level='ACTION_INFO'):
 
 
 def add_log(log, logfile):
+    """
+    It sets the formatter for the handle and add that handler to the logger.
+    """
     dir = os.path.dirname(logfile)
     if not os.path.exists(dir) and dir != '':
         os.makedirs(dir)

@@ -21,8 +21,11 @@ popper_version = popper_version
 
 
 class PopperCLI(click.MultiCommand):
-
+    """Provides CLI interface for Popper.
+    """
     def list_commands(self, ctx):
+        """Returns the list of available commands in sorted order.
+        """
         rv = []
         for filename in os.listdir(cmd_folder):
             if filename.endswith('.py') and filename.startswith('cmd_'):
@@ -31,6 +34,9 @@ class PopperCLI(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
+        """Imports the command if available in commmands list and provides
+        with most similar commands if the command is not present in the list.
+        """
         try:
             if sys.version_info[0] == 2:
                 name = name.encode('ascii', 'replace')
@@ -69,7 +75,7 @@ flist = None
 
 
 def signal_handler(sig, frame):
-
+    """Handles the interrupt signal."""
     if interrupt_params.get('parallel', None) and flist:
         for future in flist:
             future.cancel()

@@ -202,4 +202,7 @@ def cli(ctx, service, install):
 
 
 def reformat(config):
+    """"
+    Returns the string in formatted order.
+    """
     return '\n'.join([s for s in config.splitlines() if s.strip()])
