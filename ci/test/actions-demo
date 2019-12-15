@@ -316,7 +316,7 @@ workflow "sample" {
 }
 
 action "test" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--verssion"]
 }
 
@@ -334,7 +334,7 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -345,7 +345,7 @@ action "test2" {
 EOF
 
 popper run --runtime "$RUNTIME" > output
-grep -q "https://github.com/actions/npm@master" output
+grep -q "https://github.com/popperized/npm@master" output
 ! grep -q "https://github.com/popperized/bin@master" output
 
 cat <<EOF > main.workflow
@@ -354,7 +354,7 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -365,7 +365,7 @@ action "test2" {
 EOF
 
 popper run --skip test1 --runtime "$RUNTIME" > output
-! grep -q "https://github.com/actions/npm@master" output
+! grep -q "https://github.com/popperized/npm@master" output
 grep -q "https://github.com/popperized/bin@master" output
 
 # Test environment variables

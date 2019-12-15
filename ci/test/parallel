@@ -27,7 +27,7 @@ action "three" {
 }
 
 action "four" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -69,7 +69,7 @@ action "three" {
 }
 
 action "four" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--vesrsion"]
 }
 
