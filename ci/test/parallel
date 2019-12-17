@@ -85,7 +85,7 @@ action "stage_one" {
 }
 EOF
 
-! popper run --parallel --runtime "$RUNTIME"
+(! popper run --parallel --runtime "$RUNTIME")
 echo "Some actions failed as expected !"
 
 echo "Test PARALLEL passed."

@@ -42,7 +42,7 @@ docker cp popper_show_env_"$ID":/main.workflow main.workflow
 popper run
 
 # so the file shouldn't be there
-! docker cp popper_show_env_"$ID":/main.workflow /tmp/main.workflow
+(! docker cp popper_show_env_"$ID":/main.workflow /tmp/main.workflow)
 
 # lastly, test reuse for a single action
 popper run --reuse 'show env'
@@ -83,8 +83,8 @@ EOF
 
 popper run --reuse --runtime "$RUNTIME" > output
 grep  -q "popper" output
-! grep -q "README.md" output
-! grep -q "main.workflow" output
+(! grep -q "README.md" output)
+(! grep -q "main.workflow" output)
 
 
 cat <<EOF > main.workflow
