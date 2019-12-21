@@ -18,7 +18,6 @@ from subprocess import CalledProcessError, PIPE, Popen, STDOUT
 import yaml
 import docker
 import spython
-import vagrant
 from spython.main.parse.parsers import DockerParser
 from spython.main.parse.writers import SingularityWriter
 
@@ -835,6 +834,8 @@ class VagrantRunner(DockerRunner):
     """
 
     def __init__(self, action, workspace, env, dry, skip_pull, wid):
+        import vagrant
+
         super(VagrantRunner, self).__init__(
             action, workspace, env, dry, skip_pull, wid
         )

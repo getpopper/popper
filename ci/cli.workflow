@@ -106,16 +106,16 @@ action "end" {
     "test ci",
     "test dot",
     "test dry-run",
+    "test inject",
     "test interrupt",
+    "test offline",
     "test parallel",
     "test quiet",
     "test reuse",
     "test scaffold",
-    "test validate",
-    "test skip",
-    "test sh",
     "test search",
-    "test offline",
-    "test inject"
+    "test sh",
+    "test skip",
+    "test validate",
   ]
 }
