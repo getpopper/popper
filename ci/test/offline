@@ -47,7 +47,11 @@ action "sample action" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --skip-pull --runtime "$RUNTIME"
+=======
+(! popper run --skip-pull --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 # action repo not present locally, fail workflow using --skip-clone
 delete_dir "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
@@ -63,7 +67,11 @@ action "sample action" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --skip-clone --runtime "$RUNTIME"
+=======
+(! popper run --skip-clone --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.

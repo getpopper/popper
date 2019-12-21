@@ -26,7 +26,7 @@ popper search abc > output
 grep -q 'No matching actions found.' output
 
 # test unable to find action metadata
-! popper info abc
+(! popper info abc)
 
 # test info not found
 popper info apex/actions/go > output

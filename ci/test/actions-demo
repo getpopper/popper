@@ -123,8 +123,13 @@ action "d" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME"
 popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" a1 > output
+=======
+(! popper run --dry-run --with-dependencies --runtime "$RUNTIME")
+popper run --dry-run --with-dependencies --runtime "$RUNTIME" a1 > output
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 grep -q "a1" output
 popper run --no-color --dry-run --with-dependencies --runtime "$RUNTIME" a2 > output
 grep -q "a2" output
@@ -249,7 +254,11 @@ popper run --no-color --on-failure cleanup --runtime "$RUNTIME" > output
 grep -q "Cleaning up..." output
 
 # test action fails, clean action couldnt be found.
+<<<<<<< HEAD
 ! popper run --no-color --on-failure clean --runtime "$RUNTIME"
+=======
+(! popper run --on-failure clean --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -268,7 +277,11 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup action also fails.
+<<<<<<< HEAD
 ! popper run --no-color --on-failure cleanup --runtime "$RUNTIME"
+=======
+(! popper run --on-failure cleanup --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -287,7 +300,11 @@ action "cleanup" {
 EOF
 
 # test action fails, no --on-failure cleanup action.
+<<<<<<< HEAD
 ! popper run --no-color --runtime "$RUNTIME"
+=======
+(! popper run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -306,8 +323,13 @@ action "cleanup" {
 EOF
 
 # test action runs sucessfully, cleanup action in not triggered
+<<<<<<< HEAD
 popper run --no-color --on-failure cleanup --runtime "$RUNTIME" > output
 ! grep -q "Cleaning up..." output
+=======
+popper run --on-failure cleanup --runtime "$RUNTIME" > output
+(! grep -q "Cleaning up..." output)
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 # test prevention of double cloning of actions, instantiation of runners etc.
 cat <<EOF > main.workflow
@@ -316,7 +338,7 @@ workflow "sample" {
 }
 
 action "test" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--verssion"]
 }
 
@@ -334,7 +356,7 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -344,9 +366,15 @@ action "test2" {
 }
 EOF
 
+<<<<<<< HEAD
 popper run --no-color --runtime "$RUNTIME" > output
 grep -q "https://github.com/actions/npm@master" output
 ! grep -q "https://github.com/popperized/bin@master" output
+=======
+popper run --runtime "$RUNTIME" > output
+grep -q "https://github.com/popperized/npm@master" output
+(! grep -q "https://github.com/popperized/bin@master" output)
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -354,7 +382,7 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -364,8 +392,13 @@ action "test2" {
 }
 EOF
 
+<<<<<<< HEAD
 popper run --no-color --skip test1 --runtime "$RUNTIME" > output
 ! grep -q "https://github.com/actions/npm@master" output
+=======
+popper run --skip test1 --runtime "$RUNTIME" > output
+(! grep -q "https://github.com/popperized/npm@master" output)
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 grep -q "https://github.com/popperized/bin@master" output
 
 # Test environment variables
@@ -423,6 +456,6 @@ EOF
 
 popper run --no-color --runtime "$RUNTIME" > output
 grep -q "Action 'b' ran successfully !" output
-! grep -q "Action 'end' ran successfully !" output
+(! grep -q "Action 'end' ran successfully !" output)
 
 echo "Test ACTIONS-DEMO passed."

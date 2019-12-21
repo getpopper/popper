@@ -42,7 +42,7 @@ docker cp popper_show_env_"$ID":/main.workflow main.workflow
 popper run --no-color
 
 # so the file shouldn't be there
-! docker cp popper_show_env_"$ID":/main.workflow /tmp/main.workflow
+(! docker cp popper_show_env_"$ID":/main.workflow /tmp/main.workflow)
 
 # lastly, test reuse for a single action
 popper run --no-color --reuse 'show env'
@@ -60,15 +60,19 @@ action "show env" {
   uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
-    TOOL_NAME="popper"
+    MESSAGE = "message in a bottle"
   }
 }
 EOF
 
+<<<<<<< HEAD
 popper run --no-color --runtime "$RUNTIME" > output
+=======
+popper run --runtime "$RUNTIME" > output
+
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 grep -q "README.md" output
 grep -q "main.workflow" output
-
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -77,15 +81,20 @@ workflow "test" {
 
 action "show env" {
   uses = "popperized/bin/sh@master"
-  runs = ["sh", "-c", "echo \$TOOL_NAME"]
+  runs = ["sh", "-c", "echo \$MESSAGE"]
 }
 EOF
 
+<<<<<<< HEAD
 popper run --no-color --reuse --runtime "$RUNTIME" > output
 grep  -q "popper" output
 ! grep -q "README.md" output
 ! grep -q "main.workflow" output
 
+=======
+popper run --reuse --runtime "$RUNTIME" > output
+grep  -q "message in a bottle" output
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -98,7 +107,11 @@ action "check file" {
 }
 EOF
 
+<<<<<<< HEAD
 popper run --no-color --runtime "$RUNTIME" > output
+=======
+popper run --runtime "$RUNTIME" > /dev/null
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test" {

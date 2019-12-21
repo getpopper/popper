@@ -35,7 +35,11 @@ action "show env one" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## workflow block present with unknown attributes.
 
@@ -52,7 +56,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## workflow block not present
 cat <<EOF > main.workflow
@@ -66,7 +74,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## workflow block present
 cat <<EOF > main.workflow
@@ -94,7 +106,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## resolves attribute present but wrong type
 cat <<EOF > main.workflow
@@ -108,7 +124,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## resolves attribute present and correct type
 cat <<EOF > main.workflow
@@ -137,7 +157,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## on attribute present and correct type
 cat <<EOF > main.workflow
@@ -175,7 +199,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## action block present with unknown attributes
 cat <<EOF > main.workflow
@@ -191,7 +219,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## action block not present
 cat <<EOF > main.workflow
@@ -205,7 +237,11 @@ acccction "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## action block present
 cat <<EOF > main.workflow
@@ -237,7 +273,11 @@ action "show env one" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## uses attribute present but wrong type
 cat <<EOF > main.workflow
@@ -251,7 +291,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## uses attribute present and correct type
 cat <<EOF > main.workflow
@@ -280,7 +324,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## needs attribute present and correct type
 cat <<EOF > main.workflow
@@ -314,7 +362,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## runs attribute present and correct type
 cat <<EOF > main.workflow
@@ -345,7 +397,11 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## args attribute present and correct type
 cat <<EOF > main.workflow
@@ -374,15 +430,19 @@ action "show env" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## env attribute present and correct type
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = "show env"
+  resolves = "test env-good"
 }
 
-action "show env" {
+action "test env-good" {
   uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
@@ -397,27 +457,33 @@ popper run --no-color --dry-run --runtime "$RUNTIME"
 ## secrets attribute present but wrong type
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = "show env"
+  resolves = "secrets wrong"
 }
 
-action "show env" {
+action "secrets wrong" {
   uses = "popperized/bin/sh@master"
   args = "ls"
-  secrets = "123"
+  secrets = {
+    key =  "value"
+  }
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 ## secrets attribute present and correct type
 export F_NAME=F_NAME
 export L_NAME=L_NAME
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = "show env"
+  resolves = "secrets good"
 }
 
-action "show env" {
+action "secrets good" {
   uses = "popperized/bin/sh@master"
   args = "ls"
   env = {

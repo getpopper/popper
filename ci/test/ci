@@ -44,9 +44,9 @@ test -f scripts/install_scripts.sh
 cat brigade.js
 cat scripts/install_scripts.sh
 
-! popper ci jenkins --install singularity
+(! popper ci jenkins --install singularity)
 
-! popper ci gitlab --install singularity
+(! popper ci gitlab --install singularity)
 
 
 # Test blacklisting/skip in CI environment
@@ -97,7 +97,7 @@ git commit -m "popper:run[--wfile /tmp/mypaper/myaction/a.workflow] popper:run[-
 popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/a.workflow" output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/b.workflow" output
-! grep -q "Found and running workflow at /tmp/mypaper/myaction/c.workflow" output
+(! grep -q "Found and running workflow at /tmp/mypaper/myaction/c.workflow" output)
 
 cd $test_repo_path
 cd myaction
@@ -145,13 +145,13 @@ popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at /tmp/mypaper/myaction/e.workflow" output
 cat output
 grep -q "a2" output
-! grep -q "a1" output
+(! grep -q "a1" output)
 
 git clone https://github.com/JayjeetAtGithub/test-merge-commits.git
 cd test-merge-commits
 popper run --no-color --dry-run --runtime "$RUNTIME" > output
 grep -q "Found and running workflow at b.workflow" output
-! grep -q "Found and running workflow at a.workflow" output
-! grep -q "Found and running workflow at c.workflow" output
+(! grep -q "Found and running workflow at a.workflow" output)
+(! grep -q "Found and running workflow at c.workflow" output)
 
 echo "Test CI passed."

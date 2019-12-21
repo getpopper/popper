@@ -39,7 +39,11 @@ action "d" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color a1 --skip a2
+=======
+(! popper run a1 --skip a2)
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 popper run --no-color --dry-run --runtime "$RUNTIME" a1 | grep "a1"
 popper run --no-color --dry-run --runtime "$RUNTIME" a2 | grep "a2"
@@ -47,9 +51,15 @@ popper run --no-color --dry-run --runtime "$RUNTIME" b | grep "b"
 popper run --no-color --dry-run --runtime "$RUNTIME" c | grep "c"
 popper run --no-color --dry-run --runtime "$RUNTIME" d | grep "d"
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --skip e1
 ! popper run --no-color --dry-run --skip a1 --skip a2
 popper run --no-color --dry-run --runtime "$RUNTIME" --skip a1 > output
+=======
+(! popper run --dry-run --skip e1)
+(! popper run --dry-run --skip a1 --skip a2)
+popper run --dry-run --runtime "$RUNTIME" --skip a1 > output
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 grep -q "a2" output
 grep -q "b" output
 grep -q "c" output
@@ -59,8 +69,13 @@ grep -q "a1" output
 grep -q "b" output
 grep -q "c" output
 grep -q "d" output
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME" --skip b --skip c
 popper run --no-color --dry-run --runtime "$RUNTIME" --skip b > output
+=======
+(! popper run --dry-run --runtime "$RUNTIME" --skip b --skip c)
+popper run --dry-run --runtime "$RUNTIME" --skip b > output
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 grep -q "a1" output
 grep -q "a2" output
 grep -q "c" output
@@ -110,7 +125,11 @@ action "d" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -146,6 +165,10 @@ action "d" {
 }
 EOF
 
+<<<<<<< HEAD
 ! popper run --no-color --dry-run --runtime "$RUNTIME"
+=======
+(! popper run --dry-run --runtime "$RUNTIME")
+>>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 echo "Test SKIP passed."

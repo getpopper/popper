@@ -1,10 +1,8 @@
 import difflib
 import os
 import signal
-import shutil
 import sys
 
-import vagrant
 import click
 from click.exceptions import ClickException
 
@@ -87,8 +85,10 @@ def signal_handler(sig, frame):
         log.info("Stopping container '{}'".format(container.name))
         container.stop(timeout=1)
 
-    for box_path in vagrant_list:
-        log.info("Stopping box '{}'".format(box_path))
-        vagrant.Vagrant(root=box_path).halt()
+    if vagrant_list:
+        import vagrant
+        for box_path in vagrant_list:
+            log.info("Stopping box '{}'".format(box_path))
+            vagrant.Vagrant(root=box_path).halt()
 
     sys.exit(0)
