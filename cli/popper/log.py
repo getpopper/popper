@@ -70,6 +70,31 @@ class PopperLogger(logging.Logger):
     A Logger so that we can add popper fail and action_info log methods
     """
 
+    color = True
+
+    def noColor(self):
+        self.color = False
+        formatter = PopperFormatter(False)
+
+        # INFO/ACTION_INFO goes to stdout
+        new_Handler1 = logging.StreamHandler(sys.stdout)
+        new_Handler1.addFilter(LevelFilter([logging.INFO, ACTION_INFO], False))
+        new_Handler1.setFormatter(formatter)
+
+        # anything goes to stdout
+        new_Handler2 = logging.StreamHandler(sys.stderr)
+        new_Handler2.addFilter(LevelFilter([logging.INFO, ACTION_INFO], True))
+        new_Handler2.setFormatter(formatter)
+
+        self.addHandler(new_Handler1)
+        self.addHandler(new_Handler2)
+        self.setLevel('ACTION_INFO')
+        self.RemoveHandler(self.handlers[0])
+        self.RemoveHandler(self.handlers[0])
+
+    def RemoveHandler(self, fmt):
+        super(PopperLogger, self).removeHandler(fmt)
+
     def fail(self, msg='', *args, **kwargs):
         """
         Log a message with severity 'ERROR', and then exits.
@@ -101,26 +126,17 @@ class PopperLogger(logging.Logger):
         """
         Logs a message with severity 'INFO'
         """
-        m = ""
+        msg_updated = msg
 
-        if 'prefix' in kwargs:
-            m += kwargs.get("prefix") + " "
-            kwargs.pop("prefix")
+        if self.color:
+            if (msg.find('[') != -1):
+                msg_updated = msg[0: msg.find("[") +1]
+                msg_updated += BOLD_CYAN
+                msg_updated += msg[msg.find("[")+1: msg.find("]")]
+                msg_updated += RESET
+                msg_updated += msg[msg.find("]"): ]
 
-        if 'action' in kwargs:
-            if 'no_color' in kwargs:
-                if  kwargs['no_color'] :
-                    m += "[" + kwargs.get("action") + "] : "
-                else:
-                    m += "[" + BOLD_YELLOW + kwargs.get("action") + RESET + "] : "
-                kwargs.pop("no_color")
-                kwargs.pop("action")
-            else:
-                m += "[" + BOLD_YELLOW + kwargs.get("action") + RESET + "] : "
-                kwargs.pop("action")
-
-        msg = m + msg
-        super(PopperLogger, self).info(msg, *args, **kwargs)
+        super(PopperLogger, self).info(msg_updated, *args, **kwargs)
 
     def debug(self, msg='', *args, **kwargs):
         """
