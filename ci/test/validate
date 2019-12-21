@@ -379,10 +379,10 @@ EOF
 ## env attribute present and correct type
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = "show env"
+  resolves = "test env-good"
 }
 
-action "show env" {
+action "test env-good" {
   uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
@@ -397,13 +397,15 @@ popper run --dry-run --runtime "$RUNTIME"
 ## secrets attribute present but wrong type
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = "show env"
+  resolves = "secrets wrong"
 }
 
-action "show env" {
+action "secrets wrong" {
   uses = "popperized/bin/sh@master"
   args = "ls"
-  secrets = "123"
+  secrets = {
+    key =  "value"
+  }
 }
 EOF
 
@@ -414,10 +416,10 @@ export F_NAME=F_NAME
 export L_NAME=L_NAME
 cat <<EOF > main.workflow
 workflow "test" {
-  resolves = "show env"
+  resolves = "secrets good"
 }
 
-action "show env" {
+action "secrets good" {
   uses = "popperized/bin/sh@master"
   args = "ls"
   env = {

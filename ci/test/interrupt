@@ -28,7 +28,7 @@ sleep 5
 # ensure no containers are running
 if [ "$RUNTIME" == "docker" ]
 then
-  test -z "$(docker ps -aq --filter 'status=running')"
+  test -z "$(docker ps -aq --filter 'status=running' --filter 'name=popper_')"
 else
   test -z "$(singularity instance list | tail -n +2)"
 fi
@@ -82,11 +82,11 @@ EOF
 
 send_sigint "popper run --parallel --runtime $RUNTIME" 2
 
-sleep 30
+sleep 5
 
 if [ "$RUNTIME" == "docker" ]
 then
-  test -z "$(docker ps -aq --filter 'status=running')"
+  test -z "$(docker ps -aq --filter 'status=running' --filter 'name=popper_')"
 else
   test -z "$(singularity instance list | tail -n +2)"
 fi
@@ -118,7 +118,7 @@ EOF
 
 send_sigint 'popper run' 5
 
-sleep 15
+sleep 5
 
 ps aux > running_procs
 test "$(grep -c sleep running_procs)" -eq 0
@@ -183,7 +183,7 @@ EOF
 
 send_sigint 'popper run --parallel' 15
 
-sleep 15
+sleep 5
 
 ps aux > running_procs
 test "$(grep -c sleep running_procs)" -eq 0

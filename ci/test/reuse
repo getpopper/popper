@@ -60,15 +60,15 @@ action "show env" {
   uses = "popperized/bin/sh@master"
   args = "ls"
   env = {
-    TOOL_NAME="popper"
+    MESSAGE = "message in a bottle"
   }
 }
 EOF
 
 popper run --runtime "$RUNTIME" > output
+
 grep -q "README.md" output
 grep -q "main.workflow" output
-
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -77,15 +77,12 @@ workflow "test" {
 
 action "show env" {
   uses = "popperized/bin/sh@master"
-  runs = ["sh", "-c", "echo \$TOOL_NAME"]
+  runs = ["sh", "-c", "echo \$MESSAGE"]
 }
 EOF
 
 popper run --reuse --runtime "$RUNTIME" > output
-grep  -q "popper" output
-(! grep -q "README.md" output)
-(! grep -q "main.workflow" output)
-
+grep  -q "message in a bottle" output
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -98,7 +95,7 @@ action "check file" {
 }
 EOF
 
-popper run --runtime "$RUNTIME" > output
+popper run --runtime "$RUNTIME" > /dev/null
 
 cat <<EOF > main.workflow
 workflow "test" {

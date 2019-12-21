@@ -48,10 +48,10 @@ grep "\"test-and-deploy\" -> \"install\";" dot_output
 grep "\"test\" -> \"branch-filter\";" dot_output
 
 # test no color
-(! grep ".*\"test-and-deploy\".*color=" dot_output)
+(! grep ".*\"test-and-deploy\".*,color=" dot_output)
 
 # test with color
 popper dot --colors --wfile github-actions-demo/.github/main.workflow > dot_output
-grep ".*\"test-and-deploy\".*color=" dot_output
+grep ".*\"test-and-deploy\".*,color=" dot_output
 
 echo "Test DOT passed."
