@@ -123,7 +123,7 @@ action "d" {
 }
 EOF
 
-! popper run --dry-run --with-dependencies --runtime "$RUNTIME"
+(! popper run --dry-run --with-dependencies --runtime "$RUNTIME")
 popper run --dry-run --with-dependencies --runtime "$RUNTIME" a1 > output
 grep -q "a1" output
 popper run --dry-run --with-dependencies --runtime "$RUNTIME" a2 > output
@@ -249,7 +249,7 @@ popper run --on-failure cleanup --runtime "$RUNTIME" > output
 grep -q "Cleaning up..." output
 
 # test action fails, clean action couldnt be found.
-! popper run --on-failure clean --runtime "$RUNTIME"
+(! popper run --on-failure clean --runtime "$RUNTIME")
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -268,7 +268,7 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup action also fails.
-! popper run --on-failure cleanup --runtime "$RUNTIME"
+(! popper run --on-failure cleanup --runtime "$RUNTIME")
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -287,7 +287,7 @@ action "cleanup" {
 EOF
 
 # test action fails, no --on-failure cleanup action.
-! popper run --runtime "$RUNTIME"
+(! popper run --runtime "$RUNTIME")
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -307,7 +307,7 @@ EOF
 
 # test action runs sucessfully, cleanup action in not triggered
 popper run --on-failure cleanup --runtime "$RUNTIME" > output
-! grep -q "Cleaning up..." output
+(! grep -q "Cleaning up..." output)
 
 # test prevention of double cloning of actions, instantiation of runners etc.
 cat <<EOF > main.workflow
@@ -316,7 +316,7 @@ workflow "sample" {
 }
 
 action "test" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--verssion"]
 }
 
@@ -334,7 +334,7 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -345,8 +345,8 @@ action "test2" {
 EOF
 
 popper run --runtime "$RUNTIME" > output
-grep -q "https://github.com/actions/npm@master" output
-! grep -q "https://github.com/popperized/bin@master" output
+grep -q "https://github.com/popperized/npm@master" output
+(! grep -q "https://github.com/popperized/bin@master" output)
 
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -354,7 +354,7 @@ workflow "sample" {
 }
 
 action "test1" {
-  uses = "actions/npm@master"
+  uses = "popperized/npm@master"
   args = ["--version"]
 }
 
@@ -365,7 +365,7 @@ action "test2" {
 EOF
 
 popper run --skip test1 --runtime "$RUNTIME" > output
-! grep -q "https://github.com/actions/npm@master" output
+(! grep -q "https://github.com/popperized/npm@master" output)
 grep -q "https://github.com/popperized/bin@master" output
 
 # Test environment variables
@@ -423,6 +423,6 @@ EOF
 
 popper run --runtime "$RUNTIME" > output
 grep -q "Action 'b' ran successfully !" output
-! grep -q "Action 'end' ran successfully !" output
+(! grep -q "Action 'end' ran successfully !" output)
 
 echo "Test ACTIONS-DEMO passed."

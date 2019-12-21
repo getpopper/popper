@@ -112,7 +112,7 @@ you can simply run:
 $ popper search npm
 Matched actions :
 
-> actions/npm
+> popperized/npm
 ```
 
 Additionally, when searching for an action, you may choose to include
