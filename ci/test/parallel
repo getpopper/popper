@@ -85,11 +85,7 @@ action "stage_one" {
 }
 EOF
 
-<<<<<<< HEAD
-! popper run --no-color --parallel --runtime "$RUNTIME"
-=======
 (! popper run --parallel --runtime "$RUNTIME")
->>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 echo "Some actions failed as expected !"
 
 echo "Test PARALLEL passed."

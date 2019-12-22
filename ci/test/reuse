@@ -65,12 +65,8 @@ action "show env" {
 }
 EOF
 
-<<<<<<< HEAD
-popper run --no-color --runtime "$RUNTIME" > output
-=======
 popper run --runtime "$RUNTIME" > output
 
->>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 grep -q "README.md" output
 grep -q "main.workflow" output
 
@@ -85,16 +81,8 @@ action "show env" {
 }
 EOF
 
-<<<<<<< HEAD
-popper run --no-color --reuse --runtime "$RUNTIME" > output
-grep  -q "popper" output
-! grep -q "README.md" output
-! grep -q "main.workflow" output
-
-=======
 popper run --reuse --runtime "$RUNTIME" > output
 grep  -q "message in a bottle" output
->>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -107,11 +95,7 @@ action "check file" {
 }
 EOF
 
-<<<<<<< HEAD
-popper run --no-color --runtime "$RUNTIME" > output
-=======
 popper run --runtime "$RUNTIME" > /dev/null
->>>>>>> 072c9b342220859d5284639fda3bfc470abcd014
 
 cat <<EOF > main.workflow
 workflow "test" {
