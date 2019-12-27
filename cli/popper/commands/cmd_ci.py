@@ -143,6 +143,17 @@ events.on("push", () => {
 def cli(ctx, service, install):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
+
+    Args:
+      ctx(Popper.cli.context): For process inter-command communication
+            context is used.For reference visit
+            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
+      service(string): Defines the service.
+      install(tuple): Tuple with custom installation scripts.
+
+    Returns:
+        None
+
     """
     project_root = scm.get_git_root_folder()
 
@@ -204,5 +215,12 @@ def cli(ctx, service, install):
 def reformat(config):
     """"
     Returns the string in formatted order.
+
+    Args:
+      config(string): String that is required to be formatted.
+
+    Returns:
+      string: String in required format.
+
     """
     return '\n'.join([s for s in config.splitlines() if s.strip()])

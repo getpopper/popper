@@ -17,8 +17,11 @@ from popper import scm
 def setup_base_cache():
     """Set up the base cache directory.
 
+    Args:
+      None
+
     Returns:
-        str: The path to the base cache directory.
+      str: The path to the base cache directory.
     """
     if os.environ.get('POPPER_CACHE_DIR', None):
         base_cache = os.environ['POPPER_CACHE_DIR']
@@ -40,8 +43,11 @@ def setup_base_cache():
 def setup_search_cache():
     """Set up the popper search cache.
 
+    Args:
+      None
+
     Returns:
-        str: The path to the search cache file.
+      str: The path to the search cache file.
     """
     base_cache = setup_base_cache()
     search_cache = os.path.join(base_cache, 'search')
@@ -54,22 +60,36 @@ def setup_search_cache():
 
 
 def decode(line):
-    """Make treatment of stdout Python 2/3 compatible."""
+    """Make treatment of stdout Python 2/3 compatible.
+
+    Args:
+      line(str): The string that is required to be converted.
+
+    Returns:
+      str : The string in converted form.
+    """
     if isinstance(line, bytes):
         return line.decode('utf-8')
     return line
 
 
 def get_items(dict_object):
-    """Python 2/3 compatible way of iterating over a dictionary."""
+    """Python 2/3 compatible way of iterating over a dictionary.
+
+    Args:
+      dict_object(dict): Dictionary that is required to be made compatible.
+
+    Returns:
+      key,value : All the keys and values associated with them in the
+                    dictionary.
+    """
     for key in dict_object:
         yield key, dict_object[key]
 
 
 class threadsafe_iter_3:
-    """Takes an iterator/generator and makes it thread-safe by
-    serializing call to the `next` method of given iterator/generator.
-    """
+    """Takes an iterator/generator and makes it thread-safe by serializing call
+    to the `next` method of given iterator/generator."""
 
     def __init__(self, it):
         self.it = it
@@ -84,9 +104,8 @@ class threadsafe_iter_3:
 
 
 class threadsafe_iter_2:
-    """Takes an iterator/generator and makes it thread-safe by
-    serializing call to the `next` method of given iterator/generator.
-    """
+    """Takes an iterator/generator and makes it thread-safe by serializing call
+    to the `next` method of given iterator/generator."""
 
     def __init__(self, it):
         self.it = it
@@ -102,8 +121,23 @@ class threadsafe_iter_2:
 
 def threadsafe_generator(f):
     """A decorator that takes a generator function and makes it thread-safe.
+
+    Args:
+      f(function): Generator function
+
+    Returns:
+      None
     """
     def g(*args, **kwargs):
+        """
+
+        Args:
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          function: The thread-safe function.
+        """
         if sys.version_info[0] < 3:
             return threadsafe_iter_2(f(*args, **kwargs))
         else:
@@ -112,18 +146,17 @@ def threadsafe_generator(f):
 
 
 def find_default_wfile(wfile=None):
-    """
-    Used to find `main.workflow` in $PWD or in `.github`
-    And returns error if not found.
+    """Used to find `main.workflow` in $PWD or in `.github` And returns error
+    if not found.
 
     Args:
-        wfile (str): The path to a workflow file.
-        The default value of this is None, when the
-        function searches for `main.workflow` or
-        `.github/main.workflow'.
+      wfile(str, optional): The path to a workflow file.
+    The default value of this is None, when the
+    function searches for `main.workflow` or
+    `.github/main.workflow'. (Default value = None)
 
     Returns:
-        str: Path of wfile.
+      str: Path of wfile.
     """
     if not wfile:
         if os.path.isfile("main.workflow"):
@@ -142,12 +175,14 @@ def find_default_wfile(wfile=None):
 
 
 def find_recursive_wfile():
-    """
-    Used to search for `.workflow` files in $PWD and
-    then recursively in sub directories.
+    """Used to search for `.workflow` files in $PWD and then recursively in sub
+    directories.
+
+    Args:
+      None
 
     Returns:
-        list: List of path of workflow files.
+      list: List of path of workflow files.
     """
     wfile_list = list()
     for root, _, files in os.walk('.'):
@@ -161,12 +196,16 @@ def find_recursive_wfile():
 
 def make_gh_request(url, err=True, msg=None):
     """Method for making GET requests to GitHub API.
+
     Args:
-        url (str): URL on which the API request is to be made.
-        err (bool): Checks if an error message needs to be printed or not.
-        msg (str): Error message to be printed for a failed request.
+      url(str): URL on which the API request is to be made.
+      err(bool, optional): Checks if an error message needs to
+                    be printed or not.(Default value = True)
+      msg(str): Error message to be printed for a failed
+                    request.(Default value = None)
+
     Returns:
-        Response object: Contains a server's response to an HTTP request.
+      Response object: Contains a server's response to an HTTP request.
     """
     if not msg:
         msg = (
@@ -183,8 +222,11 @@ def make_gh_request(url, err=True, msg=None):
 def read_search_sources():
     """Method to fetch the list of actions.
 
+    Args:
+      None
+
     Returns:
-        list: The list of actions.
+      list: The list of actions.
     """
     response = make_gh_request(
         'https://raw.githubusercontent.com/systemslab/popper/'
@@ -194,15 +236,15 @@ def read_search_sources():
 
 
 def fetch_metadata(update_cache=False):
-    """Fetch metatdata of the repositories from the
-    search_sources on which to run the search.
+    """Fetch metadata of the repositories from the search_sources on which to
+    run the search.
 
     Args:
-        update_cache (bool): Flag variable to decide whether to update
-        the cache or not.
+      update_cache(bool, optional): Flag variable to decide whether to update
+    the cache or not. (Default value = False)
 
     Returns:
-        dict: All metadata related to the actions.
+      dict: All metadata related to the actions.
     """
     cache_file = setup_search_cache()
 
@@ -250,13 +292,13 @@ def fetch_repo_metadata(user, repo, path_to_action, version):
     """Returns the metadata for a repo.
 
     Args:
-        user (str): The user to which the actions belongs to.
-        repo (str): The parent repository name.
-        path_to_action (str): The path to the action from the root.
-        version (str): The branch where the action resides.
+      user(str): The user to which the actions belongs to.
+      repo(str): The parent repository name.
+      path_to_action(str): The path to the action from the root.
+      version(str): The branch where the action resides.
 
     Returns:
-        dict: Metadata of the repo.
+      dict: Metadata of the repo.
     """
     readme = fetch_readme_for_repo(user, repo, path_to_action, version)
     meta = dict()
@@ -265,18 +307,17 @@ def fetch_repo_metadata(user, repo, path_to_action, version):
 
 
 def fetch_readme_for_repo(user, repo, path_to_action, version=None):
-    """Method to fetch the README for the repo
-    if present.
+    """Method to fetch the README for the repo if present.
 
     Args:
-        user (str): The user to which the actions belongs to.
-        repo (str): The parent repository name.
-        path_to_action (str): The path to the action from the root.
-        version (str): The branch where the action resides.
+      user(str): The user to which the actions belongs to.
+      repo(str): The parent repository name.
+      path_to_action(str): The path to the action from the root.
+      version(str, optional): The branch where the action resides.
+                            (Default value = None)
 
     Returns:
-        str: The contents of the README file.
-
+      str: The contents of the README file.
     """
     if not version:
         version = 'master'
@@ -287,15 +328,15 @@ def fetch_readme_for_repo(user, repo, path_to_action, version=None):
 
 
 def sanitized_name(name, wid):
-    """Clean an action name and change it to
-    proper format. It replaces all the unwanted
-    characters with `_`.
+    """Clean an action name and change it to proper format. It replaces all the
+    unwanted characters with `_`.
 
     Args:
-        name (str): The crude action name.
+      name(str): The crude action name.
+      wid(str): It  is a workflow ID produced by a utils.get_id().
 
     Returns:
-        str: The sanitized action name.
+      str: The sanitized action name.
     """
     return "popper_{}_{}".format(
         re.sub('[^a-zA-Z0-9_.-]', '_', name),
@@ -310,12 +351,12 @@ def of_type(param, valid_types):
     types passed through `valid_types` list.
 
     Args:
-        param: A value of any type.
-        valid_types (list): A list of acceptable types.
+      param: A value of any type.
+      valid_types(list): A list of acceptable types.
 
     Returns:
-        bool: True/False, depending upon whether the type of
-        the passed param matches with any of the valid types.
+      bool: True/False, depending upon whether the type of
+      the passed param matches with any of the valid types.
     """
     for t in valid_types:
         if t == 'str':
@@ -335,16 +376,15 @@ def of_type(param, valid_types):
 
 
 def get_id(*args):
-    """Function to generate an unique hashid
-    for identifying a workflow by joining the args
-    provided.
+    """Function to generate an unique hashid for identifying a workflow by
+    joining the args provided.
 
     Args:
-        args (tuple): The items to join in order to form
-                      an identifier.
+      args(tuple): The items to join in order to form
+    an identifier.
 
     Returns:
-        str: The generated hashid.
+      str: The generated hashid.
     """
     identifier = '_'.join([str(x) for x in args])
     workflow_id = str(hashlib.md5(identifier.encode()).hexdigest())
@@ -352,12 +392,16 @@ def get_id(*args):
 
 
 def write_file(path, content=''):
-    """Create and write contents to a file. If no content is
-    provided a blank file is created.
+    """Create and write contents to a file. If no content is provided a blank
+    file is created.
 
     Args:
-        path (str): The path where the file would be created.
-        content (str): The content to write in the file.
+      path(str): The path where the file would be created.
+      content(str, optional): The content to write in the file.
+                            (Default value = '')
+
+    Returns:
+      None
     """
     f = open(path, 'w')
     f.write(content)
