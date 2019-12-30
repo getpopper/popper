@@ -387,3 +387,27 @@ class Workflow(object):
             workflow.action.pop(a)
 
         return workflow
+
+    @staticmethod
+    def parse_substitutions(wf, substitutions):
+
+        workflow = deepcopy(wf)
+        substitution_dict = dict()
+
+        for args in substitutions:
+            item = args.split('=')
+            substitution_dict[item[0]] = item[1]
+
+        for key in workflow.parsed_workflow['action']:
+            for var in substitution_dict:
+                uses_str = workflow.parsed_workflow['action'][key]['uses']
+                temp_str = uses_str.replace(var, substitution_dict[var])
+                workflow.parsed_workflow['action'][key]['uses'] = temp_str
+
+        for itr in range(len(workflow.workflow_content)):
+            for var in substitution_dict:
+                content_str = workflow.workflow_content[itr]
+                temp_str = content_str.replace(var, substitution_dict[var])
+                workflow.workflow_content[itr] = temp_str
+
+        return workflow

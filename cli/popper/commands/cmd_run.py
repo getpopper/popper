@@ -95,6 +95,13 @@ from popper import log as logging
     is_flag=True
 )
 @click.option(
+    '--substitutions',
+    help='Substitutions for the custom arguments used in the workflow',
+    required=False,
+    default=list(),
+    multiple=True
+)
+@click.option(
     '--with-dependencies',
     help=(
         'When an action argument is given (first positional argument), '

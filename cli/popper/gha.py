@@ -178,7 +178,7 @@ class WorkflowRunner(object):
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, runtime,
-            skip_secrets_prompt=False):
+            substitutions, skip_secrets_prompt=False):
         """Run the workflow or a specific action.
         """
         new_wf = deepcopy(self.wf)
@@ -188,6 +188,9 @@ class WorkflowRunner(object):
 
         if action:
             new_wf = Workflow.filter_action(self.wf, action, with_dependencies)
+
+        if substitutions:
+            new_wf = Workflow.parse_substitutions(self.wf, substitutions)
 
         new_wf.check_for_unreachable_actions(skip)
 

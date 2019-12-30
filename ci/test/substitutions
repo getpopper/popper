@@ -1,0 +1,124 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./ci/test/common
+init_test_repo
+cd "$test_repo_path"
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "_X1"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+(! popper run --substitutions)
+popper run --dry-run --runtime "$RUNTIME" a1 | grep "a1"
+popper run --dry-run --runtime "$RUNTIME" a2 | grep "a2"
+popper run --dry-run --substitutions _X1=sh --runtime "$RUNTIME" b | grep "b"
+(! popper run --dry-run --substitutions _X1=shx --runtime "$RUNTIME" b | grep "b")
+popper run --dry-run --substitutions _X1=shx --substitutions _X1=sh --runtime "$RUNTIME" b | grep "b"
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "_X1"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+(! popper run --dry-run --runtime "$RUNTIME")
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "d"
+}
+
+action "a1" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "a2" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "b" {
+  needs = ["a1", "a2"]
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = ["a1", "a2"]
+  uses = "_X1"
+  args = "ls"
+}
+
+action "d" {
+  needs = ["b1", "c"]
+  uses = "sh"
+  args = "ls"
+}
+EOF
+
+(! popper run --dry-run --substitutions _X1=sh --runtime "$RUNTIME")
+
+echo "Test SUBSTITUTIONS passed."
+
+
+
