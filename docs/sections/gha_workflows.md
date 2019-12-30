@@ -37,8 +37,8 @@ action "ACTION2" {
 In this example, the workflow invokes `ACTION2` using `resolves`, but 
 because it `needs` `ACTION1`, the `ACTION1` block executes first. 
 `ACTION2` will execute once `ACTION1` has successfully completed. For 
-more information on why this happens, see [Workflow attributes]() and 
-[Actions attributes]() below.
+more information on why this happens, see "Workflow attributes" and 
+"Action attributes" below.
 
 ### Workflow blocks
 
@@ -84,7 +84,7 @@ action "IDENTIFIER" {
 }
 ```
 
-#### Actions attributes
+#### Action attributes
 
 <table>
 <thead>
