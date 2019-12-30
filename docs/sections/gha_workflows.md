@@ -48,9 +48,28 @@ attributes table.
 
 #### Workflow attributes
 
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>resolves</code></td>
+<td>Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the <code>needs</code> attribute are also invoked. In the example workflow above, <code>ACTION2</code> runs first via the <code>resolves</code> attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel.</td>
+</tr>
+</tbody>
+</table>
+
+<!--
+
 |  Name         | Description |
 | ------------  | ----------------------------------------------------------|
 |  `resolves`   | Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the `needs` attribute are also invoked. In the example workflow above, `ACTION2` runs first via the `resolves` attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel. |
+
+-->
 
 ### Action blocks
 
@@ -162,26 +181,16 @@ action "hello world" {
 When an action runs, GitHub also sets these environment variables in the
 runtime environment:
 
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Environment variable   Description
----------------------- --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-`HOME`                 The path to the GitHub home directory used to store user data. Value: `/github/home`.
-
-`GITHUB_WORKFLOW`      The name of the workflow.
-
-`GITHUB_ACTION`        The name of the action.
-
-`GITHUB_ACTOR`         The name of the person or app that initiated the workflow. For example, `octocat`.
-
-`GITHUB_REPOSITORY`    The owner and repository name. For example, `octocat/Hello-World`.
-
-`GITHUB_WORKSPACE`     The GitHub workspace path. Value: `/github/workspace`.\
-                       **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/\#user), otherwise you will not be able to access `GITHUB_WORKSPACE`.
-
-`GITHUB_SHA`           The commit SHA that triggered the workflow.
-
-`GITHUB_REF`           The branch or tag ref that triggered the workflow. For example, `refs/heads/feature-branch-1`. If neither a branch or tag is available for the event type, the variable will not exist.
--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+| Environment variable   | Description |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `HOME`                 | The path to the GitHub home directory used to store user data. Value: `/github/home`. |
+| `GITHUB_WORKFLOW`      | The name of the workflow. |
+| `GITHUB_ACTION`        | The name of the action. |
+| `GITHUB_ACTOR`         | The name of the person or app that initiated the workflow. For example, `octocat`. |
+| `GITHUB_REPOSITORY`    | The owner and repository name. For example, `octocat/Hello-World`. |
+| `GITHUB_WORKSPACE`     | The GitHub workspace path. Value: `/github/workspace`. **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the `USER` instruction, otherwise you will not be able to access `GITHUB_WORKSPACE`. |
+| `GITHUB_SHA`           | The commit SHA that triggered the workflow. |
+| `GITHUB_REF`           | The branch or tag ref that triggered the workflow. For example, `refs/heads/feature-branch-1`. If neither a branch or tag is available for the event type, the variable will not exist. |
 
 ### Naming conventions
 
@@ -194,10 +203,10 @@ because the words \"home\" and \"workspace\" already imply a location.
 
 Two directories are bind-mounted on the `/github` path prefix. These two directories are shared from the host machine to the containers running in a workflow:
 
-Directory                       Description
-------------------------------- ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-`/github/home`                  The `HOME` directory for the user running the workflow. This directory path is set in the `HOME` environment variable.
-`/github/workspace`             The working directory of the Docker container. GitHub Actions execute in this directory. The path to this directory is set in the `GITHUB_WORKSPACE` environment variable. This directory is where the repository (with version `GITHUB_SHA`) that triggered the workflow. An action can modify the contents of this directory, which subsequent actions can access. **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/#user), otherwise you will not be able to access `GITHUB_WORKSPACE`.
+| Directory                       | Description |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `/github/home`                  | The `HOME` directory for the user running the workflow. This directory path is set in the `HOME` environment variable. |
+| `/github/workspace`             | The working directory of the Docker container. GitHub Actions execute in this directory. The path to this directory is set in the `GITHUB_WORKSPACE` environment variable. This directory is where the repository (with version `GITHUB_SHA`) that triggered the workflow. An action can modify the contents of this directory, which subsequent actions can access. **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/#user), otherwise you will not be able to access `GITHUB_WORKSPACE`. |
 
 #### Exit codes and statuses
 
@@ -205,11 +214,11 @@ You can use exit codes to provide an action\'s status. GitHub uses the
 exit code to set the workflow execution status, which can be 
 `success`, `neutral`, or `failure`:
 
-Exit status       Check run status   Description
------------------ ------------------ ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-`0`               `success`          The action completed successfully and other tasks that depends on it can begin.
-`78`              `neutral`          The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the action terminated but did not fail. For example, a [filter action](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status to stop a workflow if certain conditions aren\'t met. When an action returns this exit status, GitHub terminates all concurrently running actions and prevents any future actions from starting. The associated check run shows a `neutral` status, and the overall check suite will have a status of `success` as long as there were no failed or cancelled actions.
-All other codes   `failure`          Any other exit code indicates the action failed. When an action fails, all concurrent actions are cancelled and future actions are skipped. The check run and check suite both get a `failure` status.
+| Exit status       | Check run status   | Description |
+| ----------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`               | `success`          | The action completed successfully and other tasks that depends on it can begin. |
+| `78`              | `neutral`          | The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the action terminated but did not fail. For example, a [filter action](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status to stop a workflow if certain conditions aren\'t met. When an action returns this exit status, GitHub terminates all concurrently running actions and prevents any future actions from starting. The associated check run shows a `neutral` status, and the overall check suite will have a status of `success` as long as there were no failed or cancelled actions. |
+| All other codes   | `failure`          | Any other exit code indicates the action failed. When an action fails, all concurrent actions are cancelled and future actions are skipped. The check run and check suite both get a `failure` status. |
 
 ### Alternative container engines
 
