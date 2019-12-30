@@ -35,7 +35,6 @@ from recommonmark.parser import CommonMarkParser
 extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.autosectionlabel',
-    'sphinx_markdown_tables',
 ]
 
 

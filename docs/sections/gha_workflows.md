@@ -48,15 +48,9 @@ attributes table.
 
 #### Workflow attributes
 
-Name         Description
------------- -----------------
-`resolves`   Identifies the action(s) to invoke. Can be a string or an 
-             array of strings. Any dependencies of the named action 
-             listed in the `needs` attribute are also invoked. In the 
-             example workflow above, `ACTION2` runs first via the 
-             `resolves` attribute. When more than one action is 
-             listed, like the example workflow block above, the 
-             actions are executed in parallel.
+|  Name         | Description |
+| ------------  | ----------------------------------------------------------|
+|  `resolves`   | Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the `needs` attribute are also invoked. In the example workflow above, `ACTION2` runs first via the `resolves` attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel. |
 
 ### Action blocks
 
@@ -133,17 +127,13 @@ and the action owner publishes an update, it may break your workflows
 or have unexpected behavior. Here are some examples of the how you can 
 refer to an action on GitHub and Docker:
 
-Template                            Description
----------------------------------- ---------------------------------
-`{url}/{user}/{repo}@{ref}`         A specific branch, ref, or SHA in a public Git repository. If `url` is ommited, `github.com` is used by default. **Example:**  `https://bitbucket.com/popperized/ansible@master`.
-
-`{url}/{user}/{repo}/{path}@{ref}`  A subdirectory in a public Git repository at a specific branch, ref, or SHA. **Example:** `git@gitlab.com:popperized/geni/build-context@v2.0`
-
-`./path/to/dir`                     The path to the directory that contains the action in your workflow's repository. **Example:** `./actions/my-action`
-
-`docker://{image}:{tag}`            A Docker image published on [Docker Hub](https://hub.docker.com/). **Example:** `docker://alpine:3.8`
-
-`docker://{host}/{image}:{tag}`     A Docker image in a public registry. **Example:** `docker://gcr.io/cloud-builders/gradle`.
+| Template                           | Description |
+| ---------------------------------- | --------------------------------- |
+| `{url}/{user}/{repo}@{ref}`        |  A specific branch, ref, or SHA in a public Git repository. If `url` is ommited, `github.com` is used by default. **Example:**  `https://bitbucket.com/popperized/ansible@master`. |
+| `{url}/{user}/{repo}/{path}@{ref}` |  A subdirectory in a public Git repository at a specific branch, ref, or SHA. **Example:** `git@gitlab.com:popperized/geni/build-context@v2.0` |
+| `./path/to/dir`                    |  The path to the directory that contains the action in your workflow's repository. **Example:** `./actions/my-action` |
+| `docker://{image}:{tag}`           |  A Docker image published on [Docker Hub](https://hub.docker.com/). **Example:** `docker://alpine:3.8` |
+| `docker://{host}/{image}:{tag}`    |  A Docker image in a public registry. **Example:** `docker://gcr.io/cloud-builders/gradle`. |
 
 ## Execution Runtime
 
