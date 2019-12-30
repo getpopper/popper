@@ -56,11 +56,11 @@ popper run --recursive
 
 ## Environment Variables
 
-Popper defines the same environment variables that are [defined by the 
-official Github Actions 
-runner](https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables). 
-To see the values assigned to these variables, run the following 
-workflow:
+Popper defines a set of environment variables (see [Environment 
+Variables][envvars] section) that are available to all actions. To see 
+the values assigned to these variables, run the following workflow:
+
+[envvars]: sections/gha_workflows.md:Environment variable
 
 ```hcl
 workflow "env workflow" {
@@ -72,6 +72,11 @@ action "show env" {
   args = ["env"]
 }
 ```
+
+To define new variables, the `env` keyword can be used (see [Action 
+Attributes][act-attr] for more).
+
+[act-attr]: sections/gha_workflows.md:Action attributes
 
 ## Reusing existing workflows
 
@@ -119,16 +124,19 @@ Additionally, when searching for an action, you may choose to include
 the contents of the readme in your search by using the `--include-readme`
 flag.
 
-Once `popper search` runs, it caches all the metadata related to the search.
-So, to get the latest releases of the actions, you might want to update the
-cache using the `--update-cache` flag.
+Once `popper search` runs, it caches all the metadata related to the 
+search. So, to get the latest releases of the actions, you might want 
+to update the cache using the `--update-cache` flag.
 
-By default, popper searches for actions from a list present [here](https://github.com/systemslab/popper/blob/master/cli/resources/search_sources.yml).
-To help the list keep growing, you can add Github organization names or repository
-names(org/repo) and send a pull request to the upstream repository.
+By default, popper searches for actions from a list present 
+[here](https://github.com/systemslab/popper/blob/master/cli/resources/search_sources.yml). 
+To help the list keep growing, you can add Github organization names 
+or repository names(org/repo) and send a pull request to the upstream 
+repository.
 
 
-To get the details of a searched action, use the `popper info` command. For example,
+To get the details of a searched action, use the `popper info` 
+command. For example:
 
 ```bash
 popper info popperized/cmake
