@@ -141,8 +141,8 @@ block refers to the images using the `uses` attribute. It's strongly
 recommended to include the version of the action you are using by 
 specifying a SHA or Docker tag number. If you don't specify a version 
 and the action owner publishes an update, it may break your workflows 
-or have unexpected behavior. Here are some examples of the how you can 
-refer to an action on GitHub and Docker:
+or have unexpected behavior. Here are some examples of how you can 
+refer to an action on a public Git repository or Docker container registry:
 
 <table>
 <thead>
@@ -211,8 +211,8 @@ action "hello world" {
 }
 ```
 
-When an action runs, GitHub also sets these environment variables in the
-runtime environment:
+When an action runs, Popper also sets these environment variables in 
+the runtime environment:
 
 <table>
 <thead>
@@ -224,7 +224,7 @@ runtime environment:
 <tbody>
 <tr>
 <td style="text-align:left"><code>HOME</code></td>
-<td style="text-align:left">The path to the GitHub home directory used to store user data. Value: <code>/github/home</code>.</td>
+<td style="text-align:left">The path to the home directory used to store user data. Value: <code>/github/home</code>.</td>
 </tr>
 <tr>
 <td style="text-align:left"><code>GITHUB_WORKFLOW</code></td>
@@ -244,7 +244,7 @@ runtime environment:
 </tr>
 <tr>
 <td style="text-align:left"><code>GITHUB_WORKSPACE</code></td>
-<td style="text-align:left">The GitHub workspace path. Value: <code>/github/workspace</code>. <strong>Note:</strong> GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the <code>USER</code> instruction, otherwise you will not be able to access <code>GITHUB_WORKSPACE</code>.</td>
+<td style="text-align:left">The workspace path. Value: <code>/github/workspace</code>. <strong>Note:</strong> actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the <code>USER</code> instruction, otherwise you will not be able to access <code>GITHUB_WORKSPACE</code>.</td>
 </tr>
 <tr>
 <td style="text-align:left"><code>GITHUB_SHA</code></td>
@@ -261,12 +261,12 @@ runtime environment:
 
 | Environment variable   | Description |
 | :--------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `HOME`                 | The path to the GitHub home directory used to store user data. Value: `/github/home`. |
+| `HOME`                 | The path to the home directory used. Value: `/github/home`. |
 | `GITHUB_WORKFLOW`      | The name of the workflow. |
 | `GITHUB_ACTION`        | The name of the action. |
 | `GITHUB_ACTOR`         | The name of the person or app that initiated the workflow. For example, `octocat`. |
 | `GITHUB_REPOSITORY`    | The owner and repository name. For example, `octocat/Hello-World`. |
-| `GITHUB_WORKSPACE`     | The GitHub workspace path. Value: `/github/workspace`. **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the `USER` instruction, otherwise you will not be able to access `GITHUB_WORKSPACE`. |
+| `GITHUB_WORKSPACE`     | The workspace path. Value: `/github/workspace`. **Note:** actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the `USER` instruction, otherwise you will not be able to access `GITHUB_WORKSPACE`. |
 | `GITHUB_SHA`           | The commit SHA that triggered the workflow. |
 | `GITHUB_REF`           | The branch or tag ref that triggered the workflow. For example, `refs/heads/feature-branch-1`. If neither a branch or tag is available for the event type, the variable will not exist. |
 
@@ -297,7 +297,7 @@ Two directories are bind-mounted on the `/github` path prefix. These two directo
 </tr>
 <tr>
 <td style="text-align:left"><code>/github/workspace</code></td>
-<td style="text-align:left">The working directory of the Docker container. GitHub Actions execute in this directory. The path to this directory is set in the <code>GITHUB_WORKSPACE</code> environment variable. This directory is where the repository (with version <code>GITHUB_SHA</code>) that triggered the workflow. An action can modify the contents of this directory, which subsequent actions can access. <strong>Note:</strong> GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the <a href="https://docs.docker.com/engine/reference/builder/#user"><code>USER</code> instruction</a>, otherwise you will not be able to access <code>GITHUB_WORKSPACE</code>.</td>
+<td style="text-align:left">The working directory of the Docker container. Actions execute in this directory. The path to this directory is set in the <code>GITHUB_WORKSPACE</code> environment variable. This directory is where the repository (with version <code>GITHUB_SHA</code>) that triggered the workflow. An action can modify the contents of this directory, which subsequent actions can access. <strong>Note:</strong> actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the <a href="https://docs.docker.com/engine/reference/builder/#user"><code>USER</code> instruction</a>, otherwise you will not be able to access <code>GITHUB_WORKSPACE</code>.</td>
 </tr>
 </tbody>
 </table>
@@ -307,13 +307,13 @@ Two directories are bind-mounted on the `/github` path prefix. These two directo
 | Directory                       | Description |
 | :------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `/github/home`                  | The `HOME` directory for the user running the workflow. This directory path is set in the `HOME` environment variable. |
-| `/github/workspace`             | The working directory of the Docker container. GitHub Actions execute in this directory. The path to this directory is set in the `GITHUB_WORKSPACE` environment variable. This directory is where the repository (with version `GITHUB_SHA`) that triggered the workflow. An action can modify the contents of this directory, which subsequent actions can access. **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/#user), otherwise you will not be able to access `GITHUB_WORKSPACE`. |
+| `/github/workspace`             | The working directory of the Docker container. Actions execute in this directory. The path to this directory is set in the `GITHUB_WORKSPACE` environment variable. This directory is where the repository (with version `GITHUB_SHA`) that triggered the workflow. An action can modify the contents of this directory, which subsequent actions can access. **Note:** actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/#user), otherwise you will not be able to access `GITHUB_WORKSPACE`. |
 
 -->
 
 #### Exit codes and statuses
 
-You can use exit codes to provide an action\'s status. GitHub uses the 
+You can use exit codes to provide an action\'s status. Popper uses the 
 exit code to set the workflow execution status, which can be 
 `success`, `neutral`, or `failure`:
 
@@ -334,7 +334,7 @@ exit code to set the workflow execution status, which can be
 <tr>
 <td style="text-align:left"><code>78</code></td>
 <td style="text-align:left"><code>neutral</code></td>
-<td style="text-align:left">The configuration error exit status (<a href="https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114"><code>EX_CONFIG</code></a>) indicates that the action terminated but did not fail. For example, a <a href="https://github.com/popperized/bin/tree/master/filter">filter action</a> can use a <code>neutral</code> status to stop a workflow if certain conditions aren\&#39;t met. When an action returns this exit status, GitHub terminates all concurrently running actions and prevents any future actions from starting. The associated check run shows a <code>neutral</code> status, and the overall check suite will have a status of <code>success</code> as long as there were no failed or cancelled actions.</td>
+<td style="text-align:left">The configuration error exit status (<a href="https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114"><code>EX_CONFIG</code></a>) indicates that the action terminated but did not fail. For example, a <a href="https://github.com/popperized/bin/tree/master/filter">filter action</a> can use a <code>neutral</code> status to stop a workflow if certain conditions aren\&#39;t met. When an action returns this exit status, Popper terminates all concurrently running actions and prevents any future actions from starting. The associated check run shows a <code>neutral</code> status, and the overall check suite will have a status of <code>success</code> as long as there were no failed or cancelled actions.</td>
 </tr>
 <tr>
 <td style="text-align:left">All other codes</td>
@@ -349,7 +349,7 @@ exit code to set the workflow execution status, which can be
 | Exit status       | Check run status   | Description |
 | :---------------- | :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `0`               | `success`          | The action completed successfully and other tasks that depends on it can begin. |
-| `78`              | `neutral`          | The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the action terminated but did not fail. For example, a [filter action](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status to stop a workflow if certain conditions aren\'t met. When an action returns this exit status, GitHub terminates all concurrently running actions and prevents any future actions from starting. The associated check run shows a `neutral` status, and the overall check suite will have a status of `success` as long as there were no failed or cancelled actions. |
+| `78`              | `neutral`          | The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the action terminated but did not fail. For example, a [filter action](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status to stop a workflow if certain conditions aren\'t met. When an action returns this exit status, Popper terminates all concurrently running actions and prevents any future actions from starting. The associated check run shows a `neutral` status, and the overall check suite will have a status of `success` as long as there were no failed or cancelled actions. |
 | All other codes   | `failure`          | Any other exit code indicates the action failed. When an action fails, all concurrent actions are cancelled and future actions are skipped. The check run and check suite both get a `failure` status. |
 
 -->
