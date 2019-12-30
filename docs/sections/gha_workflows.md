@@ -186,7 +186,7 @@ Environment variable   Description
 `GITHUB_REPOSITORY`    The owner and repository name. For example, `octocat/Hello-World`.
 
 `GITHUB_WORKSPACE`     The GitHub workspace path. Value: `/github/workspace`.\
-                       **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/#user), otherwise you will not be able to access `GITHUB_WORKSPACE`.
+                       **Note:** GitHub actions must be run by the default Docker user (root). Ensure your Dockerfile does not set the [`USER` instruction](https://docs.docker.com/engine/reference/builder/\#user), otherwise you will not be able to access `GITHUB_WORKSPACE`.
 
 `GITHUB_SHA`           The commit SHA that triggered the workflow.
 
