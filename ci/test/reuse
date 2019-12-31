@@ -65,7 +65,7 @@ action "show env" {
 }
 EOF
 
-popper run --runtime "$RUNTIME" > output
+popper run --engine "$RUNTIME" > output
 
 grep -q "README.md" output
 grep -q "main.workflow" output
@@ -81,7 +81,7 @@ action "show env" {
 }
 EOF
 
-popper run --reuse --runtime "$RUNTIME" > output
+popper run --reuse --engine "$RUNTIME" > output
 grep  -q "message in a bottle" output
 
 cat <<EOF > main.workflow
@@ -95,7 +95,7 @@ action "check file" {
 }
 EOF
 
-popper run --runtime "$RUNTIME" > /dev/null
+popper run --engine "$RUNTIME" > /dev/null
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -108,7 +108,7 @@ action "check file" {
 }
 EOF
 
-popper run --reuse --runtime "$RUNTIME" > output
+popper run --reuse --engine "$RUNTIME" > output
 grep -q "Hello from Popper 2.x !" output
 
 fi
