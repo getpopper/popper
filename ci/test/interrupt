@@ -20,7 +20,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --runtime $RUNTIME" 5
+send_sigint "popper run --engine $RUNTIME" 5
 
 # give popper some time to remove containers
 sleep 5
@@ -80,7 +80,7 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --parallel --runtime $RUNTIME" 2
+send_sigint "popper run --parallel --engine $RUNTIME" 2
 
 sleep 5
 

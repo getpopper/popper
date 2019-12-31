@@ -358,10 +358,10 @@ exit code to set the workflow execution status, which can be
 
 By default, actions in Popper workflows run in Docker. In addition to 
 Docker, Popper can execute workflows in other runtimes by interacting 
-with other container engines. A `--runtime <engine>` flag for the 
+with other container engines. A `--engine <engine>` flag for the 
 `popper run` can be used to invoke alternative engines (where 
 `<engine>` is one of the supported engines). When no value for the 
-`--runtime` option is given, Popper executes workflows in Docker.
+`--engine` option is given, Popper executes workflows in Docker.
 
 > **NOTE**: As part of our roadmap, we plan to add support for the 
 > [Podman](https://podman.io/) runtime. Open a [new
@@ -374,7 +374,7 @@ Popper can execute a workflow in systems where Singularity 3.2+ is
 available. To execute a workflow in Singularity containers:
 
 ```bash
-popper run --runtime singularity
+popper run --engine singularity
 ```
 
 ##### Limitations
@@ -393,7 +393,7 @@ communicating with the Docker daemon that runs inside the VM. To
 execute a workflow in Vagrant:
 
 ```bash
-popper run --runtime vagrant
+popper run --engine vagrant
 ```
 
 [vagrant]: https://vagrantup.com/

@@ -47,7 +47,7 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-pull --runtime "$RUNTIME")
+(! popper run --skip-pull --engine "$RUNTIME")
 
 # action repo not present locally, fail workflow using --skip-clone
 delete_dir "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
@@ -63,7 +63,7 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-clone --runtime "$RUNTIME")
+(! popper run --skip-clone --engine "$RUNTIME")
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
@@ -92,7 +92,7 @@ action "sample action two" {
 }
 EOF
 
-popper run --skip-clone --skip-pull --runtime "$RUNTIME" > output
+popper run --skip-clone --skip-pull --engine "$RUNTIME" > output
 grep -q "sample action one" output
 grep -q "sample action two" output
 
