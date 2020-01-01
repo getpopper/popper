@@ -368,7 +368,7 @@ class TestDockerRunner(unittest.TestCase):
         self.docker_client.close()
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_get_build_resources(self):
         res = self.runner.get_build_resources()
@@ -388,7 +388,7 @@ class TestDockerRunner(unittest.TestCase):
             res, (True, 'jshint:unknown', '/tmp/test_folder/./actions/jshint'))
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_exists(self):
         image = self.docker_client.images.pull('debian:buster-slim')
@@ -400,7 +400,7 @@ class TestDockerRunner(unittest.TestCase):
         self.docker_client.images.remove('debian:buster-slim')
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_image_exists(self):
         image = self.docker_client.images.pull('debian:buster-slim')
@@ -409,7 +409,7 @@ class TestDockerRunner(unittest.TestCase):
         self.docker_client.images.remove('debian:buster-slim', force=True)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_rm(self):
         self.docker_client.images.pull('debian:buster-slim')
@@ -418,7 +418,7 @@ class TestDockerRunner(unittest.TestCase):
         self.assertRaises(docker.errors.NotFound, self.runner.docker_rm)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_pull(self):
         self.assertEqual(self.runner.docker_image_exists(
@@ -434,7 +434,7 @@ class TestDockerRunner(unittest.TestCase):
             'debian:buster-slim'), True)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_start(self):
         self.runner.action['runs'] = [
@@ -450,7 +450,7 @@ class TestDockerRunner(unittest.TestCase):
         self.runner.docker_rm()
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_build(self):
         pu.write_file('/tmp/test_folder/Dockerfile', """
@@ -464,7 +464,7 @@ class TestDockerRunner(unittest.TestCase):
         res = self.docker_client.images.get('abcd:latest')
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_create(self):
         self.runner.action['args'] = ['env']
@@ -506,7 +506,7 @@ class TestSingularityRunner(unittest.TestCase):
         log.setLevel('NOTSET')
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_singularity_exists(self):
         pu.write_file('/tmp/test_folder/testimg.sif', 'fake image file')
@@ -516,7 +516,7 @@ class TestSingularityRunner(unittest.TestCase):
         os.remove('/tmp/test_folder/testimg.sif')
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_singularity_rm(self):
         pu.write_file('/tmp/test_folder/testimg.sif', 'fake image file')
@@ -525,7 +525,7 @@ class TestSingularityRunner(unittest.TestCase):
             '/tmp/test_folder/testimg.sif'), False)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_singularity_build_from_image(self):
         self.runner.singularity_build_from_image(
@@ -553,7 +553,7 @@ class TestSingularityRunner(unittest.TestCase):
                 '.cache/.popper/singularity/12345/testimg.sif'))
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_singularity_build_from_recipe(self):
         os.chdir(
@@ -575,7 +575,7 @@ class TestSingularityRunner(unittest.TestCase):
             True)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_get_recipe_file(self):
         os.chdir(
@@ -598,7 +598,7 @@ class TestSingularityRunner(unittest.TestCase):
             '12345')
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_singularity_start(self):
         self.runner.action['runs'] = [
@@ -617,7 +617,7 @@ class TestSingularityRunner(unittest.TestCase):
         self.assertEqual(os.path.exists('popper.file'), True)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_get_build_resources(self):
         res = self.runner.get_build_resources()
@@ -641,7 +641,7 @@ class TestSingularityRunner(unittest.TestCase):
              '/tmp/test_folder/./actions/jshint'))
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'singularity',
+        os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_setup_singularity_cache(self):
         cache_path = os.path.join(
@@ -684,7 +684,7 @@ class TestVagrantRunner(unittest.TestCase):
         log.setLevel('NOTSET')
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'vagrant',
+        os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_setup_vagrant_cache(self):
         cache_path = os.path.join(
@@ -696,7 +696,7 @@ class TestVagrantRunner(unittest.TestCase):
         self.assertEqual(os.path.exists(cache_path), True)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'vagrant',
+        os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_start(self):
         os.makedirs('/tmp/test_folder/test_vm')
@@ -715,7 +715,7 @@ class TestVagrantRunner(unittest.TestCase):
         vagrant.Vagrant(root='/tmp/test_folder/test_vm').destroy()
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'vagrant',
+        os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_stop(self):
         os.makedirs('/tmp/test_folder/test_vm')
@@ -737,7 +737,7 @@ class TestVagrantRunner(unittest.TestCase):
         vagrant.Vagrant(root='/tmp/test_folder/test_vm').destroy()
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'vagrant',
+        os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_exists(self):
         os.makedirs('/tmp/test_folder/test_vm')
@@ -762,7 +762,7 @@ class TestVagrantRunner(unittest.TestCase):
             '/tmp/test_folder/test_vm'), False)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'vagrant',
+        os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_write_vagrantfile(self):
         self.runner.vagrant_write_vagrantfile('/tmp/test_folder/test_vm')
@@ -872,7 +872,7 @@ class TestConcurrentExecution(unittest.TestCase):
     def test_run(self):
         os.environ['PHONY_SECRET'] = '1234'
         args = (None, False, False, list(), '/tmp/test_folder/gha-demo',
-                False, False, False, False, os.environ['RUNTIME'])
+                False, False, False, False, os.environ['ENGINE'])
         with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
             flist = [
                 ex.submit(self.runner_one.run, *args),
