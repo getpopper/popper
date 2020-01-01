@@ -98,6 +98,12 @@ action "test inject" {
   args = "ci/test/inject"
 }
 
+action "test runtime conf" {
+  needs = "lint"
+  uses = "sh"
+  args = "ci/test/runtime-conf"
+}
+
 action "end" {
   uses = "sh"
   args = "ci/test/version"
@@ -117,5 +123,6 @@ action "end" {
     "test sh",
     "test skip",
     "test validate",
+    "test runtime conf"
   ]
 }

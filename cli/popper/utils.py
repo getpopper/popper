@@ -406,3 +406,22 @@ def write_file(path, content=''):
     f = open(path, 'w')
     f.write(content)
     f.close()
+
+
+def parse_runtime_configuration(runtime_conf_file):
+    if not runtime_conf_file:
+        return None
+
+    if not os.path.exists(runtime_conf_file):
+        log.fail('File {} was not found.'.format(runtime_conf_file))
+
+    sys.path.append(os.path.abspath(os.path.dirname(runtime_conf_file)))
+    try:
+        import settings
+    except Exception as e:
+        log.fail('Failed to import setting.py: {}'.format(e))
+
+    try:
+        return settings.runtime_configuration
+    except AttributeError:
+        log.fail('No variable named \"runtime_configuration\" was found.')

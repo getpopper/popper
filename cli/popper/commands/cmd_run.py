@@ -111,6 +111,11 @@ from popper import log as logging
     hidden=True,
     default=popper.scm.get_git_root_folder()
 )
+@click.option(
+    '--runtime-conf',
+    help='Specify the runtime configuration file for a container.',
+    required=False,
+)
 @pass_context
 def cli(ctx, **kwargs):
     """Runs a Github Action Workflow.

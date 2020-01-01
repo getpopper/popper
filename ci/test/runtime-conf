@@ -1,0 +1,35 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./ci/test/common
+init_test_repo
+cd "$test_repo_path"
+
+cat <<EOF > settings.py
+runtime_configuration = {
+    "docker": {
+        "name": "dont use this name",
+        "image": "abc/xyz",
+        "hostname": "xYz.local"
+    }
+}
+EOF
+
+cat <<EOF > main.workflow
+workflow "test" {
+    resolves = "run"
+}
+
+action "run" {
+    uses = "popperized/bin/sh@master"
+    args = ["hostname"]
+}
+EOF
+
+popper run --runtime-conf settings.py > output
+grep -Fxq "xYz.local" output
+
+popper run > output
+grep -vFxq "xYz.local" output
+
+echo "Test RUNTIME-CONF passed."

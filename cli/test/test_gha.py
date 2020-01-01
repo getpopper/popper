@@ -413,7 +413,7 @@ class TestDockerRunner(unittest.TestCase):
         'Skipping docker tests...')
     def test_docker_rm(self):
         self.docker_client.images.pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim')
+        self.runner.docker_create('debian:buster-slim', None)
         self.runner.docker_rm()
         self.assertRaises(docker.errors.NotFound, self.runner.docker_rm)
 
@@ -441,7 +441,7 @@ class TestDockerRunner(unittest.TestCase):
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         self.runner.docker_pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim')
+        self.runner.docker_create('debian:buster-slim', None)
         e = self.runner.docker_start()
         self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
@@ -466,10 +466,54 @@ class TestDockerRunner(unittest.TestCase):
     @unittest.skipIf(
         os.environ['RUNTIME'] != 'docker',
         'Skipping docker tests...')
+    def test_mix_with_runtime_config(self):
+        config = {
+            "image": "popperized/bin",
+            "command": "ls -l",
+            "name": "popper_bin",
+            "volumes": ["/tmp:/tmp"],
+            "working_dir": "/tmp/workdir",
+            "environment": {
+                "A": "a", "B": "b"
+            },
+            "entrypoint": None,
+            "detach": True
+        }
+
+        runtime_config = {
+            "docker": {
+                "volumes": ["/var:/var"],
+                "environment": {
+                    "C": "c"
+                },
+                "hostname": "abc.local",
+                "privileged": True
+            }
+        }
+
+        result_config = {
+            'image': 'popperized/bin',
+            'command': 'ls -l',
+            'name': 'popper_bin',
+            'volumes': ['/tmp:/tmp', '/var:/var'],
+            'working_dir': '/tmp/workdir',
+            'environment': {'A': 'a', 'B': 'b', 'C': 'c'},
+            'entrypoint': None,
+            'detach': True,
+            'hostname': 'abc.local',
+            'privileged': True
+        }
+
+        config = self.runner.mix_with_runtime_config(config, runtime_config)
+        self.assertEqual(config, result_config)
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'docker',
+        'Skipping docker tests...')
     def test_docker_create(self):
         self.runner.action['args'] = ['env']
         self.runner.docker_pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim')
+        self.runner.docker_create('debian:buster-slim', None)
         self.assertEqual(self.runner.docker_exists(), True)
         self.runner.docker_rm()
 
@@ -809,8 +853,8 @@ class TestHostRunner(unittest.TestCase):
 
     def test_run(self):
         runner = self.wf.action['sample action']['runner']
-        self.assertRaises(SystemExit, runner.run, reuse=True)
-        runner.run()
+        self.assertRaises(SystemExit, runner.run, None, reuse=True)
+        runner.run(None)
 
     def test_host_prepare(self):
         runner = self.wf.action['sample action']['runner']
