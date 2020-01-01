@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import os
-import shutil
 import signal
 import time
 import getpass
@@ -9,7 +8,6 @@ import subprocess
 import multiprocessing as mp
 from copy import deepcopy
 from builtins import dict
-from distutils.dir_util import copy_tree
 from distutils.spawn import find_executable
 from concurrent.futures import (ThreadPoolExecutor,
                                 as_completed)
@@ -95,8 +93,8 @@ class WorkflowRunner(object):
         infoed = False
 
         for _, a in wf.action.items():
-            if ('docker://' in a['uses']
-                    or './' in a['uses'] or a['uses'] == 'sh'):
+            uses = a['uses']
+            if 'docker://' in uses or './' in uses or uses == 'sh':
                 continue
 
             url, service, user, repo, action_dir, version = scm.parse(
@@ -131,7 +129,7 @@ class WorkflowRunner(object):
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid,
+    def instantiate_runners(engine, wf, workspace, dry_run, skip_pull, wid,
                             engine_config=None):
         """Factory of ActionRunner instances, one for each action.
 
@@ -139,7 +137,7 @@ class WorkflowRunner(object):
             If the `uses` attribute startswith a './' and does not have
             a `Dockerfile` in the referenced directory, we assume that
             it is meant to be run on the Host machine and ignore the
-            runtime argument.
+            engine argument.
             Same is the case when the `uses` attribute is equal to 'sh'.
 
         Args:
@@ -171,15 +169,15 @@ class WorkflowRunner(object):
                         engine_config)
                     continue
 
-            if runtime == 'docker':
+            if engine == 'docker':
                 a['runner'] = DockerRunner(
                     a, workspace, env, dry_run, skip_pull, wid, engine_config)
 
-            elif runtime == 'singularity':
+            elif engine == 'singularity':
                 a['runner'] = SingularityRunner(
                     a, workspace, env, dry_run, skip_pull, wid, engine_config)
 
-            elif runtime == 'vagrant':
+            elif engine == 'vagrant':
                 a['runner'] = VagrantRunner(
                     a, workspace, env, dry_run, skip_pull, wid, engine_config)
 
@@ -219,7 +217,7 @@ class WorkflowRunner(object):
         return env
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
-            reuse, dry_run, parallel, with_dependencies, runtime,
+            reuse, dry_run, parallel, with_dependencies, engine,
             engine_conf, skip_secrets_prompt=False):
         """Run the workflow or a specific action.
 
@@ -256,7 +254,7 @@ class WorkflowRunner(object):
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime,
+            engine,
             new_wf,
             workspace,
             dry_run,
@@ -266,15 +264,15 @@ class WorkflowRunner(object):
 
         for s in new_wf.get_stages():
             WorkflowRunner.run_stage(
-                runtime, new_wf, s, reuse, parallel)
+                engine, new_wf, s, reuse, parallel)
 
     @staticmethod
-    def run_stage(runtime, wf, stage, reuse=False,
+    def run_stage(engine, wf, stage, reuse=False,
                   parallel=False):
         """Runs actions in a stage either parallelly or sequentially.
 
         Args:
-          runtime(str): Name of the run time being used in workflow.
+          engine(str): Name of container engine to use for the workflow.
           wf(popper.parser.Workflow): Instance of the Workflow class.
           stage(set): Set containing stages to be executed in the workflow.
           reuse(bool): True if existing containers are to be
@@ -367,7 +365,7 @@ class ActionRunner(object):
             f.close()
 
     def prepare_volumes(self, env, include_docker_socket=False):
-        """Prepare volume bindings for the container runtimes.
+        """Prepare volume bindings for the container.
 
         Args:
           env(dict): Dictionary containing popper environment variables.
@@ -375,7 +373,7 @@ class ActionRunner(object):
                         included.(Default value = False)
 
         Returns:
-            list: Volume bindings for container runtime.
+            list: Volume bindings.
         """
         volumes = [
             '/var/run/docker.sock:/var/run/docker.sock',
@@ -419,7 +417,7 @@ class ActionRunner(object):
         return env
 
     def remove_environment(self):
-        """Removes the runtime environment variables."""
+        """Removes environment variables set prior to execution."""
         env = self.prepare_environment()
         env.pop('HOME')
         for k, v in env.items():
@@ -442,7 +440,7 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    """Run a Github Action in Docker runtime."""
+    """Runs actions in docker."""
 
     def __init__(self, action, workspace, env, dry, skip_pull,
                  wid, engine_config):
@@ -686,7 +684,7 @@ class DockerRunner(ActionRunner):
 
 
 class SingularityRunner(ActionRunner):
-    """Runs a Github Action in Singularity runtime."""
+    """Runs actions in singularity."""
     lock = threading.Lock()
 
     def __init__(self, action, workspace, env, dry_run, skip_pull,
@@ -754,7 +752,7 @@ class SingularityRunner(ActionRunner):
         singularity_cache = SingularityRunner.setup_singularity_cache(self.wid)
 
         if reuse:
-            log.fail('Reusing containers in singularity runtime is '
+            log.fail('Reusing containers in singularity engine is '
                      'currently not supported.')
 
         build, image, build_source = self.get_build_resources()
@@ -981,7 +979,7 @@ class SingularityRunner(ActionRunner):
 
 
 class VagrantRunner(DockerRunner):
-    """Run an Action in Vagrant runtime."""
+    """Runs actions in docker within a VM."""
     actions = set()
     running = False
     vbox_path = None
@@ -996,8 +994,6 @@ class VagrantRunner(DockerRunner):
 
     def __init__(self, action, workspace, env, dry, skip_pull,
                  wid, engine_config):
-        import vagrant
-
         super(VagrantRunner, self).__init__(
             action, workspace, env, dry, skip_pull, wid, engine_config
         )
@@ -1049,6 +1045,8 @@ class VagrantRunner(DockerRunner):
         Returns:
           bool: Whether the VM exists in running state or not.
         """
+        import vagrant
+
         if self.dry_run:
             return True
         vg_file_path = os.path.join(vagrant_box_path, 'Vagrantfile')
@@ -1067,6 +1065,7 @@ class VagrantRunner(DockerRunner):
         Returns:
             None
         """
+        import vagrant
         if self.dry_run:
             return
         if not self.vagrant_exists(vagrant_box_path):
@@ -1085,6 +1084,7 @@ class VagrantRunner(DockerRunner):
         Returns:
             None
         """
+        import vagrant
         if self.dry_run:
             return
         log.info("[-] Stopping VM....")
