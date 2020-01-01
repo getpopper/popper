@@ -112,14 +112,14 @@ class WorkflowRunner(object):
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid):
+    def instantiate_runners(engine, wf, workspace, dry_run, skip_pull, wid):
         """Factory of ActionRunner instances, one for each action.
 
         Note:
             If the `uses` attribute startswith a './' and does not have
             a `Dockerfile` in the referenced directory, we assume that
             it is meant to be run on the Host machine and ignore the
-            runtime argument.
+            engine argument.
             Same is the case when the `uses` attribute is equal to 'sh'.
         """
         env = WorkflowRunner.get_workflow_env(wf, workspace)
@@ -139,15 +139,15 @@ class WorkflowRunner(object):
                         a, workspace, env, dry_run, skip_pull, wid)
                     continue
 
-            if runtime == 'docker':
+            if engine == 'docker':
                 a['runner'] = DockerRunner(
                     a, workspace, env, dry_run, skip_pull, wid)
 
-            elif runtime == 'singularity':
+            elif engine == 'singularity':
                 a['runner'] = SingularityRunner(
                     a, workspace, env, dry_run, skip_pull, wid)
 
-            elif runtime == 'vagrant':
+            elif engine == 'vagrant':
                 a['runner'] = VagrantRunner(
                     a, workspace, env, dry_run, skip_pull, wid)
 
@@ -177,7 +177,7 @@ class WorkflowRunner(object):
         return env
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
-            reuse, dry_run, parallel, with_dependencies, runtime,
+            reuse, dry_run, parallel, with_dependencies, engine,
             skip_secrets_prompt=False):
         """Run the workflow or a specific action.
         """
@@ -194,13 +194,13 @@ class WorkflowRunner(object):
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
+            engine, new_wf, workspace, dry_run, skip_pull, self.wid)
 
         for s in new_wf.get_stages():
-            WorkflowRunner.run_stage(runtime, new_wf, s, reuse, parallel)
+            WorkflowRunner.run_stage(engine, new_wf, s, reuse, parallel)
 
     @staticmethod
-    def run_stage(runtime, wf, stage, reuse=False, parallel=False):
+    def run_stage(engine, wf, stage, reuse=False, parallel=False):
         """Runs actions in a stage either parallely or
         sequentially."""
         if parallel:
@@ -272,7 +272,7 @@ class ActionRunner(object):
             f.close()
 
     def prepare_volumes(self, env, include_docker_socket=False):
-        """Prepare volume bindings for the container runtimes.
+        """Prepare volume bindings for the container engines.
         """
         volumes = [
             '/var/run/docker.sock:/var/run/docker.sock',
@@ -318,7 +318,7 @@ class ActionRunner(object):
         return env
 
     def remove_environment(self):
-        """Removes the runtime environment variables.
+        """Removes the engine environment variables.
         """
         env = self.prepare_environment()
         env.pop('HOME')
@@ -332,7 +332,7 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
-    """Run a Github Action in Docker runtime.
+    """Run a Github Action in Docker engine.
     """
 
     def __init__(self, action, workspace, env, dry, skip_pull, wid):
@@ -540,7 +540,7 @@ class DockerRunner(ActionRunner):
 
 
 class SingularityRunner(ActionRunner):
-    """Runs a Github Action in Singularity runtime.
+    """Runs a Github Action in Singularity engine.
     """
     lock = threading.Lock()
     def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
@@ -603,7 +603,7 @@ class SingularityRunner(ActionRunner):
         singularity_cache = SingularityRunner.setup_singularity_cache(self.wid)
 
         if reuse:
-            log.fail('Reusing containers in singularity runtime is '
+            log.fail('Reusing containers in singularity engine is '
                      'currently not supported.')
 
         build, image, build_source = self.get_build_resources()
@@ -819,7 +819,7 @@ class SingularityRunner(ActionRunner):
 
 class VagrantRunner(DockerRunner):
     """
-    Run an Action in Vagrant runtime.
+    Run an Action in Vagrant engine.
     """
     actions = set()
     running = False
