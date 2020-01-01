@@ -6,14 +6,14 @@ source ./ci/test/common
 delete_dir /tmp/gha-demo
 git clone https://github.com/popperized/github-actions-demo /tmp/gha-demo
 pushd /tmp/gha-demo
-PHONY_SECRET=phony popper run --debug --engine "$RUNTIME"
+PHONY_SECRET=phony popper run --debug --engine "$ENGINE"
 popd
 
 # test with an action defined on the root of the repo
 delete_dir /tmp/spack
 git clone https://github.com/popperized/spack /tmp/spack
 pushd /tmp/spack
-popper run --wfile .ci/test.workflow --engine "$RUNTIME"
+popper run --wfile .ci/test.workflow --engine "$ENGINE"
 popd
 
 # test with a remote action defined on the root of the repo
@@ -30,7 +30,7 @@ action "test" {
 }
 EOF
 
-ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run --engine "$RUNTIME"
+ANSIBLE_SSH_KEY_DATA="$(echo 'dummydata' | base64)" popper run --engine "$ENGINE"
 
 # test with actions hosted on gitlab
 cd $test_repo_path
@@ -67,7 +67,7 @@ action "test" {
 }
 EOF
 
-popper run --dry-run --engine "$RUNTIME" > output
+popper run --dry-run --engine "$ENGINE" > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
@@ -75,15 +75,15 @@ grep -q "dependency three" output
 grep -q "dependency four" output
 
 # test --with-dependencies flag
-popper run --dry-run --engine "$RUNTIME" test > output
+popper run --dry-run --engine "$ENGINE" test > output
 grep -q "test" output
-popper run --dry-run --with-dependencies --engine "$RUNTIME" test > output
+popper run --dry-run --with-dependencies --engine "$ENGINE" test > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
 grep -q "dependency four" output
-popper run --dry-run --with-dependencies --engine "$RUNTIME" 'dependency one' > output
+popper run --dry-run --with-dependencies --engine "$ENGINE" 'dependency one' > output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
@@ -123,20 +123,20 @@ action "d" {
 }
 EOF
 
-(! popper run --dry-run --with-dependencies --engine "$RUNTIME")
-popper run --dry-run --with-dependencies --engine "$RUNTIME" a1 > output
+(! popper run --dry-run --with-dependencies --engine "$ENGINE")
+popper run --dry-run --with-dependencies --engine "$ENGINE" a1 > output
 grep -q "a1" output
-popper run --dry-run --with-dependencies --engine "$RUNTIME" a2 > output
+popper run --dry-run --with-dependencies --engine "$ENGINE" a2 > output
 grep -q "a2" output
-popper run --dry-run --with-dependencies --engine "$RUNTIME" b > output 
+popper run --dry-run --with-dependencies --engine "$ENGINE" b > output 
 grep -q "a1"  output
 grep -q "a2" output 
 grep -q "b" output
-popper run --dry-run --with-dependencies --engine "$RUNTIME" c > output
+popper run --dry-run --with-dependencies --engine "$ENGINE" c > output
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "c" output
-popper run --dry-run --with-dependencies --engine "$RUNTIME" d > output 
+popper run --dry-run --with-dependencies --engine "$ENGINE" d > output 
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "b" output 
@@ -157,7 +157,7 @@ FROM alpine:3.9
 ENTRYPOINT ["echo", "'hello world!'"]
 EOF
 
-if [ "$RUNTIME" == "docker" ]; then
+if [ "$ENGINE" == "docker" ]; then
 
 cat <<EOF > main.workflow
 workflow "test bindings" {
@@ -202,7 +202,7 @@ EOF
 
 fi
 
-popper run --engine "$RUNTIME"
+popper run --engine "$ENGINE"
 
 rm "$HOME/popperfile" ./popperfile
 
@@ -221,7 +221,7 @@ action "test" {
 }
 EOF
 
-popper run --engine "$RUNTIME" > output
+popper run --engine "$ENGINE" > output
 grep -q "Successfully ran 'ls'" output
 
 # test on-failure flag
@@ -245,11 +245,11 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup runs successfully.
-popper run --on-failure cleanup --engine "$RUNTIME" > output
+popper run --on-failure cleanup --engine "$ENGINE" > output
 grep -q "Cleaning up..." output
 
 # test action fails, clean action couldnt be found.
-(! popper run --on-failure clean --engine "$RUNTIME")
+(! popper run --on-failure clean --engine "$ENGINE")
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -268,7 +268,7 @@ action "cleanup" {
 EOF
 
 # test action fails, cleanup action also fails.
-(! popper run --on-failure cleanup --engine "$RUNTIME")
+(! popper run --on-failure cleanup --engine "$ENGINE")
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -287,7 +287,7 @@ action "cleanup" {
 EOF
 
 # test action fails, no --on-failure cleanup action.
-(! popper run --engine "$RUNTIME")
+(! popper run --engine "$ENGINE")
 
 cat <<EOF > main.workflow
 workflow "test-on-failure" {
@@ -306,7 +306,7 @@ action "cleanup" {
 EOF
 
 # test action runs sucessfully, cleanup action in not triggered
-popper run --on-failure cleanup --engine "$RUNTIME" > output
+popper run --on-failure cleanup --engine "$ENGINE" > output
 (! grep -q "Cleaning up..." output)
 
 # test prevention of double cloning of actions, instantiation of runners etc.
@@ -326,7 +326,7 @@ action "cleanup" {
 }
 EOF
 
-popper run --on-failure cleanup --engine "$RUNTIME"
+popper run --on-failure cleanup --engine "$ENGINE"
 
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -344,7 +344,7 @@ action "test2" {
 }
 EOF
 
-popper run --engine "$RUNTIME" > output
+popper run --engine "$ENGINE" > output
 grep -q "https://github.com/popperized/npm@master" output
 (! grep -q "https://github.com/popperized/bin@master" output)
 
@@ -364,7 +364,7 @@ action "test2" {
 }
 EOF
 
-popper run --skip test1 --engine "$RUNTIME" > output
+popper run --skip test1 --engine "$ENGINE" > output
 (! grep -q "https://github.com/popperized/npm@master" output)
 grep -q "https://github.com/popperized/bin@master" output
 
@@ -385,7 +385,7 @@ action "show workspace in host" {
 }
 EOF
 
-popper run --engine "$RUNTIME" > output
+popper run --engine "$ENGINE" > output
 count=$(grep -wc "/tmp/mypaper" output)
 test "$count" -eq 2
 
@@ -421,7 +421,7 @@ action "end" {
 }
 EOF
 
-popper run --engine "$RUNTIME" > output
+popper run --engine "$ENGINE" > output
 grep -q "Action 'b' ran successfully !" output
 (! grep -q "Action 'end' ran successfully !" output)
 
