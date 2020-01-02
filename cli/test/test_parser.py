@@ -799,3 +799,190 @@ class TestParser(unittest.TestCase):
             {'h'},
             {'end'}
         ])
+
+    def test_substitutions(self):
+        self.create_workflow_file("""
+        workflow "example" {
+            resolves = "end"
+            }
+
+            action "a" {
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "b" {
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "c" {
+            uses = "_X1"
+            args = "ls"
+            }
+
+            action "d" {
+            needs = ["c"]
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "e" {
+            needs = ["d", "b", "a"]
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "end" {
+            needs = "e"
+            uses = "sh"
+            args = "ls"
+            }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf.parse()
+        changed_wf = Workflow.parse_substitutions(wf, ['_X1=sh'])
+        self.assertDictEqual(changed_wf.action, {
+            'a': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
+                'next': {'e'}},
+            'b': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'b',
+                'next': {'e'}},
+            'c': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'c',
+                'next': {'d'}},
+            'd': {
+                'needs': ['c'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'd',
+                'next': {'e'}},
+            'e': {
+                'needs': ['d', 'b', 'a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'e',
+                'next': {'end'}},
+            'end': {
+                'needs': ['e'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'end'}})
+
+        self.create_workflow_file("""
+        workflow "example" {
+            resolves = "end"
+            }
+
+            action "a" {
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "b" {
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "c" {
+            uses = "_X1"
+            args = "ls"
+            }
+
+            action "d" {
+            needs = ["c"]
+            uses = "sh"
+            args = "ls"
+            }
+
+            action "e" {
+            needs = ["d", "b", "a"]
+            uses = "_X2"
+            args = "ls"
+            }
+
+            action "end" {
+            needs = "e"
+            uses = "sh"
+            args = "ls"
+            }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf.parse()
+        changed_wf = Workflow.parse_substitutions(wf, ['_X1=sh', '_X2=sh'])
+        self.assertDictEqual(changed_wf.action, {
+            'a': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
+                'next': {'e'}},
+            'b': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'b',
+                'next': {'e'}},
+            'c': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'c',
+                'next': {'d'}},
+            'd': {
+                'needs': ['c'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'd',
+                'next': {'e'}},
+            'e': {
+                'needs': ['d', 'b', 'a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'e',
+                'next': {'end'}},
+            'end': {
+                'needs': ['e'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'end'}})
+
+        changed_wf = Workflow.parse_substitutions(wf, ['_X1=shx',
+                                                       '_X2=sh', '_X1=sh'])
+        self.assertDictEqual(changed_wf.action, {
+            'a': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
+                'next': {'e'}},
+            'b': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'b',
+                'next': {'e'}},
+            'c': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'c',
+                'next': {'d'}},
+            'd': {
+                'needs': ['c'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'd',
+                'next': {'e'}},
+            'e': {
+                'needs': ['d', 'b', 'a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'e',
+                'next': {'end'}},
+            'end': {
+                'needs': ['e'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'end'}})
