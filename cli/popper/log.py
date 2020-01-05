@@ -7,8 +7,7 @@ logging.addLevelName(ACTION_INFO, 'ACTION_INFO')
 
 
 class PopperFormatter(logging.Formatter):
-    """
-    A Formatter which sets the format for popper custom log messages
+    """A Formatter which sets the format for popper custom log messages.
 
     Level Values are
     DEBUG: 10
@@ -55,6 +54,16 @@ class PopperFormatter(logging.Formatter):
         self.log_fmt = self.log_format if colors else self.log_format_no_colors
 
     def format(self, record):
+        """
+
+        Args:
+          record(logging.LogRecord): The part of the log record from which
+                                        the information is to be extracted.
+
+        Returns:
+          str: String containing meaningful information from logs.
+
+        """
         fmt = self.log_fmt[logging.getLevelName(record.levelno)]
         if sys.version_info[0] < 3:
             self._fmt = fmt
@@ -65,62 +74,112 @@ class PopperFormatter(logging.Formatter):
 
 
 class PopperLogger(logging.Logger):
-    """
-    A Logger so that we can add popper fail and action_info log methods
-    """
+    """A Logger so that we can add popper fail and action_info log methods."""
 
     def fail(self, msg='', *args, **kwargs):
-        """
-        Log a message with severity 'ERROR', and then exits.
+        """Log a message with severity 'ERROR', and then exits.
+
+        Args:
+          msg(str, optional): Message to be logged.(Default value = '')
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          None
         """
         super(PopperLogger, self).error(msg, *args, **kwargs)
         sys.exit(1)
 
     def action_info(self, msg='', *args, **kwargs):
-        """
-        Log a message with severity 'ACTION_INFO'.
+        """Log a message with severity 'ACTION_INFO'.
+
+        Args:
+          msg(str, optional): Message to be logged.(Default value = '')
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          None
         """
         if self.isEnabledFor(ACTION_INFO):
             self._log(ACTION_INFO, msg, args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
-        """
-        Sends a warning about the use of fail(). We are depreciating it in
+        """Sends a warning about the use of fail(). We are depreciating it in
         favor of fail()
 
         The error() method has been replaced with fail(), as fail is more
         indicative of the functionality provided i.e. fail() will also
         result in the failure of the module when called and stop execution.
+
+        Args:
+          msg(str, optional): Message to be logged.
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          None
         """
         super(PopperLogger, self).\
             warning('error() has been replaced with fail()')
         pass
 
     def info(self, msg='', *args, **kwargs):
-        """
-        Logs a message with severity 'INFO'
+        """Logs a message with severity 'INFO'.
+
+        Args:
+          msg(str, optional): Message to be logged.(Default value = '')
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          None
         """
         super(PopperLogger, self).info(msg, *args, **kwargs)
 
     def debug(self, msg='', *args, **kwargs):
-        """
-        Logs a message with severity 'DEBUG'
+        """Logs a message with severity 'DEBUG'.
+
+        Args:
+          msg(str,optional): Message to be logged.(Default value = '')
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          None
         """
         super(PopperLogger, self).debug(msg, *args, **kwargs)
 
     def warning(self, msg='', *args, **kwargs):
-        """
-        Logs a message with severity 'WARNING'
+        """Logs a message with severity 'WARNING'.
+
+        Args:
+          msg(str, optional): Message to be logged.(Default value = '')
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          None
         """
         super(PopperLogger, self).warning(msg, *args, **kwargs)
 
 
 class LevelFilter(logging.Filter):
+    """Filters the level that are to be accepted and rejected."""
     def __init__(self, passlevels, reject):
         self.passlevels = passlevels
         self.reject = reject
 
     def filter(self, record):
+        """Returns True and False according to the pass levels and reject value.
+
+        Args:
+          record(logging.LogRecord): Record from logs.
+
+        Returns:
+          bool : True/False according to values of pass levels and level number
+                of the record.
+        """
         if self.reject:
             return (record.levelno not in self.passlevels)
         else:
@@ -128,8 +187,14 @@ class LevelFilter(logging.Filter):
 
 
 def setup_logging(level='ACTION_INFO'):
-    """
-    Setups logging facilities with custom Logger and Formatter
+    """Setups logging facilities with custom Logger and Formatter.
+
+    Args:
+      level(str): Level to be logged in custom logger.
+                    (Default value = 'ACTION_INFO')
+
+    Returns:
+      popper.log.PopperLogger: Custom log for that particular level.
     """
     logging.setLoggerClass(PopperLogger)
     log = logging.getLogger('popper')
@@ -154,6 +219,15 @@ def setup_logging(level='ACTION_INFO'):
 
 
 def add_log(log, logfile):
+    """It sets the formatter for the handle and add that handler to the logger.
+
+    Args:
+      log(Logging.logger): The logger object used for logging.
+      logfile(str): path for the log file.
+
+    Returns:
+      None
+    """
     dir = os.path.dirname(logfile)
     if not os.path.exists(dir) and dir != '':
         os.makedirs(dir)

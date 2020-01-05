@@ -138,6 +138,16 @@ def cli(ctx, **kwargs):
     * When CI is set, popper run searches for special keywords of the form
     `popper:run[...]`. If found, popper executes with the options given in
     these run instances else popper executes all the workflows recursively.
+
+    Args:
+      ctx(popper.cli.context): ctx(Popper.cli.context): For process inter-command communication
+            context is used.For reference visit
+            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
+      **kwargs(dictionary): key-worded,variable-length argument dictionary.
+
+    Returns:
+        None
+
     """
     if os.environ.get('CI') == 'true':
         # When CI is set,
@@ -158,7 +168,17 @@ def cli(ctx, **kwargs):
 
 def prepare_workflow_execution(recursive=False, **kwargs):
     """Set parameters for the workflow execution
-    and run the workflow."""
+    and run the workflow.
+
+    Args:
+      recursive(bool, optional):  True if workflow is to be executed
+                                recursively.(Default value = False)
+      **kwargs: key-worded,variable-length argument dictionary.
+
+    Returns:
+        None
+
+    """
 
     # Set the logging levels.
     level = 'ACTION_INFO'
@@ -185,10 +205,18 @@ def prepare_workflow_execution(recursive=False, **kwargs):
 
 
 def run_workflow(**kwargs):
+    """Runs the workflow for the set parameters.
 
+    Args:
+      **kwargs: key-worded,variable-length argument dictionary.
+
+    Returns:
+        None
+
+    """
     kwargs['wfile'] = pu.find_default_wfile(kwargs['wfile'])
     log.info('Found and running workflow at ' + kwargs['wfile'])
-    # Initialize a Worklow. During initialization all the validation
+    # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(kwargs['wfile'])
     wf_runner = WorkflowRunner(wf)
@@ -246,6 +274,13 @@ def run_workflow(**kwargs):
 
 def parse_commit_message():
     """Parse `popper:run[]` keywords from head commit message.
+
+    Args:
+        None
+
+    Returns:
+        None
+
     """
     head_commit = scm.get_head_commit()
     if not head_commit:
@@ -267,7 +302,15 @@ def parse_commit_message():
 
 def get_args(popper_run_instances):
     """Parse the argument strings from popper:run[..] instances
-    and return the args."""
+    and return the args.
+
+    Args:
+      popper_run_instances: Argument string from popper run command
+
+    Returns:
+      string: Arguments that are passed with command.
+
+    """
     for args in popper_run_instances:
         args = args.split(" ")
         ci_context = cli.make_context('popper run', args)
