@@ -102,6 +102,13 @@ from popper import log as logging
     multiple=True
 )
 @click.option(
+    '--allow-loose',
+    help='To prevent error if substitution variable passed as an '
+    'argument is not used in workflow',
+    required=False,
+    is_flag=True
+)
+@click.option(
     '--with-dependencies',
     help=(
         'When an action argument is given (first positional argument), '
@@ -198,7 +205,8 @@ def run_workflow(**kwargs):
     # Initialize a Worklow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(kwargs['wfile'])
-    wf_runner = WorkflowRunner(wf)
+    wf_runner = WorkflowRunner(wf, kwargs['substitutions'],
+                               kwargs['allow_loose'])
 
     # Check for injected actions
     pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
@@ -211,7 +219,7 @@ def run_workflow(**kwargs):
         if sys.version_info[0] < 3:
             log.fail('--parallel is only supported on Python3')
         log.warning("Using --parallel may result in interleaved output. "
-                 "You may use --quiet flag to avoid confusion.")
+                    "You may use --quiet flag to avoid confusion.")
 
     if kwargs['with_dependencies'] and (not kwargs['action']):
         log.fail('`--with-dependencies` can be used only with '

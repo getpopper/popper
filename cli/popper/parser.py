@@ -6,6 +6,7 @@ import hcl
 
 from popper.cli import log
 from popper import utils as pu
+import re
 
 
 VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
@@ -31,9 +32,11 @@ class Workflow(object):
         else:
             log.fail("Action '{}' doesn\'t exist.".format(action))
 
-    def parse(self):
+    def parse(self, substitutions, allow_loose):
         """Parse and validate a workflow."""
         self.validate_workflow_block()
+        if substitutions:
+            self.parse_substitutions(substitutions, allow_loose)
         self.validate_action_blocks()
         self.normalize()
         self.check_for_empty_workflow()
@@ -283,6 +286,63 @@ class Workflow(object):
         for a in unreachable:
             self.action.pop(a)
 
+    def parse_substitutions(self, substitutions, allow_loose):
+
+        substitution_dict = dict()
+
+        for args in substitutions:
+            item = args.split('=')
+            substitution_dict[item[0]] = {'value': item[1], 'subs_flag': False}
+
+        for keys in substitution_dict:
+            if(not bool(re.match(r"_[A-Z0-9]+", keys))):
+                log.fail("Substitution variable '{}' doesn't "
+                         "satify required format ".format(keys))
+
+        for action in self.parsed_workflow:
+            for args in self.parsed_workflow[action]:
+                for key in self.parsed_workflow[action][args]:
+                    subs_str = self.parsed_workflow[action][args][key]
+                    if(pu.of_type(subs_str, ['str'])):
+                        for var in substitution_dict:
+                            if(subs_str.find(var) != -1):
+                                subs_str = subs_str.replace(var,
+                                                            substitution_dict[var]['value'])
+                                substitution_dict[var]['subs_flag'] = True
+
+                    elif(pu.of_type(subs_str, ['los'])):
+                        for item in (range(len(subs_str))):
+                            for var in substitution_dict:
+                                if(subs_str[item].find(var) != -1):
+                                    subs_str[item] = subs_str[item].replace(var,
+                                                                            substitution_dict[var]['value'])
+                                    substitution_dict[var]['subs_flag'] = True
+
+                    elif(pu.of_type(subs_str, ['dict'])):
+                        for keys in subs_str:
+                            for var in substitution_dict:
+                                if(subs_str[keys].find(var) != -1):
+                                    subs_str[keys] = subs_str[keys].replace(var,
+                                                                            substitution_dict[var]['value'])
+                                    substitution_dict[var]['subs_flag'] = True
+
+                    self.parsed_workflow[action][args][key] = subs_str
+
+        for itr in range(len(self.workflow_content)):
+            for var in substitution_dict:
+                content_str = self.workflow_content[itr]
+                if(content_str.find(var) != -1):
+                    content_str = content_str.replace(var,
+                                                      substitution_dict[var]['value'])
+                    substitution_dict[var]['subs_flag'] = True
+                    self.workflow_content[itr] = content_str
+
+        if(allow_loose is False):
+            for keys in substitution_dict:
+                if(substitution_dict[keys]['subs_flag'] is False):
+                    log.fail("Substitution variable'{}' is not"
+                             "used in workflow".format(keys))
+
     @staticmethod
     def skip_actions(wf, skip_list=list()):
         """Removes the actions to be skipped from the workflow graph and
@@ -385,29 +445,5 @@ class Workflow(object):
             if a in workflow.root:
                 workflow.root.remove(a)
             workflow.action.pop(a)
-
-        return workflow
-
-    @staticmethod
-    def parse_substitutions(wf, substitutions):
-
-        workflow = deepcopy(wf)
-        substitution_dict = dict()
-
-        for args in substitutions:
-            item = args.split('=')
-            substitution_dict[item[0]] = item[1]
-
-        for key in workflow.parsed_workflow['action']:
-            for var in substitution_dict:
-                uses_str = workflow.parsed_workflow['action'][key]['uses']
-                temp_str = uses_str.replace(var, substitution_dict[var])
-                workflow.parsed_workflow['action'][key]['uses'] = temp_str
-
-        for itr in range(len(workflow.workflow_content)):
-            for var in substitution_dict:
-                content_str = workflow.workflow_content[itr]
-                temp_str = content_str.replace(var, substitution_dict[var])
-                workflow.workflow_content[itr] = temp_str
 
         return workflow

@@ -7,118 +7,67 @@ cd "$test_repo_path"
 
 cat <<EOF > main.workflow
 workflow "wf" {
-  resolves = "d"
-}
-
-action "a1" {
-  uses = "sh"
-  args = "ls"
-}
-
-action "a2" {
-  uses = "sh"
-  args = "ls"
+  resolves = "b"
 }
 
 action "b" {
-  needs = ["a1", "a2"]
-  uses = "_X1"
-  args = "ls"
-}
-
-action "c" {
-  needs = ["a1", "a2"]
-  uses = "sh"
-  args = "ls"
-}
-
-action "d" {
-  needs = ["b", "c"]
-  uses = "sh"
-  args = "ls"
+  uses = "_VAR1"
+  args = "_VAR2"
 }
 EOF
 
 (! popper run --substitutions)
-popper run --dry-run --runtime "$RUNTIME" a1 | grep "a1"
-popper run --dry-run --runtime "$RUNTIME" a2 | grep "a2"
-popper run --dry-run --substitutions _X1=sh --runtime "$RUNTIME" b | grep "b"
-(! popper run --dry-run --substitutions _X1=shx --runtime "$RUNTIME" b | grep "b")
-popper run --dry-run --substitutions _X1=shx --substitutions _X1=sh --runtime "$RUNTIME" b | grep "b"
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --runtime "$RUNTIME" | grep "ls"
+(! popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR2=ls --runtime "$RUNTIME")
+popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR1=sh --substitutions _VAR2=ls --runtime "$RUNTIME" | grep "ls"
 
+export TESTING="test"
 cat <<EOF > main.workflow
 workflow "wf" {
-  resolves = "d"
-}
-
-action "a1" {
-  uses = "sh"
-  args = "ls"
-}
-
-action "a2" {
-  uses = "sh"
-  args = "ls"
+  resolves = "c"
 }
 
 action "b" {
-  needs = ["a1", "a2"]
-  uses = "_X1"
-  args = "ls"
-}
-
-action "c" {
-  needs = ["a1", "a2"]
-  uses = "sh"
-  args = "ls"
-}
-
-action "d" {
-  needs = ["b", "c"]
-  uses = "sh"
-  args = "ls"
-}
-EOF
-
-(! popper run --dry-run --runtime "$RUNTIME")
-
-cat <<EOF > main.workflow
-workflow "wf" {
-  resolves = "d"
-}
-
-action "a1" {
-  uses = "sh"
-  args = "ls"
-}
-
-action "a2" {
-  uses = "sh"
-  args = "ls"
-}
-
-action "b" {
-  needs = ["a1", "a2"]
   uses = "sh"
   args = "ls"
 }
 
 action "c" {
-  needs = ["a1", "a2"]
-  uses = "_X1"
-  args = "ls"
-}
-
-action "d" {
-  needs = ["b1", "c"]
+  needs = "b"
   uses = "sh"
-  args = "ls"
+  args = ["ls","_VAR1"]
+  runs = "_VAR2"
+  secrets = ["_VAR3"]
+  env = {
+    "_VAR4" = "_VAR5"
+  }
 }
 EOF
 
-(! popper run --dry-run --substitutions _X1=sh --runtime "$RUNTIME")
+popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --runtime "$RUNTIME" | grep "ls pwd"
+(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --runtime "$RUNTIME" | grep "ls pwd")
+popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --allow-loose --runtime "$RUNTIME" | grep "ls pwd"
+(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _var6=EXTRA --runtime "$RUNTIME" | grep "ls pwd")
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "b"
+}
+
+action "a" {
+  uses = "_VAR1"
+  args = "_VAR2"
+}
+
+action "b" {
+  needs = "_VAR3"
+  uses = "_VAR1"
+  args = "_VAR2"
+}
+EOF
+
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --runtime "$RUNTIME"
+(! popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --runtime "$RUNTIME")
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --allow-loose --runtime "$RUNTIME"
 
 echo "Test SUBSTITUTIONS passed."
-
-
-
