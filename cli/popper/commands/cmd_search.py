@@ -21,21 +21,6 @@ from popper.cli import log, pass_context
 @click.command('search', short_help='Search for actions on Github.')
 @pass_context
 def cli(ctx, keyword, update_cache, include_readme):
-    """Searches for the action on github. It fetches the metadata
-    and passes it to search function.
-
-    Args:
-      ctx(Popper.cli.context): For process inter-command communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-      keyword(str): Action passed as an argument.
-      update_cache(bool): Flag for update-cache if passed as an argument.
-      include_readme(bool): Flag for include-readme if passed as an argument.
-
-    Returns:
-        None
-
-    """
     metadata = pu.fetch_metadata(update_cache)
     result = search(metadata, keyword, include_readme)
     log.info('Search Results : \n')
@@ -50,15 +35,14 @@ def search(metadata, keyword, include_readme):
     """Search for the keyword in the repo metadata.
 
     Args:
-      metadata(dict): The dict on which to run search.
-      keyword(str): The keyword to search for.
-      include_readme(bool): Flag variable indicating whether
-    to search keyword inside the README.md or not.
+        metadata (dict) : The dict on which to run search.
+        keyword (str) : The keyword to search for.
+        include_readme (bool) : Flag variable indicating whether
+        to search keyword inside the README.md or not.
 
     Returns:
-      list: List of repo names which confirm with
-      the search.
-
+        list : List of repo names which confirm with
+        the search.
     """
     keyword = keyword.lower()
     result = list()

@@ -8,15 +8,7 @@ from popper.cli import log
 
 def init_repo_object():
     """Function to initialize the global repo
-    object before every scm utility functions.
-
-    Args:
-        None
-
-    Returns:
-        string/None : Path to git repository of the file.
-
-    """
+    object before every scm utility functions."""
     repo = None
     try:
         repo = git.Repo(search_parent_directories=True)
@@ -36,12 +28,8 @@ def get_git_root_folder():
     containing the `.git` folder, else the $PWD is assumed to be the
     project root.
 
-    Args:
-        None
-
     Returns:
-      str: The path to the root of the project.
-
+        str: The path to the root of the project.
     """
     repo = init_repo_object()
     if repo:
@@ -59,12 +47,8 @@ def get_name():
     the repository by looking at the 'origin' git remote. If no 'origin' remote
     is defined, it returns the name of the parent folder.
 
-    Args:
-        None
-
     Returns:
-      str: The name of the project repository.
-
+        str: The name of the project repository.
     """
     url = get_remote_url()
     if not url:
@@ -84,12 +68,8 @@ def get_user():
     information. If the repository has not been pushed to a remote repo or if
     'origin' is not the name of any remote repository, it returns "".
 
-    Args:
-        None
-
     Returns:
-      str: The user (or org) of the repository or "".
-
+        str: The user (or org) of the repository or "".
     """
     url = get_remote_url()
     if url:
@@ -107,12 +87,8 @@ def get_ref():
     If the project folder is not a git repo,
     'unknown' is returned.
 
-    Args:
-        None
-
     Returns:
-      str: The head ref of the project repository or 'unknown'.
-
+        str: The head ref of the project repository or 'unknown'.
     """
     repo = init_repo_object()
     if repo:
@@ -128,12 +104,8 @@ def get_sha():
     is not a git repo. It fails, when the project folder is a
     git repo but doesn't have any commit.
 
-    Args:
-        None
-
     Returns:
-      str: The sha of the head commit or 'unknown'.
-
+        str: The sha of the head commit or 'unknown'.
     """
     repo = init_repo_object()
     if repo:
@@ -153,12 +125,8 @@ def get_head_commit():
     If project folder is not a git repository, None is returned.
     Else, the head commit object is returned.
 
-    Args:
-        None
-
     Returns:
-      git.objects.commit.Commit: The head commit object or None.
-
+        git.objects.commit.Commit: The head commit object or None.
     """
     repo = init_repo_object()
     if repo:
@@ -171,12 +139,8 @@ def get_remote_url():
     """Obtains remote origin URL, if possible.
     Otherwise it returns empty str.
 
-    Args:
-        None
-
     Returns:
-      str: The remote origin url or "".
-
+        str: The remote origin url or "".
     """
     repo = init_repo_object()
     url = ""
@@ -197,28 +161,15 @@ def clone(url, org, repo, repo_dir, version=None):
     https://github.com/ by default.
 
     Args:
-      url(str): The remote git repository hosting service url.
-      org(str): The org/user to which the repo belongs.
-      repo(str): The repo name.
-      repo_dir(str): The path where to clone the repo.
-      version(str, optional): The remote tag/branch to checkout.
-    If version is None, we use the default
-    remote branch as version.
-
-    Returns:
-        None
-
+        url (str): The remote git repository hosting service url.
+        org (str): The org/user to which the repo belongs.
+        repo (str): The repo name.
+        repo_dir (str): The path where to clone the repo.
+        version (str): The remote tag/branch to checkout.
+                       If version is None, we use the default
+                       remote branch as version.
     """
     def get_default_branch(r):
-        """
-        Used to find default branch of the repository.
-
-        Args:
-          r: It is git.Repo object
-
-        Returns:
-
-        """
         if version:
             return version
         return r.remotes.origin.refs['HEAD'].ref.remote_head
@@ -244,12 +195,8 @@ def get_git_files():
 
     If not a git tracked repository, None is returned.
 
-    Args:
-        None
-
     Returns:
-      list: List of git tracked files or None.
-
+        list: List of git tracked files or None.
     """
     repo = init_repo_object()
     if repo:
@@ -262,11 +209,10 @@ def parse(url):
     """Method to parse the git url.
 
     Args:
-      url(str): The url in string format.
+        url (str): The url in string format.
 
     Returns:
         tuple(service_url, service, user, repo, action_dir, version)
-
     """
 
     if url.startswith('ssh://'):

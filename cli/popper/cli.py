@@ -10,9 +10,6 @@ from popper import __version__ as popper_version, log as log
 
 
 class Context(object):
-    """Context Class.For more details refer
-    https://click.palletsprojects.com/en/7.x/commands/#custom-multi-commands .
-    """
     pass
 
 
@@ -24,19 +21,8 @@ popper_version = popper_version
 
 
 class PopperCLI(click.MultiCommand):
-    """Provides CLI interface for Popper."""
 
     def list_commands(self, ctx):
-        """Returns the list of available commands in sorted order.
-
-        Args:
-            ctx(popper.cli.context):For process intercommand communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-
-        Returns:
-          list: Returns the list of available commands.
-        """
         rv = []
         for filename in os.listdir(cmd_folder):
             if filename.endswith('.py') and filename.startswith('cmd_'):
@@ -45,20 +31,6 @@ class PopperCLI(click.MultiCommand):
         return rv
 
     def get_command(self, ctx, name):
-        """Imports the command if available in commmands list and provides with
-        most similar commands if the command is not present in the list.
-
-        Args:
-          ctx(popper.cli.context):ctx(popper.cli.context):For process intercommand communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-          name(str): The name of the command.
-
-        Returns:
-          click.core.Command: It is a new command and uses the decorated
-            function as callback.For reference visit
-            https://click.palletsprojects.com/en/7.x/api/#decorators .
-        """
         try:
             if sys.version_info[0] == 2:
                 name = name.encode('ascii', 'replace')
@@ -84,16 +56,7 @@ class PopperCLI(click.MultiCommand):
 @click.command(cls=PopperCLI)
 @pass_context
 def cli(ctx):
-    """Popper command line interface.
-
-    Args:
-      ctx(popper.cli.context):ctx(popper.cli.context):For process intercommand communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-
-    Returns:
-        None
-    """
+    """Popper command line interface."""
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGUSR1, signal_handler)
 
@@ -106,17 +69,7 @@ flist = None
 
 
 def signal_handler(sig, frame):
-    """Handles the interrupt signal.
 
-    Args:
-        sig(int): Signal number of signal being passed to cli.
-        frame(class):It represents execution frame. For more
-            details visit
-            https://docs.python.org/3/reference/datamodel.html#frame-objects .
-
-    Returns:
-        None
-    """
     if interrupt_params.get('parallel', None) and flist:
         for future in flist:
             future.cancel()
