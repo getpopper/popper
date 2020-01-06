@@ -258,6 +258,11 @@ class WorkflowRunner(object):
             WorkflowRunner.run_stage(engine, new_wf, s, reuse, parallel)
 
     @staticmethod
+<<<<<<< HEAD
+    def run_stage(engine, wf, stage, reuse=False, parallel=False):
+        """Runs actions in a stage either parallely or
+        sequentially."""
+=======
     def run_stage(runtime, wf, stage, reuse=False, parallel=False):
         """Runs actions in a stage either parallelly or sequentially.
 
@@ -273,6 +278,7 @@ class WorkflowRunner(object):
         Returns:
             None
         """
+>>>>>>> upstream/master
         if parallel:
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
@@ -353,7 +359,10 @@ class ActionRunner(object):
             f.close()
 
     def prepare_volumes(self, env, include_docker_socket=False):
+<<<<<<< HEAD
         """Prepare volume bindings for the container engines.
+=======
+        """Prepare volume bindings for the container runtimes.
 
         Args:
           env(dict): Dictionary containing popper environment variables.
@@ -362,6 +371,7 @@ class ActionRunner(object):
 
         Returns:
             list: Volume bindings for container runtime.
+>>>>>>> upstream/master
         """
         volumes = [
             '/var/run/docker.sock:/var/run/docker.sock',
@@ -405,7 +415,12 @@ class ActionRunner(object):
         return env
 
     def remove_environment(self):
+<<<<<<< HEAD
+        """Removes the engine environment variables.
+        """
+=======
         """Removes the runtime environment variables."""
+>>>>>>> upstream/master
         env = self.prepare_environment()
         env.pop('HOME')
         for k, v in env.items():
@@ -428,7 +443,12 @@ class ActionRunner(object):
 
 
 class DockerRunner(ActionRunner):
+<<<<<<< HEAD
+    """Run a Github Action in Docker engine.
+    """
+=======
     """Run a Github Action in Docker runtime."""
+>>>>>>> upstream/master
 
     def __init__(self, action, workspace, env, dry, skip_pull, wid):
         super(DockerRunner, self).__init__(
@@ -654,8 +674,12 @@ class DockerRunner(ActionRunner):
 
 
 class SingularityRunner(ActionRunner):
+<<<<<<< HEAD
     """Runs a Github Action in Singularity engine.
     """
+=======
+    """Runs a Github Action in Singularity runtime."""
+>>>>>>> upstream/master
     lock = threading.Lock()
     def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
         super(SingularityRunner, self).__init__(action, workspace, env,
@@ -948,9 +972,13 @@ class SingularityRunner(ActionRunner):
 
 
 class VagrantRunner(DockerRunner):
+<<<<<<< HEAD
     """
     Run an Action in Vagrant engine.
     """
+=======
+    """Run an Action in Vagrant runtime."""
+>>>>>>> upstream/master
     actions = set()
     running = False
     vbox_path = None
