@@ -258,8 +258,7 @@ def run_workflow(**kwargs):
             pre_wf_runner = WorkflowRunner(pre_wf)
             pre_wf_runner.run(**kwargs)
 
-        for key, value in kwargs.items(): 
-            print ("%s == %s" %(key, value))
+        
         wf_runner.run(**kwargs)
 
         if post_wfile:
