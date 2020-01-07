@@ -35,7 +35,7 @@ class WorkflowRunner(object):
     """A GHA workflow runner.
     """
 
-    def __init__(self, workflow, substitutions, allow_loose):
+    def __init__(self, workflow, substitutions=None, allow_loose=False):
         self.wf = workflow
         self.wf.parse(substitutions, allow_loose)
         self.wid = pu.get_id(os.getuid(), self.wf.workflow_path)
@@ -178,7 +178,7 @@ class WorkflowRunner(object):
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, runtime,
-            skip_secrets_prompt=False):
+            substitutions, allow_loose, skip_secrets_prompt=False):
         """Run the workflow or a specific action.
         """
         new_wf = deepcopy(self.wf)
@@ -543,6 +543,7 @@ class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime.
     """
     lock = threading.Lock()
+
     def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
         super(SingularityRunner, self).__init__(action, workspace, env,
                                                 dry_run, skip_pull, wid)

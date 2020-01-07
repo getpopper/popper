@@ -803,70 +803,86 @@ class TestParser(unittest.TestCase):
     def test_substitutions(self):
         self.create_workflow_file("""
         workflow "example" {
-            resolves = "end"
-            }
+            resolves = ["b"]
+        }
 
-            action "a" {
+        action "a" {
             uses = "_VAR1"
             args = "_VAR2"
-            }
+        }
 
-            action "end" {
-            needs = "a"
-            uses = "sh"
-            args = "ls"
-            secrets = ["_VAR3"]
+        action "b" {
+            needs = "_VAR3"
+            uses = "_VAR1"
+            args = "_VAR2"
+            runs = "_VAR4"
+            secrets = ["_VAR5"]
             env = {
-                    TEST_ENV = "_VAR4"
-                }
+                "_VAR6" = "_VAR7"
             }
+        }
         """)
         wf = Workflow('/tmp/test_folder/a.workflow')
-        wf.parse()
-        changed_wf = Workflow.parse_substitutions(wf,
-                                                  ['_VAR1=sh', '_VAR2=ls', '_VAR3=TEST', '_VAR4=testing'], False)
-        self.assertDictEqual(changed_wf.action, {
+        wf.parse(['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                  '_VAR4=test_env', '_VAR5=TESTING',
+                  '_VAR6=TESTER', '_VAR7=TEST'], False)
+        self.assertDictEqual(wf.action, {
             'a': {
                 'uses': 'sh',
                 'args': ['ls'],
                 'name': 'a',
-                'next': {'end'}},
-            'end': {
+                'next': {'b'}},
+            'b': {
                 'needs': ['a'],
                 'uses': 'sh',
                 'args': ['ls'],
-                'secrets': ['TEST'],
-                'env': {'TEST_ENV': 'testing'},
-                'name': 'end'}})
+                'runs': ['test_env'],
+                'secrets': ['TESTING'],
+                'env': {
+                    'TESTER': 'TEST'
+                },
+                'name': 'b'}
+        })
 
-        changed_wf = Workflow.parse_substitutions(wf, ['_VAR1=shx',
-                                                       '_VAR2=lsd', '_VAR1=sh', '_VAR2=ls', '_VAR3=TEST', '_VAR4=testing'], False)
-        self.assertDictEqual(changed_wf.action, {
-            'a': {
-                'uses': 'sh',
-                'args': ['ls'],
-                'name': 'a',
-                'next': {'end'}},
-            'end': {
-                'needs': ['a'],
-                'uses': 'sh',
-                'args': ['ls'],
-                'secrets': ['TEST'],
-                'env': {'TEST_ENV': 'testing'},
-                'name': 'end'}})
+        self.create_workflow_file("""
+        workflow "example" {
+            resolves = ["b"]
+        }
 
-        changed_wf = Workflow.parse_substitutions(wf,
-                                                  ['_VAR1=sh', '_VAR2=ls', '_VAR3=TEST', '_VAR4=testing', '_VAR5=extra'], True)
-        self.assertDictEqual(changed_wf.action, {
+        action "a" {
+            uses = "_VAR1"
+            args = "_VAR2"
+        }
+
+        action "b" {
+            needs = "_VAR3"
+            uses = "_VAR1"
+            args = "_VAR2"
+            runs = "_VAR4"
+            secrets = ["_VAR5"]
+            env = {
+                "_VAR6" = "_VAR7"
+            }
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf.parse(['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                  '_VAR4=test_env', '_VAR5=TESTING',
+                  '_VAR6=TESTER', '_VAR7=TEST', '_VAR8=sd'], True)
+        self.assertDictEqual(wf.action, {
             'a': {
                 'uses': 'sh',
                 'args': ['ls'],
                 'name': 'a',
-                'next': {'end'}},
-            'end': {
+                'next': {'b'}},
+            'b': {
                 'needs': ['a'],
                 'uses': 'sh',
                 'args': ['ls'],
-                'secrets': ['TEST'],
-                'env': {'TEST_ENV': 'testing'},
-                'name': 'end'}})
+                'runs': ['test_env'],
+                'secrets': ['TESTING'],
+                'env': {
+                    'TESTER': 'TEST'
+                },
+                'name': 'b'}
+        })

@@ -32,7 +32,7 @@ class Workflow(object):
         else:
             log.fail("Action '{}' doesn\'t exist.".format(action))
 
-    def parse(self, substitutions, allow_loose):
+    def parse(self, substitutions=None, allow_loose=False):
         """Parse and validate a workflow."""
         self.validate_workflow_block()
         if substitutions:
@@ -306,24 +306,37 @@ class Workflow(object):
                     if(pu.of_type(subs_str, ['str'])):
                         for var in substitution_dict:
                             if(subs_str.find(var) != -1):
-                                subs_str = subs_str.replace(var,
-                                                            substitution_dict[var]['value'])
+                                subs_str = subs_str.replace(
+                                        var, substitution_dict[var]['value'])
                                 substitution_dict[var]['subs_flag'] = True
 
                     elif(pu.of_type(subs_str, ['los'])):
                         for item in (range(len(subs_str))):
                             for var in substitution_dict:
                                 if(subs_str[item].find(var) != -1):
-                                    subs_str[item] = subs_str[item].replace(var,
-                                                                            substitution_dict[var]['value'])
+                                    subs_str[item] = subs_str[item].replace(
+                                        var, substitution_dict[var]['value'])
                                     substitution_dict[var]['subs_flag'] = True
 
                     elif(pu.of_type(subs_str, ['dict'])):
+                        temp_dict = dict()
+
+                        for keys in subs_str:
+                            if(keys in substitution_dict.keys()):
+                                temp_dict[substitution_dict[keys]
+                                          ['value']] = subs_str[keys]
+                                substitution_dict[keys]['subs_flag'] = True
+
+                            else:
+                                temp_dict[keys] = subs_str[keys]
+
+                        subs_str = temp_dict
+
                         for keys in subs_str:
                             for var in substitution_dict:
                                 if(subs_str[keys].find(var) != -1):
-                                    subs_str[keys] = subs_str[keys].replace(var,
-                                                                            substitution_dict[var]['value'])
+                                    subs_str[keys] = subs_str[keys].replace(
+                                        var, substitution_dict[var]['value'])
                                     substitution_dict[var]['subs_flag'] = True
 
                     self.parsed_workflow[action][args][key] = subs_str
@@ -332,8 +345,8 @@ class Workflow(object):
             for var in substitution_dict:
                 content_str = self.workflow_content[itr]
                 if(content_str.find(var) != -1):
-                    content_str = content_str.replace(var,
-                                                      substitution_dict[var]['value'])
+                    content_str = content_str.replace(
+                        var, substitution_dict[var]['value'])
                     substitution_dict[var]['subs_flag'] = True
                     self.workflow_content[itr] = content_str
 
