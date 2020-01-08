@@ -425,4 +425,24 @@ popper run --runtime "$RUNTIME" > output
 grep -q "Action 'b' ran successfully !" output
 (! grep -q "Action 'end' ran successfully !" output)
 
+cat<<EOF > main.workflow
+workflow "sample" {
+  resolves = "end"
+}
+
+action "a" {
+  uses = "vipulchhabra99/Dummy-Repo@master"
+  args = "whoami"
+}
+
+action "end" {
+  needs = ["a"]
+  uses = "sh"
+  args = "whoami"
+}
+EOF
+
+popper run --runtime "$RUNTIME" > output
+grep -q "This is hello from private repo" output
+
 echo "Test ACTIONS-DEMO passed."
