@@ -187,6 +187,14 @@ refer to an action on a public Git repository or Docker container registry:
 
 -->
 
+### Using Private repositories of `Github` in an action
+
+When creating an action block we can also use an action defined in Github private repository. To use private repository you need to create Personal access token from <a href="https://github.com/settings/tokens"> here </a> with permissions to access private repositories and set it as an environment variable using
+
+<code>export GITHUB_API_TOKEN=access_token_here</code>.
+
+If the access token doesn't have permissions to access private repositories then private repositories couldn't be used in an action. The repositories can be cloned only using `HTTPS` protocol since `Github` doesn't support cloning of the repositories using any other protocol. The `SSH` links to private repositories are also not supported.
+
 ## Execution Runtime
 
 This section describes the runtime environment where a workflow 

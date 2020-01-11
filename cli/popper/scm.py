@@ -236,17 +236,13 @@ def clone(url, org, repo, repo_dir, version=None):
         auth_token = os.getenv('GITHUB_API_TOKEN')
 
         if(auth_token is not None):
+            # To verify the link of github for private repo support.
             if('github' in url):
                 if('@' not in url):
                     # The authentication token has to be added after protocol
-                    # The length of protocol is 8 in case of https://,
-                    # 7 in case of http://
+                    # The length of protocol is 8 in case of https://
                     if('https' in url):
                         url = url[:8]+auth_token+'@'+url[8:]
-
-                    elif('http' in url):
-                        url = url[:7]+auth_token+'@'+url[7:]
-
 
         repo_url = '{}{}/{}'.format(url, org, repo)
         cloned_repo = git.Repo.clone_from(repo_url, repo_dir)
