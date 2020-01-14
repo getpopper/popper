@@ -1,10 +1,11 @@
+---
 dist: xenial
 language: python
 python:
-- '3.7'
+- "3.7"
 env:
-  - RUNTIME=singularity POPPER_TEST_MODE=with-git
-  - RUNTIME=docker POPPER_TEST_MODE=without-git
+- RUNTIME=singularity POPPER_TEST_MODE=with-git
+- RUNTIME=docker POPPER_TEST_MODE=without-git
 services: docker
 before_install:
 - ci/scripts/install_scripts.sh

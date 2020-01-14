@@ -425,6 +425,11 @@ popper run --runtime "$RUNTIME" > output
 grep -q "Action 'b' ran successfully !" output
 (! grep -q "Action 'end' ran successfully !" output)
 
+
+if [[ -z "${GITHUB_API_TOKEN}" ]]; then
+echo "Test for private-repo skipped"
+
+else
 cat<<EOF > main.workflow
 workflow "sample" {
   resolves = "end"
@@ -444,5 +449,7 @@ EOF
 
 popper run --runtime "$RUNTIME" > output
 grep -q "This is hello from private repo" output
+echo "Test for private-repo passed"
+fi
 
 echo "Test ACTIONS-DEMO passed."

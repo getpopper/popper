@@ -1,3 +1,4 @@
+
 # Workflow Language and Runtime
 
 This section introduces the [HCL-based][hcl] [workflow language][wfl] 
@@ -187,13 +188,16 @@ refer to an action on a public Git repository or Docker container registry:
 
 -->
 
-### Using Private repositories of `Github` in an action
+### Referencing private Github repositories in an action
 
-When creating an action block we can also use an action defined in Github private repository. To use private repository you need to create Personal access token from <a href="https://github.com/settings/tokens"> here </a> with permissions to access private repositories and set it as an environment variable using
+We can make use of actions located in private Github repositories by defining a ```GITHUB_API_TOKEN``` environment variable that the ```popper run``` command reads and uses to clone private Github repositories. To accomplish this, the repository referenced in the ```uses``` attribute is assumed to be private and, to access it, an API token from Github is needed (see instructions <a href = "https://github.com/settings/tokens">here</a>). The token needs to have permissions to read the private repository in question. To run a workflow that references private repositories:
 
-<code>export GITHUB_API_TOKEN=access_token_here</code>.
+```bash
+export GITHUB_API_TOKEN=access_token_here
+popper run
+```
 
-If the access token doesn't have permissions to access private repositories then private repositories couldn't be used in an action. The repositories can be cloned only using `HTTPS` protocol since `Github` doesn't support cloning of the repositories using any other protocol. The `SSH` links to private repositories are also not supported.
+If the access token doesn't have permissions to access private repositories, the popper run command will fail.
 
 ## Execution Runtime
 
