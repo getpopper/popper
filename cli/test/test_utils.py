@@ -215,12 +215,12 @@ class TestUtils(unittest.TestCase):
         id = pu.get_id('abcd', 1234, 'efgh')
         self.assertEqual(id, 'cbae02068489f7577862718287862a3b')
 
-    def test_parse_runtime_configuration(self):
-        conf = pu.parse_runtime_configuration(None)
+    def test_parse_engine_configuration(self):
+        conf = pu.parse_engine_configuration(None)
         self.assertEqual(conf, None)
         self.assertRaises(
             SystemExit,
-            pu.parse_runtime_configuration,
+            pu.parse_engine_configuration,
             'settings.py')
         conf_content = """
 - docker
@@ -228,7 +228,7 @@ class TestUtils(unittest.TestCase):
         pu.write_file('settings.py', conf_content)
         self.assertRaises(
             SystemExit,
-            pu.parse_runtime_configuration,
+            pu.parse_engine_configuration,
             'settings.py')
         conf_content = """
 docker: {
@@ -238,5 +238,5 @@ docker: {
         pu.write_file('settings.py', conf_content)
         self.assertRaises(
             SystemExit,
-            pu.parse_runtime_configuration,
+            pu.parse_engine_configuration,
             'settings.py')

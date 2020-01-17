@@ -30,4 +30,4 @@ grep -Fxq "xYz.local" output
 popper run > output
 grep -vFxq "xYz.local" output
 
-echo "Test RUNTIME-CONF passed."
+echo "Test ENGINE-CONF passed."
