@@ -422,6 +422,6 @@ def parse_runtime_configuration(runtime_conf_file):
         log.fail('Failed to import setting.py: {}'.format(e))
 
     try:
-        return settings.runtime_configuration
+        return settings.engine_configuration
     except AttributeError:
-        log.fail('No variable named \"runtime_configuration\" was found.')
+        log.fail('No variable named \"engine_configuration\" was found.')

@@ -6,7 +6,7 @@ init_test_repo
 cd "$test_repo_path"
 
 cat <<EOF > settings.py
-runtime_configuration = {
+engine_configuration = {
     "docker": {
         "name": "dont use this name",
         "image": "abc/xyz",

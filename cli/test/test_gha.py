@@ -413,7 +413,7 @@ class TestDockerRunner(unittest.TestCase):
         'Skipping docker tests...')
     def test_docker_rm(self):
         self.docker_client.images.pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim', None)
+        self.runner.docker_create('debian:buster-slim')
         self.runner.docker_rm()
         self.assertRaises(docker.errors.NotFound, self.runner.docker_rm)
 
@@ -441,7 +441,7 @@ class TestDockerRunner(unittest.TestCase):
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         self.runner.docker_pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim', None)
+        self.runner.docker_create('debian:buster-slim')
         e = self.runner.docker_start()
         self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
@@ -513,7 +513,7 @@ class TestDockerRunner(unittest.TestCase):
     def test_docker_create(self):
         self.runner.action['args'] = ['env']
         self.runner.docker_pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim', None)
+        self.runner.docker_create('debian:buster-slim')
         self.assertEqual(self.runner.docker_exists(), True)
         self.runner.docker_rm()
 

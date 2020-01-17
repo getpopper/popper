@@ -584,7 +584,7 @@ class DockerRunner(ActionRunner):
                 config[k] = runtime_config[k]
         return config
 
-    def docker_create(self, img, runtime_config):
+    def docker_create(self, img, runtime_config=None):
         """Create a docker container from an image.
 
         Args:
