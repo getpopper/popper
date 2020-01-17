@@ -255,7 +255,7 @@ class WorkflowRunner(object):
             runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
 
         # If a runtime configuration file is passed through the
-        # --runtime-conf option, parse it and pass it to ActionRunner(s).
+        # --engine-conf option, parse it and pass it to ActionRunner(s).
         runtime_config = pu.parse_runtime_configuration(runtime_conf)
 
         for s in new_wf.get_stages():

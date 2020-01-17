@@ -101,7 +101,7 @@ action "test inject" {
 action "test runtime conf" {
   needs = "lint"
   uses = "sh"
-  args = "ci/test/runtime-conf"
+  args = "ci/test/engine-conf"
 }
 
 action "end" {

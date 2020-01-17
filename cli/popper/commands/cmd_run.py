@@ -112,8 +112,8 @@ from popper import log as logging
     default=popper.scm.get_git_root_folder()
 )
 @click.option(
-    '--runtime-conf',
-    help='Specify the runtime configuration file for a container.',
+    '--engine-conf',
+    help='Specify the engine configuration file for a container.',
     required=False,
 )
 @pass_context

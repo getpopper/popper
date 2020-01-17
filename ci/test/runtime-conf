@@ -26,7 +26,7 @@ action "run" {
 }
 EOF
 
-popper run --runtime-conf settings.py > output
+popper run --engine-conf settings.py > output
 grep -Fxq "xYz.local" output
 
 popper run > output
