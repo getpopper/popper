@@ -7,11 +7,9 @@ cd "$test_repo_path"
 
 cat <<EOF > settings.py
 engine_configuration = {
-    "docker": {
-        "name": "dont use this name",
-        "image": "abc/xyz",
-        "hostname": "xYz.local"
-    }
+    "name": "dont use this name",
+    "image": "abc/xyz",
+    "hostname": "xYz.local"
 }
 EOF
 

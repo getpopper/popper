@@ -481,14 +481,12 @@ class TestDockerRunner(unittest.TestCase):
         }
 
         engine_config = {
-            "docker": {
-                "volumes": ["/var:/var"],
-                "environment": {
-                    "C": "c"
-                },
-                "hostname": "abc.local",
-                "privileged": True
-            }
+            "volumes": ["/var:/var"],
+            "environment": {
+                "C": "c"
+            },
+            "hostname": "abc.local",
+            "privileged": True
         }
 
         result_config = {

@@ -573,7 +573,6 @@ class DockerRunner(ActionRunner):
         self.container.remove(force=True)
 
     def mix_with_runtime_config(self, config, engine_config):
-        engine_config = engine_config.get('docker', dict())
         config["volumes"] = [*config["volumes"],
                              *engine_config.get('volumes', list())]
         for k, v in engine_config.get('environment', dict()).items():
