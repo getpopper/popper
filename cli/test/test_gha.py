@@ -852,7 +852,7 @@ class TestHostRunner(unittest.TestCase):
     def test_run(self):
         runner = self.wf.action['sample action']['runner']
         self.assertRaises(SystemExit, runner.run, None, reuse=True)
-        runner.run(None)
+        runner.run()
 
     def test_host_prepare(self):
         runner = self.wf.action['sample action']['runner']

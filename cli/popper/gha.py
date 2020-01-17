@@ -418,7 +418,7 @@ class ActionRunner(object):
         for k, v in env.items():
             os.environ.pop(k, None)
 
-    def run(self, engine_config, reuse=False):
+    def run(self, engine_config=None, reuse=False):
         """
 
         Args:
@@ -488,7 +488,7 @@ class DockerRunner(ActionRunner):
         image = image.lower()
         return (build, image, build_source)
 
-    def run(self, engine_config, reuse=False):
+    def run(self, engine_config=None, reuse=False):
         """Parent function to handle the execution of an action.
 
         Args:
@@ -731,7 +731,7 @@ class SingularityRunner(ActionRunner):
 
         return (build, image, build_source)
 
-    def run(self, engine_config, reuse=False):
+    def run(self, engine_config=None, reuse=False):
         """Parent function to handle the execution of the action.
 
         Args:
@@ -1081,7 +1081,7 @@ class VagrantRunner(DockerRunner):
         vagrant.Vagrant(root=vagrant_box_path).halt()
         time.sleep(5)
 
-    def run(self, engine_config, reuse=False):
+    def run(self, engine_config=None, reuse=False):
         """Parent function to handle the execution of the action.
 
         Args:
@@ -1151,7 +1151,7 @@ class HostRunner(ActionRunner):
             action, workspace, env, dry, skip_pull, wid)
         self.cwd = os.getcwd()
 
-    def run(self, engine_config, reuse=False):
+    def run(self, engine_config=None, reuse=False):
         """
 
         Args:
