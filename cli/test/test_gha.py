@@ -466,7 +466,7 @@ class TestDockerRunner(unittest.TestCase):
     @unittest.skipIf(
         os.environ['RUNTIME'] != 'docker',
         'Skipping docker tests...')
-    def test_mix_with_runtime_config(self):
+    def test_mix_with_engine_config(self):
         config = {
             "image": "popperized/bin",
             "command": "ls -l",
@@ -502,7 +502,7 @@ class TestDockerRunner(unittest.TestCase):
             'privileged': True
         }
 
-        config = self.runner.mix_with_runtime_config(config, engine_config)
+        config = self.runner.mix_with_engine_config(config, engine_config)
         self.assertEqual(config, result_config)
 
     @unittest.skipIf(

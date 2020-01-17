@@ -572,7 +572,7 @@ class DockerRunner(ActionRunner):
             return
         self.container.remove(force=True)
 
-    def mix_with_runtime_config(self, config, engine_config):
+    def mix_with_engine_config(self, config, engine_config):
         config["volumes"] = [*config["volumes"],
                              *engine_config.get('volumes', list())]
         for k, v in engine_config.get('environment', dict()).items():
@@ -614,7 +614,7 @@ class DockerRunner(ActionRunner):
         }
 
         if engine_config:
-            config = self.mix_with_runtime_config(config, engine_config)
+            config = self.mix_with_engine_config(config, engine_config)
 
         log.debug(config)
         self.container = self.d_client.containers.create(**config)
