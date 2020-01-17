@@ -98,7 +98,7 @@ action "test inject" {
   args = "ci/test/inject"
 }
 
-action "test runtime conf" {
+action "test engine conf" {
   needs = "lint"
   uses = "sh"
   args = "ci/test/engine-conf"
@@ -123,6 +123,6 @@ action "end" {
     "test sh",
     "test skip",
     "test validate",
-    "test runtime conf"
+    "test engine conf"
   ]
 }
