@@ -480,7 +480,7 @@ class TestDockerRunner(unittest.TestCase):
             "detach": True
         }
 
-        runtime_config = {
+        engine_config = {
             "docker": {
                 "volumes": ["/var:/var"],
                 "environment": {
@@ -504,7 +504,7 @@ class TestDockerRunner(unittest.TestCase):
             'privileged': True
         }
 
-        config = self.runner.mix_with_runtime_config(config, runtime_config)
+        config = self.runner.mix_with_runtime_config(config, engine_config)
         self.assertEqual(config, result_config)
 
     @unittest.skipIf(
