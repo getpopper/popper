@@ -59,8 +59,14 @@ class TestScm(unittest.TestCase):
     def test_get_remote_url(self):
         url = scm.get_remote_url()
         if self.with_git:
-            self.assertEqual(
-                url, 'https://github.com/popperized/github-actions-demo')
+            auth_token = os.getenv('GITHUB_API_TOKEN')
+            if(auth_token is None):
+                self.assertEqual(
+                    url, 'https://github.com/popperized/github-actions-demo')
+            else:
+                self.assertEqual(
+                    url[:8]+url[url.find('@')+1:],
+                    'https://github.com/popperized/github-actions-demo')
         else:
             self.assertEqual(url, '')
 
