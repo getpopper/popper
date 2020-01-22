@@ -247,23 +247,21 @@ class WorkflowRunner(object):
         if action:
             new_wf = Workflow.filter_action(self.wf, action, with_dependencies)
 
+        engine_config = pu.parse_engine_configuration(engine_conf)
+
         new_wf.check_for_unreachable_actions(skip)
 
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
-
-        # If a runtime configuration file is passed through the
-        # --engine-conf option, parse it and pass it to ActionRunner(s).
-        engine_config = pu.parse_engine_configuration(engine_conf)
+            runtime, new_wf, workspace, dry_run, skip_pull, self.wid, engine_config)
 
         for s in new_wf.get_stages():
             WorkflowRunner.run_stage(
-                runtime, new_wf, s, engine_config, reuse, parallel)
+                runtime, new_wf, s, reuse, parallel)
 
     @staticmethod
-    def run_stage(runtime, wf, stage, engine_config, reuse=False,
+    def run_stage(runtime, wf, stage, reuse=False,
                   parallel=False):
         """Runs actions in a stage either parallelly or sequentially.
 
@@ -284,26 +282,26 @@ class WorkflowRunner(object):
                 flist = {
                     ex.submit(
                         wf.action[a]['runner'].run,
-                        engine_config,
                         reuse): a for a in stage}
                 popper.cli.flist = flist
                 for future in as_completed(flist):
                     future.result()
         else:
             for a in stage:
-                wf.action[a]['runner'].run(engine_config, reuse)
+                wf.action[a]['runner'].run(reuse)
 
 
 class ActionRunner(object):
     """An action runner."""
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry_run, skip_pull, wid, engine_config=None):
         self.action = action
         self.workspace = workspace
         self.env = env
         self.dry_run = dry_run
         self.skip_pull = skip_pull
         self.wid = wid
+        self.engine_config = engine_config
         self.msg_prefix = "DRYRUN: " if dry_run else ""
         self.setup_necessary_files()
 
@@ -418,7 +416,7 @@ class ActionRunner(object):
         for k, v in env.items():
             os.environ.pop(k, None)
 
-    def run(self, engine_config=None, reuse=False):
+    def run(self, reuse=False):
         """
 
         Args:
@@ -437,9 +435,9 @@ class ActionRunner(object):
 class DockerRunner(ActionRunner):
     """Run a Github Action in Docker runtime."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull, wid, engine_config=None):
         super(DockerRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid)
+            action, workspace, env, dry, skip_pull, wid, engine_config)
         self.d_client = docker.from_env()
         self.cid = pu.sanitized_name(self.action['name'], wid)
         self.container = None
@@ -488,7 +486,7 @@ class DockerRunner(ActionRunner):
         image = image.lower()
         return (build, image, build_source)
 
-    def run(self, engine_config=None, reuse=False):
+    def run(self, reuse=False):
         """Parent function to handle the execution of an action.
 
         Args:
@@ -508,18 +506,18 @@ class DockerRunner(ActionRunner):
                 self.docker_build(image, build_source)
             else:
                 self.docker_pull(image)
-            self.docker_create(image, engine_config)
+            self.docker_create(image)
         else:
             if not self.docker_exists():
                 if build:
                     self.docker_build(image, build_source)
                 else:
                     self.docker_pull(image)
-                self.docker_create(image, engine_config)
+                self.docker_create(image)
             else:
                 self.container.commit(self.cid, 'reuse')
                 self.docker_rm()
-                self.docker_create('{}:reuse'.format(self.cid), engine_config)
+                self.docker_create('{}:reuse'.format(self.cid))
 
         if self.container is not None:
             popper.cli.docker_list.append(self.container)
@@ -572,18 +570,18 @@ class DockerRunner(ActionRunner):
             return
         self.container.remove(force=True)
 
-    def mix_with_engine_config(self, config, engine_config):
+    def mix_with_engine_config(self, config):
         config["volumes"] = [*config["volumes"],
-                             *engine_config.get('volumes', list())]
-        for k, v in engine_config.get('environment', dict()).items():
+                             *self.engine_config.get('volumes', list())]
+        for k, v in self.engine_config.get('environment', dict()).items():
             config["environment"].update({k: v})
 
-        for k, v in engine_config.items():
+        for k, v in self.engine_config.items():
             if k not in config.keys():
-                config[k] = engine_config[k]
+                config[k] = self.engine_config[k]
         return config
 
-    def docker_create(self, img, engine_config=None):
+    def docker_create(self, img):
         """Create a docker container from an image.
 
         Args:
@@ -613,8 +611,8 @@ class DockerRunner(ActionRunner):
             "detach": True
         }
 
-        if engine_config:
-            config = self.mix_with_engine_config(config, engine_config)
+        if self.engine_config:
+            config = self.mix_with_engine_config(config)
 
         log.debug(config)
         self.container = self.d_client.containers.create(**config)
@@ -681,9 +679,9 @@ class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime."""
     lock = threading.Lock()
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry_run, skip_pull, wid, engine_config=None):
         super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry_run, skip_pull, wid)
+                                                dry_run, skip_pull, wid, engine_config)
         s_client.quiet = True
 
     @staticmethod
@@ -731,7 +729,7 @@ class SingularityRunner(ActionRunner):
 
         return (build, image, build_source)
 
-    def run(self, engine_config=None, reuse=False):
+    def run(self, reuse=False):
         """Parent function to handle the execution of the action.
 
         Args:
@@ -985,11 +983,11 @@ class VagrantRunner(DockerRunner):
     end
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull, wid, engine_config=None):
         import vagrant
 
         super(VagrantRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid
+            action, workspace, env, dry, skip_pull, wid, engine_config
         )
         self.cid = pu.sanitized_name(self.action['name'], wid)
         VagrantRunner.actions.add(self.action['name'])
@@ -1081,7 +1079,7 @@ class VagrantRunner(DockerRunner):
         vagrant.Vagrant(root=vagrant_box_path).halt()
         time.sleep(5)
 
-    def run(self, engine_config=None, reuse=False):
+    def run(self, reuse=False):
         """Parent function to handle the execution of the action.
 
         Args:
@@ -1116,18 +1114,18 @@ class VagrantRunner(DockerRunner):
                 self.docker_build(image, build_source)
             else:
                 self.docker_pull(image)
-            self.docker_create(image, engine_config)
+            self.docker_create(image)
         else:
             if not self.docker_exists():
                 if build:
                     self.docker_build(image, build_source)
                 else:
                     self.docker_pull(image)
-                self.docker_create(image, engine_config)
+                self.docker_create(image)
             else:
                 self.container.commit(self.cid, 'reuse')
                 self.docker_rm()
-                self.docker_create('{}:reuse'.format(self.cid), engine_config)
+                self.docker_create('{}:reuse'.format(self.cid))
 
         if self.container is not None:
             popper.cli.docker_list.append(self.container)
@@ -1146,12 +1144,12 @@ class VagrantRunner(DockerRunner):
 class HostRunner(ActionRunner):
     """Run an Action on the Host Machine."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull, wid, engine_config=None):
         super(HostRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid)
+            action, workspace, env, dry, skip_pull, wid, engine_config)
         self.cwd = os.getcwd()
 
-    def run(self, engine_config=None, reuse=False):
+    def run(self, reuse=False):
         """
 
         Args:

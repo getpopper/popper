@@ -480,7 +480,7 @@ class TestDockerRunner(unittest.TestCase):
             "detach": True
         }
 
-        engine_config = {
+        self.runner.engine_config = {
             "volumes": ["/var:/var"],
             "environment": {
                 "C": "c"
@@ -502,7 +502,7 @@ class TestDockerRunner(unittest.TestCase):
             'privileged': True
         }
 
-        config = self.runner.mix_with_engine_config(config, engine_config)
+        config = self.runner.mix_with_engine_config(config)
         self.assertEqual(config, result_config)
 
     @unittest.skipIf(
@@ -851,7 +851,7 @@ class TestHostRunner(unittest.TestCase):
 
     def test_run(self):
         runner = self.wf.action['sample action']['runner']
-        self.assertRaises(SystemExit, runner.run, None, reuse=True)
+        self.assertRaises(SystemExit, runner.run, reuse=True)
         runner.run()
 
     def test_host_prepare(self):
