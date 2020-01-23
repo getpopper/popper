@@ -167,7 +167,8 @@ class WorkflowRunner(object):
                                  'Dockerfile')):
 
                     a['runner'] = HostRunner(
-                        a, workspace, env, dry_run, skip_pull, wid, engine_config)
+                        a, workspace, env, dry_run, skip_pull, wid,
+                        engine_config)
                     continue
 
             if runtime == 'docker':
