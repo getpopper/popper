@@ -131,7 +131,8 @@ class WorkflowRunner(object):
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid, engine_config=None):
+    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid,
+                            engine_config=None):
         """Factory of ActionRunner instances, one for each action.
 
         Note:
@@ -254,7 +255,13 @@ class WorkflowRunner(object):
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, dry_run, skip_pull, self.wid, engine_config)
+            runtime,
+            new_wf,
+            workspace,
+            dry_run,
+            skip_pull,
+            self.wid,
+            engine_config)
 
         for s in new_wf.get_stages():
             WorkflowRunner.run_stage(
@@ -294,7 +301,8 @@ class WorkflowRunner(object):
 class ActionRunner(object):
     """An action runner."""
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid, engine_config):
+    def __init__(self, action, workspace, env, dry_run, skip_pull,
+                 wid, engine_config):
         self.action = action
         self.workspace = workspace
         self.env = env
@@ -435,7 +443,8 @@ class ActionRunner(object):
 class DockerRunner(ActionRunner):
     """Run a Github Action in Docker runtime."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid, engine_config):
+    def __init__(self, action, workspace, env, dry, skip_pull,
+                 wid, engine_config):
         super(DockerRunner, self).__init__(
             action, workspace, env, dry, skip_pull, wid, engine_config)
         self.d_client = docker.from_env()
@@ -679,9 +688,10 @@ class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime."""
     lock = threading.Lock()
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid, engine_config):
-        super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry_run, skip_pull, wid, engine_config)
+    def __init__(self, action, workspace, env, dry_run, skip_pull,
+                 wid, engine_config):
+        super(SingularityRunner, self).__init__(
+            action, workspace, env, dry_run, skip_pull, wid, engine_config)
         s_client.quiet = True
 
     @staticmethod
@@ -983,7 +993,8 @@ class VagrantRunner(DockerRunner):
     end
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid, engine_config):
+    def __init__(self, action, workspace, env, dry, skip_pull,
+                 wid, engine_config):
         import vagrant
 
         super(VagrantRunner, self).__init__(
@@ -1144,7 +1155,8 @@ class VagrantRunner(DockerRunner):
 class HostRunner(ActionRunner):
     """Run an Action on the Host Machine."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid, engine_config):
+    def __init__(self, action, workspace, env, dry, skip_pull,
+                 wid, engine_config):
         super(HostRunner, self).__init__(
             action, workspace, env, dry, skip_pull, wid, engine_config)
         self.cwd = os.getcwd()
