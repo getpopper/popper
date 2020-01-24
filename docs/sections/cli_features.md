@@ -54,6 +54,36 @@ or to execute all the workflows in a project:
 popper run --recursive
 ```
 
+## Specifying extra engine configuration
+
+Many times, workflows might require the containers with some special configuration
+like extra privileges, extra volume bindings, extra capabilites, etc i-e users
+might want to use the different runtime features that container technologies provide.
+Since, Popper by default spawns containers in their most basic and default configuration,
+a `settings.py` file can be passed to `--engine-conf` option of `popper run`
+to specify the extra configuration that is required for the particular use case.
+
+For example, to make Popper spawn containers in the privileged mode, there should be a
+file called `settings.py` containing the engine configuration in the form of a
+python `dict` as shown below.
+
+```python
+engine_configuration = {
+  'privileged': True
+}
+```
+
+After creating the file, the workflow can be run using the above configuration by doing
+```
+popper run --engine-conf settings.py
+```
+
+> **NOTE**:
+> 1. Currently, the `--engine-conf` option is only supported for the `docker` engine.
+> 2. The `settings.py` file must contain a `dict` type variable with
+> the name `engine_configuration` as shown above.
+
+
 ## Environment Variables
 
 Popper defines a set of environment variables (see [Environment 
