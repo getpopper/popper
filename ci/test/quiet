@@ -16,8 +16,8 @@ action "test" {
 }
 EOF
 
-output_lines_without_quiet=$(popper run --runtime "$RUNTIME" | wc -l)
-output_lines_with_quiet=$(popper run --quiet --runtime "$RUNTIME" | wc -l)
+output_lines_without_quiet=$(popper run --engine "$ENGINE" | wc -l)
+output_lines_with_quiet=$(popper run --quiet --engine "$ENGINE" | wc -l)
 
 test "$output_lines_without_quiet" -gt "$output_lines_with_quiet"
 
