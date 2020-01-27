@@ -466,6 +466,48 @@ class TestDockerRunner(unittest.TestCase):
     @unittest.skipIf(
         os.environ['RUNTIME'] != 'docker',
         'Skipping docker tests...')
+    def test_mix_with_engine_config(self):
+        config = {
+            "image": "popperized/bin",
+            "command": "ls -l",
+            "name": "popper_bin",
+            "volumes": ["/tmp:/tmp"],
+            "working_dir": "/tmp/workdir",
+            "environment": {
+                "A": "a", "B": "b"
+            },
+            "entrypoint": None,
+            "detach": True
+        }
+
+        self.runner.engine_config = {
+            "volumes": ["/var:/var"],
+            "environment": {
+                "C": "c"
+            },
+            "hostname": "abc.local",
+            "privileged": True
+        }
+
+        result_config = {
+            'image': 'popperized/bin',
+            'command': 'ls -l',
+            'name': 'popper_bin',
+            'volumes': ['/tmp:/tmp', '/var:/var'],
+            'working_dir': '/tmp/workdir',
+            'environment': {'A': 'a', 'B': 'b', 'C': 'c'},
+            'entrypoint': None,
+            'detach': True,
+            'hostname': 'abc.local',
+            'privileged': True
+        }
+
+        config = self.runner.mix_with_engine_config(config)
+        self.assertEqual(config, result_config)
+
+    @unittest.skipIf(
+        os.environ['RUNTIME'] != 'docker',
+        'Skipping docker tests...')
     def test_docker_create(self):
         self.runner.action['args'] = ['env']
         self.runner.docker_pull('debian:buster-slim')
