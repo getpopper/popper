@@ -258,7 +258,6 @@ def run_workflow(**kwargs):
             pre_wf_runner = WorkflowRunner(pre_wf)
             pre_wf_runner.run(**kwargs)
 
-        
         wf_runner.run(**kwargs)
 
         if post_wfile:

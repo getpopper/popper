@@ -447,7 +447,7 @@ action "end" {
 }
 EOF
 
-popper run --runtime "$RUNTIME" > output
+popper run --engine "$ENGINE" > output
 grep -q "This is hello from private repo" output
 echo "Test for private-repo passed"
 fi

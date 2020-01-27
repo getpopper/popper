@@ -506,7 +506,7 @@ class TestDockerRunner(unittest.TestCase):
         self.assertEqual(config, result_config)
 
     @unittest.skipIf(
-        os.environ['RUNTIME'] != 'docker',
+        os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_create(self):
         self.runner.action['args'] = ['env']
