@@ -16,7 +16,7 @@ EOF
 
 ID=$(python id.py 2>&1)
 
-if [ "$RUNTIME" == "vagrant" ]; then
+if [ "$ENGINE" == "vagrant" ]; then
 mkdir -p "$HOME/.cache/.popper/vagrant/$ID"
 cd "$HOME/.cache/.popper/vagrant/$ID"
 cat <<EOF > Vagrantfile
@@ -47,7 +47,7 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-pull --runtime "$RUNTIME")
+(! popper run --skip-pull --engine "$ENGINE")
 
 # action repo not present locally, fail workflow using --skip-clone
 delete_dir "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
@@ -63,12 +63,12 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-clone --runtime "$RUNTIME")
+(! popper run --skip-clone --engine "$ENGINE")
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
-if [ "$RUNTIME" == "singularity" ]; then
+if [ "$ENGINE" == "singularity" ]; then
 rm -rf "$HOME/.cache/.popper/singularity/$ID"
 mkdir "$HOME/.cache/.popper/singularity/$ID"
 singularity pull --name popper_docker___debian_stretch-slim_"$ID".sif docker://debian:stretch-slim
@@ -92,12 +92,12 @@ action "sample action two" {
 }
 EOF
 
-popper run --skip-clone --skip-pull --runtime "$RUNTIME" > output
+popper run --skip-clone --skip-pull --engine "$ENGINE" > output
 grep -q "sample action one" output
 grep -q "sample action two" output
 
 
-if [ "$RUNTIME" == "vagrant" ]; then
+if [ "$ENGINE" == "vagrant" ]; then
 vagrant destroy -f
 export DOCKER_HOST=
 rm -rf "$HOME/.cache/.popper/vagrant/$ID"

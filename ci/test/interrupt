@@ -20,13 +20,13 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --runtime $RUNTIME" 5
+send_sigint "popper run --engine $ENGINE" 5
 
 # give popper some time to remove containers
 sleep 5
 
 # ensure no containers are running
-if [ "$RUNTIME" == "docker" ]
+if [ "$ENGINE" == "docker" ]
 then
   test -z "$(docker ps -aq --filter 'status=running' --filter 'name=popper_')"
 else
@@ -80,11 +80,11 @@ action "sleep" {
 }
 EOF
 
-send_sigint "popper run --parallel --runtime $RUNTIME" 2
+send_sigint "popper run --parallel --engine $ENGINE" 2
 
 sleep 5
 
-if [ "$RUNTIME" == "docker" ]
+if [ "$ENGINE" == "docker" ]
 then
   test -z "$(docker ps -aq --filter 'status=running' --filter 'name=popper_')"
 else
