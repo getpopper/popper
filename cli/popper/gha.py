@@ -131,7 +131,8 @@ class WorkflowRunner(object):
             cloned.add('{}/{}'.format(user, repo))
 
     @staticmethod
-    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid):
+    def instantiate_runners(runtime, wf, workspace, dry_run, skip_pull, wid,
+                            engine_config=None):
         """Factory of ActionRunner instances, one for each action.
 
         Note:
@@ -157,7 +158,7 @@ class WorkflowRunner(object):
 
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
                 continue
 
             if a['uses'].startswith('./'):
@@ -166,20 +167,21 @@ class WorkflowRunner(object):
                                  'Dockerfile')):
 
                     a['runner'] = HostRunner(
-                        a, workspace, env, dry_run, skip_pull, wid)
+                        a, workspace, env, dry_run, skip_pull, wid,
+                        engine_config)
                     continue
 
             if runtime == 'docker':
                 a['runner'] = DockerRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
 
             elif runtime == 'singularity':
                 a['runner'] = SingularityRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
 
             elif runtime == 'vagrant':
                 a['runner'] = VagrantRunner(
-                    a, workspace, env, dry_run, skip_pull, wid)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
 
     @staticmethod
     def get_workflow_env(wf, workspace):
@@ -218,7 +220,7 @@ class WorkflowRunner(object):
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, runtime,
-            skip_secrets_prompt=False):
+            engine_conf, skip_secrets_prompt=False):
         """Run the workflow or a specific action.
 
         Args:
@@ -247,18 +249,28 @@ class WorkflowRunner(object):
         if action:
             new_wf = Workflow.filter_action(self.wf, action, with_dependencies)
 
+        engine_config = pu.parse_engine_configuration(engine_conf)
+
         new_wf.check_for_unreachable_actions(skip)
 
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
-            runtime, new_wf, workspace, dry_run, skip_pull, self.wid)
+            runtime,
+            new_wf,
+            workspace,
+            dry_run,
+            skip_pull,
+            self.wid,
+            engine_config)
 
         for s in new_wf.get_stages():
-            WorkflowRunner.run_stage(runtime, new_wf, s, reuse, parallel)
+            WorkflowRunner.run_stage(
+                runtime, new_wf, s, reuse, parallel)
 
     @staticmethod
-    def run_stage(runtime, wf, stage, reuse=False, parallel=False):
+    def run_stage(runtime, wf, stage, reuse=False,
+                  parallel=False):
         """Runs actions in a stage either parallelly or sequentially.
 
         Args:
@@ -276,9 +288,9 @@ class WorkflowRunner(object):
         if parallel:
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
-                    ex.submit(wf.action[a]['runner'].run, reuse):
-                        a for a in stage
-                }
+                    ex.submit(
+                        wf.action[a]['runner'].run,
+                        reuse): a for a in stage}
                 popper.cli.flist = flist
                 for future in as_completed(flist):
                     future.result()
@@ -290,13 +302,15 @@ class WorkflowRunner(object):
 class ActionRunner(object):
     """An action runner."""
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry_run, skip_pull,
+                 wid, engine_config):
         self.action = action
         self.workspace = workspace
         self.env = env
         self.dry_run = dry_run
         self.skip_pull = skip_pull
         self.wid = wid
+        self.engine_config = engine_config
         self.msg_prefix = "DRYRUN: " if dry_run else ""
         self.setup_necessary_files()
 
@@ -430,9 +444,10 @@ class ActionRunner(object):
 class DockerRunner(ActionRunner):
     """Run a Github Action in Docker runtime."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull,
+                 wid, engine_config):
         super(DockerRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid)
+            action, workspace, env, dry, skip_pull, wid, engine_config)
         self.d_client = docker.from_env()
         self.cid = pu.sanitized_name(self.action['name'], wid)
         self.container = None
@@ -565,6 +580,17 @@ class DockerRunner(ActionRunner):
             return
         self.container.remove(force=True)
 
+    def mix_with_engine_config(self, config):
+        config["volumes"] = [*config["volumes"],
+                             *self.engine_config.get('volumes', list())]
+        for k, v in self.engine_config.get('environment', dict()).items():
+            config["environment"].update({k: v})
+
+        for k, v in self.engine_config.items():
+            if k not in config.keys():
+                config[k] = self.engine_config[k]
+        return config
+
     def docker_create(self, img):
         """Create a docker container from an image.
 
@@ -584,16 +610,22 @@ class DockerRunner(ActionRunner):
         env = self.prepare_environment()
         volumes = self.prepare_volumes(env, include_docker_socket=True)
 
-        self.container = self.d_client.containers.create(
-            image=img,
-            command=self.action.get('args', None),
-            name=self.cid,
-            volumes=volumes,
-            working_dir=env['GITHUB_WORKSPACE'],
-            environment=env,
-            entrypoint=self.action.get('runs', None),
-            detach=True
-        )
+        config = {
+            "image": img,
+            "command": self.action.get('args', None),
+            "name": self.cid,
+            "volumes": volumes,
+            "working_dir": env['GITHUB_WORKSPACE'],
+            "environment": env,
+            "entrypoint": self.action.get('runs', None),
+            "detach": True
+        }
+
+        if self.engine_config:
+            config = self.mix_with_engine_config(config)
+
+        log.debug(config)
+        self.container = self.d_client.containers.create(**config)
 
     def docker_start(self):
         """Start the container process.
@@ -656,9 +688,11 @@ class DockerRunner(ActionRunner):
 class SingularityRunner(ActionRunner):
     """Runs a Github Action in Singularity runtime."""
     lock = threading.Lock()
-    def __init__(self, action, workspace, env, dry_run, skip_pull, wid):
-        super(SingularityRunner, self).__init__(action, workspace, env,
-                                                dry_run, skip_pull, wid)
+
+    def __init__(self, action, workspace, env, dry_run, skip_pull,
+                 wid, engine_config):
+        super(SingularityRunner, self).__init__(
+            action, workspace, env, dry_run, skip_pull, wid, engine_config)
         s_client.quiet = True
 
     @staticmethod
@@ -674,7 +708,7 @@ class SingularityRunner(ActionRunner):
         singularity_cache = os.path.join(
             pu.setup_base_cache(), 'singularity', wid)
         if not os.path.exists(singularity_cache):
-            os.makedirs(singularity_cache)
+            os.makedirs(singularity_cache, exist_ok=True)
         return singularity_cache
 
     def get_build_resources(self):
@@ -960,11 +994,12 @@ class VagrantRunner(DockerRunner):
     end
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull,
+                 wid, engine_config):
         import vagrant
 
         super(VagrantRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid
+            action, workspace, env, dry, skip_pull, wid, engine_config
         )
         self.cid = pu.sanitized_name(self.action['name'], wid)
         VagrantRunner.actions.add(self.action['name'])
@@ -1121,9 +1156,10 @@ class VagrantRunner(DockerRunner):
 class HostRunner(ActionRunner):
     """Run an Action on the Host Machine."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull, wid):
+    def __init__(self, action, workspace, env, dry, skip_pull,
+                 wid, engine_config):
         super(HostRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid)
+            action, workspace, env, dry, skip_pull, wid, engine_config)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
