@@ -5,14 +5,7 @@ source ./ci/test/common
 init_test_repo
 cd "$test_repo_path"
 
-cat <<EOF > settings.py
-engine_configuration = {
-    "name": "dont use this name",
-    "image": "abc/xyz",
-    "hostname": "xYz.local"
-}
-EOF
-
+# write the workflow file
 cat <<EOF > main.workflow
 workflow "test" {
     resolves = "run"
@@ -24,10 +17,68 @@ action "run" {
 }
 EOF
 
+# config file called settings.py in the project root.
+cat <<EOF > settings.py
+engine_configuration = {
+    "name": "dont use this name",
+    "image": "abc/xyz",
+    "hostname": "xYz.local"
+}
+EOF
+
 popper run --engine-conf settings.py > output
 grep -Fxq "xYz.local" output
 
 popper run > output
 grep -vFxq "xYz.local" output
+
+# config file with different name in the project root.
+cat <<EOF > myconf.py
+engine_configuration = {
+    "name": "dont use this name",
+    "image": "abc/xyz",
+    "hostname": "xYz.local"
+}
+EOF
+
+popper run --engine-conf myconf.py > output
+grep -Fxq "xYz.local" output
+
+popper run > output
+grep -vFxq "xYz.local" output
+
+# config file in different directory than project root.
+mkdir -p /tmp/myengineconf/
+cat <<EOF > /tmp/myengineconf/mysettings.py
+engine_configuration = {
+    "name": "dont use this name",
+    "image": "abc/xyz",
+    "hostname": "xYz.local"
+}
+EOF
+
+popper run --engine-conf /tmp/myengineconf/mysettings.py > output
+grep -Fxq "xYz.local" output
+
+popper run > output
+grep -vFxq "xYz.local" output
+
+cat <<EOF > settings
+engine_configuration = {
+    "name": "dont use this name",
+    "image": "abc/xyz",
+    "hostname": "xYz.local"
+}
+EOF
+
+popper run --engine-conf settings && exit 1
+
+popper run --engine-conf conf && exit 1
+
+cat <<EOF > newconf.py
+print('No config')
+EOF
+
+popper run --engine-conf newconf.py && exit 1
 
 echo "Test ENGINE-CONF passed."

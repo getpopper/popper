@@ -221,18 +221,20 @@ class TestUtils(unittest.TestCase):
         self.assertRaises(
             SystemExit,
             pu.parse_engine_configuration,
-            'settings.py')
+            'myconf.py')
+
         conf_content = """
-- docker
+- engine_configuration
         """
-        pu.write_file('settings.py', conf_content)
+        pu.write_file('settings.yml', conf_content)
         self.assertRaises(
             SystemExit,
             pu.parse_engine_configuration,
-            'settings.py')
+            'settings.yml')
+
         conf_content = """
-docker: {
-    "..."
+runtime_configuration = {
+    "runtime": "nvidia"
 }
         """
         pu.write_file('settings.py', conf_content)
@@ -240,3 +242,12 @@ docker: {
             SystemExit,
             pu.parse_engine_configuration,
             'settings.py')
+
+        conf_content = """
+engine_configuration = {
+    "runtime": "nvidia"
+}
+        """
+        pu.write_file('settings.py', conf_content)
+        config = pu.parse_engine_configuration('settings.py')
+        self.assertDictEqual(config, {'runtime': 'nvidia'})

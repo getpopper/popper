@@ -113,8 +113,10 @@ from popper import log as logging
 )
 @click.option(
     '--engine-conf',
-    help='Specify the engine configuration file for a container.',
-    required=False,
+    help=('File containing configuration options for the '
+          'underlying container engine.'
+    ),
+    required=False
 )
 @pass_context
 def cli(ctx, **kwargs):
@@ -237,7 +239,7 @@ def run_workflow(**kwargs):
         if sys.version_info[0] < 3:
             log.fail('--parallel is only supported on Python3')
         log.warning("Using --parallel may result in interleaved output. "
-                 "You may use --quiet flag to avoid confusion.")
+                    "You may use --quiet flag to avoid confusion.")
 
     if kwargs['with_dependencies'] and (not kwargs['action']):
         log.fail('`--with-dependencies` can be used only with '
