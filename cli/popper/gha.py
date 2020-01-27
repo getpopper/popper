@@ -708,7 +708,7 @@ class SingularityRunner(ActionRunner):
         singularity_cache = os.path.join(
             pu.setup_base_cache(), 'singularity', wid)
         if not os.path.exists(singularity_cache):
-            os.makedirs(singularity_cache)
+            os.makedirs(singularity_cache, exist_ok=True)
         return singularity_cache
 
     def get_build_resources(self):
