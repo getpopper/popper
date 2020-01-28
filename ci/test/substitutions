@@ -11,8 +11,8 @@ workflow "wf" {
 }
 
 action "b" {
-  uses = "_VAR1"
-  args = "_VAR2"
+  uses = "\$_VAR1"
+  args = "\$_VAR2"
 }
 EOF
 
@@ -35,11 +35,11 @@ action "b" {
 action "c" {
   needs = "b"
   uses = "sh"
-  args = ["ls","_VAR1"]
-  runs = "_VAR2"
-  secrets = ["_VAR3"]
+  args = ["ls","\$_VAR1"]
+  runs = "\$_VAR2"
+  secrets = ["\$_VAR3"]
   env = {
-    "_VAR4" = "_VAR5"
+    "\$_VAR4" = "\$_VAR5"
   }
 }
 EOF
@@ -55,14 +55,14 @@ workflow "wf" {
 }
 
 action "a" {
-  uses = "_VAR1"
-  args = "_VAR2"
+  uses = "\$_VAR1"
+  args = "\$_VAR2"
 }
 
 action "b" {
-  needs = "_VAR3"
-  uses = "_VAR1"
-  args = "_VAR2"
+  needs = "\$_VAR3"
+  uses = "\$_VAR1"
+  args = "\$_VAR2"
 }
 EOF
 

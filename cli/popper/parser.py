@@ -14,8 +14,7 @@ VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
 
 class Workflow(object):
-    """Represent's a immutable workflow.
-    """
+    """Represent's a immutable workflow."""
 
     def __init__(self, wfile):
         # Read and parse the workflow file.
@@ -26,19 +25,36 @@ class Workflow(object):
             self.workflow_path = wfile
 
     def get_action(self, action):
-        """Returns an action from a workflow."""
+        """Returns an action from a workflow.
+
+        Args:
+          action(str): Name of the action.
+
+        Returns:
+            string : workflow block of the action.
+
+        """
         if self.parsed_workflow['action'].get(action, None):
             return self.parsed_workflow['action'][action]
         else:
             log.fail("Action '{}' doesn\'t exist.".format(action))
 
     def parse(self, substitutions=None, allow_loose=False):
-        """Parse and validate a workflow."""
+        """Parse and validate a workflow.
+
+        Args:
+          substitutions(list): Substituitions that are to be passed as an argumnets. (Default value = None)
+          allow_loose(bool): Flag if the unused variables are to be ignored. (Default value = False)
+
+        Returns:
+            None.
+
+        """
         self.validate_workflow_block()
-        if substitutions:
-            self.parse_substitutions(substitutions, allow_loose)
         self.validate_action_blocks()
         self.normalize()
+        if substitutions:
+            self.parse_substitutions(substitutions, allow_loose)
         self.check_for_empty_workflow()
         self.complete_graph()
 
@@ -49,7 +65,15 @@ class Workflow(object):
         """
         def resolve_intersections(stage):
             """Removes actions from a stage that creates
-            conflict between the selected stage candidates."""
+            conflict between the selected stage candidates.
+
+            Args:
+              stage: Selected stage candidate.
+
+            Returns:
+                None.
+
+            """
             actions_to_remove = set()
             for a in stage:
                 if self.action[a].get('next', None):
@@ -79,6 +103,12 @@ class Workflow(object):
 
         If none of them are present, then the workflow is assumed to
         be empty and the execution halts.
+
+        Args:
+            None
+        
+        Returns:
+            None
         """
         actions_in_workflow = set(map(lambda a: a[0], self.action.items()))
         actions_in_resolves = set(self.resolves)
@@ -115,6 +145,12 @@ class Workflow(object):
 
     def validate_workflow_block(self):
         """Validate the syntax of the workflow block.
+        Args:
+            None
+
+        Returns:
+            None
+
         """
         workflow_block_cnt = len(
             self.parsed_workflow.get(
@@ -145,6 +181,12 @@ class Workflow(object):
 
     def validate_action_blocks(self):
         """Validate the syntax of the action blocks.
+        Args:
+            None
+
+        Returns:
+            None
+
         """
         self.check_duplicate_actions()
         if not self.parsed_workflow.get('action', None):
@@ -193,7 +235,15 @@ class Workflow(object):
     @staticmethod
     def format_command(params):
         """A static method that formats the `runs` and `args`
-        attributes into a list of strings."""
+        attributes into a list of strings.
+
+        Args:
+          params(str): string parameters that are to be converted to list.
+
+        Returns:
+            list : List of parameters.
+
+        """
         if pu.of_type(params, ['str']):
             return params.split(" ")
         return params
@@ -208,6 +258,13 @@ class Workflow(object):
         if provided as a string to a list of string by splitting around
         whitespace. Also, it changes parameters like `uses` and `resolves`,
         if provided as a string to a list.
+
+        Args:
+            None
+
+        Returns:
+            None
+
         """
         for wf_name, wf_block in self.parsed_workflow['workflow'].items():
 
@@ -240,7 +297,15 @@ class Workflow(object):
 
     def check_duplicate_actions(self):
         """Checks whether duplicate action blocks are
-        present or not."""
+        present or not.
+        
+        Args:
+            None
+            
+        Returns:
+            None
+
+        """
         parsed_acount = 0
         if self.parsed_workflow.get('action', None):
             parsed_acount = len(list(self.parsed_workflow['action'].items()))
@@ -257,10 +322,25 @@ class Workflow(object):
         in the workflow.
 
         Args:
-            skip (list) : The list actions to skip if applicable.
+          skip(list, optional): The list actions to skip if applicable. (Default value = None)
+
+        Returns:
+            None.
+
         """
 
         def _traverse(entrypoint, reachable, actions):
+            """
+
+            Args:
+              entrypoint: The entrypoint node. 
+              reachable: Nodes that are reachable from entrypoint.
+              actions: list of all actions of the workflow
+
+            Returns:
+                None.
+
+            """
             for node in entrypoint:
                 reachable.add(node)
                 _traverse(actions[node].get(
@@ -287,74 +367,91 @@ class Workflow(object):
             self.action.pop(a)
 
     def parse_substitutions(self, substitutions, allow_loose):
+        """
+
+        Args:
+          substitutions(list): List of substitutions that are passed as an arguments.
+          allow_loose(bool): Flag used to ignore unused substitution variable in the workflow.
+
+        Returns:
+            None
+
+        """
 
         substitution_dict = dict()
 
         for args in substitutions:
-            item = args.split('=')
-            substitution_dict[item[0]] = {'value': item[1], 'subs_flag': False}
+            item = args.split('=',1)
+            if len(item) < 2:
+                raise Exception("Excepting '=' as seperator")
+            substitution_dict['$'+item[0]] = item[1]
 
         for keys in substitution_dict:
-            if(not bool(re.match(r"_[A-Z0-9]+", keys))):
+            if(not bool(re.match(r"\$_[A-Z0-9]+", keys))):
                 log.fail("Substitution variable '{}' doesn't "
                          "satify required format ".format(keys))
 
-        for action in self.parsed_workflow:
-            for args in self.parsed_workflow[action]:
-                for key in self.parsed_workflow[action][args]:
-                    subs_str = self.parsed_workflow[action][args][key]
-                    if(pu.of_type(subs_str, ['str'])):
-                        for var in substitution_dict:
-                            if(subs_str.find(var) != -1):
-                                subs_str = subs_str.replace(
-                                        var, substitution_dict[var]['value'])
-                                substitution_dict[var]['subs_flag'] = True
+        used = {}
 
-                    elif(pu.of_type(subs_str, ['los'])):
-                        for item in (range(len(subs_str))):
-                            for var in substitution_dict:
-                                if(subs_str[item].find(var) != -1):
-                                    subs_str[item] = subs_str[item].replace(
-                                        var, substitution_dict[var]['value'])
-                                    substitution_dict[var]['subs_flag'] = True
+        for wf_name,wf_block in self.action.items():
+            attr = wf_block.get('needs',[])
+            for i in range(len(attr)):
+                for k,v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k,v)
 
-                    elif(pu.of_type(subs_str, ['dict'])):
-                        temp_dict = dict()
+            attr = wf_block.get('uses','')
+            for k,v in substitution_dict.items():
+                if k in attr:
+                    used[k] = 1
+                    wf_block['uses'] = attr.replace(k,v)
 
-                        for keys in subs_str:
-                            if(keys in substitution_dict.keys()):
-                                temp_dict[substitution_dict[keys]
-                                          ['value']] = subs_str[keys]
-                                substitution_dict[keys]['subs_flag'] = True
+            attr = wf_block.get('args',[])
+            for i in range(len(attr)):
+                for k,v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k,v)
 
-                            else:
-                                temp_dict[keys] = subs_str[keys]
 
-                        subs_str = temp_dict
+            attr = wf_block.get('runs',[])
+            for i in range(len(attr)):
+                for k,v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k,v)
+                                    
+            attr = wf_block.get('secrets',[])
+            for i in range(len(attr)):
+                for k,v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k,v)
 
-                        for keys in subs_str:
-                            for var in substitution_dict:
-                                if(subs_str[keys].find(var) != -1):
-                                    subs_str[keys] = subs_str[keys].replace(
-                                        var, substitution_dict[var]['value'])
-                                    substitution_dict[var]['subs_flag'] = True
+                                    
+            attr = wf_block.get('env',{})
+            temp_dict = {}
+            for key in attr.keys():
+                for k,v in substitution_dict.items():
+                    if k in key:
+                        used[k] = 1
+                        temp_dict[v] = attr[key]
+                    
+                    else:
+                        temp_dict[key] = attr[key]
+                                    
+            for key,value in temp_dict.items():
+                for k,v in substitution_dict.items():
+                    if k in value:
+                        used[k] = 1
+                        temp_dict[key] = v
 
-                    self.parsed_workflow[action][args][key] = subs_str
+            wf_block['env'] = temp_dict        
 
-        for itr in range(len(self.workflow_content)):
-            for var in substitution_dict:
-                content_str = self.workflow_content[itr]
-                if(content_str.find(var) != -1):
-                    content_str = content_str.replace(
-                        var, substitution_dict[var]['value'])
-                    substitution_dict[var]['subs_flag'] = True
-                    self.workflow_content[itr] = content_str
-
-        if(allow_loose is False):
-            for keys in substitution_dict:
-                if(substitution_dict[keys]['subs_flag'] is False):
-                    log.fail("Substitution variable'{}' is not"
-                             "used in workflow".format(keys))
+            if not allow_loose and len(substitution_dict.keys()) != len(used.keys()):
+                log.fail("All the substitutions passed are not used !")
+                
 
     @staticmethod
     def skip_actions(wf, skip_list=list()):
@@ -396,13 +493,14 @@ class Workflow(object):
         the argument from the workflow.
 
         Args:
-            wf (Workflow) : The workflow object to operate upon.
-            action (str) : The action to run.
-            with_dependencies (bool) : Filter out action to
-            run with dependencies or not.
+          wf(Workflow): The workflow object to operate upon.
+          action(str): The action to run.
+          with_dependencies(bool, optional): Filter out action to
+        run with dependencies or not. (Default value = False)
 
         Returns:
-            Workflow : The updated workflow object.
+          Workflow: The updated workflow object.
+
         """
         # Recursively generate root when an action is run
         # with the `--with-dependencies` flag.
