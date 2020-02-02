@@ -807,18 +807,18 @@ class TestParser(unittest.TestCase):
         }
 
         action "a" {
-            uses = "\$_VAR1"
-            args = "\$_VAR2"
+            uses = "$_VAR1"
+            args = "$_VAR2"
         }
 
         action "b" {
-            needs = "\$_VAR3"
-            uses = "\$_VAR1"
-            args = "\$_VAR2"
-            runs = "\$_VAR4"
-            secrets = ["\$_VAR5"]
+            needs = "$_VAR3"
+            uses = "$_VAR1"
+            args = "$_VAR2"
+            runs = "$_VAR4"
+            secrets = ["$_VAR5"]
             env = {
-                "\$_VAR6" = "\$_VAR7"
+                "$_VAR6" = "$_VAR7"
             }
         }
         """)
@@ -850,18 +850,18 @@ class TestParser(unittest.TestCase):
         }
 
         action "a" {
-            uses = "\$_VAR1"
-            args = "\$_VAR2"
+            uses = "$_VAR1"
+            args = "$_VAR2"
         }
 
         action "b" {
-            needs = "\$_VAR3"
-            uses = "\$_VAR1"
-            args = "\$_VAR2"
-            runs = "\$_VAR4"
-            secrets = ["\$_VAR5"]
+            needs = "$_VAR3"
+            uses = "$_VAR1"
+            args = "$_VAR2"
+            runs = "$_VAR4"
+            secrets = ["$_VAR5"]
             env = {
-                "\$_VAR6" = "\$_VAR7"
+                "$_VAR6" = "$_VAR7"
             }
         }
         """)

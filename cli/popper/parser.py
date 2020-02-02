@@ -462,7 +462,8 @@ class Workflow(object):
                         used[k] = 1
                         temp_dict[key] = v
 
-            wf_block['env'] = temp_dict 
+            if(len(temp_dict) != 0):
+                wf_block['env'] = temp_dict 
 
         if not allow_loose and len(substitution_dict) != len(used):
             log.fail("All the substitutions passed are not used !")
