@@ -12,25 +12,26 @@
 </p>
 
 Popper is a [Github Actions](https://github.com/features/actions) 
-(GHA) execution engine that allows you to run GHA workflows (in [HCL 
-syntax][hcl-to-yml]) locally on your machine and on CI services. The 
-goal of this project is to provide the following functionality:
+(GHA) execution engine for running [HCL-syntax GHA workflows][ghawf] 
+locally on your machine and on CI services. The goal of this project 
+is to provide the following functionality:
 
   * **Continuous integration**. Generate configuration files for 
     distinct CI services, allowing users to execute GHA workflows on 
     Travis, Jenkins, Gitlab or Circle. [See here for more][ci].
-  * **Other Runtimes**. In addition to Docker, Popper can execute 
-    workflows in other container runtimes. We currently support 
-    [Singularity](https://sylabs.io/) and [Vagrant](https://vagrantup.com/)
-    and are working on adding [Podman](https://podman.io) to the list (see [here for more][runtimedocs]).
-  * **Action search**. Provide with a [searchable 
-    catalog][search] of publicly available actions so that users can 
-    easily find which actions already exist (do not re-invent the 
-    wheel!).
+  * **Alternative Container Runtimes**. In addition to Docker, Popper 
+    can execute workflows in other runtimes by interacting with other 
+    container engines. We currently support [Singularity][sylabs], as 
+    well as running Docker inside virtual machines (via 
+    [Vagrant][vagrant]). We are working on adding 
+    [Podman](https://podman.io) to the list.
+  * **Action search**. Provide with a [searchable catalog][search] of 
+    publicly available actions so that users can easily find which 
+    actions already exist (do not re-invent the wheel!).
   * **Scaffolding**. Aid in the implementation of [new actions and 
     workflows][scaffold].
   * **Action library**. Provide with a list of reusable actions and 
-    example workflows <https://github.com/popperized>.
+    example workflows at <https://github.com/popperized>.
 
 -----
 
@@ -90,5 +91,6 @@ us](mailto:ivo@cs.ucsc.edu).
 [docs]: https://popper.readthedocs.io/en/latest/
 [gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
 [scaffold]: https://popper.readthedocs.io/en/latest/sections/getting_started.html#create-a-workflow
-[runtimedocs]: https://popper.readthedocs.io/en/latest/sections/extensions.html#other-runtimes
-[hcl-to-yml]: https://help.github.com/en/articles/about-github-actions#migrating-github-actions-from-hcl-to-yaml-syntax
+[ghawf]: docs/sections/gha_workflows.md
+[sylabs]: https://sylabs.io/
+[vagrant]: https://vagrantup.com/

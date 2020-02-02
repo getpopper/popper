@@ -28,11 +28,10 @@ class Workflow(object):
         """Returns an action from a workflow.
 
         Args:
-          action(str): Name of the action.
+          action(str): Name of the action currently being executed.
 
         Returns:
-            string : workflow block of the action.
-
+            None
         """
         if self.parsed_workflow['action'].get(action, None):
             return self.parsed_workflow['action'][action]
@@ -62,17 +61,23 @@ class Workflow(object):
     def get_stages(self):
         """Generator of stages. A stages is a list of actions that can be
         executed in parallel.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         def resolve_intersections(stage):
-            """Removes actions from a stage that creates
-            conflict between the selected stage candidates.
+            """Removes actions from a stage that creates conflict between the
+            selected stage candidates.
 
             Args:
-              stage: Selected stage candidate.
+              stage(set): Stage from which conflicted actions are to be
+                            removed.
 
             Returns:
-                None.
-
+                None
             """
             actions_to_remove = set()
             for a in stage:
@@ -98,15 +103,15 @@ class Workflow(object):
             current_stage = next_stage
 
     def check_for_empty_workflow(self):
-        """Checks whether all the actions mentioned in resolves
-        attribute is actually present in the workflow.
+        """Checks whether all the actions mentioned in resolves attribute is
+        actually present in the workflow.
 
         If none of them are present, then the workflow is assumed to
         be empty and the execution halts.
 
         Args:
             None
-        
+            
         Returns:
             None
         """
@@ -122,10 +127,13 @@ class Workflow(object):
         we add forward edges. This also obtains the root nodes.
 
         Args:
-            entrypoint (list): List of nodes from where to start
-                               generating the graph.
-            root (set) : Set of nodes without dependencies,
-                         that would eventually be used as root.
+          entrypoint(list): List of nodes from where to start
+        generating the graph.
+          root(set): Set of nodes without dependencies,
+        that would eventually be used as root.
+
+        Returns:
+            None
         """
         for node in entrypoint:
             if self.get_action(node).get('needs', None):
@@ -140,17 +148,23 @@ class Workflow(object):
     def complete_graph(self):
         """Driver function to run the recursive function
         `_complete_graph_util()` which adds forward edges.
-        """
-        self.find_root(self.resolves, self.root)
 
-    def validate_workflow_block(self):
-        """Validate the syntax of the workflow block.
         Args:
             None
 
         Returns:
             None
+        """
+        self.find_root(self.resolves, self.root)
 
+    def validate_workflow_block(self):
+        """Validate the syntax of the workflow block.
+        
+        Args:
+            None
+
+        Returns:
+            None
         """
         workflow_block_cnt = len(
             self.parsed_workflow.get(
@@ -181,12 +195,12 @@ class Workflow(object):
 
     def validate_action_blocks(self):
         """Validate the syntax of the action blocks.
+
         Args:
             None
 
         Returns:
             None
-
         """
         self.check_duplicate_actions()
         if not self.parsed_workflow.get('action', None):
@@ -234,25 +248,24 @@ class Workflow(object):
 
     @staticmethod
     def format_command(params):
-        """A static method that formats the `runs` and `args`
-        attributes into a list of strings.
+        """A static method that formats the `runs` and `args` attributes into a
+        list of strings.
 
         Args:
-          params(str): string parameters that are to be converted to list.
+          params(list/str): run or args that are being executed.
 
         Returns:
-            list : List of parameters.
-
+            list: List of strings of parameters.
         """
         if pu.of_type(params, ['str']):
             return params.split(" ")
         return params
 
     def normalize(self):
-        """Takes properties from the `self.parsed_workflow` dict and
-        makes them native to the `Workflow` class. Also it normalizes
-        some of the attributes of a parsed workflow according to
-        the Github defined specifications.
+        """Takes properties from the `self.parsed_workflow` dict and makes them
+        native to the `Workflow` class. Also it normalizes some of the
+        attributes of a parsed workflow according to the Github defined
+        specifications.
 
         For example, it changes `args`, `runs` and `secrets` attribute,
         if provided as a string to a list of string by splitting around
@@ -264,7 +277,6 @@ class Workflow(object):
 
         Returns:
             None
-
         """
         for wf_name, wf_block in self.parsed_workflow['workflow'].items():
 
@@ -296,15 +308,13 @@ class Workflow(object):
                     a_block['secrets'])
 
     def check_duplicate_actions(self):
-        """Checks whether duplicate action blocks are
-        present or not.
-        
+        """Checks whether duplicate action blocks are present or not.
+
         Args:
             None
-            
+
         Returns:
             None
-
         """
         parsed_acount = 0
         if self.parsed_workflow.get('action', None):
@@ -318,28 +328,30 @@ class Workflow(object):
             log.fail('Duplicate action identifiers found.')
 
     def check_for_unreachable_actions(self, skip=None):
-        """Validates a workflow by checking for unreachable nodes / gaps
-        in the workflow.
+        """Validates a workflow by checking for unreachable nodes / gaps in the
+        workflow.
 
         Args:
-          skip(list, optional): The list actions to skip if applicable. (Default value = None)
+          skip(list, optional): The list actions to skip if applicable.
+                                (Default value = None)
 
         Returns:
-            None.
-
+            None
         """
 
         def _traverse(entrypoint, reachable, actions):
             """
 
             Args:
-              entrypoint: The entrypoint node. 
-              reachable: Nodes that are reachable from entrypoint.
-              actions: list of all actions of the workflow
+              entrypoint(set): Set containing the entry point of part of the
+                                workflow.
+              reachable(set): Set containing all the reachable parts of
+                                workflow.
+              actions(dict): Dictionary containing the identifier of the
+                                workflow and its description.
 
             Returns:
-                None.
-
+                None
             """
             for node in entrypoint:
                 reachable.add(node)
@@ -458,15 +470,16 @@ class Workflow(object):
 
     @staticmethod
     def skip_actions(wf, skip_list=list()):
-        """Removes the actions to be skipped from the workflow graph and
-        return a new `Workflow` object.
+        """Removes the actions to be skipped from the workflow graph and return
+        a new `Workflow` object.
 
         Args:
-            wf (Workflow) : The workflow object to operate upon.
-            skip_list (list) : List of actions to be skipped.
+          wf(Workflow): The workflow object to operate upon.
+          skip_list(list): List of actions to be skipped.
+                            (Default value = list())
 
         Returns:
-            Workflow : The updated workflow object.
+          Workflow : The updated workflow object.
         """
         workflow = deepcopy(wf)
         for sa_name in skip_list:
@@ -492,8 +505,8 @@ class Workflow(object):
 
     @staticmethod
     def filter_action(wf, action, with_dependencies=False):
-        """Filters out all actions except the one passed in
-        the argument from the workflow.
+        """Filters out all actions except the one passed in the argument from
+        the workflow.
 
         Args:
           wf(Workflow): The workflow object to operate upon.
@@ -503,11 +516,22 @@ class Workflow(object):
 
         Returns:
           Workflow: The updated workflow object.
-
         """
         # Recursively generate root when an action is run
         # with the `--with-dependencies` flag.
         def find_root_recursively(workflow, action, required_actions):
+            """
+
+            Args:
+              workflow(worklfow): The workflow object to operate upon.
+              action(str): The action to run.
+              required_actions(set): Set containing actions that are
+                                    to be executed.
+
+            Returns:
+                None
+
+            """
             required_actions.add(action)
             if workflow.get_action(action).get('needs', None):
                 for a in workflow.get_action(action)['needs']:

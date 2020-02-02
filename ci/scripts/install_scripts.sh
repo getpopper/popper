@@ -1,7 +1,7 @@
 #!/bin/bash
 set -ex
 
-if [ "$RUNTIME" == "singularity" ]; then
+if [ "$ENGINE" == "singularity" ]; then
     sudo apt-get update
     sudo apt-get install -y build-essential libssl-dev uuid-dev libgpgme11-dev libseccomp-dev pkg-config squashfs-tools
     mkdir -p ${GOPATH}/src/github.com/sylabs

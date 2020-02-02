@@ -54,13 +54,40 @@ or to execute all the workflows in a project:
 popper run --recursive
 ```
 
+## Customizing container engine behavior
+
+By default, Popper instantiates containers in the underlying engine by using
+basic configuration options (see [here](https://popper.readthedocs.io/en/latest/sections/gha_workflows.html?highlight=mount#execution-runtime)). When these options are not suitable
+to your needs, you can modify or extend them by providing engine-specific options.
+These options allow you to specify fine-grained capabilities, bind-mounting additional folders, etc.
+In order to do this, you can provide a configuration file to modify the underlying container engine configuration used to spawn containers. This file is a python script that defines an `engine_configuration` dictionary with custom options and is passed to the `popper run` command via the `--engine-conf` flag.
+
+For example, to make Popper spawn Docker containers in [privileged](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) mode,
+we can write the following options:
+```python
+engine_configuration = {
+  'privileged': True
+}
+```
+
+Assuming the above is stored in a file called `settings.py`, we pass it to Popper by running:
+```
+popper run --engine-conf settings.py
+```
+
+> **NOTE**:
+> 1. Currently, the `--engine-conf` option is only supported for the `docker` engine.
+> 2. The `settings.py` file must contain a `dict` type variable with
+> the name `engine_configuration` as shown above.
+
+
 ## Environment Variables
 
-Popper defines the same environment variables that are [defined by the 
-official Github Actions 
-runner](https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables). 
-To see the values assigned to these variables, run the following 
-workflow:
+Popper defines a set of environment variables (see [Environment 
+Variables][envvars] section) that are available to all actions. To see 
+the values assigned to these variables, run the following workflow:
+
+[envvars]: gha_workflows.html#environment-variables
 
 ```hcl
 workflow "env workflow" {
@@ -72,6 +99,11 @@ action "show env" {
   args = ["env"]
 }
 ```
+
+To define new variables, the `env` keyword can be used (see [Action 
+Attributes][act-attr] for more).
+
+[act-attr]: gha_workflows.html#action-attributes
 
 ## Reusing existing workflows
 
@@ -119,16 +151,19 @@ Additionally, when searching for an action, you may choose to include
 the contents of the readme in your search by using the `--include-readme`
 flag.
 
-Once `popper search` runs, it caches all the metadata related to the search.
-So, to get the latest releases of the actions, you might want to update the
-cache using the `--update-cache` flag.
+Once `popper search` runs, it caches all the metadata related to the 
+search. So, to get the latest releases of the actions, you might want 
+to update the cache using the `--update-cache` flag.
 
-By default, popper searches for actions from a list present [here](https://github.com/systemslab/popper/blob/master/cli/resources/search_sources.yml).
-To help the list keep growing, you can add Github organization names or repository
-names(org/repo) and send a pull request to the upstream repository.
+By default, popper searches for actions from a list present 
+[here](https://github.com/systemslab/popper/blob/master/cli/resources/search_sources.yml). 
+To help the list keep growing, you can add Github organization names 
+or repository names(org/repo) and send a pull request to the upstream 
+repository.
 
 
-To get the details of a searched action, use the `popper info` command. For example,
+To get the details of a searched action, use the `popper info` 
+command. For example:
 
 ```bash
 popper info popperized/cmake

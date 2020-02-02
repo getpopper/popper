@@ -43,7 +43,7 @@ action "stage_one" {
 }
 EOF
 
-popper run --parallel --runtime "$RUNTIME" |& tee out
+popper run --parallel --engine "$ENGINE" |& tee out
 counter="$(grep -c "Action '[a-zA-Z_]*' ran successfully !" out)"
 test "$counter" -eq 5
 
@@ -85,7 +85,7 @@ action "stage_one" {
 }
 EOF
 
-(! popper run --parallel --runtime "$RUNTIME")
+(! popper run --parallel --engine "$ENGINE")
 echo "Some actions failed as expected !"
 
 echo "Test PARALLEL passed."

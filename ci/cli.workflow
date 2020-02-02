@@ -104,6 +104,12 @@ action "test inject" {
   args = "ci/test/inject"
 }
 
+action "test engine conf" {
+  needs = "lint"
+  uses = "sh"
+  args = "ci/test/engine-conf"
+}
+
 action "end" {
   uses = "sh"
   args = "ci/test/version"
@@ -124,5 +130,6 @@ action "end" {
     "test skip",
     "test substitutions",
     "test validate",
+    "test engine conf"
   ]
 }
