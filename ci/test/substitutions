@@ -17,9 +17,9 @@ action "b" {
 EOF
 
 (! popper run --substitutions)
-popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --runtime "$RUNTIME" | grep "ls"
-(! popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR2=ls --runtime "$RUNTIME")
-popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR1=sh --substitutions _VAR2=ls --runtime "$RUNTIME" | grep "ls"
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --engine "$ENGINE" | grep "ls"
+(! popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR2=ls --engine "$ENGINE")
+popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR1=sh --substitutions _VAR2=ls --engine "$ENGINE" | grep "ls"
 
 export TESTING="test"
 cat <<EOF > main.workflow
@@ -44,10 +44,10 @@ action "c" {
 }
 EOF
 
-popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --runtime "$RUNTIME" | grep "ls pwd"
-(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --runtime "$RUNTIME" | grep "ls pwd")
-popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --allow-loose --runtime "$RUNTIME" | grep "ls pwd"
-(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _var6=EXTRA --runtime "$RUNTIME" | grep "ls pwd")
+popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --engine "$ENGINE" | grep "ls pwd"
+(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --engine "$ENGINE" | grep "ls pwd")
+popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --allow-loose --engine "$ENGINE" | grep "ls pwd"
+(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _var6=EXTRA --engine "$ENGINE" | grep "ls pwd")
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -66,8 +66,8 @@ action "b" {
 }
 EOF
 
-popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --runtime "$RUNTIME"
-(! popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --runtime "$RUNTIME")
-popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --allow-loose --runtime "$RUNTIME"
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --engine "$ENGINE"
+(! popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --engine "$ENGINE")
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --allow-loose --engine "$ENGINE"
 
 echo "Test SUBSTITUTIONS passed."
