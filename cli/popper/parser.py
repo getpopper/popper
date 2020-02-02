@@ -42,8 +42,10 @@ class Workflow(object):
         """Parse and validate a workflow.
 
         Args:
-          substitutions(list): Substituitions that are to be passed as an argumnets. (Default value = None)
-          allow_loose(bool): Flag if the unused variables are to be ignored. (Default value = False)
+          substitutions(list): Substituitions that are to be passed
+                                as an argumnets. (Default value = None)
+          allow_loose(bool): Flag if the unused variables are to be
+                                ignored. (Default value = False)
 
         Returns:
             None.
@@ -111,7 +113,7 @@ class Workflow(object):
 
         Args:
             None
-            
+
         Returns:
             None
         """
@@ -159,7 +161,7 @@ class Workflow(object):
 
     def validate_workflow_block(self):
         """Validate the syntax of the workflow block.
-        
+
         Args:
             None
 
@@ -382,8 +384,10 @@ class Workflow(object):
         """
 
         Args:
-          substitutions(list): List of substitutions that are passed as an arguments.
-          allow_loose(bool): Flag used to ignore unused substitution variable in the workflow.
+          substitutions(list): List of substitutions that are passed
+                                as an arguments.
+          allow_loose(bool): Flag used to ignore unused substitution
+                                variable in the workflow.
 
         Returns:
             None
@@ -393,7 +397,7 @@ class Workflow(object):
         substitution_dict = dict()
 
         for args in substitutions:
-            item = args.split('=',1)
+            item = args.split('=', 1)
             if len(item) < 2:
                 raise Exception("Excepting '=' as seperator")
             substitution_dict['$'+item[0]] = item[1]
@@ -405,69 +409,66 @@ class Workflow(object):
 
         used = {}
 
-        for wf_name,wf_block in self.action.items():
+        for wf_name, wf_block in self.action.items():
 
-            attr = wf_block.get('needs',[])
+            attr = wf_block.get('needs', [])
             for i in range(len(attr)):
-                for k,v in substitution_dict.items():
+                for k, v in substitution_dict.items():
                     if k in attr[i]:
                         used[k] = 1
-                        attr[i] = attr[i].replace(k,v)
+                        attr[i] = attr[i].replace(k, v)
 
-            attr = wf_block.get('uses','')
-            for k,v in substitution_dict.items():
+            attr = wf_block.get('uses', '')
+            for k, v in substitution_dict.items():
                 if k in attr:
                     used[k] = 1
-                    wf_block['uses'] = attr.replace(k,v)
+                    wf_block['uses'] = attr.replace(k, v)
 
-            attr = wf_block.get('args',[])
+            attr = wf_block.get('args', [])
             for i in range(len(attr)):
-                for k,v in substitution_dict.items():
+                for k, v in substitution_dict.items():
                     if k in attr[i]:
                         used[k] = 1
-                        attr[i] = attr[i].replace(k,v)
+                        attr[i] = attr[i].replace(k, v)
 
-
-            attr = wf_block.get('runs',[])
+            attr = wf_block.get('runs', [])
             for i in range(len(attr)):
-                for k,v in substitution_dict.items():
+                for k, v in substitution_dict.items():
                     if k in attr[i]:
                         used[k] = 1
-                        attr[i] = attr[i].replace(k,v)
-                                    
-            attr = wf_block.get('secrets',[])
+                        attr[i] = attr[i].replace(k, v)
+
+            attr = wf_block.get('secrets', [])
             for i in range(len(attr)):
-                for k,v in substitution_dict.items():
+                for k, v in substitution_dict.items():
                     if k in attr[i]:
                         used[k] = 1
-                        attr[i] = attr[i].replace(k,v)
+                        attr[i] = attr[i].replace(k, v)
 
-                                    
-            attr = wf_block.get('env',{})
+            attr = wf_block.get('env', {})
             temp_dict = {}
             for key in attr.keys():
                 check_replacement = False
-                for k,v in substitution_dict.items():
+                for k, v in substitution_dict.items():
                     if k in key:
                         used[k] = 1
                         temp_dict[v] = attr[key]
                         check_replacement = True
-                    
+
                 if(check_replacement is False):
                     temp_dict[key] = attr[key]
-                                    
-            for key,value in temp_dict.items():
-                for k,v in substitution_dict.items():
+
+            for key, value in temp_dict.items():
+                for k, v in substitution_dict.items():
                     if k in value:
                         used[k] = 1
                         temp_dict[key] = v
 
             if(len(temp_dict) != 0):
-                wf_block['env'] = temp_dict 
+                wf_block['env'] = temp_dict
 
         if not allow_loose and len(substitution_dict) != len(used):
             log.fail("All the substitutions passed are not used !")
-                
 
     @staticmethod
     def skip_actions(wf, skip_list=list()):
