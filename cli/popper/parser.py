@@ -394,6 +394,7 @@ class Workflow(object):
         used = {}
 
         for wf_name,wf_block in self.action.items():
+
             attr = wf_block.get('needs',[])
             for i in range(len(attr)):
                 for k,v in substitution_dict.items():
@@ -433,13 +434,15 @@ class Workflow(object):
             attr = wf_block.get('env',{})
             temp_dict = {}
             for key in attr.keys():
+                check_replacement = False
                 for k,v in substitution_dict.items():
                     if k in key:
                         used[k] = 1
                         temp_dict[v] = attr[key]
+                        check_replacement = True
                     
-                    else:
-                        temp_dict[key] = attr[key]
+                if(check_replacement is False):
+                    temp_dict[key] = attr[key]
                                     
             for key,value in temp_dict.items():
                 for k,v in substitution_dict.items():
@@ -447,10 +450,10 @@ class Workflow(object):
                         used[k] = 1
                         temp_dict[key] = v
 
-            wf_block['env'] = temp_dict        
+            wf_block['env'] = temp_dict 
 
-            if not allow_loose and len(substitution_dict.keys()) != len(used.keys()):
-                log.fail("All the substitutions passed are not used !")
+        if not allow_loose and len(substitution_dict) != len(used):
+            log.fail("All the substitutions passed are not used !")
                 
 
     @staticmethod
