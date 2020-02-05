@@ -1,0 +1,73 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./ci/test/common
+init_test_repo
+cd "$test_repo_path"
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "b"
+}
+
+action "b" {
+  uses = "\$_VAR1"
+  args = "\$_VAR2"
+}
+EOF
+
+(! popper run --substitutions)
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --engine "$ENGINE" | grep "ls"
+(! popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR2=ls --engine "$ENGINE")
+popper run --dry-run --substitutions _VAR1=shx --substitutions _VAR1=sh --substitutions _VAR2=ls --engine "$ENGINE" | grep "ls"
+
+export TESTING="test"
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "c"
+}
+
+action "b" {
+  uses = "sh"
+  args = "ls"
+}
+
+action "c" {
+  needs = "b"
+  uses = "sh"
+  args = ["ls","\$_VAR1"]
+  runs = "\$_VAR2"
+  secrets = ["\$_VAR3"]
+  env = {
+    "\$_VAR4" = "\$_VAR5"
+  }
+}
+EOF
+
+popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --engine "$ENGINE" | grep "ls pwd"
+(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --engine "$ENGINE" | grep "ls pwd")
+popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _VAR6=EXTRA --allow-loose --engine "$ENGINE" | grep "ls pwd"
+(! popper run --dry-run --substitutions _VAR1=pwd --substitutions _VAR2=ubuntu-latest --substitutions _VAR3=TESTING --substitutions _VAR4=TEST_ENV --substitutions _VAR5=TEST --substitutions _var6=EXTRA --engine "$ENGINE" | grep "ls pwd")
+
+cat <<EOF > main.workflow
+workflow "wf" {
+  resolves = "b"
+}
+
+action "a" {
+  uses = "\$_VAR1"
+  args = "\$_VAR2"
+}
+
+action "b" {
+  needs = "\$_VAR3"
+  uses = "\$_VAR1"
+  args = "\$_VAR2"
+}
+EOF
+
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --engine "$ENGINE"
+(! popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --engine "$ENGINE")
+popper run --dry-run --substitutions _VAR1=sh --substitutions _VAR2=ls --substitutions _VAR3=a --substitutions _VAR4=extra --allow-loose --engine "$ENGINE"
+
+echo "Test SUBSTITUTIONS passed."

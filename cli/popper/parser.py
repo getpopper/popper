@@ -6,6 +6,7 @@ import hcl
 
 from popper.cli import log
 from popper import utils as pu
+import re
 
 
 VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
@@ -15,10 +16,12 @@ VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 class Workflow(object):
     """Represent's a immutable workflow."""
 
-    def __init__(self, wfile):
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
         # Read and parse the workflow file.
         with open(wfile, 'r') as fp:
             self.parsed_workflow = hcl.load(fp)
+            self.substitutions = substitutions
+            self.allow_loose = allow_loose
             fp.seek(0)
             self.workflow_content = fp.readlines()
             self.workflow_path = wfile
@@ -38,10 +41,23 @@ class Workflow(object):
             log.fail("Action '{}' doesn\'t exist.".format(action))
 
     def parse(self):
-        """Parse and validate a workflow."""
+        """Parse and validate a workflow.
+
+        Args:
+          substitutions(list): Substituitions that are to be passed
+                                as an argumnets. (Default value = None)
+          allow_loose(bool): Flag if the unused variables are to be
+                                ignored. (Default value = False)
+
+        Returns:
+            None.
+
+        """
         self.validate_workflow_block()
         self.validate_action_blocks()
         self.normalize()
+        if self.substitutions:
+            self.parse_substitutions(self.substitutions, self.allow_loose)
         self.check_for_empty_workflow()
         self.complete_graph()
 
@@ -340,7 +356,6 @@ class Workflow(object):
 
             Returns:
                 None
-
             """
             for node in entrypoint:
                 reachable.add(node)
@@ -366,6 +381,97 @@ class Workflow(object):
 
         for a in unreachable:
             self.action.pop(a)
+
+    def parse_substitutions(self, substitutions, allow_loose):
+        """
+
+        Args:
+          substitutions(list): List of substitutions that are passed
+                                as an arguments.
+          allow_loose(bool): Flag used to ignore unused substitution
+                                variable in the workflow.
+
+        Returns:
+            None
+
+        """
+
+        substitution_dict = dict()
+
+        for args in substitutions:
+            item = args.split('=', 1)
+            if len(item) < 2:
+                raise Exception("Excepting '=' as seperator")
+            substitution_dict['$'+item[0]] = item[1]
+
+        for keys in substitution_dict:
+            if(not bool(re.match(r"\$_[A-Z0-9]+", keys))):
+                log.fail("Substitution variable '{}' doesn't "
+                         "satify required format ".format(keys))
+
+        used = {}
+
+        for wf_name, wf_block in self.action.items():
+
+            attr = wf_block.get('needs', [])
+            for i in range(len(attr)):
+                for k, v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k, v)
+
+            attr = wf_block.get('uses', '')
+            for k, v in substitution_dict.items():
+                if k in attr:
+                    used[k] = 1
+                    wf_block['uses'] = attr.replace(k, v)
+
+            attr = wf_block.get('args', [])
+            for i in range(len(attr)):
+                for k, v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k, v)
+
+            attr = wf_block.get('runs', [])
+            for i in range(len(attr)):
+                for k, v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k, v)
+
+            attr = wf_block.get('secrets', [])
+            for i in range(len(attr)):
+                for k, v in substitution_dict.items():
+                    if k in attr[i]:
+                        used[k] = 1
+                        attr[i] = attr[i].replace(k, v)
+
+            attr = wf_block.get('env', {})
+            temp_dict = {}
+            for key in attr.keys():
+                check_replacement = False
+                for k, v in substitution_dict.items():
+                    if k in key:
+                        used[k] = 1
+                        temp_dict[v] = attr[key]
+                        check_replacement = True
+
+                if(check_replacement is False):
+                    temp_dict[key] = attr[key]
+
+            for key, value in temp_dict.items():
+                for k, v in substitution_dict.items():
+                    if k in value:
+                        used[k] = 1
+                        temp_dict[key] = v
+
+            if(len(temp_dict) != 0):
+                wf_block['env'] = temp_dict
+
+        if not allow_loose and len(substitution_dict) != len(used):
+            log.fail("Not all given substitutions are used in"
+                     "the workflow file")
 
     @staticmethod
     def skip_actions(wf, skip_list=list()):
