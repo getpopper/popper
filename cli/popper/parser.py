@@ -471,7 +471,7 @@ class Workflow(object):
 
         if not allow_loose and len(substitution_dict) != len(used):
             log.fail("Not all given substitutions are used in"
-                        "the workflow file")
+                     "the workflow file")
 
     @staticmethod
     def skip_actions(wf, skip_list=list()):

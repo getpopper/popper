@@ -161,7 +161,7 @@ def cli(ctx, **kwargs):
     these run instances else popper executes all the workflows recursively.
 
     Args:
-      ctx(popper.cli.context): ctx(Popper.cli.context): For process inter-command communication
+      ctx(Popper.cli.context): For process inter-command communication
             context is used.For reference visit
             https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
       **kwargs(dictionary): key-worded,variable-length argument dictionary.
@@ -240,7 +240,7 @@ def run_workflow(**kwargs):
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
     wf = Workflow(kwargs['wfile'], kwargs['substitutions'],
-                    kwargs['allow_loose'])
+                  kwargs['allow_loose'])
     wf_runner = WorkflowRunner(wf)
 
     # Check for injected actions
