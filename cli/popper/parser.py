@@ -16,10 +16,12 @@ VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 class Workflow(object):
     """Represent's a immutable workflow."""
 
-    def __init__(self, wfile):
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
         # Read and parse the workflow file.
         with open(wfile, 'r') as fp:
             self.parsed_workflow = hcl.load(fp)
+            self.substitutions = substitutions
+            self.allow_loose = allow_loose
             fp.seek(0)
             self.workflow_content = fp.readlines()
             self.workflow_path = wfile
@@ -38,7 +40,7 @@ class Workflow(object):
         else:
             log.fail("Action '{}' doesn\'t exist.".format(action))
 
-    def parse(self, substitutions=None, allow_loose=False):
+    def parse(self):
         """Parse and validate a workflow.
 
         Args:
@@ -54,8 +56,8 @@ class Workflow(object):
         self.validate_workflow_block()
         self.validate_action_blocks()
         self.normalize()
-        if substitutions:
-            self.parse_substitutions(substitutions, allow_loose)
+        if self.substitutions:
+            self.parse_substitutions(self.substitutions, self.allow_loose)
         self.check_for_empty_workflow()
         self.complete_graph()
 
@@ -468,7 +470,8 @@ class Workflow(object):
                 wf_block['env'] = temp_dict
 
         if not allow_loose and len(substitution_dict) != len(used):
-            log.fail("All the substitutions passed are not used !")
+            log.fail("Not all given substitutions are used in"
+                        "the workflow file")
 
     @staticmethod
     def skip_actions(wf, skip_list=list()):

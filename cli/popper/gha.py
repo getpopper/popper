@@ -32,9 +32,9 @@ s_client = spython.main.Client
 class WorkflowRunner(object):
     """A GHA workflow runner."""
 
-    def __init__(self, workflow, substitutions=None, allow_loose=False):
+    def __init__(self, workflow):
         self.wf = workflow
-        self.wf.parse(substitutions, allow_loose)
+        self.wf.parse()
         self.wid = pu.get_id(os.getuid(), self.wf.workflow_path)
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))

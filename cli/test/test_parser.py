@@ -822,10 +822,11 @@ class TestParser(unittest.TestCase):
             }
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
-        wf.parse(['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
-                  '_VAR4=test_env', '_VAR5=TESTING',
-                  '_VAR6=TESTER', '_VAR7=TEST'], False)
+        wf = Workflow('/tmp/test_folder/a.workflow',
+                    ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                    '_VAR4=test_env', '_VAR5=TESTING',
+                    '_VAR6=TESTER', '_VAR7=TEST'], False)
+        wf.parse()
         self.assertDictEqual(wf.action, {
             'a': {
                 'uses': 'sh',
@@ -865,10 +866,11 @@ class TestParser(unittest.TestCase):
             }
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
-        wf.parse(['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
-                  '_VAR4=test_env', '_VAR5=TESTING',
-                  '_VAR6=TESTER', '_VAR7=TEST', '_VAR8=sd'], True)
+        wf = Workflow('/tmp/test_folder/a.workflow',
+                    ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                    '_VAR4=test_env', '_VAR5=TESTING',
+                    '_VAR6=TESTER', '_VAR7=TEST', '_VAR8=sd'], True)
+        wf.parse()
         self.assertDictEqual(wf.action, {
             'a': {
                 'uses': 'sh',

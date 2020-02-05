@@ -239,9 +239,9 @@ def run_workflow(**kwargs):
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
-    wf = Workflow(kwargs['wfile'])
-    wf_runner = WorkflowRunner(wf, kwargs['substitutions'],
-                               kwargs['allow_loose'])
+    wf = Workflow(kwargs['wfile'], kwargs['substitutions'],
+                    kwargs['allow_loose'])
+    wf_runner = WorkflowRunner(wf)
 
     # Check for injected actions
     pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
