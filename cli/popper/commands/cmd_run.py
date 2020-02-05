@@ -95,6 +95,20 @@ from popper import log as logging
     is_flag=True
 )
 @click.option(
+    '--substitutions',
+    help='Substitutions for the custom arguments used in the workflow',
+    required=False,
+    default=list(),
+    multiple=True
+)
+@click.option(
+    '--allow-loose',
+    help='To prevent error if substitution variable passed as an '
+    'argument is not used in workflow',
+    required=False,
+    is_flag=True
+)
+@click.option(
     '--with-dependencies',
     help=(
         'When an action argument is given (first positional argument), '
@@ -147,7 +161,7 @@ def cli(ctx, **kwargs):
     these run instances else popper executes all the workflows recursively.
 
     Args:
-      ctx(popper.cli.context): ctx(Popper.cli.context): For process inter-command communication
+      ctx(Popper.cli.context): For process inter-command communication
             context is used.For reference visit
             https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
       **kwargs(dictionary): key-worded,variable-length argument dictionary.
@@ -225,8 +239,13 @@ def run_workflow(**kwargs):
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
-    wf = Workflow(kwargs['wfile'])
+    wf = Workflow(kwargs['wfile'], kwargs['substitutions'],
+                  kwargs['allow_loose'])
     wf_runner = WorkflowRunner(wf)
+
+    # remove substitution arguments from kwargs
+    kwargs.pop('substitutions')
+    kwargs.pop('allow_loose')
 
     # Check for injected actions
     pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')

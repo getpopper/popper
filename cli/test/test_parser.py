@@ -799,3 +799,92 @@ class TestParser(unittest.TestCase):
             {'h'},
             {'end'}
         ])
+
+    def test_substitutions(self):
+        self.create_workflow_file("""
+        workflow "example" {
+            resolves = ["b"]
+        }
+
+        action "a" {
+            uses = "$_VAR1"
+            args = "$_VAR2"
+        }
+
+        action "b" {
+            needs = "$_VAR3"
+            uses = "$_VAR1"
+            args = "$_VAR2"
+            runs = "$_VAR4"
+            secrets = ["$_VAR5"]
+            env = {
+                "$_VAR6" = "$_VAR7"
+            }
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow',
+                      ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                       '_VAR4=test_env', '_VAR5=TESTING',
+                       '_VAR6=TESTER', '_VAR7=TEST'], False)
+        wf.parse()
+        self.assertDictEqual(wf.action, {
+            'a': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
+                'next': {'b'}},
+            'b': {
+                'needs': ['a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'runs': ['test_env'],
+                'secrets': ['TESTING'],
+                'env': {
+                    'TESTER': 'TEST'
+                },
+                'name': 'b'}
+        })
+
+        self.create_workflow_file("""
+        workflow "example" {
+            resolves = ["b"]
+        }
+
+        action "a" {
+            uses = "$_VAR1"
+            args = "$_VAR2"
+        }
+
+        action "b" {
+            needs = "$_VAR3"
+            uses = "$_VAR1"
+            args = "$_VAR2"
+            runs = "$_VAR4"
+            secrets = ["$_VAR5"]
+            env = {
+                "$_VAR6" = "$_VAR7"
+            }
+        }
+        """)
+        wf = Workflow('/tmp/test_folder/a.workflow',
+                      ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                       '_VAR4=test_env', '_VAR5=TESTING',
+                       '_VAR6=TESTER', '_VAR7=TEST', '_VAR8=sd'], True)
+        wf.parse()
+        self.assertDictEqual(wf.action, {
+            'a': {
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
+                'next': {'b'}},
+            'b': {
+                'needs': ['a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'runs': ['test_env'],
+                'secrets': ['TESTING'],
+                'env': {
+                    'TESTER': 'TEST'
+                },
+                'name': 'b'}
+        })

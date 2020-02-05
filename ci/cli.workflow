@@ -86,6 +86,12 @@ action "test search" {
   args = "ci/test/search"
 }
 
+action "test substitutions" {
+  needs = "lint"
+  uses = "sh"
+  args = "ci/test/substitutions"
+}
+
 action "test offline" {
   needs = "lint"
   uses = "sh"
@@ -122,6 +128,7 @@ action "end" {
     "test search",
     "test sh",
     "test skip",
+    "test substitutions",
     "test validate",
     "test engine conf"
   ]
