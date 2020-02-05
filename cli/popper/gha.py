@@ -218,8 +218,7 @@ class WorkflowRunner(object):
 
     def run(self, action, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, engine,
-            engine_conf, substitutions, allow_loose,
-            skip_secrets_prompt=False):
+            engine_conf, skip_secrets_prompt=False):
         """Run the workflow or a specific action.
 
         Args:

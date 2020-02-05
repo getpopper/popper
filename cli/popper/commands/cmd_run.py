@@ -243,6 +243,10 @@ def run_workflow(**kwargs):
                   kwargs['allow_loose'])
     wf_runner = WorkflowRunner(wf)
 
+    # remove substitution arguments from kwargs
+    kwargs.pop('substitutions')
+    kwargs.pop('allow_loose')
+
     # Check for injected actions
     pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
     post_wfile = os.environ.get('POPPER_POST_WORKFLOW_PATH')
