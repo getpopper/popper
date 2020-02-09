@@ -128,11 +128,13 @@ popper run
 
 You should see the output of actions printed to the terminal.
 
-To better understand what the above code does, we include a help flag:
+To obtain more detailed information of what this command does, you can pass the `--help` flag to it:
 
 ```bash
 popper run --help
 ```
+
+**Note:** All Popper subcommands allow you to pass `--help` flag to it to get more information about what the command does.
 
 ## Link to GitHub repository
 
@@ -176,17 +178,6 @@ Trigger an execution by pushing to github:
 git push
 ```
 
-## More Information
-
-Popper commands allow you to pass `--help` flag to it to get more information about what the command does.
-
-Examples of commands you can get more information about are included (but not limited to) here:
-
-```bash
-popper --help
-popper ci --help
-popper run --help
-```
 
 Go to the TravisCI website to see your experiments being executed.
 
