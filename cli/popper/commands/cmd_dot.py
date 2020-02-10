@@ -37,37 +37,13 @@ from popper.parser import Workflow
 @click.command('dot', short_help='Generate a graph in the .dot format.')
 @pass_context
 def cli(ctx, wfile, skip, recursive, colors):
-    """Creates a graph in the .dot format representing the workflow.
-
-    Args:
-      ctx(Popper.cli.context): For process inter-command communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-      wfile(str): Name of the file containing definition of workflow.
-      skip(tuple): List of actions that are to be skipped.
-      recursive(bool): Flag for recursive.
-      colors(bool): Flag for colors.
-
-    Returns:
-        None
-
+    """
+    Creates a graph in the .dot format representing the workflow.
     """
     def add_to_graph(dot_str, wf, parent, children, node_attrs, stage_edges):
-        """Recursively goes over the children ("next" attribute) of the given
+        """
+        Recursively goes over the children ("next" attribute) of the given
         parent, adding an edge from parent to children
-
-        Args:
-          dot_str(str): The intermediate string to which further nodes are
-                        to be added.
-          wf(popper.parser.workflow): Instance of the workflow class.
-          parent(str): Action Identifier.
-          children(list/set): The node that is to be attached as a children.
-          node_attrs(str): These are the attributes of the node of the graph.
-          stage_edges(set): Intermediate sets containing the nodes and edges.
-
-        Returns:
-          str: The string containing nodes and their description.
-
         """
         for n in children:
             edge = '  "{}" -> "{}";\n'.format(parent, n)
