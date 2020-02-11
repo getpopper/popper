@@ -159,17 +159,17 @@ def cli(ctx, **kwargs):
     * When CI is set, popper run searches for special keywords of the form
     `popper:run[...]`. If found, popper executes with the options given in
     these run instances else popper executes all the workflows recursively.
-
-    Args:
-      ctx(Popper.cli.context): For process inter-command communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-      **kwargs(dictionary): key-worded,variable-length argument dictionary.
-
-    Returns:
-        None
-
     """
+
+    # Args:
+    #   ctx(Popper.cli.context): For process inter-command communication
+    #         context is used.For reference visit
+    #         https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
+    #   **kwargs(dictionary): key-worded,variable-length argument dictionary.
+
+    # Returns:
+    #     None
+
     if os.environ.get('CI') == 'true':
         # When CI is set,
         log.info('Running in CI environment...')
