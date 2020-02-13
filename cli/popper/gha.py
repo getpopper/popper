@@ -35,7 +35,7 @@ class WorkflowRunner(object):
     def __init__(self, workflow):
         self.wf = workflow
         self.wf.parse()
-        self.wid = pu.get_id(os.getuid(), self.wf.wf_file)
+        self.wid = pu.get_id(os.getuid(), self.wf.wfile)
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
@@ -241,7 +241,7 @@ class WorkflowRunner(object):
         """
         new_wf = deepcopy(self.wf)
 
-        if self.wf.wf_file.endswith('.workflow'):
+        if self.wf.wfile.endswith('.workflow'):
             Workflow = HCLWorkflow
         else:
             Workflow = YMLWorkflow

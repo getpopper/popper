@@ -17,8 +17,8 @@ VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 class Workflow(object):
     """Represent's a immutable workflow."""
 
-    def __init__(self, wf_file, substitutions=None, allow_loose=False):
-        self.wf_file = wf_file
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
+        self.wfile = wfile
         self.substitutions = substitutions
         self.allow_loose = allow_loose
 
@@ -442,8 +442,8 @@ class Workflow(object):
 class YMLWorkflow(Workflow):
     """Parse a yml based workflow and generate a workflow graph.
     """
-    def __init__(self, wf_file, substitutions=None, allow_loose=False):
-        super(YMLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
+        super(YMLWorkflow, self).__init__(wfile, substitutions, allow_loose)
         self.wf_fmt = "yml"
         self.action_map = dict()
         self.id_map = dict()
@@ -452,7 +452,7 @@ class YMLWorkflow(Workflow):
     def load_file(self):
         """Loads the workflow as a dict from the `.workflow` file.
         """
-        with open(self.wf_file) as fp:
+        with open(self.wfile) as fp:
             self.wf_list = yaml.safe_load(fp)['steps']
             self.wf_content = fp.readlines()
             if not self.wf_list:
@@ -545,15 +545,15 @@ class HCLWorkflow(Workflow):
     """Parse a hcl based workflow and generate 
     the workflow graph.
     """
-    def __init__(self, wf_file, substitutions=None, allow_loose=False):
-        super(HCLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
+        super(HCLWorkflow, self).__init__(wfile, substitutions, allow_loose)
         self.wf_fmt = "hcl"
         self.load_file()
 
     def load_file(self):
         """Loads the workflow as a dict from the `.workflow` file.
         """
-        with open(self.wf_file) as fp:
+        with open(self.wfile) as fp:
             self.wf_dict = hcl.load(fp)
             fp.seek(0)
             self.wf_content = fp.readlines()
