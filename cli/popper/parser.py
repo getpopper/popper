@@ -552,10 +552,10 @@ class YMLWorkflow(Workflow):
                 curr = self.action_map[self.id_map[idx]]
                 prev = self.action_map[self.id_map[idx - 1]]
 
-                tup1 = {self.id_map[idx], self.id_map[idx - 1]}
-                tup2 = {self.id_map[idx - 1], self.id_map[idx]}
+                curr_prev_tuple = {self.id_map[idx], self.id_map[idx - 1]}
+                prev_curr_tuple = {self.id_map[idx - 1], self.id_map[idx]}
 
-                if tup1 in stages or tup2 in stages:
+                if curr_prev_tuple in stages or prev_curr_tuple in stages:
                     continue
 
                 required_stage = None
