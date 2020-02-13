@@ -2,7 +2,7 @@ import click
 
 from popper import utils as pu
 from popper.cli import pass_context, log
-from popper.parser import Workflow
+from popper.parser import HCLWorkflow, YMLWorkflow
 
 
 @click.option(
@@ -90,6 +90,11 @@ def cli(ctx, wfile, skip, recursive, colors):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
+        if wfile.endswith('.workflow'):
+            Workflow = HCLWorkflow
+        else:
+            Workflow = YMLWorkflow
+
         wf = Workflow(wfile)
         wf.parse()
         wf = Workflow.skip_actions(wf, skip)

@@ -17,7 +17,7 @@ VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 class Workflow(object):
     """Represent's a immutable workflow."""
 
-    def __init__(self, wf_file, substitutions, allow_loose):
+    def __init__(self, wf_file, substitutions=None, allow_loose=False):
         self.wf_file = wf_file
         self.substitutions = substitutions
         self.allow_loose = allow_loose
@@ -447,7 +447,7 @@ class Workflow(object):
 class YMLWorkflow(Workflow):
     """Parse a yml based workflow and generate a workflow graph.
     """
-    def __init__(self, wf_file, substitutions, allow_loose):
+    def __init__(self, wf_file, substitutions=None, allow_loose=False):
         super(YMLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
         self.wf_fmt = "yml"
         self.wf_dict = dict()
@@ -552,7 +552,7 @@ class HCLWorkflow(Workflow):
     """Parse a hcl based workflow and generate 
     the workflow graph.
     """
-    def __init__(self, wf_file, substitutions, allow_loose):
+    def __init__(self, wf_file, substitutions=None, allow_loose=False):
         super(HCLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
         self.wf_fmt = "hcl"
         self.load_file()
