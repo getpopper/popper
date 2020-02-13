@@ -450,10 +450,8 @@ class YMLWorkflow(Workflow):
     def __init__(self, wf_file, substitutions=None, allow_loose=False):
         super(YMLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
         self.wf_fmt = "yml"
-        self.wf_dict = dict()
         self.action_map = dict()
         self.id_map = dict()
-        self.stages = list()
         self.load_file()
 
     def load_file(self):
@@ -472,6 +470,7 @@ class YMLWorkflow(Workflow):
             self.action_map[action['id']] = action
             self.id_map[idx + 1] = action['id']
 
+        self.wf_dict = dict()
         self.wf_dict['action'] = self.action_map
         self.action = self.action_map
 
@@ -506,17 +505,15 @@ class YMLWorkflow(Workflow):
                     self.action_map[a]['next'].add(action['id'])
 
         # Assume a set of stages from next and needs attribute.
-        stagelist = list()
+        stages = list()
         for idx, action in self.action_map.items():
             if action.get('next', None):
-                stagelist.append(action['next'])
+                stages.append(action['next'])
             
             if action.get('needs', None):
-                stagelist.append(set(action['needs']))
-
-        for s in stagelist:
-            if len(s) > 1:
-                self.stages.append(s)
+                stages.append(set(action['needs']))
+        
+        stages = [s for s in stages if len(s) > 1]
 
         for idx, id in self.id_map.items():
             action = self.action_map[id]
@@ -532,12 +529,12 @@ class YMLWorkflow(Workflow):
                 tup2 = {self.id_map[idx - 1], self.id_map[idx]}
 
                 # if a tuple is itself a stage, ignore it
-                if tup1 in self.stages or tup2 in self.stages:
+                if tup1 in stages or tup2 in stages:
                     continue
 
                 required_stage = None
                 
-                for tup in self.stages:
+                for tup in stages:
                     if self.id_map[idx] in tup:
                         required_stage = tup
                     else:
