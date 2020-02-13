@@ -17,19 +17,10 @@ VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 class Workflow(object):
     """Represent's a immutable workflow."""
 
-    def __init__(self, wf_file, substitutions=None, allow_loose=False):
-        # Read and parse the workflow file with the corresponding parsers.
+    def __init__(self, wf_file, substitutions, allow_loose):
+        self.wf_file = wf_file
         self.substitutions = substitutions
         self.allow_loose = allow_loose
-        self.workflow_path = wf_file
-
-        # Determine the format of the workflow and save it.
-        if wf_file.endswith('.workflow'):
-            self.wf_fmt = "hcl"
-            self.parser = HCLParser(wf_file)
-        elif (wf_file.endswith('.yml') or wf_file.endswith('.yaml')):
-            self.wf_fmt = "yml"
-            self.parser = YMLParser(wf_file)
 
     def parse(self):
         """Parse and validate a workflow.
@@ -46,11 +37,11 @@ class Workflow(object):
         """
         self.validate_workflow_block()
         self.validate_action_blocks()
-        self.parser.normalize()
+        self.normalize()
         if self.substitutions:
             self.parse_substitutions(self.substitutions, self.allow_loose)
         self.check_for_broken_workflow()
-        self.parser.complete_graph()
+        self.complete_graph()
 
     @staticmethod
     def format_command(params):
@@ -91,8 +82,8 @@ class Workflow(object):
             """
             actions_to_remove = set()
             for a in stage:
-                if self.parser.wf_dict['action'][a].get('next', None):
-                    intersection = self.parser.wf_dict['action'][a]['next'].intersection(stage)
+                if self.action[a].get('next', None):
+                    intersection = self.action[a]['next'].intersection(stage)
                     if intersection:
                         for i in intersection:
                             actions_to_remove.add(i)
@@ -100,26 +91,26 @@ class Workflow(object):
             for a in actions_to_remove:
                 stage.remove(a)
 
-        current_stage = self.parser.root
+        current_stage = self.root
 
         while current_stage:
             yield current_stage
             next_stage = set()
             for n in current_stage:
                 next_stage.update(
-                    self.parser.wf_dict['action'][n].get(
+                    self.action[n].get(
                         'next', set()))
                 resolve_intersections(next_stage)
             current_stage = next_stage
 
     def check_for_broken_workflow(self):
         action_dependencies = set()
-        actions_in_workflow = set(self.parser.wf_dict['action'].keys())
-        for a_name, a_block in self.parser.wf_dict['action'].items():
+        actions_in_workflow = set(self.action.keys())
+        for a_name, a_block in self.action.items():
             action_dependencies.update(set(a_block.get('needs', list())))
 
         if self.wf_fmt == "hcl":
-            action_dependencies.update(set(self.parser.resolves))
+            action_dependencies.update(set(self.resolves))
 
         if action_dependencies and (not action_dependencies.issubset(actions_in_workflow)):
             log.fail('Workflow is broken at some points.')
@@ -138,7 +129,7 @@ class Workflow(object):
             return
 
         workflow_block_cnt = len(
-            self.parser.wf_dict.get(
+            self.wf_dict.get(
                 'workflow', dict()).items())
         if workflow_block_cnt == 0:
             log.fail('A workflow block must be present.')
@@ -146,7 +137,7 @@ class Workflow(object):
         if workflow_block_cnt > 1:
             log.fail('Cannot have more than one workflow blocks.')
 
-        workflow_block = list(self.parser.wf_dict['workflow'].values())[0]
+        workflow_block = list(self.wf_dict['workflow'].values())[0]
         for key in workflow_block.keys():
             if key not in VALID_WORKFLOW_ATTRS:
                 log.fail(
@@ -175,10 +166,10 @@ class Workflow(object):
         """
         self.check_duplicate_actions()
 
-        if not self.parser.wf_dict.get('action', None):
+        if not self.wf_dict.get('action', None):
             log.fail('Atleast one action block must be present.')
 
-        for _, a_block in self.parser.wf_dict['action'].items():
+        for _, a_block in self.wf_dict['action'].items():
             for key in a_block.keys():
                 if key not in VALID_ACTION_ATTRS:
                     log.fail(
@@ -233,10 +224,10 @@ class Workflow(object):
 
         if self.wf_fmt == "hcl":
             parsed_acount = 0
-            if self.parser.wf_dict.get('action', None):
-                parsed_acount = len(list(self.parser.wf_dict['action'].items()))
+            if self.wf_dict.get('action', None):
+                parsed_acount = len(list(self.wf_dict['action'].items()))
             acount = 0
-            for line in self.parser.wf_content:
+            for line in self.wf_content:
                 line = line.strip()
                 if line.startswith('action '):
                     acount += 1
@@ -272,7 +263,7 @@ class Workflow(object):
 
         used = {}
 
-        for wf_name, wf_block in self.parser.wf_dict['action'].items():
+        for wf_name, wf_block in self.action.items():
 
             attr = wf_block.get('needs', [])
             for i in range(len(attr)):
@@ -349,7 +340,7 @@ class Workflow(object):
         """
         workflow = deepcopy(wf)
         for sa_name in skip_list:
-            sa_block = workflow.parser.wf_dict['action'][sa_name]
+            sa_block = workflow.action[sa_name]
             # Clear up all connections from sa_block
             sa_block.get('next', set()).clear()
             del sa_block.get('needs', list())[:]
@@ -399,12 +390,12 @@ class Workflow(object):
 
             """
             required_actions.add(action)
-            if workflow.parser.wf_dict['action'][action].get('needs', None):
-                for a in workflow.parser.wf_dict['action'][action]['needs']:
+            if workflow.action[action].get('needs', None):
+                for a in workflow.action[action]['needs']:
                     find_root_recursively(workflow, a, required_actions)
-                    if not workflow.parser.wf_dict['action'][action].get('next', None):
-                        workflow.parser.wf_dict['action'][action]['next'] = set()
-                    workflow.parser.wf_dict['action'][action]['next'].add(action)
+                    if not workflow.action[action].get('next', None):
+                        workflow.action[action]['next'] = set()
+                    workflow.action[action]['next'].add(action)
             else:
                 workflow.root.add(action)
 
@@ -423,7 +414,7 @@ class Workflow(object):
             filtered_actions = actions - required_actions
 
             for ra in required_actions:
-                a_block = workflow.workflow.parser.wf_dict['action'][ra]
+                a_block = workflow.action[ra]
                 common_actions = filtered_actions.intersection(
                     a_block.get('next', set()))
                 if common_actions:
@@ -433,11 +424,11 @@ class Workflow(object):
             # Prepare the action for its execution only.
             required_actions.add(action)
 
-            if workflow.parser.wf_dict['action'][action].get('next', None):
-                workflow.parser.wf_dict['action'][action]['next'] = set()
+            if workflow.action[action].get('next', None):
+                workflow.action[action]['next'] = set()
 
-            if workflow.parser.wf_dict['action'][action].get('needs', None):
-                workflow.parser.wf_dict['action'][action]['needs'] = list()
+            if workflow.action[action].get('needs', None):
+                workflow.action[action]['needs'] = list()
 
             workflow.root.add(action)
 
@@ -453,11 +444,12 @@ class Workflow(object):
         return workflow
 
 
-class YMLParser():
+class YMLWorkflow(Workflow):
     """Parse a yml based workflow and generate a workflow graph.
     """
-    def __init__(self, wf_file):
-        self.wf_file = wf_file
+    def __init__(self, wf_file, substitutions, allow_loose):
+        super(YMLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
+        self.wf_fmt = "yml"
         self.wf_dict = dict()
         self.action_map = dict()
         self.id_map = dict()
@@ -480,13 +472,14 @@ class YMLParser():
             self.id_map[idx + 1] = action['id']
 
         self.wf_dict['action'] = self.action_map
+        self.action = self.action_map
 
     def normalize(self):
         self.name = ""
         self.on = ""
         self.root = set()
 
-        for a_name, a_block in self.wf_dict['action'].items():
+        for a_name, a_block in self.action.items():
             a_block['name'] = a_name
 
             if a_block.get('needs', None):
@@ -555,12 +548,13 @@ class YMLParser():
         pass
 
 
-class HCLParser():
+class HCLWorkflow(Workflow):
     """Parse a hcl based workflow and generate 
     the workflow graph.
     """
-    def __init__(self, wf_file):
-        self.wf_file = wf_file
+    def __init__(self, wf_file, substitutions, allow_loose):
+        super(HCLWorkflow, self).__init__(wf_file, substitutions, allow_loose)
+        self.wf_fmt = "hcl"
         self.load_file()
 
     def load_file(self):
@@ -586,12 +580,12 @@ class HCLParser():
             None
         """
         for node in entrypoint:
-            if self.wf_dict['action'][node].get('needs', None):
-                for n in self.wf_dict['action'][node]['needs']:
+            if self.action[node].get('needs', None):
+                for n in self.action[node]['needs']:
                     self.find_root([n], root)
-                    if not self.wf_dict['action'][n].get('next', None):
-                        self.wf_dict['action'][n]['next'] = set()
-                    self.wf_dict['action'][n]['next'].add(node)
+                    if not self.action[n].get('next', None):
+                        self.action[n]['next'] = set()
+                    self.action[n]['next'].add(node)
             else:
                 root.add(node)
 
@@ -608,7 +602,7 @@ class HCLParser():
         self.find_root(self.resolves, self.root)
 
     def normalize(self):
-        """Takes properties from the `self.parser.wf_dict` dict and makes them
+        """Takes properties from the `self.wf_dict` dict and makes them
         native to the `Workflow` class. Also it normalizes some of the
         attributes of a parsed workflow according to the Github defined
         specifications.
@@ -630,13 +624,13 @@ class HCLParser():
             self.resolves = wf_block['resolves']
             self.on = wf_block.get('on', 'push')
             self.root = set()
-            # self.action = self.wf_dict['action']
+            self.action = self.wf_dict['action']
             self.props = dict()
 
             if pu.of_type(self.resolves, ['str']):
                 self.resolves = [self.resolves]
 
-        for a_name, a_block in self.wf_dict['action'].items():
+        for a_name, a_block in self.action.items():
             a_block['name'] = a_name
 
             if a_block.get('needs', None):
@@ -686,9 +680,9 @@ class HCLParser():
 
         reachable = set()
         skipped = set(self.props.get('skip_list', []))
-        actions = set(map(lambda a: a[0], self.wf_dict['action'].items()))
+        actions = set(map(lambda a: a[0], self.action.items()))
 
-        _traverse(self.root, reachable, self.wf_dict['action'])
+        _traverse(self.root, reachable, self.action)
 
         unreachable = actions - reachable
         if unreachable - skipped:
@@ -702,4 +696,4 @@ class HCLParser():
                 )
 
         for a in unreachable:
-            self.wf_dict['action'].pop(a)
+            self.action.pop(a)

@@ -4,10 +4,10 @@ language: python
 python:
 - "3.7"
 env:
-- ENGINE=singularity POPPER_TEST_MODE=with-git
+# - ENGINE=singularity POPPER_TEST_MODE=with-git
 - ENGINE=docker POPPER_TEST_MODE=without-git
 - ENGINE=docker POPPER_TEST_MODE=with-git
-- ENGINE=singularity POPPER_TEST_MODE=without-git
+# - ENGINE=singularity POPPER_TEST_MODE=without-git
 services: docker
 before_install:
 - ci/scripts/install_scripts.sh
@@ -16,7 +16,7 @@ before_install:
 install:
 - pip install cli/[dev]
 script:
-- coverage run -m unittest discover --start-directory cli/
+# - coverage run -m unittest discover --start-directory cli/
 - popper run
 after_success:
 - bash <(curl -s https://codecov.io/bash)

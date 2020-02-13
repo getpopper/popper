@@ -22,7 +22,7 @@ from spython.main.parse.writers import SingularityWriter
 import popper.cli
 from popper.cli import log
 from popper import scm, utils as pu
-from popper.parser import Workflow
+from popper.parser import HCLWorkflow, YMLWorkflow
 
 
 yaml.Dumper.ignore_aliases = lambda *args: True
@@ -35,7 +35,7 @@ class WorkflowRunner(object):
     def __init__(self, workflow):
         self.wf = workflow
         self.wf.parse()
-        self.wid = pu.get_id(os.getuid(), self.wf.workflow_path)
+        self.wid = pu.get_id(os.getuid(), self.wf.wf_file)
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
@@ -62,7 +62,7 @@ class WorkflowRunner(object):
         """
         if dry_run or skip_secrets_prompt:
             return
-        for _, a in wf.parser.wf_dict['action'].items():
+        for _, a in wf.action.items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI') == 'true':
@@ -92,7 +92,7 @@ class WorkflowRunner(object):
         cloned = set()
         infoed = False
 
-        for _, a in wf.parser.wf_dict['action'].items():
+        for _, a in wf.action.items():
             uses = a['uses']
             if 'docker://' in uses or './' in uses or uses == 'sh':
                 continue
@@ -152,7 +152,7 @@ class WorkflowRunner(object):
             None
         """
         env = WorkflowRunner.get_workflow_env(wf, workspace)
-        for _, a in wf.parser.wf_dict['action'].items():
+        for _, a in wf.action.items():
 
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
@@ -200,11 +200,11 @@ class WorkflowRunner(object):
 
         env = {
             'HOME': os.environ['HOME'],
-            'GITHUB_WORKFLOW': wf.parser.name,
+            'GITHUB_WORKFLOW': wf.name,
             'GITHUB_ACTION': '',
             'GITHUB_ACTOR': 'popper',
             'GITHUB_REPOSITORY': repo_id,
-            'GITHUB_EVENT_NAME': wf.parser.on,
+            'GITHUB_EVENT_NAME': wf.on,
             'GITHUB_EVENT_PATH': '/tmp/github_event.json',
             'GITHUB_WORKSPACE': workspace,
             'GITHUB_SHA': scm.get_sha(),
@@ -241,6 +241,11 @@ class WorkflowRunner(object):
         """
         new_wf = deepcopy(self.wf)
 
+        if self.wf.wf_file.endswith('.workflow'):
+            Workflow = HCLWorkflow
+        else:
+            Workflow = YMLWorkflow
+
         if skip:
             new_wf = Workflow.skip_actions(self.wf, skip)
 
@@ -249,7 +254,7 @@ class WorkflowRunner(object):
 
         engine_config = pu.parse_engine_configuration(engine_conf)
 
-        new_wf.parser.check_for_unreachable_actions(skip)
+        new_wf.check_for_unreachable_actions(skip)
 
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
         WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
@@ -288,14 +293,14 @@ class WorkflowRunner(object):
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(
-                        wf.parser.wf_dict['action'][a]['runner'].run,
+                        wf.action[a]['runner'].run,
                         reuse): a for a in stage}
                 popper.cli.flist = flist
                 for future in as_completed(flist):
                     future.result()
         else:
             for a in stage:
-                wf.parser.wf_dict['action'][a]['runner'].run(reuse)
+                wf.action[a]['runner'].run(reuse)
 
 
 class ActionRunner(object):

@@ -7,7 +7,7 @@ import click
 import popper.cli
 from popper.cli import pass_context, log
 from popper.gha import WorkflowRunner
-from popper.parser import Workflow
+from popper.parser import HCLWorkflow, YMLWorkflow
 from popper import utils as pu, scm
 from popper import log as logging
 
@@ -239,6 +239,10 @@ def run_workflow(**kwargs):
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
+    if kwargs['wfile'].endswith('.workflow'):
+        Workflow = HCLWorkflow
+    else:
+        Workflow = YMLWorkflow
     wf = Workflow(kwargs['wfile'], kwargs['substitutions'],
                   kwargs['allow_loose'])
     wf_runner = WorkflowRunner(wf)
