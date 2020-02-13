@@ -114,7 +114,6 @@ action "end" {
   uses = "sh"
   args = "ci/test/version"
   needs = [
-    "test actions-demo",
     "test ci",
     "test dot",
     "test dry-run",
