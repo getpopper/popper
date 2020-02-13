@@ -10,7 +10,7 @@ from popper import utils as pu
 import re
 
 
-VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env", "id"]
+VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
 
@@ -171,6 +171,8 @@ class Workflow(object):
 
         for _, a_block in self.wf_dict['action'].items():
             for key in a_block.keys():
+                if key == "id" and self.wf_fmt == "yml":
+                    continue
                 if key not in VALID_ACTION_ATTRS:
                     log.fail(
                         'Invalid action attribute \'{}\' found.'.format(key))
@@ -440,7 +442,7 @@ class Workflow(object):
 
 
 class YMLWorkflow(Workflow):
-    """Parse a yml based workflow and generate a workflow graph.
+    """Parse a yml based workflow and generate the workflow graph.
     """
     def __init__(self, wfile, substitutions=None, allow_loose=False):
         super(YMLWorkflow, self).__init__(wfile, substitutions, allow_loose)
@@ -450,7 +452,13 @@ class YMLWorkflow(Workflow):
         self.load_file()
 
     def load_file(self):
-        """Loads the workflow as a dict from the `.workflow` file.
+        """Loads the workflow as a dict from the `.yml` file.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         with open(self.wfile) as fp:
             self.wf_list = yaml.safe_load(fp)['steps']
@@ -470,6 +478,22 @@ class YMLWorkflow(Workflow):
         self.action = self.action_map
 
     def normalize(self):
+        """Takes properties from the `self.wf_dict` dict and makes them
+        native to the `Workflow` class. Also it normalizes some of the
+        attributes of a parsed workflow according to the Github defined
+        specifications.
+
+        For example, it changes `args`, `runs` and `secrets` attribute,
+        if provided as a string to a list of string by splitting around
+        whitespace. Also, it changes parameters like `uses` and `resolves`,
+        if provided as a string to a list.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         self.name = ""
         self.on = ""
         self.root = set()
@@ -492,6 +516,15 @@ class YMLWorkflow(Workflow):
                     a_block['secrets'])
 
     def complete_graph(self):
+        """Function to generate the workflow graph by
+        adding forward edges.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
         for idx, action in self.action_map.items():
             if action.get('needs', None):
                 for a in action['needs']:
@@ -499,7 +532,6 @@ class YMLWorkflow(Workflow):
                         self.action_map[a]['next'] = set()
                     self.action_map[a]['next'].add(action['id'])
 
-        # Assume a set of stages from next and needs attribute.
         stages = list()
         for idx, action in self.action_map.items():
             if action.get('next', None):
@@ -523,7 +555,6 @@ class YMLWorkflow(Workflow):
                 tup1 = {self.id_map[idx], self.id_map[idx - 1]}
                 tup2 = {self.id_map[idx - 1], self.id_map[idx]}
 
-                # if a tuple is itself a stage, ignore it
                 if tup1 in stages or tup2 in stages:
                     continue
 
@@ -552,6 +583,12 @@ class HCLWorkflow(Workflow):
 
     def load_file(self):
         """Loads the workflow as a dict from the `.workflow` file.
+
+        Args:
+            None
+
+        Returns:
+            None
         """
         with open(self.wfile) as fp:
             self.wf_dict = hcl.load(fp)
@@ -584,7 +621,7 @@ class HCLWorkflow(Workflow):
 
     def complete_graph(self):
         """Driver function to run the recursive function
-        `_complete_graph_util()` which adds forward edges.
+        `find_root()` which adds forward edges.
 
         Args:
             None
