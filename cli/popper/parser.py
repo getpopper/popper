@@ -364,13 +364,11 @@ class Workflow(object):
     def filter_action(wf, action, with_dependencies=False):
         """Filters out all actions except the one passed in the argument from
         the workflow.
-
         Args:
           wf(Workflow): The workflow object to operate upon.
           action(str): The action to run.
           with_dependencies(bool, optional): Filter out action to
         run with dependencies or not. (Default value = False)
-
         Returns:
           Workflow: The updated workflow object.
         """
@@ -378,24 +376,21 @@ class Workflow(object):
         # with the `--with-dependencies` flag.
         def find_root_recursively(workflow, action, required_actions):
             """
-
             Args:
               workflow(worklfow): The workflow object to operate upon.
               action(str): The action to run.
               required_actions(set): Set containing actions that are
                                     to be executed.
-
             Returns:
                 None
-
             """
             required_actions.add(action)
             if workflow.action[action].get('needs', None):
                 for a in workflow.action[action]['needs']:
                     find_root_recursively(workflow, a, required_actions)
-                    if not workflow.action[action].get('next', None):
-                        workflow.action[action]['next'] = set()
-                    workflow.action[action]['next'].add(action)
+                    if not workflow.action[a].get('next', None):
+                        workflow.action[a]['next'] = set()
+                    workflow.action[a]['next'].add(action)
             else:
                 workflow.root.add(action)
 
