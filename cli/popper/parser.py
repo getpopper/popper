@@ -607,42 +607,54 @@ class YMLWorkflow(Workflow):
         Returns:
             None
         """
-        for idx, action in self.action.items():
-            if action.get('needs', None):
-                for a in action['needs']:
+        # Connect the graph as much as possible.
+        for a_id, a_block in self.action.items():
+            if a_block.get('needs', None):
+                for a in a_block['needs']:
                     if not self.action[a].get('next', None):
                         self.action[a]['next'] = set()
-                    self.action[a]['next'].add(action['id'])
+                    self.action[a]['next'].add(a_id)
 
+        # Generate the potential stages.
         self.stages = list()
-        for idx, action in self.action.items():
-            if action.get('next', None):
-                if action['next'] not in self.stages:
-                    self.stages.append(action['next'])
+        self.visited = dict()
 
-            if action.get('needs', None):
-                if action['needs'] not in self.stages:
-                    self.stages.append(set(action['needs']))
+        for a_id, a_block in self.action.items():
+            if a_block.get('next', None):
+                if a_block['next'] not in self.stages:
+                    self.stages.append(a_block['next'])
+                    self.visited[tuple(a_block['next'])] = False
 
-        self.stages = [s for s in self.stages if len(s) > 1]
+            if a_block.get('needs', None):
+                if a_block['needs'] not in self.stages:
+                    self.stages.append(a_block['needs'])
+                    self.visited[tuple(a_block['needs'])] = False
 
+        # Moving from top to bottom
         for idx, id in self.id_map.items():
             action = self.action[id]
-            if not action.get('needs', None):
-                if idx == 1:
-                    self.root = self.get_containing_stage(1)
-                    continue
+            if not action.get('next', None):
+                # if this is not the last action,
+                if idx + 1 <= len(self.action.items()):
+                    curr = self.id_map[idx]
+                    later = self.id_map[idx+1]
+                    # If the current action and next action is not in any stage,
+                    if ({curr, later} not in self.stages) and ({later, curr} not in self.stages):
+                        next_stage = self.get_containing_stage(idx+1)
+                        curr_stage = self.get_containing_stage(idx)
 
-                curr = self.action[self.id_map[idx]]
-                prev = self.action[self.id_map[idx - 1]]
+                        if not self.visited.get(tuple(next_stage), None):
+                            action['next'] = next_stage
+                            for nsa in next_stage:
+                                self.action[nsa]['needs'] = id
+                            self.visited[tuple(curr_stage)] = True
 
-                curr_prev_tuple = {self.id_map[idx], self.id_map[idx - 1]}
-                prev_curr_tuple = {self.id_map[idx - 1], self.id_map[idx]}
-
-                if curr_prev_tuple in self.stages or prev_curr_tuple in self.stages:
-                    continue
-
-                prev['next'] = self.get_containing_stage(idx)
+        # Finally, generate the root.
+        for a_id, a_block in self.action.items():
+            if not a_block.get('needs', None):
+                self.root.add(a_id)
+            else:
+                break
 
 
 class HCLWorkflow(Workflow):

@@ -29,9 +29,32 @@ class TestWorkflow(unittest.TestCase):
           uses: 'sh'
         """)
 
+        pu.write_file('/tmp/test_folder/a.workflow', """
+        workflow "sample" {
+            resolves = ["a", "b"]
+        }
+
+        action "a" {
+            uses = "sh"
+        }
+
+        action "b" {
+            needs = "a1"
+            uses = "sh"
+        }
+        """)
+
         yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
+        hcl_workflow = HCLWorkflow('/tmp/test_folder/a.workflow')
+
+        yml_workflow.normalize()
+        hcl_workflow.normalize()
+
         self.assertEqual(yml_workflow.verify_action('c'), False)
         self.assertEqual(yml_workflow.verify_action('a'), True)
+
+        self.assertEqual(hcl_workflow.verify_action('c'), False)
+        self.assertEqual(hcl_workflow.verify_action('a'), True)
 
     def test_check_for_broken_workflow(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
@@ -142,7 +165,6 @@ class TestWorkflow(unittest.TestCase):
 
         yml_workflow.check_duplicate_actions()
         hcl_workflow.check_duplicate_actions()
-        
 
     def test_validate_workflow_block(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
@@ -308,7 +330,7 @@ class TestWorkflow(unittest.TestCase):
         self.assertRaises(SystemExit, wf.validate_action_blocks)
 
     def test_skip_actions(self):
-        self.create_workflow_file("""
+        pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "example" {
             resolves = "end"
             }
@@ -346,7 +368,7 @@ class TestWorkflow(unittest.TestCase):
             args = "ls"
             }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         changed_wf = Workflow.skip_actions(wf, ['b'])
         self.assertDictEqual(changed_wf.action, {
@@ -419,7 +441,7 @@ class TestWorkflow(unittest.TestCase):
                 'name': 'end'}})
 
     def test_filter_action(self):
-        self.create_workflow_file("""
+        pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "example" {
             resolves = "end"
             }
@@ -457,7 +479,7 @@ class TestWorkflow(unittest.TestCase):
             args = "ls"
             }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         changed_wf = Workflow.filter_action(wf, 'e')
         self.assertSetEqual(changed_wf.root, {'e'})
@@ -528,8 +550,118 @@ class TestWorkflow(unittest.TestCase):
                     'name': 'd',
                     'next': set()}})
 
+        pu.write_file('/tmp/test_folder/a.yml', """
+        steps:
+        - id: "a"
+          uses: "sh"
+          args: "ls"
+
+        - id: "b"
+          uses: "sh"
+          args: "ls"
+
+        - id: "c"
+          uses: "sh"
+          args: "ls"
+
+        - id: "d"
+          needs: ["c"]
+          uses: "sh"
+          args: "ls"
+
+        - id: "e"
+          needs: ["d", "b", "a"]
+          uses: "sh"
+          args: "ls"
+
+        - id: "end"
+          needs: "e"
+          uses: "sh"
+          args: "ls"
+        """)
+
+        wf = YMLWorkflow('/tmp/test_folder/a.yml')
+        wf.parse()
+        changed_wf = Workflow.filter_action(wf, 'e')
+        self.assertSetEqual(changed_wf.root, {'e'})
+        self.assertDictEqual(
+            changed_wf.action, {
+                'e': {
+                    'id': 'e',
+                    'needs': [],
+                    'uses': 'sh',
+                    'args': ['ls'],
+                    'name': 'e',
+                    'next': set()}})
+
+        changed_wf = Workflow.filter_action(wf, 'd')
+        self.assertSetEqual(changed_wf.root, {'d'})
+        self.assertDictEqual(
+            changed_wf.action, {
+                'd': {
+                    'id': 'd',
+                    'needs': [],
+                    'uses': 'sh',
+                    'args': ['ls'],
+                    'name': 'd',
+                    'next': set()}})
+
+        changed_wf = Workflow.filter_action(wf, 'e', with_dependencies=True)
+        self.assertSetEqual(changed_wf.root, {'b', 'a', 'c'})
+        self.assertDictEqual(changed_wf.action, {
+            'a': {
+                'id': 'a',
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
+                'next': {'e'}},
+            'b': {
+                'id': 'b',
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'b',
+                'next': {'e'}},
+            'c': {
+                'id': 'c',
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'c',
+                'next': {'d'}},
+            'd': {
+                'id': 'd',
+                'needs': ['c'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'd',
+                'next': {'e'}},
+            'e': {
+                'id': 'e',
+                'needs': ['d', 'b', 'a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'e',
+                'next': set()}})
+
+        changed_wf = Workflow.filter_action(wf, 'd', with_dependencies=True)
+        self.assertSetEqual(changed_wf.root, {'c'})
+        self.assertDictEqual(
+            changed_wf.action, {
+                'c': {
+                    'id': 'c',
+                    'uses': 'sh',
+                    'args': ['ls'],
+                    'name': 'c',
+                    'next': {'d'}},
+                'd': {
+                    'id': 'd',
+                    'needs': ['c'],
+                    'uses': 'sh',
+                    'args': ['ls'],
+                    'name': 'd',
+                    'next': set()}})
+
     def test_check_for_unreachable_actions(self):
-        self.create_workflow_file("""
+        pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "example" {
         resolves = "end"
         }
@@ -567,7 +699,7 @@ class TestWorkflow(unittest.TestCase):
         args = "ls"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         changed_wf = Workflow.skip_actions(wf, ['d', 'a', 'b'])
         self.assertDictEqual(changed_wf.action, {
@@ -609,27 +741,22 @@ class TestWorkflow(unittest.TestCase):
             changed_wf.check_for_unreachable_actions,
             True)
 
-        self.create_workflow_file("""
-        workflow "sample" {
-            resolves = ["reachable"]
-        }
+        pu.write_file('/tmp/test_folder/a.yml', """
+        steps:
+        - id: "reachable"
+          uses: "popperized/bin/sh@master"
+          args: "ls"
 
-        action "reachable" {
-            uses = "popperized/bin/sh@master"
-            args = "ls"
-        }
-
-        action "unreachable" {
-            uses = "popperized/bin/sh@master"
-            args = ["ls -ltr"]
-        }
+        - id: "unreachable"
+          uses: "popperized/bin/sh@master"
+          args: ["ls -ltr"]
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         wf.check_for_unreachable_actions()
 
     def test_get_stages(self):
-        self.create_workflow_file("""
+        pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "example" {
         resolves = "end"
         }
@@ -667,10 +794,10 @@ class TestWorkflow(unittest.TestCase):
         args = "ls"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
-        wf.parse()
+        hcl_workflow = HCLWorkflow('/tmp/test_folder/a.workflow')
+        hcl_workflow.parse()
         stages = list()
-        for stage in wf.get_stages():
+        for stage in hcl_workflow.get_stages():
             stages.append(stage)
 
         self.assertListEqual(stages, [
@@ -680,7 +807,7 @@ class TestWorkflow(unittest.TestCase):
             {'end'}
         ])
 
-        self.create_workflow_file("""
+        pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "example" {
             resolves = ["end"]
         }
@@ -731,10 +858,10 @@ class TestWorkflow(unittest.TestCase):
             args = "ls"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
-        wf.parse()
+        hcl_workflow = HCLWorkflow('/tmp/test_folder/a.workflow')
+        hcl_workflow.parse()
         stages = list()
-        for stage in wf.get_stages():
+        for stage in hcl_workflow.get_stages():
             stages.append(stage)
 
         self.assertListEqual(stages, [
@@ -745,6 +872,106 @@ class TestWorkflow(unittest.TestCase):
             {'h'},
             {'end'}
         ])
+
+        pu.write_file('/tmp/test_folder/a.yml', """
+        steps:
+        - id: "a"
+          uses: "sh"
+          args: "ls"
+
+        - id: "b"
+          uses: "sh"
+          args: "ls"
+
+        - id: "c"
+          uses: "sh"
+          args: "ls"
+
+        - id: "d"
+          needs: ["c"]
+          uses: "sh"
+          args: "ls"
+
+        - id: "e"
+          needs: ["d", "b", "a"]
+          uses: "sh"
+          args: "ls"
+
+        - id: "end"
+          needs: "e"
+          uses: "sh"
+          args: "ls"
+        """)
+
+        yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
+        yml_workflow.parse()
+        stages = list()
+        for stage in yml_workflow.get_stages():
+            stages.append(stage)
+
+        self.assertListEqual(stages, [
+            {'b', 'c', 'a'},
+            {'d'},
+            {'e'},
+            {'end'}
+        ])
+
+        # pu.write_file('/tmp/test_folder/a.yml', """
+        # steps:
+        # - id: "a"
+        #   uses: "sh"
+        #   args: "ls"
+
+        # - id: "b"
+        #   needs: "a"
+        #   uses: "sh"
+        #   args: "ls"
+
+        # - id: "c"
+        #   uses: "sh"
+        #   args: "ls"
+
+        # - id: "d"
+        #   uses: "sh"
+        #   needs: ["b", "c"]
+        #   args: "ls"
+
+        # - id: "g"
+        #   needs: "d"
+        #   uses: "sh"
+        #   args: "ls"
+
+        # - id: "f"
+        #   needs: "d"
+        #   uses: "sh"
+        #   args: "ls"
+
+        # - id: "h"
+        #   needs: "g"
+        #   uses: "sh"
+        #   args: "ls"
+
+        # - id: "end"
+        #   needs: ["h", "f"]
+        #   uses: "sh"
+        #   args: "ls"
+        # """)
+        # yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
+        # yml_workflow.parse()
+        # stages = list()
+        # for stage in yml_workflow.get_stages():
+        #     stages.append(stage)
+
+        # print(stages)
+
+        # self.assertListEqual(stages, [
+        #     {'a', 'c'},
+        #     {'b'},
+        #     {'d'},
+        #     {'g', 'f'},
+        #     {'h'},
+        #     {'end'}
+        # ])
 
     def test_substitutions(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
@@ -978,8 +1205,6 @@ class TestHCLWorkflow(unittest.TestCase):
                 'name': 'end'}
         }
         self.assertDictEqual(hcl_workflow.action, actions_dict)
-        for s in hcl_workflow.get_stages():
-            print(s)
 
 
 class TestYMLWorkflow(unittest.TestCase):
@@ -1071,47 +1296,44 @@ class TestYMLWorkflow(unittest.TestCase):
         self.assertEqual(yml_workflow.name, '')
         self.assertEqual(yml_workflow.on, '')
         self.assertEqual(yml_workflow.props, {})
-        self.assertEqual(yml_workflow.root, {'b', 'd', 'a'})
-        
+        self.assertEqual(yml_workflow.root, {'b', 'c', 'a'})
+
         actions_dict = {
             'a': {
                 'id': 'a', 
                 'uses': 'sh', 
                 'args': ['ls'], 
                 'name': 'a', 
-                'next': {'b', 'a', 'd'}
-                }, 
+                'next': {'e'}
+            }, 
             'b': {
                 'id': 'b', 
                 'uses': 'sh', 
                 'args': ['ls'], 
                 'name': 'b', 
-                'next': {'c'}
-                }, 
+                'next': {'e'}
+            }, 
             'c': {
                 'id': 'c', 
                 'uses': 'sh', 
                 'args': ['ls'], 
                 'name': 'c', 
                 'next': {'d'}
-                }, 
-            'd': {
+            }, 'd': {
                 'id': 'd', 
                 'needs': ['c'], 
                 'uses': 'sh', 
                 'args': ['ls'], 
                 'name': 'd', 
                 'next': {'e'}
-                }, 
-            'e': {
+            }, 'e': {
                 'id': 'e', 
                 'needs': ['d', 'b', 'a'], 
                 'uses': 'sh', 
                 'args': ['ls'], 
                 'name': 'e', 
                 'next': {'end'}
-                }, 
-            'end': {
+            }, 'end': {
                 'id': 'end', 
                 'needs': ['e'], 
                 'uses': 'sh', 
@@ -1119,5 +1341,3 @@ class TestYMLWorkflow(unittest.TestCase):
                 'name': 'end'}
             }
         self.assertDictEqual(yml_workflow.action, actions_dict)
-        for s in yml_workflow.get_stages():
-            print(s)
