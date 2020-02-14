@@ -22,7 +22,7 @@ from spython.main.parse.writers import SingularityWriter
 import popper.cli
 from popper.cli import log
 from popper import scm, utils as pu
-from popper.parser import HCLWorkflow, YMLWorkflow
+from popper.parser import Workflow
 
 
 yaml.Dumper.ignore_aliases = lambda *args: True
@@ -240,11 +240,6 @@ class WorkflowRunner(object):
             None
         """
         new_wf = deepcopy(self.wf)
-
-        if self.wf.wfile.endswith('.workflow'):
-            Workflow = HCLWorkflow
-        else:
-            Workflow = YMLWorkflow
 
         if skip:
             new_wf = Workflow.skip_actions(self.wf, skip)

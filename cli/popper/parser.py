@@ -460,6 +460,7 @@ class YMLWorkflow(Workflow):
         """
         with open(self.wfile) as fp:
             self.wf_list = yaml.safe_load(fp)['steps']
+            fp.seek(0)
             self.wf_content = fp.readlines()
             if not self.wf_list:
                 return
