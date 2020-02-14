@@ -35,17 +35,17 @@ action "ACTION2" {
 }
 ```
 
-In this example, the workflow invokes `ACTION2` using `resolves`, but 
-because it `needs` `ACTION1`, the `ACTION1` block executes first. 
-`ACTION2` will execute once `ACTION1` has successfully completed. For 
-more information on why this happens, see "Workflow attributes" and 
-"Action attributes" below.
+In this example, the workflow invokes `ACTION2` by inspecting the 
+`resolves` attribute of the `workflow` block, but because `ACTION1` 
+specifies that it `needs` to have `ACTION1` execute first, the 
+`ACTION1` block is processed first (and so on and so forth until no 
+more `needs` attributes are found). `ACTION2` will execute once 
+`ACTION1` has successfully completed.
 
 ### Workflow blocks
 
-A workflow file contains only one `workflow` blocks, each with a 
-unique identifier and the attributes outlined in the workflow 
-attributes table.
+A workflow file contains only one `workflow` block, containing the 
+attributes outlined in the table shown below.
 
 #### Workflow attributes
 
@@ -59,18 +59,10 @@ attributes table.
 <tbody>
 <tr>
 <td style="text-align:left"><code>resolves</code></td>
-<td style="text-align:left">Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the <code>needs</code> attribute are also invoked. In the example workflow above, <code>ACTION2</code> runs first via the <code>resolves</code> attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel.</td>
+<td style="text-align:left">Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the <code>needs</code> attribute of actions are also invoked. In the example workflow above, <code>ACTION2</code> runs first via the <code>resolves</code> attribute. When more than one action is listed, the actions are executed in parallel.</td>
 </tr>
 </tbody>
 </table>
-
-<!--
-
-|  Name         | Description |
-| :------------ | :----------------------------------------------------------|
-|  `resolves`   | Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the `needs` attribute are also invoked. In the example workflow above, `ACTION2` runs first via the `resolves` attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel. |
-
--->
 
 ### Action blocks
 
