@@ -525,6 +525,24 @@ class YMLWorkflow(Workflow):
                 a_block['secrets'] = Workflow.format_command(
                     a_block['secrets'])
 
+    def get_containing_stage(self, idx):
+        """Find the stage from the list of stages, where
+        the action with the given index is present.
+
+        Args:
+            idx(int): The index of the action to be searched.
+
+        Returns:
+            set: The required stage.
+        """
+        for stage in self.stages:
+            if self.id_map[idx] in stage:
+                return stage
+
+        required_stage = set()
+        required_stage.add(self.id_map[idx])
+        return required_stage
+
     def complete_graph(self):
         """Function to generate the workflow graph by
         adding forward edges.
@@ -542,21 +560,21 @@ class YMLWorkflow(Workflow):
                         self.action[a]['next'] = set()
                     self.action[a]['next'].add(action['id'])
 
-        stages = list()
+        self.stages = list()
         for idx, action in self.action.items():
             if action.get('next', None):
-                stages.append(action['next'])
+                self.stages.append(action['next'])
             
             if action.get('needs', None):
-                stages.append(set(action['needs']))
+                self.stages.append(set(action['needs']))
         
-        stages = [s for s in stages if len(s) > 1]
+        self.stages = [s for s in self.stages if len(s) > 1]
 
         for idx, id in self.id_map.items():
             action = self.action[id]
             if not action.get('needs', None):
                 if idx == 1:
-                    self.root.add(self.id_map[1])
+                    self.root = self.get_containing_stage(1)
                     continue
 
                 curr = self.action[self.id_map[idx]]
@@ -565,18 +583,10 @@ class YMLWorkflow(Workflow):
                 curr_prev_tuple = {self.id_map[idx], self.id_map[idx - 1]}
                 prev_curr_tuple = {self.id_map[idx - 1], self.id_map[idx]}
 
-                if curr_prev_tuple in stages or prev_curr_tuple in stages:
+                if curr_prev_tuple in self.stages or prev_curr_tuple in self.stages:
                     continue
 
-                required_stage = None
-                
-                for tup in stages:
-                    if self.id_map[idx] in tup:
-                        required_stage = tup
-                    else:
-                        required_stage = (self.id_map[idx],)
-                
-                prev['next'] = set(required_stage)
+                prev['next'] = self.get_containing_stage(idx)
 
     def check_for_unreachable_actions(self, skip=None):
         pass
