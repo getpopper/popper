@@ -117,7 +117,8 @@ class Workflow(object):
 
         for action in action_dependencies:
             if not self.verify_action(action):
-                log.fail('Action {} is referenced in the workflow but is missing.'.format(action))
+                log.fail(
+                    'Action {} is referenced in the workflow but is missing.'.format(action))
 
     def validate_workflow_block(self):
         """Validate the syntax of the workflow block.
@@ -314,7 +315,7 @@ class Workflow(object):
             item = args.split('=', 1)
             if len(item) < 2:
                 raise Exception("Excepting '=' as seperator")
-            substitution_dict['$'+item[0]] = item[1]
+            substitution_dict['$' + item[0]] = item[1]
 
         for keys in substitution_dict:
             if(not bool(re.match(r"\$_[A-Z0-9]+", keys))):
@@ -401,7 +402,8 @@ class Workflow(object):
         workflow = deepcopy(wf)
         for sa_name in skip_list:
             if not workflow.verify_action(sa_name):
-                log.fail('Action {} can\'t be skipped as it is missing from the workflow.'.format(sa_name))
+                log.fail(
+                    'Action {} can\'t be skipped as it is missing from the workflow.'.format(sa_name))
             sa_block = workflow.action[sa_name]
             # Clear up all connections from sa_block
             sa_block.get('next', set()).clear()
@@ -460,7 +462,8 @@ class Workflow(object):
         workflow = deepcopy(wf)
 
         if not workflow.verify_action(action):
-            log.fail('Action {} can\'t be filtered as it is missing from the workflow.'.format(action))
+            log.fail(
+                'Action {} can\'t be filtered as it is missing from the workflow.'.format(action))
 
         actions = set(map(lambda x: x[0], workflow.action.items()))
 
@@ -507,6 +510,7 @@ class Workflow(object):
 class YMLWorkflow(Workflow):
     """Parse a yml based workflow and generate the workflow graph.
     """
+
     def __init__(self, wfile, substitutions=None, allow_loose=False):
         super(YMLWorkflow, self).__init__(wfile, substitutions, allow_loose)
         self.wf_fmt = "yml"
@@ -636,10 +640,12 @@ class YMLWorkflow(Workflow):
                 # if this is not the last action,
                 if idx + 1 <= len(self.action.items()):
                     curr = self.id_map[idx]
-                    later = self.id_map[idx+1]
-                    # If the current action and next action is not in any stage,
-                    if ({curr, later} not in self.stages) and ({later, curr} not in self.stages):
-                        next_stage = self.get_containing_stage(idx+1)
+                    later = self.id_map[idx + 1]
+                    # If the current action and next action is not in any
+                    # stage,
+                    if ({curr, later} not in self.stages) and (
+                            {later, curr} not in self.stages):
+                        next_stage = self.get_containing_stage(idx + 1)
                         curr_stage = self.get_containing_stage(idx)
 
                         if not self.visited.get(tuple(next_stage), None):
@@ -655,9 +661,10 @@ class YMLWorkflow(Workflow):
 
 
 class HCLWorkflow(Workflow):
-    """Parse a hcl based workflow and generate 
+    """Parse a hcl based workflow and generate
     the workflow graph.
     """
+
     def __init__(self, wfile, substitutions=None, allow_loose=False):
         super(HCLWorkflow, self).__init__(wfile, substitutions, allow_loose)
         self.wf_fmt = "hcl"

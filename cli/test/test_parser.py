@@ -113,7 +113,7 @@ class TestWorkflow(unittest.TestCase):
           uses: 'sh'
         """)
 
-        pu.write_file('/tmp/test_folder/a.workflow', """        
+        pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "sample" {
             resolves = ["a", "b"]
         }
@@ -994,9 +994,9 @@ class TestWorkflow(unittest.TestCase):
         }
         """)
         wf = HCLWorkflow('/tmp/test_folder/a.workflow',
-                      ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
-                       '_VAR4=test_env', '_VAR5=TESTING',
-                       '_VAR6=TESTER', '_VAR7=TEST'], False)
+                         ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                          '_VAR4=test_env', '_VAR5=TESTING',
+                          '_VAR6=TESTER', '_VAR7=TEST'], False)
         wf.parse()
         self.assertDictEqual(wf.action, {
             'a': {
@@ -1038,9 +1038,9 @@ class TestWorkflow(unittest.TestCase):
         }
         """)
         wf = HCLWorkflow('/tmp/test_folder/a.workflow',
-                      ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
-                       '_VAR4=test_env', '_VAR5=TESTING',
-                       '_VAR6=TESTER', '_VAR7=TEST', '_VAR8=sd'], True)
+                         ['_VAR1=sh', '_VAR2=ls', '_VAR3=a',
+                          '_VAR4=test_env', '_VAR5=TESTING',
+                          '_VAR6=TESTER', '_VAR7=TEST', '_VAR8=sd'], True)
         wf.parse()
         self.assertDictEqual(wf.action, {
             'a': {
@@ -1091,9 +1091,13 @@ class TestHCLWorkflow(unittest.TestCase):
         hcl_workflow.load_file()
         self.assertEqual(hcl_workflow.wf_fmt, "hcl")
         self.assertDictEqual(
-            hcl_workflow.wf_dict,
-            {'workflow': {'sample': {'resolves': 'b'}}, 
-            'action': {'a': {'uses': 'sh'}, 'b': {'needs': 'a', 'uses': 'sh'}}})
+            hcl_workflow.wf_dict, {
+                'workflow': {
+                    'sample': {
+                        'resolves': 'b'}}, 'action': {
+                    'a': {
+                        'uses': 'sh'}, 'b': {
+                            'needs': 'a', 'uses': 'sh'}}})
 
     def test_normalize(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
@@ -1229,10 +1233,13 @@ class TestYMLWorkflow(unittest.TestCase):
         yml_workflow.load_file()
         self.assertEqual(yml_workflow.wf_fmt, "yml")
         self.assertDictEqual(
-            yml_workflow.wf_dict, 
-            {'action': {'a': {'id': 'a', 'uses': 'sh'}, 'b': {'id': 'b', 'uses': 'sh'}}})
+            yml_workflow.wf_dict, {
+                'action': {
+                    'a': {
+                        'id': 'a', 'uses': 'sh'}, 'b': {
+                        'id': 'b', 'uses': 'sh'}}})
         self.assertListEqual(
-            yml_workflow.wf_list, 
+            yml_workflow.wf_list,
             [{'id': 'a', 'uses': 'sh'}, {'id': 'b', 'uses': 'sh'}])
         self.assertDictEqual(
             yml_workflow.id_map,
@@ -1272,12 +1279,12 @@ class TestYMLWorkflow(unittest.TestCase):
         - id: 'c'
           uses: 'sh'
           args: 'ls'
-        
+
         - id: 'd'
           needs: 'c'
           uses: 'sh'
           args: 'ls'
-        
+
         - id: 'e'
           needs: ['d', 'b', 'a']
           uses: 'sh'
@@ -1298,44 +1305,44 @@ class TestYMLWorkflow(unittest.TestCase):
 
         actions_dict = {
             'a': {
-                'id': 'a', 
-                'uses': 'sh', 
-                'args': ['ls'], 
-                'name': 'a', 
+                'id': 'a',
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'a',
                 'next': {'e'}
-            }, 
+            },
             'b': {
-                'id': 'b', 
-                'uses': 'sh', 
-                'args': ['ls'], 
-                'name': 'b', 
+                'id': 'b',
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'b',
                 'next': {'e'}
-            }, 
+            },
             'c': {
-                'id': 'c', 
-                'uses': 'sh', 
-                'args': ['ls'], 
-                'name': 'c', 
+                'id': 'c',
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'c',
                 'next': {'d'}
             }, 'd': {
-                'id': 'd', 
-                'needs': ['c'], 
-                'uses': 'sh', 
-                'args': ['ls'], 
-                'name': 'd', 
+                'id': 'd',
+                'needs': ['c'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'd',
                 'next': {'e'}
             }, 'e': {
-                'id': 'e', 
-                'needs': ['d', 'b', 'a'], 
-                'uses': 'sh', 
-                'args': ['ls'], 
-                'name': 'e', 
+                'id': 'e',
+                'needs': ['d', 'b', 'a'],
+                'uses': 'sh',
+                'args': ['ls'],
+                'name': 'e',
                 'next': {'end'}
             }, 'end': {
-                'id': 'end', 
-                'needs': ['e'], 
-                'uses': 'sh', 
-                'args': ['ls'], 
+                'id': 'end',
+                'needs': ['e'],
+                'uses': 'sh',
+                'args': ['ls'],
                 'name': 'end'}
-            }
+        }
         self.assertDictEqual(yml_workflow.action, actions_dict)
