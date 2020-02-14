@@ -113,7 +113,8 @@ class Workflow(object):
             action_dependencies.update(set(self.resolves))
 
         if action_dependencies and (not action_dependencies.issubset(actions_in_workflow)):
-            log.fail('Workflow is broken at some points.')
+            log.fail('Some of the action dependencies are missing: {}'.format(
+                action_dependencies.difference(actions_in_workflow)))
 
     def validate_workflow_block(self):
         """Validate the syntax of the workflow block.
