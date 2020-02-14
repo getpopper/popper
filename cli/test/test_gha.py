@@ -13,7 +13,7 @@ import git
 import vagrant
 
 from popper.cli import log
-from popper.parser import Workflow
+from popper.parser import Workflow, HCLWorkflow
 from popper.gha import (WorkflowRunner,
                         ActionRunner,
                         DockerRunner,
@@ -50,7 +50,7 @@ class TestWorkflowRunner(unittest.TestCase):
             secrets = ["SECRET_ONE", "SECRET_TWO"]
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         WorkflowRunner.check_secrets(wf, False, False)
         WorkflowRunner.check_secrets(wf, True, False)
@@ -68,7 +68,7 @@ class TestWorkflowRunner(unittest.TestCase):
             secrets = ["SECRET_ONE", "SECRET_TWO"]
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         os.environ['CI'] = 'false'
         with patch('getpass.getpass', return_value='1234') as fake_input:
@@ -94,7 +94,7 @@ class TestWorkflowRunner(unittest.TestCase):
             args = "ls"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         WorkflowRunner.instantiate_runners(
@@ -115,7 +115,7 @@ class TestWorkflowRunner(unittest.TestCase):
 
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         WorkflowRunner.instantiate_runners(
@@ -131,7 +131,7 @@ class TestWorkflowRunner(unittest.TestCase):
             uses = "popperized/bin/sh@master"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         WorkflowRunner.instantiate_runners(
@@ -160,7 +160,7 @@ class TestWorkflowRunner(unittest.TestCase):
             uses = "popperized/ansible@master"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
 
         # Download actions in the default cache directory.
@@ -203,7 +203,7 @@ class TestWorkflowRunner(unittest.TestCase):
             uses = "sh"
         }
         """)
-        wf = Workflow('/tmp/test_folder/a.workflow')
+        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         self.assertDictEqual(env, {
@@ -245,7 +245,7 @@ class TestActionRunner(unittest.TestCase):
         }
         """
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
-        self.wf = Workflow('/tmp/test_folder/a.workflow')
+        self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
         WorkflowRunner.instantiate_runners(
             'docker', self.wf, '/tmp/test_folder', False, False, '12345')
@@ -352,7 +352,7 @@ class TestDockerRunner(unittest.TestCase):
         }
         """
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
-        self.wf = Workflow('/tmp/test_folder/a.workflow')
+        self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
         WorkflowRunner.download_actions(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
@@ -533,7 +533,7 @@ class TestSingularityRunner(unittest.TestCase):
         }
         """
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
-        self.wf = Workflow('/tmp/test_folder/a.workflow')
+        self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
         WorkflowRunner.download_actions(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
@@ -712,7 +712,7 @@ class TestVagrantRunner(unittest.TestCase):
         }
         """
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
-        self.wf = Workflow('/tmp/test_folder/a.workflow')
+        self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
         WorkflowRunner.download_actions(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
@@ -839,7 +839,7 @@ class TestHostRunner(unittest.TestCase):
         }
         """
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
-        self.wf = Workflow('/tmp/test_folder/a.workflow')
+        self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
         WorkflowRunner.instantiate_runners(
             'docker', self.wf, '/tmp/test_folder', False, False, '12345')
@@ -896,9 +896,9 @@ class TestConcurrentExecution(unittest.TestCase):
             'https://github.com/JayjeetAtGithub/popper-scaffold-workflow',
             '/tmp/test_folder/gha-demo')
         os.chdir('/tmp/test_folder/gha-demo')
-        self.wf_one = Workflow('/tmp/test_folder/gha-demo/main.workflow')
-        self.wf_two = Workflow('/tmp/test_folder/gha-demo/main.workflow')
-        self.wf_three = Workflow('/tmp/test_folder/gha-demo/main.workflow')
+        self.wf_one = HCLWorkflow('/tmp/test_folder/gha-demo/main.workflow')
+        self.wf_two = HCLWorkflow('/tmp/test_folder/gha-demo/main.workflow')
+        self.wf_three = HCLWorkflow('/tmp/test_folder/gha-demo/main.workflow')
         self.runner_one = WorkflowRunner(self.wf_one)
         self.runner_one.wid = '1234'
         self.runner_two = WorkflowRunner(self.wf_two)
