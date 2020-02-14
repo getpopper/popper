@@ -124,8 +124,7 @@ class Workflow(object):
         Returns:
             None
         """
-        if self.wf_fmt == "yml":
-            # YML based workflow do not have `workflow` blocks.
+        if self.wf_fmt == 'yml':
             return
 
         workflow_block_cnt = len(
@@ -220,21 +219,22 @@ class Workflow(object):
         Returns:
             None
         """
-        if self.wf_fmt == "yml":
-            # TODO: develop logic to detect duplicates in a workflow.
-            pass
+        if self.wf_fmt == 'yml':
+            action_line_identifier = '-'
 
-        if self.wf_fmt == "hcl":
-            parsed_acount = 0
-            if self.wf_dict.get('action', None):
-                parsed_acount = len(list(self.wf_dict['action'].items()))
-            acount = 0
-            for line in self.wf_content:
-                line = line.strip()
-                if line.startswith('action '):
-                    acount += 1
-            if parsed_acount != acount:
-                log.fail('Duplicate action identifiers found.')
+        if self.wf_fmt == 'hcl':
+            action_line_identifier = 'action '
+
+        parsed_acount = 0
+        if self.wf_dict.get('action', None):
+            parsed_acount = len(list(self.wf_dict['action'].items()))
+        acount = 0
+        for line in self.wf_content:
+            line = line.strip()
+            if line.startswith(action_line_identifier):
+                acount += 1
+        if parsed_acount != acount:
+            log.fail('Duplicate action identifiers found.')
 
     def parse_substitutions(self, substitutions, allow_loose):
         """
