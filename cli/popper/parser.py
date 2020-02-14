@@ -240,6 +240,60 @@ class Workflow(object):
         if parsed_acount != acount:
             log.fail('Duplicate action identifiers found.')
 
+    def check_for_unreachable_actions(self, skip=None):
+        """Validates a workflow by checking for unreachable nodes / gaps in the
+        workflow.
+
+        Args:
+          skip(list, optional): The list actions to skip if applicable.
+                                (Default value = None)
+
+        Returns:
+            None
+        """
+
+        def _traverse(entrypoint, reachable, actions):
+            """
+
+            Args:
+              entrypoint(set): Set containing the entry point of part of the
+                                workflow.
+              reachable(set): Set containing all the reachable parts of
+                                workflow.
+              actions(dict): Dictionary containing the identifier of the
+                                workflow and its description.
+
+            Returns:
+                None
+            """
+            for node in entrypoint:
+                reachable.add(node)
+                _traverse(actions[node].get(
+                    'next', []), reachable, actions)
+
+        if self.wf_fmt == 'yml':
+            return
+
+        reachable = set()
+        skipped = set(self.props.get('skip_list', []))
+        actions = set(map(lambda a: a[0], self.action.items()))
+
+        _traverse(self.root, reachable, self.action)
+
+        unreachable = actions - reachable
+        if unreachable - skipped:
+            if skip:
+                log.fail('Actions {} are unreachable.'.format(
+                    ', '.join(unreachable - skipped))
+                )
+            else:
+                log.warning('Actions {} are unreachable.'.format(
+                    ', '.join(unreachable))
+                )
+
+        for a in unreachable:
+            self.action.pop(a)
+
     def parse_substitutions(self, substitutions, allow_loose):
         """
 
@@ -590,9 +644,6 @@ class YMLWorkflow(Workflow):
 
                 prev['next'] = self.get_containing_stage(idx)
 
-    def check_for_unreachable_actions(self, skip=None):
-        pass
-
 
 class HCLWorkflow(Workflow):
     """Parse a hcl based workflow and generate 
@@ -698,54 +749,3 @@ class HCLWorkflow(Workflow):
             if a_block.get('secrets', None):
                 a_block['secrets'] = Workflow.format_command(
                     a_block['secrets'])
-
-    def check_for_unreachable_actions(self, skip=None):
-        """Validates a workflow by checking for unreachable nodes / gaps in the
-        workflow.
-
-        Args:
-          skip(list, optional): The list actions to skip if applicable.
-                                (Default value = None)
-
-        Returns:
-            None
-        """
-
-        def _traverse(entrypoint, reachable, actions):
-            """
-
-            Args:
-              entrypoint(set): Set containing the entry point of part of the
-                                workflow.
-              reachable(set): Set containing all the reachable parts of
-                                workflow.
-              actions(dict): Dictionary containing the identifier of the
-                                workflow and its description.
-
-            Returns:
-                None
-            """
-            for node in entrypoint:
-                reachable.add(node)
-                _traverse(actions[node].get(
-                    'next', []), reachable, actions)
-
-        reachable = set()
-        skipped = set(self.props.get('skip_list', []))
-        actions = set(map(lambda a: a[0], self.action.items()))
-
-        _traverse(self.root, reachable, self.action)
-
-        unreachable = actions - reachable
-        if unreachable - skipped:
-            if skip:
-                log.fail('Actions {} are unreachable.'.format(
-                    ', '.join(unreachable - skipped))
-                )
-            else:
-                log.warning('Actions {} are unreachable.'.format(
-                    ', '.join(unreachable))
-                )
-
-        for a in unreachable:
-            self.action.pop(a)
