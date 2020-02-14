@@ -563,11 +563,13 @@ class YMLWorkflow(Workflow):
         self.stages = list()
         for idx, action in self.action.items():
             if action.get('next', None):
-                self.stages.append(action['next'])
-            
+                if action['next'] not in self.stages:
+                    self.stages.append(action['next'])
+
             if action.get('needs', None):
-                self.stages.append(set(action['needs']))
-        
+                if action['needs'] not in self.stages:
+                    self.stages.append(set(action['needs']))
+
         self.stages = [s for s in self.stages if len(s) > 1]
 
         for idx, id in self.id_map.items():
