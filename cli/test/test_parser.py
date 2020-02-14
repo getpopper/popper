@@ -1256,7 +1256,7 @@ class TestYMLWorkflow(unittest.TestCase):
         """)
         yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
         yml_workflow.normalize()
-        self.assertEqual(yml_workflow.name, '')
+        self.assertEqual(yml_workflow.name, 'a')
         self.assertEqual(yml_workflow.on, '')
         self.assertDictEqual(yml_workflow.props, dict())
         action_a = yml_workflow.action['a']
@@ -1298,7 +1298,7 @@ class TestYMLWorkflow(unittest.TestCase):
         yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
         yml_workflow.normalize()
         yml_workflow.complete_graph()
-        self.assertEqual(yml_workflow.name, '')
+        self.assertEqual(yml_workflow.name, 'a')
         self.assertEqual(yml_workflow.on, '')
         self.assertEqual(yml_workflow.props, {})
         self.assertEqual(yml_workflow.root, {'b', 'c', 'a'})
