@@ -916,62 +916,60 @@ class TestWorkflow(unittest.TestCase):
             {'end'}
         ])
 
-        # pu.write_file('/tmp/test_folder/a.yml', """
-        # steps:
-        # - id: "a"
-        #   uses: "sh"
-        #   args: "ls"
+        pu.write_file('/tmp/test_folder/a.yml', """
+        steps:
+        - id: "a"
+          uses: "sh"
+          args: "ls"
 
-        # - id: "b"
-        #   needs: "a"
-        #   uses: "sh"
-        #   args: "ls"
+        - id: "b"
+          needs: "a"
+          uses: "sh"
+          args: "ls"
 
-        # - id: "c"
-        #   uses: "sh"
-        #   args: "ls"
+        - id: "c"
+          uses: "sh"
+          args: "ls"
 
-        # - id: "d"
-        #   uses: "sh"
-        #   needs: ["b", "c"]
-        #   args: "ls"
+        - id: "d"
+          uses: "sh"
+          needs: ["b", "c"]
+          args: "ls"
 
-        # - id: "g"
-        #   needs: "d"
-        #   uses: "sh"
-        #   args: "ls"
+        - id: "g"
+          needs: "d"
+          uses: "sh"
+          args: "ls"
 
-        # - id: "f"
-        #   needs: "d"
-        #   uses: "sh"
-        #   args: "ls"
+        - id: "f"
+          needs: "d"
+          uses: "sh"
+          args: "ls"
 
-        # - id: "h"
-        #   needs: "g"
-        #   uses: "sh"
-        #   args: "ls"
+        - id: "h"
+          needs: "g"
+          uses: "sh"
+          args: "ls"
 
-        # - id: "end"
-        #   needs: ["h", "f"]
-        #   uses: "sh"
-        #   args: "ls"
-        # """)
-        # yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
-        # yml_workflow.parse()
-        # stages = list()
-        # for stage in yml_workflow.get_stages():
-        #     stages.append(stage)
+        - id: "end"
+          needs: ["h", "f"]
+          uses: "sh"
+          args: "ls"
+        """)
+        yml_workflow = YMLWorkflow('/tmp/test_folder/a.yml')
+        yml_workflow.parse()
+        stages = list()
+        for stage in yml_workflow.get_stages():
+            stages.append(stage)
 
-        # print(stages)
-
-        # self.assertListEqual(stages, [
-        #     {'a', 'c'},
-        #     {'b'},
-        #     {'d'},
-        #     {'g', 'f'},
-        #     {'h'},
-        #     {'end'}
-        # ])
+        self.assertListEqual(stages, [
+            {'a', 'c'},
+            {'b'},
+            {'d'},
+            {'g', 'f'},
+            {'h'},
+            {'end'}
+        ])
 
     def test_substitutions(self):
         pu.write_file('/tmp/test_folder/a.workflow', """

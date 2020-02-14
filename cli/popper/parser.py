@@ -538,8 +538,6 @@ class YMLWorkflow(Workflow):
             self.wf_dict['action'][action['id']] = action
             self.id_map[idx + 1] = action['id']
 
-        self.action = self.wf_dict['action']
-
     def normalize(self):
         """Takes properties from the `self.wf_dict` dict and makes them
         native to the `Workflow` class. Also it normalizes some of the
@@ -561,6 +559,7 @@ class YMLWorkflow(Workflow):
         self.on = ""
         self.root = set()
         self.props = dict()
+        self.action = self.wf_dict['action']
 
         for a_name, a_block in self.action.items():
             a_block['name'] = a_name
@@ -653,8 +652,6 @@ class YMLWorkflow(Workflow):
         for a_id, a_block in self.action.items():
             if not a_block.get('needs', None):
                 self.root.add(a_id)
-            else:
-                break
 
 
 class HCLWorkflow(Workflow):
