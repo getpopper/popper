@@ -447,8 +447,6 @@ class YMLWorkflow(Workflow):
     def __init__(self, wfile, substitutions=None, allow_loose=False):
         super(YMLWorkflow, self).__init__(wfile, substitutions, allow_loose)
         self.wf_fmt = "yml"
-        self.action_map = dict()
-        self.id_map = dict()
         self.load_file()
 
     def load_file(self):
@@ -466,16 +464,17 @@ class YMLWorkflow(Workflow):
             if not self.wf_list:
                 return
 
+        self.wf_dict = {'action': dict()}
+        self.id_map = dict()
+
         for idx, action in enumerate(self.wf_list):
             # If no id attribute present, make one
             if not action.get('id', None):
                 action['id'] = str(idx + 1)
-            self.action_map[action['id']] = action
+            self.wf_dict['action'][action['id']] = action
             self.id_map[idx + 1] = action['id']
 
-        self.wf_dict = dict()
-        self.wf_dict['action'] = self.action_map
-        self.action = self.action_map
+        self.action = self.wf_dict['action']
 
     def normalize(self):
         """Takes properties from the `self.wf_dict` dict and makes them
@@ -525,15 +524,15 @@ class YMLWorkflow(Workflow):
         Returns:
             None
         """
-        for idx, action in self.action_map.items():
+        for idx, action in self.action.items():
             if action.get('needs', None):
                 for a in action['needs']:
-                    if not self.action_map[a].get('next', None):
-                        self.action_map[a]['next'] = set()
-                    self.action_map[a]['next'].add(action['id'])
+                    if not self.action[a].get('next', None):
+                        self.action[a]['next'] = set()
+                    self.action[a]['next'].add(action['id'])
 
         stages = list()
-        for idx, action in self.action_map.items():
+        for idx, action in self.action.items():
             if action.get('next', None):
                 stages.append(action['next'])
             
@@ -543,14 +542,14 @@ class YMLWorkflow(Workflow):
         stages = [s for s in stages if len(s) > 1]
 
         for idx, id in self.id_map.items():
-            action = self.action_map[id]
+            action = self.action[id]
             if not action.get('needs', None):
                 if idx == 1:
                     self.root.add(self.id_map[1])
                     continue
 
-                curr = self.action_map[self.id_map[idx]]
-                prev = self.action_map[self.id_map[idx - 1]]
+                curr = self.action[self.id_map[idx]]
+                prev = self.action[self.id_map[idx - 1]]
 
                 curr_prev_tuple = {self.id_map[idx], self.id_map[idx - 1]}
                 prev_curr_tuple = {self.id_map[idx - 1], self.id_map[idx]}
