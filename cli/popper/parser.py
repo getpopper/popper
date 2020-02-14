@@ -8,6 +8,7 @@ import yaml
 from popper.cli import log
 from popper import utils as pu
 import re
+import os
 
 
 VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
@@ -559,7 +560,7 @@ class YMLWorkflow(Workflow):
         Returns:
             None
         """
-        self.name = ""
+        self.name = os.path.basename(self.wfile)[:-4]
         self.on = ""
         self.root = set()
         self.props = dict()
