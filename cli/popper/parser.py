@@ -44,6 +44,21 @@ class Workflow(object):
         self.check_for_broken_workflow()
         self.complete_graph()
 
+    def load_file(self):
+        raise NotImplementedError(
+            "This method is required to be implemented in the derived class."
+        )
+
+    def complete_graph(self):
+        raise NotImplementedError(
+            "This method is required to be implemented in the derived class."
+        )
+
+    def normalize(self):
+        raise NotImplementedError(
+            "This method is required to be implemented in the derived class."
+        )
+
     @staticmethod
     def format_command(params):
         """A static method that formats the `runs` and `args` attributes into a
