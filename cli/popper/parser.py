@@ -192,8 +192,6 @@ class Workflow(object):
 
         for _, a_block in self.wf_dict['action'].items():
             for key in a_block.keys():
-                if key == "id" and self.wf_fmt == "yml":
-                    continue
                 if key not in VALID_ACTION_ATTRS:
                     log.fail(
                         'Invalid action attribute \'{}\' found.'.format(key))
@@ -556,10 +554,10 @@ class YMLWorkflow(Workflow):
 
         for idx, action in enumerate(self.wf_list):
             # If no id attribute present, make one
-            if not action.get('id', None):
-                action['id'] = str(idx + 1)
-            self.wf_dict['action'][action['id']] = action
-            self.id_map[idx + 1] = action['id']
+            _id = action.get('id', str(idx + 1))
+            self.wf_dict['action'][_id] = action
+            self.id_map[idx + 1] = _id
+            action.pop('id', None)
 
     def normalize(self):
         """Takes properties from the `self.wf_dict` dict and makes them
