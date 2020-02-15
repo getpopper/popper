@@ -134,7 +134,7 @@ To obtain more detailed information of what this command does, you can pass the 
 popper run --help
 ```
 
-**Note:** All Popper subcommands allow you to pass `--help` flag to it to get more information about what the command does.
+> **NOTE**: All Popper subcommands allow you to pass `--help` flag to it to get more information about what the command does.
 
 ## Link to GitHub repository
 

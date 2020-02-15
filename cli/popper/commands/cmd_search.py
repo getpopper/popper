@@ -42,6 +42,7 @@ def cli(ctx, keyword, update_cache, include_readme):
     if result:
         for action in result:
             log.info('> {}\n'.format(action))
+
     else:
         log.info('No matching actions found.\n')
 
