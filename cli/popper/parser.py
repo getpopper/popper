@@ -119,7 +119,8 @@ class Workflow(object):
         for action in action_dependencies:
             if not self.verify_action(action):
                 log.fail(
-                    'Action {} is referenced in the workflow but is missing.'.format(action))
+                    'Action {} is referenced in the workflow '
+                    'but is missing.'.format(action))
 
     def validate_workflow_block(self):
         """Validate the syntax of the workflow block.
@@ -404,7 +405,8 @@ class Workflow(object):
         for sa_name in skip_list:
             if not workflow.verify_action(sa_name):
                 log.fail(
-                    'Action {} can\'t be skipped as it is missing from the workflow.'.format(sa_name))
+                    'Action {} can\'t be skipped as it is '
+                    'missing from the workflow.'.format(sa_name))
             sa_block = workflow.action[sa_name]
             # Clear up all connections from sa_block
             sa_block.get('next', set()).clear()
@@ -464,7 +466,8 @@ class Workflow(object):
 
         if not workflow.verify_action(action):
             log.fail(
-                'Action {} can\'t be filtered as it is missing from the workflow.'.format(action))
+                'Action {} can\'t be filtered as it is '
+                'missing from the workflow.'.format(action))
 
         actions = set(map(lambda x: x[0], workflow.action.items()))
 
