@@ -641,11 +641,11 @@ class YMLWorkflow(Workflow):
                 # if this is not the last action,
                 if idx + 1 <= len(self.action.items()):
                     curr = self.id_map[idx]
-                    later = self.id_map[idx + 1]
+                    next = self.id_map[idx + 1]
                     # If the current action and next action is not in any
                     # stage,
-                    if ({curr, later} not in self.stages) and (
-                            {later, curr} not in self.stages):
+                    if ({curr, next} not in self.stages) and (
+                            {next, curr} not in self.stages):
                         next_stage = self.get_containing_stage(idx + 1)
                         curr_stage = self.get_containing_stage(idx)
 
