@@ -631,7 +631,7 @@ class YMLWorkflow(Workflow):
 
             if a_block.get('needs', None):
                 if a_block['needs'] not in self.stages:
-                    self.stages.append(a_block['needs'])
+                    self.stages.append(set(a_block['needs']))
                     self.visited[tuple(a_block['needs'])] = False
 
         # Moving from top to bottom
