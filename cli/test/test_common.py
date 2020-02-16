@@ -41,7 +41,7 @@ def init_test_repo():
         file = open(path+'/README.md', 'w+')
         file.write("foo")
         repo.git.add(A=True)
-        repo.git('-m', 'first')
+        repo.git.commit('-m', 'first')
         popdir()
 
     else:
