@@ -7,6 +7,7 @@ import unittest
 import os
 from popper.cli import log
 import shutil
+from test.test_common import *
 
 
 class TestCommandVersion(unittest.TestCase):
@@ -19,18 +20,11 @@ class TestCommandVersion(unittest.TestCase):
 
 class TestSkip(unittest.TestCase):
 
-    def setUp(self):
-        os.makedirs('/tmp/test_folder')
-        os.chdir('/tmp/test_folder')
-        log.setLevel('CRITICAL')
-
-    def tearDown(self):
-        os.chdir('/tmp')
-        shutil.rmtree('/tmp/test_folder')
-        log.setLevel('NOTSET')
+    init_test_repo()
+    os.chdir(os.environ.get('test_repo_path'))
 
     def create_workflow_file(self, content):
-        f = open('/tmp/test_folder/a.workflow', 'w')
+        f = open(os.environ.get('test_repo_path')+'/a.workflow', 'w+')
         f.write(content)
         f.close()
 
@@ -70,48 +64,50 @@ class TestSkip(unittest.TestCase):
         }
         """)
 
+        workflow_file_loc = os.environ.get('test_repo_path')+'/a.workflow'
+
         runner = CliRunner()
         result = runner.invoke(
-            run.cli, ['a1', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['a1', '--wfile', workflow_file_loc,
                       '--skip', 'a2'])
         assert result.exit_code == 1
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       'a1'])
         assert result.exit_code == 0
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       'a1'])
         assert result.exit_code == 0
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       'a2'])
         assert result.exit_code == 0
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       'b'])
         assert result.exit_code == 0
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       'c'])
         assert result.exit_code == 0
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       'd'])
         assert result.exit_code == 0
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       '--skip', 'e1'])
         assert result.exit_code == 1
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', '/tmp/test_folder/a.workflow',
+            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
                       '--skip', 'a1', '--skip', 'a2'])
         assert result.exit_code == 1
