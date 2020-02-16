@@ -1182,19 +1182,19 @@ class TestYMLWorkflow(unittest.TestCase):
         self.assertEqual(action_a['args'], ['npm', '--version'])
         self.assertEqual(action_a['secrets'], ['SECRET_KEY'])
 
-    def test_get_containing_stage(self):
+    def test_get_containing_set(self):
         pu.write_file(YML_WORKFLOW_PATH, YML_SAMPLE_WORKFLOW_1)
         yml_workflow = YMLWorkflow(YML_WORKFLOW_PATH)
         yml_workflow.normalize()
         yml_workflow.complete_graph()
-        set_1 = yml_workflow.get_containing_stage(2)
+        set_1 = yml_workflow.get_containing_set(2)
         self.assertSetEqual(set_1, {'b', 'a', 'd'})
 
         pu.write_file(YML_WORKFLOW_PATH, YML_SAMPLE_WORKFLOW_2)
         yml_workflow = YMLWorkflow(YML_WORKFLOW_PATH)
         yml_workflow.normalize()
         yml_workflow.complete_graph()
-        set_2 = yml_workflow.get_containing_stage(3)
+        set_2 = yml_workflow.get_containing_set(3)
         self.assertSetEqual(set_2, {'c', 'b'})
 
     def test_complete_graph(self):

@@ -599,23 +599,23 @@ class YMLWorkflow(Workflow):
                 a_block['secrets'] = Workflow.format_command(
                     a_block['secrets'])
 
-    def get_containing_stage(self, idx):
-        """Find the stage from the list of stages, where
+    def get_containing_set(self, idx):
+        """Find the set from the list of sets of action dependencies, where
         the action with the given index is present.
 
         Args:
             idx(int): The index of the action to be searched.
 
         Returns:
-            set: The required stage.
+            set: The required set.
         """
-        for stage in self.stages:
-            if self.id_map[idx] in stage:
-                return stage
+        for _set in self.dep_sets:
+            if self.id_map[idx] in _set:
+                return _set
 
-        required_stage = set()
-        required_stage.add(self.id_map[idx])
-        return required_stage
+        required_set = set()
+        required_set.add(self.id_map[idx])
+        return required_set
 
     def complete_graph(self):
         """Function to generate the workflow graph by
@@ -635,19 +635,19 @@ class YMLWorkflow(Workflow):
                         self.action[a]['next'] = set()
                     self.action[a]['next'].add(a_id)
 
-        # Generate the potential stages.
-        self.stages = list()
+        # Generate the dependency sets.
+        self.dep_sets = list()
         self.visited = dict()
 
         for a_id, a_block in self.action.items():
             if a_block.get('next', None):
-                if a_block['next'] not in self.stages:
-                    self.stages.append(a_block['next'])
+                if a_block['next'] not in self.dep_sets:
+                    self.dep_sets.append(a_block['next'])
                     self.visited[tuple(a_block['next'])] = False
 
             if a_block.get('needs', None):
-                if a_block['needs'] not in self.stages:
-                    self.stages.append(set(a_block['needs']))
+                if a_block['needs'] not in self.dep_sets:
+                    self.dep_sets.append(set(a_block['needs']))
                     self.visited[tuple(a_block['needs'])] = False
 
         # Moving from top to bottom
@@ -659,17 +659,17 @@ class YMLWorkflow(Workflow):
                     curr = self.id_map[idx]
                     next = self.id_map[idx + 1]
                     # If the current action and next action is not in any
-                    # stage,
-                    if ({curr, next} not in self.stages) and (
-                            {next, curr} not in self.stages):
-                        next_stage = self.get_containing_stage(idx + 1)
-                        curr_stage = self.get_containing_stage(idx)
+                    # set,
+                    if ({curr, next} not in self.dep_sets) and (
+                            {next, curr} not in self.dep_sets):
+                        next_set = self.get_containing_set(idx + 1)
+                        curr_set = self.get_containing_set(idx)
 
-                        if not self.visited.get(tuple(next_stage), None):
-                            action['next'] = next_stage
-                            for nsa in next_stage:
+                        if not self.visited.get(tuple(next_set), None):
+                            action['next'] = next_set
+                            for nsa in next_set:
                                 self.action[nsa]['needs'] = id
-                            self.visited[tuple(curr_stage)] = True
+                            self.visited[tuple(curr_set)] = True
 
         # Finally, generate the root.
         for a_id, a_block in self.action.items():
