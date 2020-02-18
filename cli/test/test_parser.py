@@ -180,7 +180,6 @@ class TestWorkflow(unittest.TestCase):
         shutil.rmtree('/tmp/test_folder')
         log.setLevel('NOTSET')
 
-    # OK
     def test_verify_action(self):
         pu.write_file(YML_WORKFLOW_PATH, """
         steps:
@@ -218,7 +217,21 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(hcl_workflow.verify_action('c'), False)
         self.assertEqual(hcl_workflow.verify_action('a'), True)
 
-    # OK
+    def test_new_workflow(self):
+        pu.write_file(HCL_WORKFLOW_PATH, HCL_SAMPLE_WORKFLOW_1)
+        self.assertEqual(
+            isinstance(
+                Workflow.new_workflow(HCL_WORKFLOW_PATH),
+                HCLWorkflow),
+            True)
+
+        pu.write_file(YML_WORKFLOW_PATH, YML_SAMPLE_WORKFLOW_1)
+        self.assertEqual(
+            isinstance(
+                Workflow.new_workflow(YML_WORKFLOW_PATH),
+                YMLWorkflow),
+            True)
+
     def test_check_for_broken_workflow(self):
         pu.write_file(HCL_WORKFLOW_PATH, """
         workflow "samples" {
@@ -254,7 +267,6 @@ class TestWorkflow(unittest.TestCase):
         self.assertRaises(SystemExit, hcl_workflow.check_for_broken_workflow)
         self.assertRaises(SystemExit, yml_workflow.check_for_broken_workflow)
 
-    # OK
     def test_format_command(self):
         cmd = u"docker version"
         res = Workflow.format_command(cmd)
@@ -264,7 +276,6 @@ class TestWorkflow(unittest.TestCase):
         res = Workflow.format_command(cmd)
         self.assertEqual(res, ["docker", "version"])
 
-    # OK
     def test_check_duplicate_actions(self):
         pu.write_file(YML_WORKFLOW_PATH, """
         steps:
@@ -331,7 +342,6 @@ class TestWorkflow(unittest.TestCase):
         yml_workflow.check_duplicate_actions()
         hcl_workflow.check_duplicate_actions()
 
-    # OK
     def test_validate_workflow_block(self):
         pu.write_file(HCL_WORKFLOW_PATH, """
         workflow "sample workflow 1" {
@@ -378,7 +388,6 @@ class TestWorkflow(unittest.TestCase):
         hcl_workflow = HCLWorkflow(HCL_WORKFLOW_PATH)
         self.assertRaises(SystemExit, hcl_workflow.validate_workflow_block)
 
-    # OK
     def test_validate_action_blocks(self):
         pu.write_file(HCL_WORKFLOW_PATH, """
         workflow "sample workflow" {
@@ -496,7 +505,6 @@ class TestWorkflow(unittest.TestCase):
         hcl_workflow = HCLWorkflow(HCL_WORKFLOW_PATH)
         self.assertRaises(SystemExit, hcl_workflow.validate_action_blocks)
 
-    # OK
     def test_skip_actions(self):
         pu.write_file(HCL_WORKFLOW_PATH, HCL_SAMPLE_WORKFLOW_1)
         hcl_workflow = HCLWorkflow(HCL_WORKFLOW_PATH)
@@ -644,7 +652,6 @@ class TestWorkflow(unittest.TestCase):
                 'args': ['ls'],
                 'name': 'end'}})
 
-    # OK
     def test_filter_action(self):
         pu.write_file(HCL_WORKFLOW_PATH, HCL_SAMPLE_WORKFLOW_1)
         hcl_workflow = HCLWorkflow(HCL_WORKFLOW_PATH)
@@ -794,7 +801,6 @@ class TestWorkflow(unittest.TestCase):
                     'name': 'd',
                     'next': set()}})
 
-    # OK
     def test_check_for_unreachable_actions(self):
         pu.write_file(HCL_WORKFLOW_PATH, HCL_SAMPLE_WORKFLOW_1)
         hcl_workflow = HCLWorkflow(HCL_WORKFLOW_PATH)
@@ -856,7 +862,6 @@ class TestWorkflow(unittest.TestCase):
         hcl_workflow.parse()
         hcl_workflow.check_for_unreachable_actions()
 
-    # OK
     def test_get_stages(self):
         pu.write_file(HCL_WORKFLOW_PATH, HCL_SAMPLE_WORKFLOW_1)
         hcl_workflow = HCLWorkflow(HCL_WORKFLOW_PATH)
@@ -918,7 +923,6 @@ class TestWorkflow(unittest.TestCase):
             {'end'}
         ])
 
-    # OK
     def test_substitutions(self):
         pu.write_file(HCL_WORKFLOW_PATH, """
         workflow "example" {

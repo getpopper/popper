@@ -60,6 +60,15 @@ class Workflow(object):
         )
 
     @staticmethod
+    def new_workflow(wfile, substitutions=None, allow_loose=False):
+        if wfile.endswith('.workflow'):
+            return HCLWorkflow(wfile, substitutions, allow_loose)
+        elif wfile.endswith('.yml') or wfile.endswith('.yaml'):
+            return YMLWorkflow(wfile, substitutions, allow_loose)
+        else:
+            log.fail('Unrecognized workflow file format.')
+
+    @staticmethod
     def format_command(params):
         """A static method that formats the `runs` and `args` attributes into a
         list of strings.
