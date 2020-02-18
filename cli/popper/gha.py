@@ -35,7 +35,7 @@ class WorkflowRunner(object):
     def __init__(self, workflow):
         self.wf = workflow
         self.wf.parse()
-        self.wid = pu.get_id(os.getuid(), self.wf.workflow_path)
+        self.wid = pu.get_id(os.getuid(), self.wf.wfile)
         log.debug('workflow:\n{}'.format(
             yaml.dump(self.wf, default_flow_style=False, default_style='')))
 
@@ -263,6 +263,7 @@ class WorkflowRunner(object):
             engine_config)
 
         for s in new_wf.get_stages():
+            log.debug(s)
             WorkflowRunner.run_stage(
                 engine, new_wf, s, reuse, parallel)
 

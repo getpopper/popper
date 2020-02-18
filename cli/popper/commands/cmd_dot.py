@@ -77,7 +77,7 @@ def cli(ctx, wfile, skip, recursive, colors):
 
             stage_edges.add(edge)
 
-            for M in wf.get_action(n).get('next', []):
+            for M in wf.action[n].get('next', []):
                 dot_str = add_to_graph(dot_str, wf, n, [M],
                                        node_attrs, stage_edges)
         return dot_str
@@ -90,7 +90,7 @@ def cli(ctx, wfile, skip, recursive, colors):
         wfile_list.append(pu.find_default_wfile(wfile))
 
     for wfile in wfile_list:
-        wf = Workflow(wfile)
+        wf = Workflow.new_workflow(wfile)
         wf.parse()
         wf = Workflow.skip_actions(wf, skip)
         wf.check_for_unreachable_actions()
