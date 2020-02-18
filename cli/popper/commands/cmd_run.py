@@ -239,8 +239,9 @@ def run_workflow(**kwargs):
     log.info('Found and running workflow at ' + kwargs['wfile'])
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
-    wf = Workflow(kwargs['wfile'], kwargs['substitutions'],
-                  kwargs['allow_loose'])
+
+    wf = Workflow.new_workflow(kwargs['wfile'], kwargs['substitutions'],
+                               kwargs['allow_loose'])
     wf_runner = WorkflowRunner(wf)
 
     # remove substitution arguments from kwargs
@@ -273,14 +274,14 @@ def run_workflow(**kwargs):
 
     try:
         if pre_wfile:
-            pre_wf = Workflow(pre_wfile)
+            pre_wf = Workflow.new_workflow(pre_wfile)
             pre_wf_runner = WorkflowRunner(pre_wf)
             pre_wf_runner.run(**kwargs)
 
         wf_runner.run(**kwargs)
 
         if post_wfile:
-            post_wf = Workflow(post_wfile)
+            post_wf = Workflow.new_workflow(post_wfile)
             pre_wf_runner = WorkflowRunner(post_wf)
             pre_wf_runner.run(**kwargs)
 
