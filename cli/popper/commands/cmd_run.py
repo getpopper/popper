@@ -113,6 +113,7 @@ from popper import log as logging
     is_flag=True
 )
 @click.option(
+    '-w',
     '--workspace',
     help='Path to workspace folder.',
     required=False,
@@ -121,11 +122,7 @@ from popper import log as logging
     default=popper.scm.get_git_root_folder()
 )
 @click.option(
-    '--engine-conf',
-    help=('File containing configuration options for the '
-          'underlying container engine.'
-          ),
-    required=False
+    '-c', '--conf', help='Runtime configuration options.', required=False
 )
 @pass_context
 def cli(ctx, **kwargs):
