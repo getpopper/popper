@@ -1,18 +1,11 @@
 import os
 import re
-import sys
-import uuid
 import hashlib
 import threading
 import importlib.util
 from builtins import str
 
-import yaml
-import click
-import requests
-
 from popper.cli import log
-from popper import scm
 
 
 def setup_base_cache():
@@ -33,31 +26,12 @@ def setup_base_cache():
                 os.path.join(
                     os.environ['HOME'],
                     '.cache')),
-            '.popper')
+            'popper')
 
     if not os.path.exists(base_cache):
         os.makedirs(base_cache)
 
     return base_cache
-
-
-def setup_search_cache():
-    """Set up the popper search cache.
-
-    Args:
-      None
-
-    Returns:
-      str: The path to the search cache file.
-    """
-    base_cache = setup_base_cache()
-    search_cache = os.path.join(base_cache, 'search')
-
-    if not os.path.isdir(search_cache):
-        os.makedirs(search_cache)
-
-    search_cache_file = os.path.join(search_cache, '.popper_search_cache.yml')
-    return search_cache_file
 
 
 def decode(line):
@@ -74,20 +48,6 @@ def decode(line):
     return line
 
 
-def get_items(dict_object):
-    """Python 2/3 compatible way of iterating over a dictionary.
-
-    Args:
-      dict_object(dict): Dictionary that is required to be made compatible.
-
-    Returns:
-      key,value : All the keys and values associated with them in the
-                    dictionary.
-    """
-    for key in dict_object:
-        yield key, dict_object[key]
-
-
 class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by serializing call
     to the `next` method of given iterator/generator."""
@@ -102,22 +62,6 @@ class threadsafe_iter_3:
     def __next__(self):
         with self.lock:
             return self.it.__next__()
-
-
-class threadsafe_iter_2:
-    """Takes an iterator/generator and makes it thread-safe by serializing call
-    to the `next` method of given iterator/generator."""
-
-    def __init__(self, it):
-        self.it = it
-        self.lock = threading.Lock()
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        with self.lock:
-            return self.it.next()
 
 
 def threadsafe_generator(f):
@@ -139,40 +83,8 @@ def threadsafe_generator(f):
         Returns:
           function: The thread-safe function.
         """
-        if sys.version_info[0] < 3:
-            return threadsafe_iter_2(f(*args, **kwargs))
-        else:
-            return threadsafe_iter_3(f(*args, **kwargs))
+        return threadsafe_iter_3(f(*args, **kwargs))
     return g
-
-
-def find_default_wfile(wfile=None):
-    """Used to find `main.workflow` in $PWD or in `.github` And returns error
-    if not found.
-
-    Args:
-      wfile(str, optional): The path to a workflow file.
-    The default value of this is None, when the
-    function searches for `main.workflow` or
-    `.github/main.workflow'. (Default value = None)
-
-    Returns:
-      str: Path of wfile.
-    """
-    if not wfile:
-        if os.path.isfile("main.workflow"):
-            wfile = "main.workflow"
-        elif os.path.isfile(".github/main.workflow"):
-            wfile = ".github/main.workflow"
-
-    if not wfile:
-        log.fail(
-            "Files {} or {} not found.".format("./main.workflow",
-                                               ".github/main.workflow"))
-    if not os.path.isfile(wfile):
-        log.fail("File {} not found.".format(wfile))
-
-    return wfile
 
 
 def find_recursive_wfile():
@@ -193,139 +105,6 @@ def find_recursive_wfile():
                 wfile = os.path.abspath(wfile)
                 wfile_list.append(wfile)
     return wfile_list
-
-
-def make_gh_request(url, err=True, msg=None):
-    """Method for making GET requests to GitHub API.
-
-    Args:
-      url(str): URL on which the API request is to be made.
-      err(bool, optional): Checks if an error message needs to
-                    be printed or not.(Default value = True)
-      msg(str): Error message to be printed for a failed
-                    request.(Default value = None)
-
-    Returns:
-      Response object: Contains a server's response to an HTTP request.
-    """
-    if not msg:
-        msg = (
-            "Unable to connect. Please check your network connection."
-        )
-
-    response = requests.get(url)
-    if err and response.status_code != 200:
-        log.fail(msg)
-    else:
-        return response
-
-
-def read_search_sources():
-    """Method to fetch the list of actions.
-
-    Args:
-      None
-
-    Returns:
-      list: The list of actions.
-    """
-    response = make_gh_request(
-        'https://raw.githubusercontent.com/systemslab/popper/'
-        'master/cli/resources/search_sources.yml')
-
-    return yaml.load(response.text, Loader=yaml.FullLoader)
-
-
-def fetch_metadata(update_cache=False):
-    """Fetch metadata of the repositories from the search_sources on which to
-    run the search.
-
-    Args:
-      update_cache(bool, optional): Flag variable to decide whether to update
-    the cache or not. (Default value = False)
-
-    Returns:
-      dict: All metadata related to the actions.
-    """
-    cache_file = setup_search_cache()
-
-    update = False
-    if (not os.path.isfile(cache_file)) or update_cache:
-        update = True
-
-    if not update:
-        # Use metadata from cache and skip its update.
-        with open(cache_file, 'r') as cf:
-            metadata = yaml.load(cf, Loader=yaml.FullLoader)
-
-    else:
-        # Update the cache file.
-        log.info('Updating action metadata cache...\n')
-        search_sources = read_search_sources()
-
-        source_list = list()
-        for url in search_sources:
-            _, _, user, repo, path_to_action, version = scm.parse(url)
-            source_list.append((user, repo, path_to_action, version))
-
-        metadata = dict()
-        with click.progressbar(
-                source_list,
-                show_eta=False,
-                bar_template='[%(bar)s] %(info)s | %(label)s',
-                show_percent=True,
-                width=30) as bar:
-            for r in bar:
-                user, repo, path_to_action, version = r[0], r[1], r[2], r[3]
-                action = os.path.normpath(
-                    os.path.join(user, repo, path_to_action))
-                bar.label = "{}".format(action)
-                metadata[action] = fetch_repo_metadata(
-                    user, repo, path_to_action, version)
-
-        with open(cache_file, 'w') as cf:
-            yaml.dump(dict(metadata), cf)
-
-    return metadata
-
-
-def fetch_repo_metadata(user, repo, path_to_action, version):
-    """Returns the metadata for a repo.
-
-    Args:
-      user(str): The user to which the actions belongs to.
-      repo(str): The parent repository name.
-      path_to_action(str): The path to the action from the root.
-      version(str): The branch where the action resides.
-
-    Returns:
-      dict: Metadata of the repo.
-    """
-    readme = fetch_readme_for_repo(user, repo, path_to_action, version)
-    meta = dict()
-    meta['repo_readme'] = readme
-    return meta
-
-
-def fetch_readme_for_repo(user, repo, path_to_action, version=None):
-    """Method to fetch the README for the repo if present.
-
-    Args:
-      user(str): The user to which the actions belongs to.
-      repo(str): The parent repository name.
-      path_to_action(str): The path to the action from the root.
-      version(str, optional): The branch where the action resides.
-                            (Default value = None)
-
-    Returns:
-      str: The contents of the README file.
-    """
-    if not version:
-        version = 'master'
-    url = os.path.join('https://raw.githubusercontent.com',
-                       user, repo, version, path_to_action, 'README.md')
-    r = make_gh_request(url, err=False)
-    return r.text
 
 
 def sanitized_name(name, wid):

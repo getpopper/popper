@@ -218,7 +218,6 @@ Trigger an execution by pushing to github:
 git push
 ```
 
-
 Go to the TravisCI website to see your experiments being executed.
 
 ## Next Steps

@@ -25,9 +25,6 @@ is to provide the following functionality:
     well as running Docker inside virtual machines (via 
     [Vagrant][vagrant]). We are working on adding 
     [Podman](https://podman.io) to the list.
-  * **Action search**. Provide with a [searchable catalog][search] of 
-    publicly available actions so that users can easily find which 
-    actions already exist (do not re-invent the wheel!).
   * **Scaffolding**. Aid in the implementation of [new actions and 
     workflows][scaffold].
   * **Action library**. Provide with a list of reusable actions and 
