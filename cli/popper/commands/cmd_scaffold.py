@@ -18,13 +18,10 @@ def cli(ctx, wfile):
     """Generates a minimal workflow that can be used as starting point."""
     main_workflow_content = """steps:
 
-- id: "step1"
-  uses: "popperized/bin/sh@master"
+- uses: "popperized/bin/sh@master"
   args: "ls"
 
-- id: "step2"
-  needs: "step1"
-  uses: "docker://alpine:3.11"
+- uses: "docker://alpine:3.11"
   args: ["ls"]
 """
 

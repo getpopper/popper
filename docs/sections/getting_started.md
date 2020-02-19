@@ -1,12 +1,11 @@
 # Getting Started
 
-Popper is a [container-native]() [workflow execution engine](). A 
-container-native workflow is one where all steps contained in it are 
+Popper is a [container-native][cn] [workflow execution engine][wfeng]. 
+A container-native workflow is one where all steps contained in it are 
 executed in containers. Before going through this guide, you need to 
 have the Docker engine installed on your machine (see [installations 
-instructions here](https://docs.docker.com/install/)), as well as a 
-Python installation capable of adding packages via [Pip]() or 
-[Virtualenv]().
+instructions here][docker-install]), as well as a Python installation 
+capable of adding packages via [Pip][pip] or [Virtualenv][venv].
 
 ## Installation
 
@@ -31,19 +30,20 @@ folder where we will place the Popper virtual environment:
 mkdir $HOME/virtualenvs
 ```
 
-We then create a `virtualenv` for Popper. This will depend on the
-method with which `virtualenv` was installed. Here we present three
-alternatives that cover most of these alternatives:
+We then create a `virtualenv` for Popper. This will depend on the 
+method with which `virtualenv` was installed:
 
 ```bash
-# 1) virtualenv installed via package, e.g.:
+# 1) if virtualenv was installed via package, e.g.:
 # - apt install virtualenv (debian/ubuntu)
 # - yum install virtualenv (centos/redhat)
 # - conda install virtualenv (conda)
 # - pip install virtualenv (pip)
 virtualenv $HOME/virtualenvs/popper
 
-# 2) virtualenv installed via Python 3.6+ built-in module
+# OR
+#
+# 2) if virtualenv installed via Python 3.6+ module
 python -m venv $HOME/virtualenvs/popper
 ```
 
@@ -76,12 +76,12 @@ And to get a list of available commands:
 popper --help
 ```
 
-> **NOTE**: given that we are using `virtualenv`, once the shell
-session is ended (when we close the terminal window or tab), the
-environment is unloaded and newer sessions (new window or tab) will
-not have the `popper` command available in the `PATH` variable. In
-order to have the environment loaded again we need to execute the
-`source` command (see above). In the case of `conda` we need to load
+> **NOTE**: given that we are using `virtualenv`, once the shell 
+session ends (when we close the terminal window or tab), the 
+environment gets unloaded and newer sessions (new window or tab) will 
+not have the `popper` command available in the `PATH` variable. In 
+order to have the environment loaded again we need to execute the 
+`source` command (see above). In the case of `conda` we need to load 
 the Conda environment (`conda activate` command).
 
 ## Create a Git repository
@@ -108,16 +108,17 @@ git commit -m 'first commit'
 
 ## Create a workflow
 
-We can create a small, pre-defined workflow by running:
+We create a small, pre-defined workflow by running:
 
 ```bash
 popper scaffold
 ```
 
 The above generates an example workflow that you can use as the 
-starting point of your project. This minimal example illustrates the 
-two distinct ways in which a `Dockerfile` image can be used in a 
-workflow. To show the content of the workflow:
+starting point of your project. This minimal example illustrates two 
+distinct ways in which a `Dockerfile` image can be used in a workflow 
+(by pulling an image from a registry, or by referencing one stored in 
+a public repository). To show the content of the workflow:
 
 ```bash
 cat wf.yml
@@ -126,8 +127,8 @@ cat wf.yml
 For each step in the workflow, an image is created (or pulled) and a 
 container is instantiated. For a more detailed description of how 
 Popper processes a workflow, take a look at the ["Workflow Language 
-and Runtime"](gha_workflows.md) section. To learn more on how to 
-modify this workflow in order to fit your needs, take a look at [this 
+and Runtime"](cn_workflows.md) section. To learn more on how to modify 
+this workflow in order to fit your needs, take a look at [this 
 tutorial][ghatut] or take a look at [some examples][ex].
 
 Before we go ahead and test this workflow, we first commit the files 
@@ -155,7 +156,7 @@ container.
 > **TIP:** Type `popper run --help` to learn more about other options 
 > available and a high-level description of what this command does.
 
-Since this workflow consists of three steps, there were three 
+Since this workflow consists of two steps, there were two 
 corresponding containers that were executed by the underlying 
 container engine, which is Docker in this case. We can verify this by 
 asking Docker to show the list of existing containers:
@@ -164,7 +165,7 @@ asking Docker to show the list of existing containers:
 docker ps -a
 ```
 
-You should see the three containers from the example workflow being 
+You should see the two containers from the example workflow being 
 listed.
 
 To obtain more detailed information of what this command does, you can pass the `--help` flag to it:
@@ -223,10 +224,13 @@ Go to the TravisCI website to see your experiments being executed.
 ## Next Steps
 
 For a detailed description of how Popper processes workflows, take a 
-look at the ["Workflow Language and Runtime"](gha_workflows.md) 
+look at the ["Workflow Language and Runtime"](cn_workflows.md) 
 section. To learn more on how to modify workflows to fit your needs, 
 take a look at [this tutorial][ghatut] or at [some examples][ex].
 
+[docker-install]: https://docs.docker.com/install/
+[wfeng]: https://en.wikipedia.org/wiki/Workflow_engine
+[cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
 [pip]: https://pip.pypa.io/en/stable/
 [wfdocs]: gha_workflows.md
 [ghatut]: https://popperized.github.io/swc-lesson/
