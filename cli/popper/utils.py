@@ -20,16 +20,11 @@ def setup_base_cache():
     if os.environ.get('POPPER_CACHE_DIR', None):
         base_cache = os.environ['POPPER_CACHE_DIR']
     else:
-        base_cache = os.path.join(
-            os.environ.get(
-                'XDG_CACHE_HOME',
-                os.path.join(
-                    os.environ['HOME'],
-                    '.cache')),
-            'popper')
+        cache_dir = os.environ.get('XDG_CACHE_HOME',
+                                   os.path.join(os.environ['HOME'], '.cache'))
+        base_cache = os.path.join(cache_dir, 'popper')
 
-    if not os.path.exists(base_cache):
-        os.makedirs(base_cache)
+    os.makedirs(base_cache, exist_ok=True)
 
     return base_cache
 
