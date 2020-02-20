@@ -168,7 +168,7 @@ class Workflow(object):
 
         workflow_block = list(self.wf_dict['workflow'].values())[0]
         for key in workflow_block.keys():
-            if key not in VALID_WORKFLOW_ATTRS and key!="on":
+            if key not in VALID_WORKFLOW_ATTRS and key != "on":
                 log.fail(
                     'Invalid workflow attribute \'{}\' was found.'.format(key))
 
