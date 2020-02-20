@@ -11,7 +11,7 @@ import re
 import os
 
 
-VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
+VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves"]
 
 
