@@ -601,7 +601,7 @@ class TestSingularityRunner(unittest.TestCase):
         self.assertTupleEqual(
             res,
             (True,
-             'step/./actions/jshint',
+             'popper_sample_action_:unknown',
              '/tmp/test_folder/./actions/jshint'))
 
     @unittest.skipIf(

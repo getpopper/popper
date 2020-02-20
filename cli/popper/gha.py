@@ -875,8 +875,7 @@ class SingularityRunner(StepRunner):
             return 0
 
         curr_env = os.environ.copy()
-        os.environ = self.prepare_environment()
-
+        os.environ.update(self.prepare_environment())
         output = start(container_path, commands, bind=volumes, stream=True,
                        options=['--userns', '--pwd=/workspace'])
         try:

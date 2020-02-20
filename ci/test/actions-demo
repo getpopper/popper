@@ -350,7 +350,7 @@ workflow "foo" {
 
 action "show env" {
   uses = "popperized/bin/sh@master"
-  runs = ["sh", "-c", "echo \$FOOBAR"]
+  runs = ["env"]
   env = {
     FOOBAR = "yeah"
   }
@@ -358,7 +358,7 @@ action "show env" {
 EOF
 
 popper run --wfile main.workflow --engine "$ENGINE" > output
-grep "yeah" output
+grep "FOOBAR=yeah" output
 
 # Test Docker image references
 cat <<EOF > main.workflow
