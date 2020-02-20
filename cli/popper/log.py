@@ -2,8 +2,8 @@ import logging
 import sys
 import os
 
-ACTION_INFO = 15
-logging.addLevelName(ACTION_INFO, 'ACTION_INFO')
+STEP_INFO = 15
+logging.addLevelName(STEP_INFO, 'STEP_INFO')
 
 
 class PopperFormatter(logging.Formatter):
@@ -11,16 +11,16 @@ class PopperFormatter(logging.Formatter):
 
     Level Values are
     DEBUG: 10
-    ACTION_INFO: 15
+    STEP_INFO: 15
     INFO: 20
     WARNING: 30
     ERROR: 40
     CRITICAL: 50
 
-    The level ACTION_INFO is used to log information produced solely by
-    actions during popper execution.
-    The popper default log level is ACTION_INFO. On the usage of --quiet flag,
-    we change the level to INFO, thus effectively silencing ACTION_INFO log.
+    The level STEP_INFO is used to log information produced solely by
+    steps during popper execution.
+    The popper default log level is STEP_INFO. On the usage of --quiet flag,
+    we change the level to INFO, thus effectively silencing STEP_INFO log.
 
     In order of Level. The format of the logs is given in log_format dict.
     The log colors used are based on ANSI Escape Codes
@@ -33,7 +33,7 @@ class PopperFormatter(logging.Formatter):
 
     log_format = {
         'DEBUG':       '{}%(levelname)s: %(msg)s {}'.format(BOLD_CYAN, RESET),
-        'ACTION_INFO': '%(msg)s',
+        'STEP_INFO': '%(msg)s',
         'INFO':        '%(msg)s',
         'WARNING':     '{}%(levelname)s: %(msg)s{}'.format(BOLD_YELLOW, RESET),
         'ERROR':       '{}%(levelname)s: %(msg)s{}'.format(BOLD_RED, RESET),
@@ -42,7 +42,7 @@ class PopperFormatter(logging.Formatter):
 
     log_format_no_colors = {
         'DEBUG': '%(levelname)s: %(msg)s ',
-        'ACTION_INFO': '%(msg)s',
+        'STEP_INFO': '%(msg)s',
         'INFO': '%(msg)s',
         'WARNING': '%(levelname)s: %(msg)s',
         'ERROR': '%(levelname)s: %(msg)s',
@@ -74,7 +74,7 @@ class PopperFormatter(logging.Formatter):
 
 
 class PopperLogger(logging.Logger):
-    """A Logger so that we can add popper fail and action_info log methods."""
+    """A Logger so that we can add popper fail and step_info log methods."""
 
     def fail(self, msg='', *args, **kwargs):
         """Log a message with severity 'ERROR', and then exits.
@@ -90,8 +90,8 @@ class PopperLogger(logging.Logger):
         super(PopperLogger, self).error(msg, *args, **kwargs)
         sys.exit(1)
 
-    def action_info(self, msg='', *args, **kwargs):
-        """Log a message with severity 'ACTION_INFO'.
+    def step_info(self, msg='', *args, **kwargs):
+        """Log a message with severity 'STEP_INFO'.
 
         Args:
           msg(str, optional): Message to be logged.(Default value = '')
@@ -101,8 +101,8 @@ class PopperLogger(logging.Logger):
         Returns:
           None
         """
-        if self.isEnabledFor(ACTION_INFO):
-            self._log(ACTION_INFO, msg, args, **kwargs)
+        if self.isEnabledFor(STEP_INFO):
+            self._log(STEP_INFO, msg, args, **kwargs)
 
     def error(self, msg, *args, **kwargs):
         """Sends a warning about the use of fail(). We are depreciating it in
@@ -186,12 +186,12 @@ class LevelFilter(logging.Filter):
             return (record.levelno in self.passlevels)
 
 
-def setup_logging(level='ACTION_INFO'):
+def setup_logging(level='STEP_INFO'):
     """Setups logging facilities with custom Logger and Formatter.
 
     Args:
       level(str): Level to be logged in custom logger.
-                    (Default value = 'ACTION_INFO')
+                    (Default value = 'STEP_INFO')
 
     Returns:
       popper.log.PopperLogger: Custom log for that particular level.
@@ -201,14 +201,14 @@ def setup_logging(level='ACTION_INFO'):
 
     formatter = PopperFormatter()
 
-    # INFO/ACTION_INFO goes to stdout
+    # INFO/STEP_INFO goes to stdout
     h1 = logging.StreamHandler(sys.stdout)
-    h1.addFilter(LevelFilter([logging.INFO, ACTION_INFO], False))
+    h1.addFilter(LevelFilter([logging.INFO, STEP_INFO], False))
     h1.setFormatter(formatter)
 
     # anything goes to stdout
     h2 = logging.StreamHandler(sys.stderr)
-    h2.addFilter(LevelFilter([logging.INFO, ACTION_INFO], True))
+    h2.addFilter(LevelFilter([logging.INFO, STEP_INFO], True))
     h2.setFormatter(formatter)
 
     log.addHandler(h1)

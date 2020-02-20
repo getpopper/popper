@@ -41,7 +41,7 @@ class WorkflowRunner(object):
 
     @staticmethod
     def check_secrets(wf, dry_run, skip_secrets_prompt):
-        """Checks whether the secrets defined in the action block is set in the
+        """Checks whether the secrets defined for a step block is set in the
         execution environment or not.
 
         Note:
@@ -62,7 +62,7 @@ class WorkflowRunner(object):
         """
         if dry_run or skip_secrets_prompt:
             return
-        for _, a in wf.action.items():
+        for _, a in wf.step.items():
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI') == 'true':
@@ -73,39 +73,39 @@ class WorkflowRunner(object):
                         os.environ[s] = val
 
     @staticmethod
-    def download_actions(wf, dry_run, skip_clone, wid):
-        """Clone actions that reference a repository.
+    def download_steps(wf, dry_run, skip_clone, wid):
+        """Clone steps that reference a repository.
 
         Args:
           wf(popper.parser.workflow): Instance of the Workflow class.
           dry_run(bool): True if workflow flag is being dry-run.
-          skip_clone(bool): True if clonning action has to be skipped.
+          skip_clone(bool): True if clonning step has to be skipped.
           wid(str):
 
         Returns:
             None
         """
-        actions_cache = os.path.join(
-            pu.setup_base_cache(), 'actions', wid
+        steps_cache = os.path.join(
+            pu.setup_base_cache(), 'steps', wid
         )
 
         cloned = set()
         infoed = False
 
-        for _, a in wf.action.items():
+        for _, a in wf.step.items():
             uses = a['uses']
             if 'docker://' in uses or './' in uses or uses == 'sh':
                 continue
 
-            url, service, user, repo, action_dir, version = scm.parse(
+            url, service, user, repo, step_dir, version = scm.parse(
                 a['uses'])
 
             repo_dir = os.path.join(
-                actions_cache, service, user, repo
+                steps_cache, service, user, repo
             )
 
             a['repo_dir'] = repo_dir
-            a['action_dir'] = action_dir
+            a['step_dir'] = step_dir
 
             if dry_run:
                 continue
@@ -113,12 +113,12 @@ class WorkflowRunner(object):
             if skip_clone:
                 if not os.path.exists(repo_dir):
                     log.fail(
-                        'The required action folder \'{}\' was not '
+                        'The required step folder \'{}\' was not '
                         'found locally.'.format(repo_dir))
                 continue
 
             if not infoed:
-                log.info('[popper] Cloning action repositories')
+                log.info('[popper] Cloning step repositories')
                 infoed = True
 
             if '{}/{}'.format(user, repo) in cloned:
@@ -130,8 +130,8 @@ class WorkflowRunner(object):
 
     @staticmethod
     def instantiate_runners(engine, wf, workspace, dry_run, skip_pull, wid,
-                            engine_config=None):
-        """Factory of ActionRunner instances, one for each action.
+                            engine_conf=None):
+        """Factory of StepRunner instances, one for each step.
 
         Note:
             If the `uses` attribute startswith a './' and does not have
@@ -145,18 +145,18 @@ class WorkflowRunner(object):
           wf(popper.parser.workflow): Instance of the Workflow class.
           workspace(str): Location of the workspace.
           dry_run(bool): True if workflow flag is being dry-run.
-          skip_pull(bool): True if pulling action has to be skipped.
+          skip_pull(bool): True if pulling step has to be skipped.
           wid(str):
 
         Returns:
             None
         """
         env = WorkflowRunner.get_workflow_env(wf, workspace)
-        for _, a in wf.action.items():
+        for _, a in wf.step.items():
 
             if a['uses'] == 'sh':
                 a['runner'] = HostRunner(
-                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_conf)
                 continue
 
             if a['uses'].startswith('./'):
@@ -166,20 +166,20 @@ class WorkflowRunner(object):
 
                     a['runner'] = HostRunner(
                         a, workspace, env, dry_run, skip_pull, wid,
-                        engine_config)
+                        engine_conf)
                     continue
 
             if engine == 'docker':
                 a['runner'] = DockerRunner(
-                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_conf)
 
             elif engine == 'singularity':
                 a['runner'] = SingularityRunner(
-                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_conf)
 
             elif engine == 'vagrant':
                 a['runner'] = VagrantRunner(
-                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
+                    a, workspace, env, dry_run, skip_pull, wid, engine_conf)
 
     @staticmethod
     def get_workflow_env(wf, workspace):
@@ -200,36 +200,30 @@ class WorkflowRunner(object):
 
         env = {
             'HOME': os.environ['HOME'],
-            'GITHUB_WORKFLOW': wf.name,
-            'GITHUB_ACTION': '',
-            'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': repo_id,
-            'GITHUB_EVENT_NAME': wf.on,
-            'GITHUB_EVENT_PATH': '/tmp/github_event.json',
-            'GITHUB_WORKSPACE': workspace,
-            'GITHUB_SHA': scm.get_sha(),
-            'GITHUB_REF': scm.get_ref()
+            'POPPER_WORKFLOW': wf.name,
+            'POPPER_STEP': '',
+            'POPPER_WORKSPACE': workspace,
+            'POPPER_GIT_REPOSITORY': repo_id,
+            'POPPER_GIT_SHA': scm.get_sha(),
+            'POPPER_GIT_REF': scm.get_ref()
         }
-
-        for e in dict(env):
-            env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
 
         return env
 
-    def run(self, action, skip_clone, skip_pull, skip, workspace,
+    def run(self, step, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, engine,
-            engine_conf, skip_secrets_prompt=False):
-        """Run the workflow or a specific action.
+            conf, skip_secrets_prompt=False):
+        """Run the workflow or a specific step.
 
         Args:
-          action(str): Name of particular action being executed from workflow.
-          skip_clone(bool): True if cloning action has to be skipped.
-          skip_pull(bool): True if pulling action has to be skipped.
-          skip(tuple): Tuple containing the actions to be skipped.
+          step(str): Name of particular step being executed from workflow.
+          skip_clone(bool): True if cloning step has to be skipped.
+          skip_pull(bool): True if pulling step has to be skipped.
+          skip(tuple): Tuple containing the steps to be skipped.
           workspace(str): Location of the workspace.
           reuse(bool): True if existing containers are to be reused.
           dry_run(bool): True if workflow flag is being dry-run.
-          parallel(bool): True if actions are to be executed in parallel.
+          parallel(bool): True if steps are to be executed in parallel.
           with_dependencies(bool): True if with-dependencies flag is passed
                                     as an argument.
           runtime(str): Name of the run time being used in workflow.
@@ -242,17 +236,17 @@ class WorkflowRunner(object):
         new_wf = deepcopy(self.wf)
 
         if skip:
-            new_wf = Workflow.skip_actions(self.wf, skip)
+            new_wf = Workflow.skip_steps(self.wf, skip)
 
-        if action:
-            new_wf = Workflow.filter_action(self.wf, action, with_dependencies)
+        if step:
+            new_wf = Workflow.filter_step(self.wf, step, with_dependencies)
 
-        engine_config = pu.parse_engine_configuration(engine_conf)
+        engine_conf = pu.parse_engine_conf(conf)
 
-        new_wf.check_for_unreachable_actions(skip)
+        new_wf.check_for_unreachable_steps(skip)
 
         WorkflowRunner.check_secrets(new_wf, dry_run, skip_secrets_prompt)
-        WorkflowRunner.download_actions(new_wf, dry_run, skip_clone, self.wid)
+        WorkflowRunner.download_steps(new_wf, dry_run, skip_clone, self.wid)
         WorkflowRunner.instantiate_runners(
             engine,
             new_wf,
@@ -260,7 +254,7 @@ class WorkflowRunner(object):
             dry_run,
             skip_pull,
             self.wid,
-            engine_config)
+            engine_conf)
 
         for s in new_wf.get_stages():
             log.debug(s)
@@ -270,7 +264,7 @@ class WorkflowRunner(object):
     @staticmethod
     def run_stage(engine, wf, stage, reuse=False,
                   parallel=False):
-        """Runs actions in a stage either parallelly or sequentially.
+        """Runs steps in a stage either parallelly or sequentially.
 
         Args:
           engine(str): Name of container engine to use for the workflow.
@@ -288,51 +282,51 @@ class WorkflowRunner(object):
             with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
                 flist = {
                     ex.submit(
-                        wf.action[a]['runner'].run,
+                        wf.step[a]['runner'].run,
                         reuse): a for a in stage}
                 popper.cli.flist = flist
                 for future in as_completed(flist):
                     future.result()
         else:
             for a in stage:
-                wf.action[a]['runner'].run(reuse)
+                wf.step[a]['runner'].run(reuse)
 
 
-class ActionRunner(object):
-    """An action runner."""
+class StepRunner(object):
+    """An step runner."""
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull,
-                 wid, engine_config):
-        self.action = action
+    def __init__(self, step, workspace, env, dry_run, skip_pull,
+                 wid, engine_conf):
+        self.step = step
         self.workspace = workspace
         self.env = env
         self.dry_run = dry_run
         self.skip_pull = skip_pull
         self.wid = wid
-        self.engine_config = engine_config
+        self.engine_conf = engine_conf
         self.msg_prefix = "DRYRUN: " if dry_run else ""
         self.setup_necessary_files()
 
     def handle_exit(self, ecode):
-        """Exit handler for the action.
+        """Exit handler for the step.
 
         Args:
-          ecode(int): The exit code of the action's process.
+          ecode(int): The exit code of the step's process.
 
         Returns:
             None
         """
         if ecode == 0:
             log.info(
-                "Action '{}' ran successfully !".format(
-                    self.action['name']))
+                "Step '{}' ran successfully !".format(
+                    self.step['name']))
         elif ecode == 78:
             log.info(
-                "Action '{}' ran successfully !".format(
-                    self.action['name']))
+                "Step '{}' ran successfully !".format(
+                    self.step['name']))
             os.kill(os.getpid(), signal.SIGUSR1)
         else:
-            log.fail("Action '{}' failed !".format(self.action['name']))
+            log.fail("Step '{}' failed !".format(self.step['name']))
 
     def check_executable(self, command):
         """Check whether the required executable dependencies are installed in
@@ -350,7 +344,7 @@ class ActionRunner(object):
             )
 
     def setup_necessary_files(self):
-        """Setup necessary files and folders for an action.
+        """Setup necessary files and folders for an step.
 
         Args:
             None
@@ -360,10 +354,6 @@ class ActionRunner(object):
         """
         if not os.path.exists(self.workspace):
             os.makedirs(self.workspace)
-
-        if not os.path.exists(self.env['GITHUB_EVENT_PATH']):
-            f = open(self.env['GITHUB_EVENT_PATH'], 'w')
-            f.close()
 
     def prepare_volumes(self, env, include_docker_socket=False):
         """Prepare volume bindings for the container.
@@ -379,19 +369,18 @@ class ActionRunner(object):
         volumes = [
             '/var/run/docker.sock:/var/run/docker.sock',
             '{}:{}'.format(env['HOME'], env['HOME']),
-            '{}:{}'.format(env['HOME'], '/github/home'),
-            '{}:{}'.format(env['GITHUB_WORKSPACE'],
-                           env['GITHUB_WORKSPACE']),
-            '{}:{}'.format(env['GITHUB_WORKSPACE'], '/github/workspace'),
-            '{}:{}'.format(env['GITHUB_EVENT_PATH'],
-                           '/github/workflow/event.json')
+            '{}:{}'.format(env['HOME'], '/popper/home'),
+            '{}:{}'.format(env['POPPER_WORKSPACE'],
+                           env['POPPER_WORKSPACE']),
+            '{}:{}'.format(env['POPPER_WORKSPACE'], '/popper/workspace'),
+            '{}:{}'.format(env['POPPER_WORKSPACE'], '/github/workspace'),
         ]
         if include_docker_socket:
             return volumes
         return volumes[1:]
 
     def prepare_environment(self, set_env=False):
-        """Prepare the environment variables to be set while running an action.
+        """Prepare the environment variables to be set while running an step.
 
         Args:
           set_env(bool, optional): If True, the environment gets
@@ -400,16 +389,15 @@ class ActionRunner(object):
         Returns:
           dict: The environment variables dict.
         """
-        env = self.action.get('env', {})
+        env = self.step.get('env', {})
 
-        for s in self.action.get('secrets', []):
+        for s in self.step.get('secrets', []):
             env.update({s: os.environ[s]})
 
         for e, v in self.env.items():
             env.update({e: v})
 
-        env['GITHUB_ACTION'] = self.action['name']
-        env['POPPER_ACTION'] = self.action['name']
+        env['POPPER_STEP'] = self.step['name']
 
         if set_env:
             for k, v in env.items():
@@ -440,15 +428,15 @@ class ActionRunner(object):
         )
 
 
-class DockerRunner(ActionRunner):
-    """Runs actions in docker."""
+class DockerRunner(StepRunner):
+    """Runs steps in docker."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull,
-                 wid, engine_config):
+    def __init__(self, step, workspace, env, dry, skip_pull,
+                 wid, engine_conf):
         super(DockerRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid, engine_config)
+            step, workspace, env, dry, skip_pull, wid, engine_conf)
         self.d_client = docker.from_env()
-        self.cid = pu.sanitized_name(self.action['name'], wid)
+        self.cid = pu.sanitized_name(self.step['name'], wid)
         self.container = None
 
     def get_build_resources(self):
@@ -464,39 +452,39 @@ class DockerRunner(ActionRunner):
         image = None
         build_source = None
 
-        if 'docker://' in self.action['uses']:
-            image = self.action['uses'].replace('docker://', '')
+        if 'docker://' in self.step['uses']:
+            image = self.step['uses'].replace('docker://', '')
             if ':' not in image:
                 image += ":latest"
             build = False
 
-        elif './' in self.action['uses']:
-            action_dir = os.path.basename(
-                self.action['uses'].replace('./', ''))
+        elif './' in self.step['uses']:
+            step_dir = os.path.basename(
+                self.step['uses'].replace('./', ''))
 
-            if self.env['GITHUB_REPOSITORY'] == 'unknown':
+            if self.env['POPPER_GIT_REPOSITORY'] == 'unknown':
                 repo_id = ''
             else:
-                repo_id = self.env['GITHUB_REPOSITORY']
+                repo_id = self.env['POPPER_GIT_REPOSITORY']
 
-                if action_dir:
+                if step_dir:
                     repo_id += '/'
 
-            image = repo_id + action_dir + ':' + self.env['GITHUB_SHA']
+            image = repo_id + step_dir + ':' + self.env['POPPER_GIT_SHA']
 
             build_source = os.path.join(
-                scm.get_git_root_folder(), self.action['uses'])
+                scm.get_git_root_folder(), self.step['uses'])
         else:
-            _, _, user, repo, _, version = scm.parse(self.action['uses'])
+            _, _, user, repo, _, version = scm.parse(self.step['uses'])
             image = '{}/{}:{}'.format(user, repo, version)
-            build_source = os.path.join(self.action['repo_dir'],
-                                        self.action['action_dir'])
+            build_source = os.path.join(self.step['repo_dir'],
+                                        self.step['step_dir'])
 
         image = image.lower()
         return (build, image, build_source)
 
     def run(self, reuse=False):
-        """Parent function to handle the execution of an action.
+        """Parent function to handle the execution of an step.
 
         Args:
           reuse(bool, optional): True if existing containers are to be reused.
@@ -579,16 +567,16 @@ class DockerRunner(ActionRunner):
             return
         self.container.remove(force=True)
 
-    def mix_with_engine_config(self, config):
-        config["volumes"] = [*config["volumes"],
-                             *self.engine_config.get('volumes', list())]
-        for k, v in self.engine_config.get('environment', dict()).items():
-            config["environment"].update({k: v})
+    def mix_with_engine_conf(self, engine_config):
+        engine_config["volumes"] = [*engine_config["volumes"],
+                                    *self.engine_conf.get('volumes', list())]
+        for k, v in self.engine_conf.get('environment', dict()).items():
+            engine_config["environment"].update({k: v})
 
-        for k, v in self.engine_config.items():
-            if k not in config.keys():
-                config[k] = self.engine_config[k]
-        return config
+        for k, v in self.engine_conf.items():
+            if k not in engine_config.keys():
+                engine_config[k] = self.engine_conf[k]
+        return engine_config
 
     def docker_create(self, img):
         """Create a docker container from an image.
@@ -601,7 +589,7 @@ class DockerRunner(ActionRunner):
         """
         log.info('{}[{}] docker create {} {}'.format(
             self.msg_prefix,
-            self.action['name'], img, ' '.join(self.action.get('args', ''))
+            self.step['name'], img, ' '.join(self.step.get('args', ''))
         ))
         if self.dry_run:
             return
@@ -609,22 +597,22 @@ class DockerRunner(ActionRunner):
         env = self.prepare_environment()
         volumes = self.prepare_volumes(env, include_docker_socket=True)
 
-        config = {
+        engine_config = {
             "image": img,
-            "command": self.action.get('args', None),
+            "command": self.step.get('args', None),
             "name": self.cid,
             "volumes": volumes,
-            "working_dir": env['GITHUB_WORKSPACE'],
+            "working_dir": env['POPPER_WORKSPACE'],
             "environment": env,
-            "entrypoint": self.action.get('runs', None),
+            "entrypoint": self.step.get('runs', None),
             "detach": True
         }
 
-        if self.engine_config:
-            config = self.mix_with_engine_config(config)
+        if self.engine_conf:
+            engine_config = self.mix_with_engine_conf(engine_config)
 
-        log.debug(config)
-        self.container = self.d_client.containers.create(**config)
+        log.debug(engine_config)
+        self.container = self.d_client.containers.create(**engine_config)
 
     def docker_start(self):
         """Start the container process.
@@ -636,13 +624,13 @@ class DockerRunner(ActionRunner):
           int: The returncode of the container process.
         """
         log.info('{}[{}] docker start '.format(self.msg_prefix,
-                                               self.action['name']))
+                                               self.step['name']))
         if self.dry_run:
             return 0
         self.container.start()
         cout = self.container.logs(stream=True)
         for line in cout:
-            log.action_info(pu.decode(line).strip('\n'))
+            log.step_info(pu.decode(line).strip('\n'))
 
         return self.container.wait()['StatusCode']
 
@@ -657,7 +645,7 @@ class DockerRunner(ActionRunner):
         """
         if not self.skip_pull:
             log.info('{}[{}] docker pull {}'.format(self.msg_prefix,
-                                                    self.action['name'], img))
+                                                    self.step['name'], img))
             if self.dry_run:
                 return
             self.d_client.images.pull(repository=img)
@@ -678,20 +666,20 @@ class DockerRunner(ActionRunner):
             None
         """
         log.info('{}[{}] docker build -t {} {}'.format(
-            self.msg_prefix, self.action['name'], img, path))
+            self.msg_prefix, self.step['name'], img, path))
         if self.dry_run:
             return
         self.d_client.images.build(path=path, tag=img, rm=True, pull=True)
 
 
-class SingularityRunner(ActionRunner):
-    """Runs actions in singularity."""
+class SingularityRunner(StepRunner):
+    """Runs steps in singularity."""
     lock = threading.Lock()
 
-    def __init__(self, action, workspace, env, dry_run, skip_pull,
-                 wid, engine_config):
+    def __init__(self, step, workspace, env, dry_run, skip_pull,
+                 wid, engine_conf):
         super(SingularityRunner, self).__init__(
-            action, workspace, env, dry_run, skip_pull, wid, engine_config)
+            step, workspace, env, dry_run, skip_pull, wid, engine_conf)
         s_client.quiet = True
 
     @staticmethod
@@ -723,24 +711,24 @@ class SingularityRunner(ActionRunner):
         image = None
         build_source = None
 
-        if 'docker://' in self.action['uses']:
-            image = self.action['uses']
+        if 'docker://' in self.step['uses']:
+            image = self.step['uses']
             build = False
 
-        elif './' in self.action['uses']:
-            image = 'action/' + self.action['uses']
+        elif './' in self.step['uses']:
+            image = 'step/' + self.step['uses']
             build_source = os.path.join(
-                scm.get_git_root_folder(), self.action['uses'])
+                scm.get_git_root_folder(), self.step['uses'])
 
         else:
-            image = self.action['uses']
+            image = self.step['uses']
             build_source = os.path.join(
-                self.action['repo_dir'], self.action['action_dir'])
+                self.step['repo_dir'], self.step['step_dir'])
 
         return (build, image, build_source)
 
     def run(self, reuse=False):
-        """Parent function to handle the execution of the action.
+        """Parent function to handle the execution of the step.
 
         Args:
           reuse(bool, optional): True if existing containers are
@@ -886,7 +874,7 @@ class SingularityRunner(ActionRunner):
 
         if not self.skip_pull:
             log.info('{}[{}] singularity pull {} {}'.format(
-                self.msg_prefix, self.action['name'], container, image)
+                self.msg_prefix, self.step['name'], container, image)
             )
             if not self.dry_run:
                 if not self.singularity_exists(container_path):
@@ -921,7 +909,7 @@ class SingularityRunner(ActionRunner):
         build_dest = os.path.dirname(container_path)
 
         log.info('{}[{}] singularity build {} {}'.format(
-            self.msg_prefix, self.action['name'],
+            self.msg_prefix, self.step['name'],
             container, recipefile)
         )
 
@@ -943,19 +931,19 @@ class SingularityRunner(ActionRunner):
         env = self.prepare_environment(set_env=True)
         volumes = self.prepare_volumes(env)
 
-        args = self.action.get('args', None)
-        runs = self.action.get('runs', None)
+        args = self.step.get('args', None)
+        runs = self.step.get('runs', None)
         ecode = None
 
         if runs:
             info = '{}[{}] singularity exec {} {}'.format(
-                self.msg_prefix, self.action['name'],
+                self.msg_prefix, self.step['name'],
                 container_path, runs)
             commands = runs
             start = s_client.execute
         else:
             info = '{}[{}] singularity run {} {}'.format(
-                self.msg_prefix, self.action['name'],
+                self.msg_prefix, self.step['name'],
                 container_path, args)
             commands = args
             start = s_client.run
@@ -965,10 +953,10 @@ class SingularityRunner(ActionRunner):
             output = start(container_path, commands, bind=volumes,
                            stream=True, options=[
                                '--userns',
-                               '--pwd', env['GITHUB_WORKSPACE']])
+                               '--pwd', env['POPPER_WORKSPACE']])
             try:
                 for line in output:
-                    log.action_info(line)
+                    log.step_info(line)
                 ecode = 0
             except subprocess.CalledProcessError as ex:
                 ecode = ex.returncode
@@ -980,8 +968,8 @@ class SingularityRunner(ActionRunner):
 
 
 class VagrantRunner(DockerRunner):
-    """Runs actions in docker within a VM."""
-    actions = set()
+    """Runs steps in docker within a VM."""
+    steps = set()
     running = False
     vbox_path = None
     lock = threading.Lock()
@@ -993,13 +981,13 @@ class VagrantRunner(DockerRunner):
     end
     """
 
-    def __init__(self, action, workspace, env, dry, skip_pull,
-                 wid, engine_config):
+    def __init__(self, step, workspace, env, dry, skip_pull,
+                 wid, engine_conf):
         super(VagrantRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid, engine_config
+            step, workspace, env, dry, skip_pull, wid, engine_conf
         )
-        self.cid = pu.sanitized_name(self.action['name'], wid)
-        VagrantRunner.actions.add(self.action['name'])
+        self.cid = pu.sanitized_name(self.step['name'], wid)
+        VagrantRunner.steps.add(self.step['name'])
 
     @staticmethod
     def setup_vagrant_cache(wid):
@@ -1093,7 +1081,7 @@ class VagrantRunner(DockerRunner):
         time.sleep(5)
 
     def run(self, reuse=False):
-        """Parent function to handle the execution of the action.
+        """Parent function to handle the execution of the step.
 
         Args:
           reuse(bool, optional): True if existing containers are
@@ -1144,23 +1132,23 @@ class VagrantRunner(DockerRunner):
             popper.cli.docker_list.append(self.container)
 
         e = self.docker_start()
-        VagrantRunner.actions.remove(self.action['name'])
+        VagrantRunner.steps.remove(self.step['name'])
 
-        # If all the actions are done, stop the VM
-        if len(VagrantRunner.actions) == 0 and e != 78:
+        # If all the steps are done, stop the VM
+        if len(VagrantRunner.steps) == 0 and e != 78:
             self.vagrant_stop(VagrantRunner.vbox_path)
             VagrantRunner.running = False
 
         self.handle_exit(e)
 
 
-class HostRunner(ActionRunner):
-    """Run an Action on the Host Machine."""
+class HostRunner(StepRunner):
+    """Run an step on the Host Machine."""
 
-    def __init__(self, action, workspace, env, dry, skip_pull,
-                 wid, engine_config):
+    def __init__(self, step, workspace, env, dry, skip_pull,
+                 wid, engine_conf):
         super(HostRunner, self).__init__(
-            action, workspace, env, dry, skip_pull, wid, engine_config)
+            step, workspace, env, dry, skip_pull, wid, engine_conf)
         self.cwd = os.getcwd()
 
     def run(self, reuse=False):
@@ -1175,7 +1163,7 @@ class HostRunner(ActionRunner):
 
         """
         if reuse:
-            log.fail('--reuse flag is not supported for actions running '
+            log.fail('--reuse flag is not supported for steps running '
                      'on the host.')
 
         cmd = self.host_prepare()
@@ -1194,26 +1182,26 @@ class HostRunner(ActionRunner):
           str: The command to execute.
         """
         root = scm.get_git_root_folder()
-        if self.action['uses'] == 'sh':
-            cmd = self.action.get('runs', [])
+        if self.step['uses'] == 'sh':
+            cmd = self.step.get('runs', [])
             if cmd:
                 cmd[0] = os.path.join(root, cmd[0])
-            cmd.extend(self.action.get('args', []))
+            cmd.extend(self.step.get('args', []))
 
             if not self.dry_run:
                 os.chdir(root)
         else:
-            cmd = self.action.get('runs', ['entrypoint.sh'])
+            cmd = self.step.get('runs', ['entrypoint.sh'])
             cmd[0] = os.path.join('./', cmd[0])
-            cmd.extend(self.action.get('args', []))
+            cmd.extend(self.step.get('args', []))
 
             if not self.dry_run:
-                if 'repo_dir' in self.action:
-                    os.chdir(self.action['repo_dir'])
-                    cmd[0] = os.path.join(self.action['repo_dir'], cmd[0])
+                if 'repo_dir' in self.step:
+                    os.chdir(self.step['repo_dir'])
+                    cmd[0] = os.path.join(self.step['repo_dir'], cmd[0])
                 else:
-                    os.chdir(os.path.join(root, self.action['uses']))
-                    cmd[0] = os.path.join(root, self.action['uses'], cmd[0])
+                    os.chdir(os.path.join(root, self.step['uses']))
+                    cmd[0] = os.path.join(root, self.step['uses'], cmd[0])
 
         return cmd
 
@@ -1226,7 +1214,7 @@ class HostRunner(ActionRunner):
         Returns:
           int: The return code of the process.
         """
-        log.info('{}[{}] {}'.format(self.msg_prefix, self.action['name'],
+        log.info('{}[{}] {}'.format(self.msg_prefix, self.step['name'],
                                     ' '.join(cmd)))
 
         if self.dry_run:
@@ -1245,7 +1233,7 @@ class HostRunner(ActionRunner):
 
             for line in iter(p.stdout.readline, ''):
                 line_decoded = pu.decode(line)
-                log.action_info(line_decoded[:-1])
+                log.step_info(line_decoded[:-1])
 
             p.wait()
             ecode = p.poll()
@@ -1254,9 +1242,9 @@ class HostRunner(ActionRunner):
         except CalledProcessError as ex:
             msg = "Command '{}' failed: {}".format(cmd, ex)
             ecode = ex.returncode
-            log.action_info(msg)
+            log.step_info(msg)
         finally:
-            log.action_info()
+            log.step_info()
 
         os.chdir(self.cwd)
         return ecode

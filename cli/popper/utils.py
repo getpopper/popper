@@ -103,15 +103,15 @@ def find_recursive_wfile():
 
 
 def sanitized_name(name, wid):
-    """Clean an action name and change it to proper format. It replaces all the
+    """Clean a step name and change it to proper format. It replaces all the
     unwanted characters with `_`.
 
     Args:
-      name(str): The crude action name.
+      name(str): The crud step name.
       wid(str): It  is a workflow ID produced by a utils.get_id().
 
     Returns:
-      str: The sanitized action name.
+      str: The sanitize step name.
     """
     return "popper_{}_{}".format(
         re.sub('[^a-zA-Z0-9_.-]', '_', name),
@@ -199,26 +199,26 @@ def module_from_file(module_name, file_path):
     return module
 
 
-def parse_engine_configuration(engine_conf_file):
+def parse_engine_conf(conf_file):
     """Validate and parse the engine configuration file.
 
     Args:
-      engine_conf_file(str): Path to the file to be parsed.
+      conf_file(str): Path to the file to be parsed.
 
     Returns:
       dict: Engine configuration.
     """
-    if not engine_conf_file:
+    if not conf_file:
         return None
 
-    if not os.path.exists(engine_conf_file):
-        log.fail('File {} was not found.'.format(engine_conf_file))
+    if not os.path.exists(conf_file):
+        log.fail('File {} was not found.'.format(conf_file))
 
-    if not engine_conf_file.endswith('.py'):
+    if not conf_file.endswith('.py'):
         log.fail('Config file must be a python source file.')
 
-    module_name = os.path.basename(engine_conf_file)[:-3]
-    module = module_from_file(module_name, engine_conf_file)
+    module_name = os.path.basename(conf_file)[:-3]
+    module = module_from_file(module_name, conf_file)
 
     try:
         return module.engine_configuration

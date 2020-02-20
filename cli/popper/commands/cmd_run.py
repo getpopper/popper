@@ -175,7 +175,7 @@ def prepare_workflow_execution(recursive=False, **kwargs):
     """
 
     # Set the logging levels.
-    level = 'ACTION_INFO'
+    level = 'STEP_INFO'
     if kwargs['quiet']:
         level = 'INFO'
     if kwargs['debug']:
@@ -208,20 +208,19 @@ def run_workflow(**kwargs):
         None
 
     """
-    kwargs['wfile'] = pu.find_default_wfile(kwargs['wfile'])
-    log.info('Found and running workflow at ' + kwargs['wfile'])
+    log.info('Running workflow defined in ' + kwargs['wfile'])
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
 
-    wf = Workflow.new_workflow(kwargs['wfile'], kwargs['substitutions'],
+    wf = Workflow.new_workflow(kwargs['wfile'], kwargs['substitution'],
                                kwargs['allow_loose'])
     wf_runner = WorkflowRunner(wf)
 
     # remove substitution arguments from kwargs
-    kwargs.pop('substitutions')
+    kwargs.pop('substitution')
     kwargs.pop('allow_loose')
 
-    # Check for injected actions
+    # Check for injected steps
     pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
     post_wfile = os.environ.get('POPPER_POST_WORKFLOW_PATH')
 
@@ -234,11 +233,11 @@ def run_workflow(**kwargs):
         log.warning("Using --parallel may result in interleaved output. "
                     "You may use --quiet flag to avoid confusion.")
 
-    if kwargs['with_dependencies'] and (not kwargs['action']):
+    if kwargs['with_dependencies'] and (not kwargs['step']):
         log.fail('`--with-dependencies` can only be used when '
                  'STEP argument is given.')
 
-    if kwargs['skip'] and kwargs['action']:
+    if kwargs['skip'] and kwargs['step']:
         log.fail('`--skip` can not be used when STEP argument is passed.')
 
     on_failure = kwargs.pop('on_failure')
@@ -260,13 +259,13 @@ def run_workflow(**kwargs):
     except SystemExit as e:
         if (e.code != 0) and on_failure:
             kwargs['skip'] = list()
-            kwargs['action'] = on_failure
+            kwargs['step'] = on_failure
             wf_runner.run(**kwargs)
         else:
             raise
 
-    if kwargs['action']:
-        log.info('Step "{}" finished successfully.'.format(kwargs['action']))
+    if kwargs['step']:
+        log.info('Step "{}" finished successfully.'.format(kwargs['step']))
     else:
         log.info('Workflow "{}" finished successfully.'.format(wfile))
 
