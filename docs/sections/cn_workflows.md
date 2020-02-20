@@ -1,128 +1,35 @@
+# Workflow Specification Syntax and Execution Runtime
 
-# Workflow Language and Runtime
+This section introduces the YAML syntax used by Popper, and describes 
+the workflow execution runtime.
 
-This section introduces the [HCL-based][hcl] [workflow language][wfl] 
-used by Popper and also describes the execution runtime.
+> **NOTE**: Popper also supports the [now-deprecated syntax][drophcl] 
+> used in the alpha version of Github Action Workflows. We recommend 
+> users to use the YAML syntax.
 
-> **NOTE**: The workflow language employed by Popper is **NOT** 
-> supported by the official Github Actions platform. The HCL syntax 
-> for workflows was [introduced by Github on 02/2019][parser] and 
-> later [deprecated on 09/2019][drophcl]. The Popper project still 
-> uses the HCL syntax.
-
-[hcl]: https://github.com/hashicorp/hcl
-[wfl]: https://en.wikipedia.org/wiki/Scientific_workflow_system
 [parser]: https://github.blog/2019-02-07-an-open-source-parser-for-github-actions/
 [drophcl]: https://github.blog/changelog/2019-09-17-github-actions-will-stop-running-workflows-written-in-hcl/
 
-## Language
+## Syntax
 
-The following example workflow contains one workflow block and two 
-action blocks.
+A Popper workflow file looks like the following:
 
-```hcl
-workflow "IDENTIFIER" {
-  resolves = "ACTION2"
-}
-
-action "ACTION1" {
-  uses = "docker://image1"
-}
-
-action "ACTION2" {
-  needs = "ACTION1"
-  uses = "docker://image2"
-}
+```yaml
+version: '1'
+steps:
+- uses: docker://alpine:3.9
+  args: ["ls", "-la"]
 ```
 
-In this example, the workflow invokes `ACTION2` using `resolves`, but 
-because it `needs` `ACTION1`, the `ACTION1` block executes first. 
-`ACTION2` will execute once `ACTION1` has successfully completed. For 
-more information on why this happens, see "Workflow attributes" and 
-"Action attributes" below.
+A workflow specification contains one or more steps in the form of a 
+YAML list. Each item in the list is a dictionary containing at least a 
+`uses` entry, which denotes the docker image being used for that step.
 
-### Workflow blocks
+### Workflow steps
 
-A workflow file contains only one `workflow` blocks, each with a 
-unique identifier and the attributes outlined in the workflow 
-attributes table.
+The following table describes the attributes that can be used for each 
+step.
 
-#### Workflow attributes
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left">Name</th>
-<th style="text-align:left">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left"><code>resolves</code></td>
-<td style="text-align:left">Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the <code>needs</code> attribute are also invoked. In the example workflow above, <code>ACTION2</code> runs first via the <code>resolves</code> attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel.</td>
-</tr>
-</tbody>
-</table>
-
-<!--
-
-|  Name         | Description |
-| :------------ | :----------------------------------------------------------|
-|  `resolves`   | Identifies the action(s) to invoke. Can be a string or an array of strings. Any dependencies of the named action listed in the `needs` attribute are also invoked. In the example workflow above, `ACTION2` runs first via the `resolves` attribute. When more than one action is listed, like the example workflow block above, the actions are executed in parallel. |
-
--->
-
-### Action blocks
-
-A workflow file may contain any number of action blocks. Action blocks 
-must have a unique identifier and must have a `uses` attribute. 
-Example action block:
-
-```hcl
-action "IDENTIFIER" {
-  needs = "ACTION1"
-  uses = "docker://image2"
-}
-```
-
-#### Action attributes
-
-<table>
-<thead>
-<tr>
-<th style="text-align:left">Name</th>
-<th style="text-align:left">Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left"><code>needs</code></td>
-<td style="text-align:left">Identifies actions that must complete successfully before this action will be invoked. It can be a string or an array of strings. In the example workflow above, <code>ACTION2</code> is executed after <code>ACTION1</code> is successfully completed. <strong>Note:</strong> When actions with a common <code>needs</code> dependency run in parallel and one action fails, the remaining actions are cancelled automatically.</td>
-</tr>
-<tr>
-<td style="text-align:left"><code>uses</code></td>
-<td style="text-align:left">The Docker image that will run the action. For example, <code>uses = &quot;node:10&quot;</code>. See &quot;Using a Dockerfile image in an action&quot; for more examples.</td>
-</tr>
-<tr>
-<td style="text-align:left"><code>runs</code></td>
-<td style="text-align:left">Specifies the command to run in the docker image. If <code>runs</code> is omitted, the command specified in the <code>Dockerfile</code>&#39;s <code>ENTRYPOINT</code> instruction will execute. Use the <code>runs</code> attribute when the <code>Dockerfile</code> does not specify an <code>ENTRYPOINT</code> or you want to override the <code>ENTRYPOINT</code> command. The <code>runs</code> attribute does not invoke a shell by default. To use environment variables with the <code>runs</code> instruction, you must include a shell to expand the variables, for example: <code>runs = [&quot;sh&quot;, &quot;-c&quot;, &quot;echo $GITHUB_SHA&quot;]</code>. Using <code>runs = &quot;echo $GITHUB_SHA&quot;</code> will not print the value stored in the <code>$GITHUB_SHA</code>, but will instead print <code>\&quot;\$GITHUB\_SHA.\&quot;</code></td>
-</tr>
-<tr>
-<td style="text-align:left"><code>args</code></td>
-<td style="text-align:left">The arguments to pass to the action. The <code>args</code> can be a string or array. If you provide <code>args</code> in a string, the string is split around whitespace. For example, <code>args = &quot;container:release --app web&quot;</code> or <code>args = [&quot;container:release&quot;, &quot;--app&quot;, &quot;web&quot;]</code>.</td>
-</tr>
-<tr>
-<td style="text-align:left"><code>env</code></td>
-<td style="text-align:left">The environment variables to set in the action&#39;s runtime environment. If you need to pass environment variables into an action, make sure your action runs a command shell to perform variable substitution. For example, if your <code>runs</code> attribute is set to <code>&quot;sh -c&quot;</code>, <code>args</code> will be run in a command shell. Alternatively, if your <code>Dockerfile</code> uses an <code>ENTRYPOINT</code> to run the same command (<code>&quot;sh -c&quot;</code>), <code>args</code> will execute in a command shell. See <a href="https://docs.docker.com/engine/reference/builder/#entrypoint"><code>ENTRYPOINT</code></a> for more details.</td>
-</tr>
-<tr>
-<td style="text-align:left"><code>secrets</code></td>
-<td style="text-align:left">Specifies the names of the secret variables to set in the runtime environment, which the action can access as an environment variable. For example, <code>secrets = [&quot;SECRET1&quot;, &quot;SECRET2&quot;]</code>.</td>
-</tr>
-</tbody>
-</table>
-
-<!--
 | Name        | Description |
 | :---------- | :-------------------- |
 | `needs`     | Identifies actions that must complete successfully before this action will be invoked. It can be a string or an array of strings. In the example workflow above, `ACTION2` is executed after `ACTION1` is successfully completed. **Note:** When actions with a common `needs` dependency run in parallel and one action fails, the remaining actions are cancelled automatically. |
@@ -131,7 +38,6 @@ action "IDENTIFIER" {
 | `args`      | The arguments to pass to the action. The `args` can be a string or array. If you provide `args` in a string, the string is split around whitespace. For example, `args = "container:release --app web"` or `args = ["container:release", "--app", "web"]`. |
 | `env`       | The environment variables to set in the action's runtime environment. If you need to pass environment variables into an action, make sure your action runs a command shell to perform variable substitution. For example, if your `runs` attribute is set to `"sh -c"`, `args` will be run in a command shell. Alternatively, if your `Dockerfile` uses an `ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a command shell. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
 | `secrets`   | Specifies the names of the secret variables to set in the runtime environment, which the action can access as an environment variable. For example, `secrets = ["SECRET1", "SECRET2"]`.
--->
 
 ### Using a `Dockerfile` image in an action
 
@@ -190,7 +96,15 @@ refer to an action on a public Git repository or Docker container registry:
 
 ### Referencing private Github repositories in an action
 
-We can make use of actions located in private Github repositories by defining a ```GITHUB_API_TOKEN``` environment variable that the ```popper run``` command reads and uses to clone private Github repositories. To accomplish this, the repository referenced in the ```uses``` attribute is assumed to be private and, to access it, an API token from Github is needed (see instructions <a href = "https://github.com/settings/tokens">here</a>). The token needs to have permissions to read the private repository in question. To run a workflow that references private repositories:
+We can make use of actions located in private Github repositories by 
+defining a `GITHUB_API_TOKEN` environment variable that the `popper 
+run` command reads and uses to clone private Github repositories. To 
+accomplish this, the repository referenced in the `uses` attribute is 
+assumed to be private and, to access it, an API token from Github is 
+needed (see instructions <a href = 
+"https://github.com/settings/tokens">here</a>). The token needs to 
+have permissions to read the private repository in question. To run a 
+workflow that references private repositories:
 
 ```bash
 export GITHUB_API_TOKEN=access_token_here

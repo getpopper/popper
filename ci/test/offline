@@ -47,10 +47,10 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-pull --engine "$ENGINE")
+(! popper run --wfile main.workflow --skip-pull --engine "$ENGINE")
 
 # action repo not present locally, fail workflow using --skip-clone
-delete_dir "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
+delete_dir "$HOME/.cache/popper/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -63,19 +63,11 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-clone --engine "$ENGINE")
+(! popper run --wfile main.workflow --skip-clone --engine "$ENGINE")
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
-docker pull debian:stretch-slim
-if [ "$ENGINE" == "singularity" ]; then
-rm -rf "$HOME/.cache/.popper/singularity/$ID"
-mkdir "$HOME/.cache/.popper/singularity/$ID"
-singularity pull --name popper_docker___debian_stretch-slim_"$ID".sif docker://debian:stretch-slim
-mv popper_docker___debian_stretch-slim_"$ID".sif "$HOME/.cache/.popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
-fi
-git clone https://github.com/popperized/bin "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
-
+git clone https://github.com/popperized/bin "$HOME/.cache/popper/$ID/github.com/popperized/bin"
 cat <<EOF > main.workflow
 workflow "sample workflow" {
     resolves = ["sample action one", "sample action two"]
@@ -92,15 +84,24 @@ action "sample action two" {
 }
 EOF
 
-popper run --skip-clone --skip-pull --engine "$ENGINE" > output
-grep -q "sample action one" output
-grep -q "sample action two" output
+if [ "$ENGINE" == "singularity" ]; then
+  rm -rf "$HOME/.cache/popper/singularity/$ID"
+  mkdir "$HOME/.cache/popper/singularity/$ID"
+  singularity pull --name debian_"$ID".sif docker://debian:stretch-slim
+  mv debian_"$ID".sif "$HOME/.cache/popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
+else
+  docker pull debian:stretch-slim
+fi
+
+popper run --wfile main.workflow --skip-clone --skip-pull --engine "$ENGINE" > output
+grep -q "sample action one' ran successfully" output
+grep -q "sample action two' ran successfully" output
 
 
 if [ "$ENGINE" == "vagrant" ]; then
-vagrant destroy -f
-export DOCKER_HOST=
-rm -rf "$HOME/.cache/.popper/vagrant/$ID"
+  vagrant destroy -f
+  export DOCKER_HOST=
+  rm -rf "$HOME/.cache/.popper/vagrant/$ID"
 fi
 
 

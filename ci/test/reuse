@@ -27,25 +27,25 @@ action "show env" {
 }
 EOF
 
-popper run
+popper run --wfile main.workflow
 
 docker ps -a | grep 'popper_show_env'
 
 docker cp ./main.workflow popper_show_env_"$ID":/
 
-popper run --reuse
+popper run --wfile main.workflow --reuse
 
 # the file we copied above should still be there
 docker cp popper_show_env_"$ID":/main.workflow main.workflow
 
 # now we re-run without --reuse so a new container is created
-popper run
+popper run --wfile main.workflow
 
 # so the file shouldn't be there
 (! docker cp popper_show_env_"$ID":/main.workflow /tmp/main.workflow)
 
 # lastly, test reuse for a single action
-popper run --reuse 'show env'
+popper run --wfile main.workflow --reuse 'show env'
 
 # test while reusing the container uses the updated args.
 
@@ -65,7 +65,7 @@ action "show env" {
 }
 EOF
 
-popper run --engine "$ENGINE" > output
+popper run --wfile main.workflow --engine "$ENGINE" > output
 
 grep -q "README.md" output
 grep -q "main.workflow" output
@@ -81,7 +81,7 @@ action "show env" {
 }
 EOF
 
-popper run --reuse --engine "$ENGINE" > output
+popper run --wfile main.workflow --reuse --engine "$ENGINE" > output
 grep  -q "message in a bottle" output
 
 cat <<EOF > main.workflow
@@ -95,7 +95,7 @@ action "check file" {
 }
 EOF
 
-popper run --engine "$ENGINE" > /dev/null
+popper run --wfile main.workflow --engine "$ENGINE" > /dev/null
 
 cat <<EOF > main.workflow
 workflow "test" {
@@ -108,7 +108,7 @@ action "check file" {
 }
 EOF
 
-popper run --reuse --engine "$ENGINE" > output
+popper run --wfile main.workflow --reuse --engine "$ENGINE" > output
 grep -q "Hello from Popper 2.x !" output
 
 fi

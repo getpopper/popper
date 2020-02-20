@@ -18,7 +18,7 @@ action "sh" {
 }
 EOF
 
-popper run
+popper run --wfile main.workflow
 
 cat <<EOF > script
 #!/bin/bash
@@ -40,7 +40,7 @@ action "sh" {
 }
 EOF
 
-popper run
+popper run --wfile main.workflow
 
 
 cat <<EOF > script
@@ -62,7 +62,7 @@ action "sh" {
 }
 EOF
 
-popper run
+popper run --wfile main.workflow
 
 
 ## Parallel Executions
@@ -220,7 +220,7 @@ action "sh" {
 }
 EOF
 
-count=$(popper run --parallel --debug | grep -c "Action '[a-zA-Z0-9_]*' ran successfully !")
+count=$(popper run --wfile main.workflow --parallel --debug | grep -c "Step '[a-zA-Z0-9_]*' ran successfully !")
 test "$count" -eq 11
 
 cat <<EOF > main.workflow
@@ -296,7 +296,7 @@ action "sh" {
 }
 EOF
 
-count=$(popper run --parallel --debug | grep -c "Action '[a-zA-Z0-9_]*' ran successfully !")
+count=$(popper run --wfile main.workflow --parallel --debug | grep -c "Step '[a-zA-Z0-9_]*' ran successfully !")
 test "$count" -eq 11
 
 echo "Tesh SH passed."

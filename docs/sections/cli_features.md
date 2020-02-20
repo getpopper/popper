@@ -84,23 +84,18 @@ popper run --engine-conf settings.py
 ## Environment Variables
 
 Popper defines a set of environment variables (see [Environment 
-Variables][envvars] section) that are available to all actions. To see 
-the values assigned to these variables, run the following workflow:
+Variables][envvars] section) that are available for all steps in a 
+workflow. To see the values assigned to these variables, run the 
+following workflow:
 
-[envvars]: gha_workflows.html#environment-variables
+[envvars]: cn_workflows.html#environment-variables
 
 ```hcl
-workflow "env workflow" {
-  resolves = "show env"
-}
-
-action "show env" {
-  uses = "popperized/bin/sh@master"
-  args = ["env"]
-}
+- uses: popperized/bin/sh@master
+  args: env
 ```
 
-To define new variables, the `env` keyword can be used (see [Action 
+To define new variables, the `env` keyword can be used (see [ 
 Attributes][act-attr] for more).
 
 [act-attr]: gha_workflows.html#action-attributes

@@ -35,6 +35,7 @@ from recommonmark.parser import CommonMarkParser
 extensions = [
     'sphinx.ext.githubpages',
     'sphinx.ext.autosectionlabel',
+    'sphinx_markdown_tables'
 ]
 
 
@@ -53,8 +54,7 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
 
 # The encoding of source files.
 #
@@ -65,7 +65,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Popper'
-copyright = u'2019, Ivo Jimenez'
+copyright = u'2020, Ivo Jimenez'
 author = u'Ivo Jimenez'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -358,5 +358,3 @@ texinfo_documents = [
 source_parsers = {
     '.md': CommonMarkParser,
 }
-
-source_suffix = ['.rst', '.md']
