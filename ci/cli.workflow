@@ -1,5 +1,4 @@
 workflow "cli tests" {
-  on = "push"
   resolves = "end"
 }
 
@@ -80,12 +79,6 @@ action "test skip" {
   args = "ci/test/skip"
 }
 
-action "test search" {
-  needs = "lint"
-  uses = "sh"
-  args = "ci/test/search"
-}
-
 action "test substitutions" {
   needs = "lint"
   uses = "sh"
@@ -125,7 +118,6 @@ action "end" {
     "test quiet",
     "test reuse",
     "test scaffold",
-    "test search",
     "test sh",
     "test skip",
     "test substitutions",

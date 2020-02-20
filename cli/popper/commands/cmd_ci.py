@@ -4,7 +4,7 @@ from string import Template
 
 import click
 
-from popper import scm, utils as pu
+from popper import scm
 from popper.cli import pass_context, log
 
 base_script_content = """
@@ -148,7 +148,7 @@ def cli(ctx, service, install):
     # Args:
     #   ctx(Popper.cli.context): For process inter-command communication
     #         context is used.For reference visit
-    #         https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
+    #         https://click.palletsprojects.com/en/7.x/
     #   service(string): Defines the service.
     #   install(tuple): Tuple with custom installation scripts.
 
@@ -162,7 +162,7 @@ def cli(ctx, service, install):
             'This command needs to be executed on the root of your '
             'Git project folder (where the .git/ folder is located).')
 
-    for ci_file, ci_file_content in pu.get_items(ci_files[service]):
+    for ci_file, ci_file_content in ci_files[service].items():
 
         # Prepare and write the CI config file.
         ci_file = os.path.join(project_root, ci_file)

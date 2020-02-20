@@ -14,9 +14,9 @@ before_install:
 - pip install git+https://github.com/virtuald/pyhcl.git@0.3.12#egg=pyhcl
 - pip install coverage
 install:
-- pip install cli/[dev]
+- pip install cli/
 script:
 - coverage run -m unittest discover --start-directory cli/
-- popper run
+- popper run -f ci/cli.workflow
 after_success:
 - bash <(curl -s https://codecov.io/bash)

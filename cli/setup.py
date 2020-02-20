@@ -15,7 +15,6 @@ setup(
     include_package_data=True,
     install_requires=[
         'python-vagrant',
-        'requests',
         'GitPython',
         'spython',
         'click',
@@ -23,9 +22,6 @@ setup(
         'pyyaml',
         'docker'
     ],
-    extras_require={
-        'dev': ['requests-mock']
-    },
     entry_points='''
         [console_scripts]
         popper=popper.cli:cli
