@@ -1074,7 +1074,6 @@ class TestHCLWorkflow(unittest.TestCase):
         hcl_workflow.normalize()
         self.assertEqual(hcl_workflow.resolves, ['a'])
         self.assertEqual(hcl_workflow.name, 'sample workflow')
-        self.assertEqual(hcl_workflow.on, 'push')
         self.assertDictEqual(hcl_workflow.props, dict())
         step_a = hcl_workflow.step['a']
         self.assertEqual(step_a['name'], 'a')
@@ -1089,7 +1088,6 @@ class TestHCLWorkflow(unittest.TestCase):
         hcl_workflow.complete_graph()
         self.assertEqual(hcl_workflow.name, 'example')
         self.assertEqual(hcl_workflow.resolves, ['end'])
-        self.assertEqual(hcl_workflow.on, 'push')
         self.assertEqual(hcl_workflow.props, {})
         self.assertEqual(hcl_workflow.root, {'b', 'c', 'a'})
 
@@ -1178,7 +1176,6 @@ class TestYMLWorkflow(unittest.TestCase):
         yml_workflow = YMLWorkflow(YML_WORKFLOW_PATH)
         yml_workflow.normalize()
         self.assertEqual(yml_workflow.name, 'a')
-        self.assertEqual(yml_workflow.on, '')
         self.assertDictEqual(yml_workflow.props, dict())
         step_a = yml_workflow.step['a']
         self.assertEqual(step_a['name'], 'a')
@@ -1207,7 +1204,6 @@ class TestYMLWorkflow(unittest.TestCase):
         yml_workflow.normalize()
         yml_workflow.complete_graph()
         self.assertEqual(yml_workflow.name, 'a')
-        self.assertEqual(yml_workflow.on, '')
         self.assertEqual(yml_workflow.props, {})
         self.assertEqual(yml_workflow.root, {'b', 'c', 'a'})
 
