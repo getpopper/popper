@@ -4,8 +4,9 @@ Popper is a [container-native][cn] [workflow execution engine][wfeng].
 A container-native workflow is one where all steps contained in it are 
 executed in containers. Before going through this guide, you need to 
 have the Docker engine installed on your machine (see [installations 
-instructions here][docker-install]), as well as a Python installation 
-capable of adding packages via [Pip][pip] or [Virtualenv][venv].
+instructions here][docker-install]), as well as a Python 3.6+ 
+installation capable of adding packages via [Pip][pip] or 
+[Virtualenv][venv].
 
 ## Installation
 
