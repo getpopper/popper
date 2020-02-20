@@ -281,13 +281,9 @@ class StepRunner(object):
             None
         """
         if ecode == 0:
-            log.info(
-                "Step '{}' ran successfully !".format(
-                    self.step['name']))
+            log.info("Step '{}' ran successfully !".format(self.step['name']))
         elif ecode == 78:
-            log.info(
-                "Step '{}' ran successfully !".format(
-                    self.step['name']))
+            log.info("Step '{}' ran successfully !".format(self.step['name']))
             os.kill(os.getpid(), signal.SIGUSR1)
         else:
             log.fail("Step '{}' failed !".format(self.step['name']))
@@ -399,7 +395,7 @@ class DockerRunner(StepRunner):
             build = False
 
         elif './' in self.step['uses']:
-            image = self.step['name'] + ':' + scm.get_sha()
+            image = pu.sanitized_name(self.step['name']) + ':' + scm.get_sha()
             build_source = os.path.join(
                 scm.get_git_root_folder(), self.step['uses'])
         else:

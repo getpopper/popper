@@ -102,7 +102,7 @@ def find_recursive_wfile():
     return wfile_list
 
 
-def sanitized_name(name, wid):
+def sanitized_name(name, wid=''):
     """Clean a step name and change it to proper format. It replaces all the
     unwanted characters with `_`.
 
@@ -113,10 +113,7 @@ def sanitized_name(name, wid):
     Returns:
       str: The sanitize step name.
     """
-    return "popper_{}_{}".format(
-        re.sub('[^a-zA-Z0-9_.-]', '_', name),
-        wid
-    )
+    return "popper_{}_{}".format(re.sub('[^a-zA-Z0-9_.-]', '_', name), wid)
 
 
 def of_type(param, valid_types):

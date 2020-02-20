@@ -164,21 +164,21 @@ class TestWorkflowRunner(unittest.TestCase):
         self.assertEqual(
             os.path.exists(
                 os.environ['HOME'] +
-                '/.cache/popper/steps/12345/github.com'),
+                '/.cache/popper/12345/github.com'),
             True)
 
         # Download steps in custom cache directory
         os.environ['POPPER_CACHE_DIR'] = '/tmp/somedir'
         WorkflowRunner.clone_repos(wf, False, False, '12345')
         self.assertEqual(os.path.exists(
-            '/tmp/somedir/steps/12345/github.com'), True)
+            '/tmp/somedir/12345/github.com'), True)
         os.environ.pop('POPPER_CACHE_DIR')
 
         # Release resources.
         shutil.rmtree('/tmp/somedir')
         shutil.rmtree(
             os.environ['HOME'] +
-            '/.cache/popper/steps/12345/github.com')
+            '/.cache/popper/12345/github.com')
 
         # Test with skipclone flag when step not present in cache.
         self.assertRaises(
@@ -304,15 +304,16 @@ class TestDockerRunner(unittest.TestCase):
             (True,
              'popperized/bin:master',
              os.environ['HOME'] +
-             '/.cache/popper/steps/12345/github.com/popperized/bin/sh'))
+             '/.cache/popper/12345/github.com/popperized/bin/sh'))
         self.runner.step['uses'] = 'docker://alpine:3.8'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res,
                               (False, 'alpine:3.8', None))
         self.runner.step['uses'] = './actions/jshint'
         res = self.runner.get_build_resources()
-        self.assertTupleEqual(
-            res, (True, 'jshint:unknown', '/tmp/test_folder/./actions/jshint'))
+        exp = (True, 'popper_sample_action_:unknown',
+               '/tmp/test_folder/./actions/jshint')
+        self.assertTupleEqual(res, exp)
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'docker',
@@ -523,11 +524,11 @@ class TestSingularityRunner(unittest.TestCase):
         os.chdir(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/popper/steps/12345/github.com/popperized/bin/sh'))
+                '.cache/popper/12345/github.com/popperized/bin/sh'))
         self.runner.singularity_build_from_recipe(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/popper/steps/12345/github.com/popperized/bin/sh'),
+                '.cache/popper/12345/github.com/popperized/bin/sh'),
             os.path.join(
                 os.environ['HOME'],
                 '.cache/popper/singularity/12345/testimg.sif'))
@@ -544,16 +545,16 @@ class TestSingularityRunner(unittest.TestCase):
     def test_get_recipe_file(self):
         os.chdir(
             os.environ['HOME'] +
-            '/.cache/popper/steps/12345/github.com/popperized/bin/sh')
+            '/.cache/popper/12345/github.com/popperized/bin/sh')
         file = SingularityRunner.get_recipe_file(os.getcwd(), '12345')
         self.assertEqual(
             file,
             os.environ['HOME'] +
-            '/.cache/popper/steps/12345/github.com/popperized/bin/sh/' +
+            '/.cache/popper/12345/github.com/popperized/bin/sh/' +
             'Singularity.12345')
         os.remove(
             os.environ['HOME'] +
-            '/.cache/popper/steps/12345/github.com/popperized/bin/sh/' +
+            '/.cache/popper/12345/github.com/popperized/bin/sh/' +
             'Dockerfile')
         self.assertRaises(
             SystemExit,
@@ -591,7 +592,7 @@ class TestSingularityRunner(unittest.TestCase):
              'popperized/bin/sh@master',
              os.path.join(
                  os.environ['HOME'],
-                 '.cache/popper/steps/12345/github.com/popperized/bin/sh')))
+                 '.cache/popper/12345/github.com/popperized/bin/sh')))
         self.runner.step['uses'] = 'docker://alpine:3.8'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res, (False, 'docker://alpine:3.8', None))
