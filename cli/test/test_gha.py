@@ -13,15 +13,14 @@ import git
 import vagrant
 
 from popper.cli import log
-from popper.parser import Workflow, HCLWorkflow
+from popper.parser import HCLWorkflow
 from popper.gha import (WorkflowRunner,
-                        ActionRunner,
                         DockerRunner,
                         SingularityRunner,
                         VagrantRunner,
                         HostRunner)
+from concurrent.futures import ThreadPoolExecutor
 import popper.utils as pu
-from concurrent.futures import ThreadPoolExecutor, as_completed
 
 
 class TestWorkflowRunner(unittest.TestCase):
@@ -71,7 +70,7 @@ class TestWorkflowRunner(unittest.TestCase):
         wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
         os.environ['CI'] = 'false'
-        with patch('getpass.getpass', return_value='1234') as fake_input:
+        with patch('getpass.getpass', return_value='1234'):
             WorkflowRunner.check_secrets(wf, False, False)
 
         os.environ['CI'] = 'true'
@@ -96,14 +95,13 @@ class TestWorkflowRunner(unittest.TestCase):
         """)
         wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
-        env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         WorkflowRunner.instantiate_runners(
             'docker', wf, '/tmp/test_folder', False, False, '12345')
-        self.assertIsInstance(wf.action['a']['runner'], HostRunner)
+        self.assertIsInstance(wf.step['a']['runner'], HostRunner)
 
-        os.makedirs('/tmp/test_folder/actions/sample')
-        pu.write_file('/tmp/test_folder/actions/sample/entrypoint.sh')
-        pu.write_file('/tmp/test_folder/actions/sample/README.md')
+        os.makedirs('/tmp/test_folder/steps/sample')
+        pu.write_file('/tmp/test_folder/steps/sample/entrypoint.sh')
+        pu.write_file('/tmp/test_folder/steps/sample/README.md')
 
         pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "sample" {
@@ -111,16 +109,15 @@ class TestWorkflowRunner(unittest.TestCase):
         }
 
         action "a" {
-            uses = "./actions/sample"
+            uses = "./steps/sample"
 
         }
         """)
         wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
-        env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         WorkflowRunner.instantiate_runners(
             'singularity', wf, '/tmp/test_folder', False, False, '12345')
-        self.assertIsInstance(wf.action['a']['runner'], HostRunner)
+        self.assertIsInstance(wf.step['a']['runner'], HostRunner)
 
         pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "sample" {
@@ -133,20 +130,19 @@ class TestWorkflowRunner(unittest.TestCase):
         """)
         wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
-        env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         WorkflowRunner.instantiate_runners(
             'singularity', wf, '/tmp/test_folder', False, False, '12345')
-        self.assertIsInstance(wf.action['a']['runner'], SingularityRunner)
+        self.assertIsInstance(wf.step['a']['runner'], SingularityRunner)
 
         WorkflowRunner.instantiate_runners(
             'docker', wf, '/tmp/test_folder', False, False, '12345')
-        self.assertIsInstance(wf.action['a']['runner'], DockerRunner)
+        self.assertIsInstance(wf.step['a']['runner'], DockerRunner)
 
         WorkflowRunner.instantiate_runners(
             'vagrant', wf, '/tmp/test_folder', False, False, '12345')
-        self.assertIsInstance(wf.action['a']['runner'], VagrantRunner)
+        self.assertIsInstance(wf.step['a']['runner'], VagrantRunner)
 
-    def test_download_actions(self):
+    def test_download_steps(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "sample" {
             resolves = "a"
@@ -163,31 +159,31 @@ class TestWorkflowRunner(unittest.TestCase):
         wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         wf.parse()
 
-        # Download actions in the default cache directory.
-        WorkflowRunner.download_actions(wf, False, False, '12345')
+        # Download steps in the default cache directory.
+        WorkflowRunner.download_steps(wf, False, False, '12345')
         self.assertEqual(
             os.path.exists(
                 os.environ['HOME'] +
-                '/.cache/.popper/actions/12345/github.com'),
+                '/.cache/popper/steps/12345/github.com'),
             True)
 
-        # Download actions in custom cache directory
+        # Download steps in custom cache directory
         os.environ['POPPER_CACHE_DIR'] = '/tmp/somedir'
-        WorkflowRunner.download_actions(wf, False, False, '12345')
+        WorkflowRunner.download_steps(wf, False, False, '12345')
         self.assertEqual(os.path.exists(
-            '/tmp/somedir/actions/12345/github.com'), True)
+            '/tmp/somedir/steps/12345/github.com'), True)
         os.environ.pop('POPPER_CACHE_DIR')
 
         # Release resources.
         shutil.rmtree('/tmp/somedir')
         shutil.rmtree(
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com')
+            '/.cache/popper/steps/12345/github.com')
 
-        # Test with skipclone flag when action not present in cache.
+        # Test with skipclone flag when step not present in cache.
         self.assertRaises(
             SystemExit,
-            WorkflowRunner.download_actions,
+            WorkflowRunner.download_steps,
             wf,
             False,
             True,
@@ -208,27 +204,14 @@ class TestWorkflowRunner(unittest.TestCase):
         env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
         self.assertDictEqual(env, {
             'HOME': os.environ['HOME'],
-            'GITHUB_WORKFLOW': 'sample',
-            'GITHUB_ACTION': '',
-            'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': 'unknown',
-            'GITHUB_EVENT_NAME': 'push',
-            'GITHUB_EVENT_PATH': '/tmp/github_event.json',
-            'GITHUB_WORKSPACE': '/tmp/test_folder',
-            'GITHUB_SHA': 'unknown',
-            'GITHUB_REF': 'unknown',
             'POPPER_WORKFLOW': 'sample',
-            'POPPER_ACTION': '',
-            'POPPER_ACTOR': 'popper',
             'POPPER_REPOSITORY': 'unknown',
-            'POPPER_EVENT_NAME': 'push',
-            'POPPER_EVENT_PATH': '/tmp/github_event.json',
             'POPPER_WORKSPACE': '/tmp/test_folder',
-            'POPPER_SHA': 'unknown',
-            'POPPER_REF': 'unknown'})
+            'POPPER_GIT_SHA': 'unknown',
+            'POPPER_GIT_REF': 'unknown'})
 
 
-class TestActionRunner(unittest.TestCase):
+class TestStepRunner(unittest.TestCase):
 
     def setUp(self):
         os.makedirs('/tmp/test_folder')
@@ -249,7 +232,7 @@ class TestActionRunner(unittest.TestCase):
         self.wf.parse()
         WorkflowRunner.instantiate_runners(
             'docker', self.wf, '/tmp/test_folder', False, False, '12345')
-        self.runner = self.wf.action['sample action']['runner']
+        self.runner = self.wf.step['sample action']['runner']
 
     def tearDown(self):
         os.chdir('/tmp')
@@ -278,23 +261,10 @@ class TestActionRunner(unittest.TestCase):
         env = self.runner.prepare_environment()
         self.assertDictEqual(env, {
             'HOME': os.environ['HOME'],
-            'GITHUB_WORKFLOW': 'sample',
-            'GITHUB_ACTION': 'sample action',
-            'GITHUB_ACTOR': 'popper',
-            'GITHUB_REPOSITORY': 'unknown',
-            'GITHUB_EVENT_NAME': 'push',
-            'GITHUB_EVENT_PATH': '/tmp/github_event.json',
-            'GITHUB_WORKSPACE': '/tmp/test_folder',
-            'GITHUB_SHA': 'unknown', 'GITHUB_REF':
-            'unknown', 'POPPER_WORKFLOW': 'sample',
-            'POPPER_ACTION': 'sample action',
-            'POPPER_ACTOR': 'popper',
             'POPPER_REPOSITORY': 'unknown',
-            'POPPER_EVENT_NAME': 'push',
-            'POPPER_EVENT_PATH': '/tmp/github_event.json',
             'POPPER_WORKSPACE': '/tmp/test_folder',
-            'POPPER_SHA': 'unknown',
-            'POPPER_REF': 'unknown'})
+            'POPPER_GIT_SHA': 'unknown',
+            'POPPER_GIT_REF': 'unknown'})
 
         self.assertEqual(set(env.keys()).issubset(set(os.environ)), False)
         env = self.runner.prepare_environment(set_env=True)
@@ -354,16 +324,16 @@ class TestDockerRunner(unittest.TestCase):
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
         self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
-        WorkflowRunner.download_actions(self.wf, False, False, '12345')
+        WorkflowRunner.download_steps(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
             'docker', self.wf, '/tmp/test_folder', False, False, '12345')
         self.docker_client = docker.from_env()
-        self.runner = self.wf.action['sample action']['runner']
+        self.runner = self.wf.step['sample action']['runner']
 
     def tearDown(self):
         os.chdir('/tmp')
         shutil.rmtree('/tmp/test_folder')
-        shutil.rmtree(os.path.join(os.environ['HOME'], '.cache/.popper'))
+        shutil.rmtree(os.path.join(os.environ['HOME'], '.cache/popper'))
         log.setLevel('NOTSET')
         self.docker_client.close()
 
@@ -377,12 +347,12 @@ class TestDockerRunner(unittest.TestCase):
             (True,
              'popperized/bin:master',
              os.environ['HOME'] +
-             '/.cache/.popper/actions/12345/github.com/popperized/bin/sh'))
-        self.runner.action['uses'] = 'docker://debian:buster-slim'
+             '/.cache/popper/steps/12345/github.com/popperized/bin/sh'))
+        self.runner.step['uses'] = 'docker://debian:buster-slim'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res,
                               (False, 'debian:buster-slim', None))
-        self.runner.action['uses'] = './actions/jshint'
+        self.runner.step['uses'] = './actions/jshint'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(
             res, (True, 'jshint:unknown', '/tmp/test_folder/./actions/jshint'))
@@ -391,7 +361,6 @@ class TestDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_exists(self):
-        image = self.docker_client.images.pull('debian:buster-slim')
         container = self.docker_client.containers.create(
             image='debian:buster-slim',
             name='popper_sample_action_12345')
@@ -403,7 +372,6 @@ class TestDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_image_exists(self):
-        image = self.docker_client.images.pull('debian:buster-slim')
         self.assertEqual(self.runner.docker_image_exists(
             'debian:buster-slim'), True)
         self.docker_client.images.remove('debian:buster-slim', force=True)
@@ -437,7 +405,7 @@ class TestDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_start(self):
-        self.runner.action['runs'] = [
+        self.runner.step['runs'] = [
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         self.runner.docker_pull('debian:buster-slim')
@@ -461,7 +429,6 @@ class TestDockerRunner(unittest.TestCase):
             apt-get clean -y
         """)
         self.runner.docker_build('abcd:latest', '/tmp/test_folder')
-        res = self.docker_client.images.get('abcd:latest')
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'docker',
@@ -509,7 +476,7 @@ class TestDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_create(self):
-        self.runner.action['args'] = ['env']
+        self.runner.step['args'] = ['env']
         self.runner.docker_pull('debian:buster-slim')
         self.runner.docker_create('debian:buster-slim')
         self.assertEqual(self.runner.docker_exists(), True)
@@ -535,16 +502,16 @@ class TestSingularityRunner(unittest.TestCase):
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
         self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
-        WorkflowRunner.download_actions(self.wf, False, False, '12345')
+        WorkflowRunner.download_steps(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
             'singularity', self.wf, '/tmp/test_folder', False, False, '12345')
-        self.runner = self.wf.action['sample action']['runner']
+        self.runner = self.wf.step['sample action']['runner']
         SingularityRunner.setup_singularity_cache('12345')
 
     def tearDown(self):
         os.chdir('/tmp')
         shutil.rmtree('/tmp/test_folder')
-        shutil.rmtree(os.path.join(os.environ['HOME'], '.cache/.popper'))
+        shutil.rmtree(os.path.join(os.environ['HOME'], '.cache/popper'))
         log.setLevel('NOTSET')
 
     @unittest.skipIf(
@@ -574,17 +541,17 @@ class TestSingularityRunner(unittest.TestCase):
             'docker://debian:buster-slim',
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/singularity/12345/testimg.sif'))
+                '.cache/popper/singularity/12345/testimg.sif'))
         self.assertEqual(
             os.path.exists(
                 os.path.join(
                     os.environ['HOME'],
-                    '.cache/.popper/singularity/12345/testimg.sif')),
+                    '.cache/popper/singularity/12345/testimg.sif')),
             True)
         os.remove(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/singularity/12345/testimg.sif'))
+                '.cache/popper/singularity/12345/testimg.sif'))
         self.runner.skip_pull = True
         self.assertRaises(
             SystemExit,
@@ -592,7 +559,7 @@ class TestSingularityRunner(unittest.TestCase):
             'docker://debian:buster-slim',
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/singularity/12345/testimg.sif'))
+                '.cache/popper/singularity/12345/testimg.sif'))
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'singularity',
@@ -601,19 +568,19 @@ class TestSingularityRunner(unittest.TestCase):
         os.chdir(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/actions/12345/github.com/popperized/bin/sh'))
+                '.cache/popper/steps/12345/github.com/popperized/bin/sh'))
         self.runner.singularity_build_from_recipe(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/actions/12345/github.com/popperized/bin/sh'),
+                '.cache/popper/steps/12345/github.com/popperized/bin/sh'),
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/singularity/12345/testimg.sif'))
+                '.cache/popper/singularity/12345/testimg.sif'))
         self.assertEqual(
             os.path.exists(
                 os.path.join(
                     os.environ['HOME'],
-                    '.cache/.popper/singularity/12345/testimg.sif')),
+                    '.cache/popper/singularity/12345/testimg.sif')),
             True)
 
     @unittest.skipIf(
@@ -622,16 +589,16 @@ class TestSingularityRunner(unittest.TestCase):
     def test_get_recipe_file(self):
         os.chdir(
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com/popperized/bin/sh')
+            '/.cache/popper/steps/12345/github.com/popperized/bin/sh')
         file = SingularityRunner.get_recipe_file(os.getcwd(), '12345')
         self.assertEqual(
             file,
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com/popperized/bin/sh/' +
+            '/.cache/popper/steps/12345/github.com/popperized/bin/sh/' +
             'Singularity.12345')
         os.remove(
             os.environ['HOME'] +
-            '/.cache/.popper/actions/12345/github.com/popperized/bin/sh/' +
+            '/.cache/popper/steps/12345/github.com/popperized/bin/sh/' +
             'Dockerfile')
         self.assertRaises(
             SystemExit,
@@ -643,18 +610,18 @@ class TestSingularityRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'singularity',
         'Skipping singularity tests...')
     def test_singularity_start(self):
-        self.runner.action['runs'] = [
+        self.runner.step['runs'] = [
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         self.runner.singularity_build_from_image(
             'docker://debian:buster-slim',
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/singularity/12345/testimg.sif'))
+                '.cache/popper/singularity/12345/testimg.sif'))
         e = self.runner.singularity_start(
             os.path.join(
                 os.environ['HOME'],
-                '.cache/.popper/singularity/12345/testimg.sif'))
+                '.cache/popper/singularity/12345/testimg.sif'))
         self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
 
@@ -669,12 +636,12 @@ class TestSingularityRunner(unittest.TestCase):
              'popperized/bin/sh@master',
              os.path.join(
                  os.environ['HOME'],
-                 '.cache/.popper/actions/12345/github.com/popperized/bin/sh')))
-        self.runner.action['uses'] = 'docker://debian:buster-slim'
+                 '.cache/popper/steps/12345/github.com/popperized/bin/sh')))
+        self.runner.step['uses'] = 'docker://debian:buster-slim'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res,
                               (False, 'docker://debian:buster-slim', None))
-        self.runner.action['uses'] = './actions/jshint'
+        self.runner.step['uses'] = './actions/jshint'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(
             res,
@@ -688,7 +655,7 @@ class TestSingularityRunner(unittest.TestCase):
     def test_setup_singularity_cache(self):
         cache_path = os.path.join(
             os.environ['HOME'],
-            '.cache/.popper/singularity/12345')
+            '.cache/popper/singularity/12345')
         shutil.rmtree(cache_path)
         self.assertEqual(os.path.exists(cache_path), False)
         SingularityRunner.setup_singularity_cache('12345')
@@ -714,10 +681,10 @@ class TestVagrantRunner(unittest.TestCase):
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
         self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
-        WorkflowRunner.download_actions(self.wf, False, False, '12345')
+        WorkflowRunner.download_steps(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
             'vagrant', self.wf, '/tmp/test_folder', False, False, '12345')
-        self.runner = self.wf.action['sample action']['runner']
+        self.runner = self.wf.step['sample action']['runner']
         VagrantRunner.setup_vagrant_cache('12345')
 
     def tearDown(self):
@@ -731,7 +698,7 @@ class TestVagrantRunner(unittest.TestCase):
     def test_setup_vagrant_cache(self):
         cache_path = os.path.join(
             os.environ['HOME'],
-            '.cache/.popper/vagrant/12345')
+            '.cache/popper/vagrant/12345')
         shutil.rmtree(cache_path)
         self.assertEqual(os.path.exists(cache_path), False)
         VagrantRunner.setup_vagrant_cache('12345')
@@ -850,26 +817,26 @@ class TestHostRunner(unittest.TestCase):
         log.setLevel('NOTSET')
 
     def test_run(self):
-        runner = self.wf.action['sample action']['runner']
+        runner = self.wf.step['sample action']['runner']
         self.assertRaises(SystemExit, runner.run, reuse=True)
         runner.run()
 
     def test_host_prepare(self):
-        runner = self.wf.action['sample action']['runner']
-        runner.action['runs'] = ['script1']
-        runner.action['args'] = ['github.com']
+        runner = self.wf.step['sample action']['runner']
+        runner.step['runs'] = ['script1']
+        runner.step['args'] = ['github.com']
         cmd = runner.host_prepare()
         self.assertEqual(cmd, ['/tmp/test_folder/script1', 'github.com'])
         os.makedirs('/tmp/test_folder/action/myaction')
-        runner.action['uses'] = './action/myaction'
-        runner.action['runs'] = ['script']
-        runner.action['args'] = ['arg1', 'arg2']
+        runner.step['uses'] = './action/myaction'
+        runner.step['runs'] = ['script']
+        runner.step['args'] = ['arg1', 'arg2']
         cmd = runner.host_prepare()
         self.assertEqual(
             cmd, [
                 '/tmp/test_folder/./action/myaction/./script', 'arg1', 'arg2'])
         os.chdir('/tmp/test_folder')
-        runner.action.pop('runs')
+        runner.step.pop('runs')
         cmd = runner.host_prepare()
         self.assertEqual(
             cmd, [
@@ -877,7 +844,7 @@ class TestHostRunner(unittest.TestCase):
                 'arg1', 'arg2'])
 
     def test_host_start(self):
-        runner = self.wf.action['sample action']['runner']
+        runner = self.wf.step['sample action']['runner']
         runner.prepare_environment(set_env=True)
         e = runner.host_start([
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
@@ -916,7 +883,6 @@ class TestConcurrentExecution(unittest.TestCase):
         args = (None, False, False, list(), '/tmp/test_folder/gha-demo',
                 False, False, False, False, os.environ['ENGINE'])
         with ThreadPoolExecutor(max_workers=mp.cpu_count()) as ex:
-            flist = [
-                ex.submit(self.runner_one.run, *args),
-                ex.submit(self.runner_two.run, *args),
-                ex.submit(self.runner_three.run, *args)]
+            ex.submit(self.runner_one.run, *args)
+            ex.submit(self.runner_two.run, *args)
+            ex.submit(self.runner_three.run, *args)
