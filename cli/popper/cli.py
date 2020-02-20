@@ -30,9 +30,8 @@ class PopperCLI(click.MultiCommand):
         """Returns the list of available commands in sorted order.
 
         Args:
-            ctx(popper.cli.context):For process intercommand communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
+          ctx(popper.cli.context): For process inter-command communication.
+          For reference visit https://click.palletsprojects.com/en/7.x
 
         Returns:
           list: Returns the list of available commands.
@@ -49,9 +48,6 @@ class PopperCLI(click.MultiCommand):
         most similar commands if the command is not present in the list.
 
         Args:
-          ctx(popper.cli.context):ctx(popper.cli.context):For process intercommand communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
           name(str): The name of the command.
 
         Returns:
@@ -74,9 +70,8 @@ class PopperCLI(click.MultiCommand):
                 message = "\n\nThe most similar commands are: " \
                     + most_similar_commands
             raise ClickException(
-                "Command '" + name + "' doesn't exist. " +
-                "\nType 'popper --help' for more."
-                + message + '\n' + str(e)
+                "Command '" + name + "' doesn't exist.\n"
+                "Type 'popper --help' for more.\n" + message + '\n' + str(e)
             )
         return mod.cli
 
@@ -84,16 +79,7 @@ class PopperCLI(click.MultiCommand):
 @click.command(cls=PopperCLI)
 @pass_context
 def cli(ctx):
-    """Popper command line interface.
-
-    Args:
-      ctx(popper.cli.context):ctx(popper.cli.context):For process intercommand communication
-            context is used.For reference visit
-            https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-
-    Returns:
-        None
-    """
+    """Popper command line interface."""
     signal.signal(signal.SIGINT, signal_handler)
     signal.signal(signal.SIGUSR1, signal_handler)
 
