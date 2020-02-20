@@ -142,7 +142,7 @@ class TestWorkflowRunner(unittest.TestCase):
             'vagrant', wf, '/tmp/test_folder', False, False, '12345')
         self.assertIsInstance(wf.step['a']['runner'], VagrantRunner)
 
-    def test_download_steps(self):
+    def test_clone_repos(self):
         pu.write_file('/tmp/test_folder/a.workflow', """
         workflow "sample" {
             resolves = "a"
@@ -160,7 +160,7 @@ class TestWorkflowRunner(unittest.TestCase):
         wf.parse()
 
         # Download steps in the default cache directory.
-        WorkflowRunner.download_steps(wf, False, False, '12345')
+        WorkflowRunner.clone_repos(wf, False, False, '12345')
         self.assertEqual(
             os.path.exists(
                 os.environ['HOME'] +
@@ -169,7 +169,7 @@ class TestWorkflowRunner(unittest.TestCase):
 
         # Download steps in custom cache directory
         os.environ['POPPER_CACHE_DIR'] = '/tmp/somedir'
-        WorkflowRunner.download_steps(wf, False, False, '12345')
+        WorkflowRunner.clone_repos(wf, False, False, '12345')
         self.assertEqual(os.path.exists(
             '/tmp/somedir/steps/12345/github.com'), True)
         os.environ.pop('POPPER_CACHE_DIR')
@@ -183,7 +183,7 @@ class TestWorkflowRunner(unittest.TestCase):
         # Test with skipclone flag when step not present in cache.
         self.assertRaises(
             SystemExit,
-            WorkflowRunner.download_steps,
+            WorkflowRunner.clone_repos,
             wf,
             False,
             True,
@@ -281,7 +281,7 @@ class TestDockerRunner(unittest.TestCase):
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
         self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
-        WorkflowRunner.download_steps(self.wf, False, False, '12345')
+        WorkflowRunner.clone_repos(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
             'docker', self.wf, '/tmp/test_folder', False, False, '12345')
         self.docker_client = docker.from_env()
@@ -457,7 +457,7 @@ class TestSingularityRunner(unittest.TestCase):
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
         self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
-        WorkflowRunner.download_steps(self.wf, False, False, '12345')
+        WorkflowRunner.clone_repos(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
             'singularity', self.wf, '/tmp/test_folder', False, False, '12345')
         self.runner = self.wf.step['sample action']['runner']
@@ -637,7 +637,7 @@ class TestVagrantRunner(unittest.TestCase):
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
         self.wf = HCLWorkflow('/tmp/test_folder/a.workflow')
         self.wf.parse()
-        WorkflowRunner.download_steps(self.wf, False, False, '12345')
+        WorkflowRunner.clone_repos(self.wf, False, False, '12345')
         WorkflowRunner.instantiate_runners(
             'vagrant', self.wf, '/tmp/test_folder', False, False, '12345')
         self.runner = self.wf.step['sample action']['runner']
