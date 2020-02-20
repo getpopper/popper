@@ -22,9 +22,6 @@ setup(
         'pyyaml',
         'docker'
     ],
-    extras_require={
-        'dev': ['requests-mock']
-    },
     entry_points='''
         [console_scripts]
         popper=popper.cli:cli
