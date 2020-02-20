@@ -49,12 +49,8 @@ A step in a workflow can reference a container image defined in a
 file resides. In addition, it can also reference a `Dockerfile` 
 contained in public Git repository. A third option is to directly 
 reference an image published a in a container registry such as 
-[DockerHub][dh]. It's strongly recommended to include the version of 
-the image you are using by specifying a SHA or Docker tag. If you 
-don't specify a version and the image owner publishes an update, it 
-may break your workflows or have unexpected behavior. Here are some 
-examples of how you can refer to an image on a public Git repository 
-or Docker container registry:
+[DockerHub][dh]. Here are some examples of how you can refer to an 
+image on a public Git repository or Docker container registry:
 
 | Template                           | Description |
 | :--------------------------------- | :--------------------------------- |
@@ -64,6 +60,24 @@ or Docker container registry:
 | `docker://{image}:{tag}`           | A Docker image published on [Docker Hub](https://hub.docker.com/).<br>**Example:** `docker://alpine:3.8`. |
 | `docker://{host}/{image}:{tag}`    | A Docker image in a public registry other than DockerHub. Note<br>that the container engine needs to have properly configured to<br>access the referenced registry in order to download from it.<br>**Example:** `docker://gcr.io/cloud-builders/gradle`.|
 
+It's strongly recommended to include the version of the image you are 
+using by specifying a SHA or Docker tag. If you don't specify a 
+version and the image owner publishes an update, it may break your 
+workflows or have unexpected behavior.
+
+In general, any Docker image can be used in a Popper workflow, but 
+keep in mind the following:
+
+  * When the `runs` attribute for a step is used, the `ENTRYPOINT` of 
+    the image is overridden.
+  * The `WORKDIR` is overridden and `/workspace` is used instead (see 
+    [Filesystem](#filesystem) section below).
+  * The `ARG` instruction is not supported, thus building an image 
+    from a `Dockerfile` (public or local) only uses its default value.
+  * While it is possible to run containers that use `USER` other than 
+    root, doing so might cause unexpected consequences. In other 
+    words, by default Popper assumes that containers run with `root` 
+    as the user.
 
 [dh]: https://hub.docker.com
 
@@ -102,7 +116,7 @@ variables `FIRST`, `MIDDLE`, and `LAST` using this:
 version: '1'
 steps:
 - uses: "docker://alpine:3.9"
-  args: ["sh", "-c", "echo 'my name is: $FIRST $MIDDLE $LAST'"]
+  args: ["sh", "-c", "echo my name is: $FIRST $MIDDLE $LAST"]
   env:
     FIRST: "Jane"
     MIDDLE: "Charlotte"
@@ -119,10 +133,11 @@ my name is: Jane Charlotte Doe
 ### Filesystem
 
 The root of the project containing the workflow file is bind-mounted 
-on the `/workspace` path prefix. This directory is shared from the 
-host machine to the containers running as part of a Popper workflow. 
-For example, the following workflow writes to `myfile` (in the root of 
-the project), that persists after its execution:
+on the `/workspace` path prefix and is used as the working directory 
+when the container executes. This directory is shared from the host 
+machine to the containers running as part of a Popper workflow. For 
+example, the following workflow writes to `myfile` (in the root of the 
+project), that persists after its execution:
 
 ```yaml
 version: '1'
@@ -223,4 +238,4 @@ on the command being executed, the workflow might not be portable.
 > or script is executed) is the root of the project. Thus, to ensure 
 > portability, scripts should make use of paths relative to the root 
 > of the folder. If absolute paths are needed, the `/workspace` path 
-> prefix variable can be used as described in the previous section._
+> prefix can be used as described in the previous section._
