@@ -8,9 +8,9 @@
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
 Popper is a tool for defining and executing [container-native][cn] 
-workflows in multiple container engines (Docker by default). With 
-Popper, you define a workflow in a YAML file, and then execute it with 
-a single command. A workflow file looks like this:
+workflows in Docker, as [well as other][engines] container engines. 
+With Popper, you define a workflow in a YAML file, and then execute it 
+with a single command. A workflow file looks like this:
 
 ```yaml
 version: '1'
@@ -111,6 +111,7 @@ us](mailto:ivo@cs.ucsc.edu).
 [gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
 [scaffold]: https://popper.readthedocs.io/en/latest/sections/getting_started.html#create-a-workflow
 [cnwf]: docs/sections/cn_workflows.md
+[engines]: docs/sections/cn_workflows.md#container-engines
 [sylabs]: https://sylabs.io/
 [vagrant]: https://vagrantup.com/
 [cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
