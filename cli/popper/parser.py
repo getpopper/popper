@@ -709,7 +709,8 @@ class HCLWorkflow(Workflow):
             fp.seek(0)
             self.wf_content = fp.readlines()
 
-        self.wf_dict['step'] = self.wf_dict.pop('action')
+        if 'action' in self.wf_dict:
+            self.wf_dict['step'] = self.wf_dict.pop('action')
 
     def find_root(self, entrypoint, root):
         """A GHA workflow is defined by specifying edges that point to the

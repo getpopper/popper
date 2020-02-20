@@ -199,7 +199,7 @@ def module_from_file(module_name, file_path):
     return module
 
 
-def parse_engine_conf(conf_file):
+def parse_engine_configuration(conf_file):
     """Validate and parse the engine configuration file.
 
     Args:
