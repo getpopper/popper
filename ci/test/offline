@@ -50,7 +50,7 @@ EOF
 (! popper run --wfile main.workflow --skip-pull --engine "$ENGINE")
 
 # action repo not present locally, fail workflow using --skip-clone
-delete_dir "$HOME/.cache/popper/steps/$ID/github.com/popperized/bin"
+delete_dir "$HOME/.cache/popper/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -74,7 +74,7 @@ mkdir "$HOME/.cache/popper/singularity/$ID"
 singularity pull --name popper_docker___debian_stretch-slim_"$ID".sif docker://debian:stretch-slim
 mv popper_docker___debian_stretch-slim_"$ID".sif "$HOME/.cache/popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
 fi
-git clone https://github.com/popperized/bin "$HOME/.cache/popper/steps/$ID/github.com/popperized/bin"
+git clone https://github.com/popperized/bin "$HOME/.cache/popper/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {

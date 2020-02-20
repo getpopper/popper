@@ -2,16 +2,14 @@ import os
 import signal
 import shutil
 import unittest
-try:
-    from unittest.mock import patch
-except ImportError:
-    from mock import patch
 import multiprocessing as mp
 
 import docker
 import git
 import vagrant
+import warnings
 
+from unittest.mock import patch
 from popper.cli import log
 from popper.parser import HCLWorkflow
 from popper.gha import (WorkflowRunner,
@@ -26,7 +24,9 @@ import popper.utils as pu
 class TestWorkflowRunner(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
 
@@ -189,32 +189,13 @@ class TestWorkflowRunner(unittest.TestCase):
             True,
             '12345')
 
-    def test_get_workflow_env(self):
-        pu.write_file('/tmp/test_folder/a.workflow', """
-        workflow "sample" {
-            resolves = "a"
-        }
-
-        action "a" {
-            uses = "sh"
-        }
-        """)
-        wf = HCLWorkflow('/tmp/test_folder/a.workflow')
-        wf.parse()
-        env = WorkflowRunner.get_workflow_env(wf, '/tmp/test_folder')
-        self.assertDictEqual(env, {
-            'HOME': os.environ['HOME'],
-            'POPPER_WORKFLOW': 'sample',
-            'POPPER_REPOSITORY': 'unknown',
-            'POPPER_WORKSPACE': '/tmp/test_folder',
-            'POPPER_GIT_SHA': 'unknown',
-            'POPPER_GIT_REF': 'unknown'})
-
 
 class TestStepRunner(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
         workflow = """
@@ -225,6 +206,9 @@ class TestStepRunner(unittest.TestCase):
         action "sample action" {
             uses = "popperized/bin/sh@master"
             args = ["echo", "Hello"]
+            env = {
+              FOOBAR = "yeah"
+            }
         }
         """
         pu.write_file('/tmp/test_folder/a.workflow', workflow)
@@ -259,47 +243,18 @@ class TestStepRunner(unittest.TestCase):
 
     def test_prepare_environment(self):
         env = self.runner.prepare_environment()
-        self.assertDictEqual(env, {
-            'HOME': os.environ['HOME'],
-            'POPPER_REPOSITORY': 'unknown',
-            'POPPER_WORKSPACE': '/tmp/test_folder',
-            'POPPER_GIT_SHA': 'unknown',
-            'POPPER_GIT_REF': 'unknown'})
-
-        self.assertEqual(set(env.keys()).issubset(set(os.environ)), False)
-        env = self.runner.prepare_environment(set_env=True)
-        self.assertEqual(set(env.keys()).issubset(set(os.environ)), True)
-        self.runner.remove_environment()
+        self.assertDictEqual(env, {'FOOBAR': 'yeah'})
 
     def test_prepare_volumes(self):
-        env = self.runner.prepare_environment()
-        volumes = self.runner.prepare_volumes(env)
+        volumes = self.runner.prepare_volumes()
         self.assertEqual(volumes, [
-            '{}:{}'.format(os.environ['HOME'], os.environ['HOME']),
-            '{}:/github/home'.format(os.environ['HOME']),
-            '/tmp/test_folder:/tmp/test_folder',
-            '/tmp/test_folder:/github/workspace',
-            '/tmp/github_event.json:/github/workflow/event.json'])
-        volumes = self.runner.prepare_volumes(env, include_docker_socket=True)
+            '/tmp/test_folder:/workspace'])
+        volumes = self.runner.prepare_volumes(include_docker_socket=True)
         self.assertEqual(volumes, [
-            '/var/run/docker.sock:/var/run/docker.sock',
-            '{}:{}'.format(os.environ['HOME'], os.environ['HOME']),
-            '{}:/github/home'.format(os.environ['HOME']),
-            '/tmp/test_folder:/tmp/test_folder',
-            '/tmp/test_folder:/github/workspace',
-            '/tmp/github_event.json:/github/workflow/event.json'])
-
-    def test_remove_environment(self):
-        env = self.runner.prepare_environment(set_env=True)
-        self.assertEqual(set(env.keys()).issubset(set(os.environ)), True)
-        self.runner.remove_environment()
-        self.assertEqual(set(env.keys()).issubset(set(os.environ)), False)
+            '/tmp/test_folder:/workspace',
+            '/var/run/docker.sock:/var/run/docker.sock'])
 
     def test_setup_necessary_files(self):
-        os.remove('/tmp/github_event.json')
-        self.assertEqual(os.path.exists('/tmp/github_event.json'), False)
-        self.runner.setup_necessary_files()
-        self.assertEqual(os.path.exists('/tmp/github_event.json'), True)
         self.runner.workspace = '/tmp/a/b/c'
         self.runner.setup_necessary_files()
         self.assertEqual(os.path.exists('/tmp/a/b/c'), True)
@@ -308,7 +263,9 @@ class TestStepRunner(unittest.TestCase):
 class TestDockerRunner(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
         workflow = """
@@ -348,10 +305,10 @@ class TestDockerRunner(unittest.TestCase):
              'popperized/bin:master',
              os.environ['HOME'] +
              '/.cache/popper/steps/12345/github.com/popperized/bin/sh'))
-        self.runner.step['uses'] = 'docker://debian:buster-slim'
+        self.runner.step['uses'] = 'docker://alpine:3.8'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(res,
-                              (False, 'debian:buster-slim', None))
+                              (False, 'alpine:3.8', None))
         self.runner.step['uses'] = './actions/jshint'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(
@@ -361,27 +318,28 @@ class TestDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_exists(self):
+        self.docker_client.images.pull('alpine:3.8')
         container = self.docker_client.containers.create(
-            image='debian:buster-slim',
+            image='alpine:3.8',
             name='popper_sample_action_12345')
         self.assertEqual(self.runner.docker_exists(), True)
         container.remove()
-        self.docker_client.images.remove('debian:buster-slim')
+        self.docker_client.images.remove('alpine:3.8')
 
-    @unittest.skipIf(
-        os.environ['ENGINE'] != 'docker',
-        'Skipping docker tests...')
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'Skipping docker...')
     def test_docker_image_exists(self):
-        self.assertEqual(self.runner.docker_image_exists(
-            'debian:buster-slim'), True)
-        self.docker_client.images.remove('debian:buster-slim', force=True)
+        self.docker_client.images.pull('alpine:3.8')
+        self.runner.docker_pull('alpine:3.8')
+        self.assertEqual(self.runner.docker_image_exists('alpine:3.8'),
+                         True)
+        self.docker_client.images.remove('alpine:3.8', force=True)
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_rm(self):
-        self.docker_client.images.pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim')
+        self.docker_client.images.pull('alpine:3.8')
+        self.runner.docker_create('alpine:3.8')
         self.runner.docker_rm()
         self.assertRaises(docker.errors.NotFound, self.runner.docker_rm)
 
@@ -389,17 +347,12 @@ class TestDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
     def test_docker_pull(self):
-        self.assertEqual(self.runner.docker_image_exists(
-            'debian:buster-slim'), False)
+        self.assertEqual(self.runner.docker_image_exists('alpine:3.8'), False)
         self.runner.skip_pull = True
-        self.assertRaises(
-            SystemExit,
-            self.runner.docker_pull,
-            'debian:buster-slim')
+        self.assertRaises(SystemExit, self.runner.docker_pull, 'alpine:3.8')
         self.runner.skip_pull = False
-        self.runner.docker_pull('debian:buster-slim')
-        self.assertEqual(self.runner.docker_image_exists(
-            'debian:buster-slim'), True)
+        self.runner.docker_pull('alpine:3.8')
+        self.assertEqual(self.runner.docker_image_exists('alpine:3.8'), True)
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'docker',
@@ -408,8 +361,8 @@ class TestDockerRunner(unittest.TestCase):
         self.runner.step['runs'] = [
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
-        self.runner.docker_pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim')
+        self.runner.docker_pull('alpine:3.8')
+        self.runner.docker_create('alpine:3.8')
         e = self.runner.docker_start()
         self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
@@ -433,13 +386,13 @@ class TestDockerRunner(unittest.TestCase):
     @unittest.skipIf(
         os.environ['ENGINE'] != 'docker',
         'Skipping docker tests...')
-    def test_mix_with_engine_config(self):
+    def test_mix_with_engine_conf(self):
         config = {
             "image": "popperized/bin",
             "command": "ls -l",
             "name": "popper_bin",
             "volumes": ["/tmp:/tmp"],
-            "working_dir": "/tmp/workdir",
+            "working_dir": "/workspace",
             "environment": {
                 "A": "a", "B": "b"
             },
@@ -447,7 +400,7 @@ class TestDockerRunner(unittest.TestCase):
             "detach": True
         }
 
-        self.runner.engine_config = {
+        self.runner.engine_conf = {
             "volumes": ["/var:/var"],
             "environment": {
                 "C": "c"
@@ -461,7 +414,7 @@ class TestDockerRunner(unittest.TestCase):
             'command': 'ls -l',
             'name': 'popper_bin',
             'volumes': ['/tmp:/tmp', '/var:/var'],
-            'working_dir': '/tmp/workdir',
+            'working_dir': '/workspace',
             'environment': {'A': 'a', 'B': 'b', 'C': 'c'},
             'entrypoint': None,
             'detach': True,
@@ -469,7 +422,7 @@ class TestDockerRunner(unittest.TestCase):
             'privileged': True
         }
 
-        config = self.runner.mix_with_engine_config(config)
+        config = self.runner.mix_with_engine_conf(config)
         self.assertEqual(config, result_config)
 
     @unittest.skipIf(
@@ -477,8 +430,8 @@ class TestDockerRunner(unittest.TestCase):
         'Skipping docker tests...')
     def test_docker_create(self):
         self.runner.step['args'] = ['env']
-        self.runner.docker_pull('debian:buster-slim')
-        self.runner.docker_create('debian:buster-slim')
+        self.runner.docker_pull('alpine:3.8')
+        self.runner.docker_create('alpine:3.8')
         self.assertEqual(self.runner.docker_exists(), True)
         self.runner.docker_rm()
 
@@ -486,7 +439,9 @@ class TestDockerRunner(unittest.TestCase):
 class TestSingularityRunner(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
         workflow = """
@@ -538,7 +493,7 @@ class TestSingularityRunner(unittest.TestCase):
         'Skipping singularity tests...')
     def test_singularity_build_from_image(self):
         self.runner.singularity_build_from_image(
-            'docker://debian:buster-slim',
+            'docker://alpine:3.8',
             os.path.join(
                 os.environ['HOME'],
                 '.cache/popper/singularity/12345/testimg.sif'))
@@ -556,7 +511,7 @@ class TestSingularityRunner(unittest.TestCase):
         self.assertRaises(
             SystemExit,
             self.runner.singularity_build_from_image,
-            'docker://debian:buster-slim',
+            'docker://alpine:3.8',
             os.path.join(
                 os.environ['HOME'],
                 '.cache/popper/singularity/12345/testimg.sif'))
@@ -614,7 +569,7 @@ class TestSingularityRunner(unittest.TestCase):
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ]
         self.runner.singularity_build_from_image(
-            'docker://debian:buster-slim',
+            'docker://alpine:3.8',
             os.path.join(
                 os.environ['HOME'],
                 '.cache/popper/singularity/12345/testimg.sif'))
@@ -637,10 +592,9 @@ class TestSingularityRunner(unittest.TestCase):
              os.path.join(
                  os.environ['HOME'],
                  '.cache/popper/steps/12345/github.com/popperized/bin/sh')))
-        self.runner.step['uses'] = 'docker://debian:buster-slim'
+        self.runner.step['uses'] = 'docker://alpine:3.8'
         res = self.runner.get_build_resources()
-        self.assertTupleEqual(res,
-                              (False, 'docker://debian:buster-slim', None))
+        self.assertTupleEqual(res, (False, 'docker://alpine:3.8', None))
         self.runner.step['uses'] = './actions/jshint'
         res = self.runner.get_build_resources()
         self.assertTupleEqual(
@@ -665,7 +619,9 @@ class TestSingularityRunner(unittest.TestCase):
 class TestVagrantRunner(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
         workflow = """
@@ -708,7 +664,7 @@ class TestVagrantRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_start(self):
-        os.makedirs('/tmp/test_folder/test_vm')
+        os.makedirs('/tmp/test_folder/test_vm', exist_ok=True)
         vagrantfile_content = """
         Vagrant.configure("2") do |config|
             config.vm.box = "ailispaw/barge"
@@ -727,7 +683,7 @@ class TestVagrantRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_stop(self):
-        os.makedirs('/tmp/test_folder/test_vm')
+        os.makedirs('/tmp/test_folder/test_vm', exist_ok=True)
         vagrantfile_content = """
         Vagrant.configure("2") do |config|
             config.vm.box = "ailispaw/barge"
@@ -749,7 +705,7 @@ class TestVagrantRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'vagrant',
         'Skipping vagrant tests...')
     def test_vagrant_exists(self):
-        os.makedirs('/tmp/test_folder/test_vm')
+        os.makedirs('/tmp/test_folder/test_vm', exist_ok=True)
         vagrantfile_content = """
         Vagrant.configure("2") do |config|
             config.vm.box = "ailispaw/barge"
@@ -792,7 +748,9 @@ class TestVagrantRunner(unittest.TestCase):
 class TestHostRunner(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
         workflow = """
@@ -827,7 +785,7 @@ class TestHostRunner(unittest.TestCase):
         runner.step['args'] = ['github.com']
         cmd = runner.host_prepare()
         self.assertEqual(cmd, ['/tmp/test_folder/script1', 'github.com'])
-        os.makedirs('/tmp/test_folder/action/myaction')
+        os.makedirs('/tmp/test_folder/action/myaction', exist_ok=True)
         runner.step['uses'] = './action/myaction'
         runner.step['runs'] = ['script']
         runner.step['args'] = ['arg1', 'arg2']
@@ -845,19 +803,19 @@ class TestHostRunner(unittest.TestCase):
 
     def test_host_start(self):
         runner = self.wf.step['sample action']['runner']
-        runner.prepare_environment(set_env=True)
         e = runner.host_start([
             "sh", "-c", "echo 'Hello from Popper 2.x !' > popper.file"
         ])
         self.assertEqual(e, 0)
         self.assertEqual(os.path.exists('popper.file'), True)
-        runner.remove_environment()
 
 
 class TestConcurrentExecution(unittest.TestCase):
 
     def setUp(self):
-        os.makedirs('/tmp/test_folder/gha-demo')
+        warnings.filterwarnings(action="ignore", message="unclosed",
+                                category=ResourceWarning)
+        os.makedirs('/tmp/test_folder/gha-demo', exist_ok=True)
         # log.setLevel('CRITICAL')
         git.Repo.clone_from(
             'https://github.com/JayjeetAtGithub/popper-scaffold-workflow',

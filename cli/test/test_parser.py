@@ -171,7 +171,7 @@ steps:
 
 class TestWorkflow(unittest.TestCase):
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
 
@@ -1021,7 +1021,7 @@ class TestWorkflow(unittest.TestCase):
 
 class TestHCLWorkflow(unittest.TestCase):
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
 
@@ -1052,7 +1052,7 @@ class TestHCLWorkflow(unittest.TestCase):
             hcl_workflow.wf_dict, {
                 'workflow': {
                     'sample': {
-                        'resolves': 'b'}}, 'action': {
+                        'resolves': 'b'}}, 'step': {
                     'a': {
                         'uses': 'sh'}, 'b': {
                             'needs': 'a', 'uses': 'sh'}}})
@@ -1132,7 +1132,7 @@ class TestHCLWorkflow(unittest.TestCase):
 
 class TestYMLWorkflow(unittest.TestCase):
     def setUp(self):
-        os.makedirs('/tmp/test_folder')
+        os.makedirs('/tmp/test_folder', exist_ok=True)
         os.chdir('/tmp/test_folder')
         log.setLevel('CRITICAL')
 
@@ -1155,7 +1155,7 @@ class TestYMLWorkflow(unittest.TestCase):
         self.assertEqual(yml_workflow.wf_fmt, "yml")
         self.assertDictEqual(
             yml_workflow.wf_dict, {
-                'action': {
+                'step': {
                     'a': {
                         'uses': 'sh'}, 'b': {
                         'uses': 'sh'}}})
