@@ -35,12 +35,12 @@ step.
 
 | Attribute   | Description |
 | :---------- | :-------------------- |
-| `uses`      | The Docker image that will be executed for that step. For example, `uses = "node:10"`.<br>See "Referencing images in a step" below for more examples. |
-| `needs`     | Identifies steps that must complete successfully before this step will be invoked.<br>It can be a string or an array of strings. In the example workflow above, `ACTION2` is executed after `ACTION1` is successfully completed. **Note:** When steps with a common `needs` dependency run in parallel and one step fails, the remaining steps are cancelled automatically. |
-| `runs`      | Specifies the command to run in the docker image. If `runs` is omitted, the command specified in the `Dockerfile`'s `ENTRYPOINT` instruction will execute. Use the `runs` attribute when the `Dockerfile` does not specify an `ENTRYPOINT` or you want to override the `ENTRYPOINT` command. The `runs` attribute does not invoke a shell by default. To use environment variables with the `runs` instruction, you must include a shell to expand the variables, for example: `runs = ["sh", "-c", "echo $GITHUB_SHA"]`. Using `runs = "echo $VAR"` will not print the value stored in the `$VAR`, but will instead print `\"\$VAR.\"` |
-| `args`      | The arguments to pass to the command. This can be a string or array. If you provide `args` in a string, the string is split around whitespace. For example, `args = "container:release --app web"` or `args = ["container:release", "--app", "web"]`. |
-| `env`       | The environment variables to set in the container's runtime environment. If you need to pass environment variables into a step, make sure it runs a command shell to perform variable substitution. For example, if your `runs` attribute is set to `"sh -c"`, `args` will be run in a command shell. Alternatively, if your `Dockerfile` uses an `ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a command shell. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
-| `secrets`   | Specifies the names of the secret variables to set in the runtime environment, which the container can access as an environment variable. For example, `secrets = ["SECRET1", "SECRET2"]`. |
+| `uses`      | The Docker image that will be executed for that step. For example,<br>`uses = "node:10"`. See **"Referencing images in a step"** section below for more examples. |
+| `needs`     | Identifies steps that must complete successfully before this step will be<br>invoked. It can be a string or an array of strings. |
+| `runs`      | Specifies the command to run in the docker image. If `runs` is omitted, the<br> command specified in the `Dockerfile`'s `ENTRYPOINT` instruction will execute.<br> Use the `runs` attribute when the `Dockerfile` does not specify an `ENTRYPOINT`<br> or you want to override the `ENTRYPOINT` command. The `runs` attribute does not<br> invoke a shell by default. Using `runs = "echo $VAR"` will not print the value<br> stored in `$VAR`, but will instead print `\"\$VAR.\"`. To use environment<br> variables with the `runs` instruction, you must include a shell to expand <br> the variables, for example: `runs = ["sh", "-c", "echo $GITHUB_SHA"]`. |
+| `args`      | The arguments to pass to the command. This can be a string or array. If you<br> provide `args` in a string, the string is split around whitespace. For example,<br> `args = "container:release --app web"` or `args = ["container:release", "--app", "web"]`. |
+| `env`       | The environment variables to set inside the container's runtime environment. If<br> you need to pass environment variables into a step, make sure it runs a command<br> shell to perform variable substitution. For example, if your `runs` attribute is<br> set to `["sh", "-c"]`, the value of `args` will be passed to `sh -c` and<br> executed in a command shell. Alternatively, if your `Dockerfile` uses an<br> `ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a<br> command shell as well. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
+| `secrets`   | Specifies the names of the secret variables to set in the runtime environment<br> which the container can access as an environment variable. For example,<br> `secrets = ["SECRET1", "SECRET2"]`. |
 
 ### Referencing images in a step
 
@@ -58,11 +58,12 @@ or Docker container registry:
 
 | Template                           | Description |
 | :--------------------------------- | :--------------------------------- |
-| `./path/to/dir`                    |  The path to the directory that contains the `Dockerfile` inside the workflow's repository. **Example:** `./docker/myimg`. |
-| `{url}/{user}/{repo}@{ref}`        |  A specific branch, ref, or SHA in a public Git repository. If `url` is ommited, `github.com` is used by default. **Example:**  `https://bitbucket.com/popperized/ansible@master`. |
-| `{url}/{user}/{repo}/{path}@{ref}` |  A subdirectory in a public Git repository at a specific branch, ref, or SHA. **Example:** `git@gitlab.com:popperized/geni/build-context@v2.0`. |
-| `docker://{image}:{tag}`           |  A Docker image published on [Docker Hub](https://hub.docker.com/). **Example:** `docker://alpine:3.8`. |
-| `docker://{host}/{image}:{tag}`    |  A Docker image in a public registry other than DockerHub. **Example:** `docker://gcr.io/cloud-builders/gradle`. Note that the container engine needs to have credentials for the registry in order to download from it. |
+| `./path/to/dir`                    | The path to the directory that contains the `Dockerfile` inside<br>the workflow's repository.<br>**Example:** `./docker/myimg/`. |
+| `{url}/{user}/{repo}@{ref}`        | A specific branch, ref, or SHA in a public Git repository. If `url`<br>is ommited, `github.com` is used by default.<br>**Example:** `https://bitbucket.com/popperized/ansible@master`. |
+| `{url}/{user}/{repo}/{path}@{ref}` | A subdirectory in a public Git repository at a specific branch, ref,<br>or SHA.<br>**Example:** `git@gitlab.com:popperized/geni/build-context@v2.0`. |
+| `docker://{image}:{tag}`           | A Docker image published on [Docker Hub](https://hub.docker.com/).<br>**Example:** `docker://alpine:3.8`. |
+| `docker://{host}/{image}:{tag}`    | A Docker image in a public registry other than DockerHub. Note<br>that the container engine needs to have properly configured to<br>access the referenced registry in order to download from it.<br>**Example:** `docker://gcr.io/cloud-builders/gradle`.|
+
 
 [dh]: https://hub.docker.com
 
@@ -73,7 +74,7 @@ repositories by defining a `GITHUB_API_TOKEN` environment variable
 that the `popper run` command reads and uses to clone private 
 repositories. The repository referenced in the `uses` attribute is 
 assumed to be private and, to access it, an API token from Github is 
-needed (see instructions [here](https://github.com/settings/tokens). 
+needed (see instructions [here](https://github.com/settings/tokens)). 
 The token needs to have permissions to read the private repository in 
 question. To run a workflow that references private repositories:
 
@@ -136,11 +137,11 @@ Exit codes are used to communicate about a step\'s status. Popper uses
 the exit code to set the workflow execution status, which can be 
 `success`, `neutral`, or `failure`:
 
-| Exit status       | Status             | Description |
-| :---------------- | :----------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0`               | `success`          | The step completed successfully and other tasks that depends on it can begin. |
-| `78`              | `neutral`          | The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the step terminated but did not fail. For example, a [filter step](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status to stop a workflow if certain conditions aren\'t met. When a step returns this exit status, Popper terminates all concurrently running steps and prevents any future steps from starting. The associated check run shows a `neutral` status, and the overall check suite will have a status of `success` as long as there were no failed or cancelled steps. |
-| All other codes   | `failure`          | Any other exit code indicates the step failed. When a step fails, all concurrent steps are cancelled and future steps are skipped. The check run and check suite both get a `failure` status. |
+| Exit code | Status    | Description |
+| :---------| :---------| :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0`       | `success` | The step completed successfully and other tasks that depends on it can begin. |
+| `78`      | `neutral` | The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the step<br>terminated but did not fail. For example, a [filter step](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status<br>to stop a workflow if certain conditions aren't met. When a step<br>returns this exit status, Popper terminates all concurrently running steps and<br>prevents any future steps from starting. The associated check run shows a<br>`neutral` status, and the overall check suite will have a status of `success`<br>as long as there were no failed or cancelled steps. |
+| All other | `failure` | Any other exit code indicates the step failed. When a step fails, all concurrent<br>steps are cancelled and future steps are skipped. The check run and<br>check suite both get a `failure` status. |
 
 ## Container Engines
 
