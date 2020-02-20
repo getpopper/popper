@@ -12,9 +12,9 @@
 </p>
 
 Popper is a tool for defining and executing [container-native][cn] 
-workflows. With Popper, you define a workflow in YAML and with execute 
-it with a single command. The goal of this project is to provide the 
-following functionality:
+workflows. With Popper, you define a workflow in a YAML file, and then 
+execute it with a single command. The goal of this project is to 
+provide the following:
 
   * **Lightweight workflow definition syntax.** Defining a workflow is 
   as simple as writing file in a [lightweight YAML syntax][cnwf] and 
