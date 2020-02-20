@@ -11,13 +11,8 @@ import re
 import os
 
 
-<<<<<<< HEAD
-VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
-VALID_WORKFLOW_ATTRS = ["resolves", "on"]
-=======
 VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves"]
->>>>>>> removed the `on` attribute from workflow
 
 
 class Workflow(object):
