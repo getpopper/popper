@@ -9,21 +9,7 @@ cd "$test_repo_path"
 git clone https://github.com/popperized/github-actions-demo.git
 cd github-actions-demo
 
-popper dot > dot_output
-
-grep "digraph G .* graph" dot_output
-grep "\"branch-filter\" -> \"deploy\";" dot_output
-grep "\"install\" -> \"lint\";" dot_output
-grep "\"install\" -> \"test\";" dot_output
-grep "\"lint\" -> \"branch-filter\";" dot_output
-grep "\"test-and-deploy\" -> \"install\";" dot_output
-grep "\"test\" -> \"branch-filter\";" dot_output
-
-## Testing --recursive feature
-# Move main.workflow to somewhere else to test --recursive flag
-mkdir dummy
-mv .github/main.workflow dummy/.
-popper dot --recursive > dot_output
+popper dot --wfile .github/main.workflow > dot_output
 
 grep "digraph G .* graph" dot_output
 grep "\"branch-filter\" -> \"deploy\";" dot_output

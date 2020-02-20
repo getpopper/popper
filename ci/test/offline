@@ -47,10 +47,10 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-pull --engine "$ENGINE")
+(! popper run --wfile main.workflow --skip-pull --engine "$ENGINE")
 
 # action repo not present locally, fail workflow using --skip-clone
-delete_dir "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
+delete_dir "$HOME/.cache/popper/steps/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -63,18 +63,18 @@ action "sample action" {
 }
 EOF
 
-(! popper run --skip-clone --engine "$ENGINE")
+(! popper run --wfile main.workflow --skip-clone --engine "$ENGINE")
 
 
 # all actions, images, containers present locally, using --skip-clone, --skip-pull together.
 docker pull debian:stretch-slim
 if [ "$ENGINE" == "singularity" ]; then
-rm -rf "$HOME/.cache/.popper/singularity/$ID"
-mkdir "$HOME/.cache/.popper/singularity/$ID"
+rm -rf "$HOME/.cache/popper/singularity/$ID"
+mkdir "$HOME/.cache/popper/singularity/$ID"
 singularity pull --name popper_docker___debian_stretch-slim_"$ID".sif docker://debian:stretch-slim
-mv popper_docker___debian_stretch-slim_"$ID".sif "$HOME/.cache/.popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
+mv popper_docker___debian_stretch-slim_"$ID".sif "$HOME/.cache/popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
 fi
-git clone https://github.com/popperized/bin "$HOME/.cache/.popper/actions/$ID/github.com/popperized/bin"
+git clone https://github.com/popperized/bin "$HOME/.cache/popper/steps/$ID/github.com/popperized/bin"
 
 cat <<EOF > main.workflow
 workflow "sample workflow" {
@@ -92,7 +92,7 @@ action "sample action two" {
 }
 EOF
 
-popper run --skip-clone --skip-pull --engine "$ENGINE" > output
+popper run --wfile main.workflow --skip-clone --skip-pull --engine "$ENGINE" > output
 grep -q "sample action one" output
 grep -q "sample action two" output
 

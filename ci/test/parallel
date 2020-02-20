@@ -43,8 +43,8 @@ action "stage_one" {
 }
 EOF
 
-popper run --parallel --engine "$ENGINE" |& tee out
-counter="$(grep -c "Action '[a-zA-Z_]*' ran successfully !" out)"
+popper run --wfile main.workflow --parallel --engine "$ENGINE" |& tee out
+counter="$(grep -c "Step '[a-zA-Z_]*' ran successfully !" out)"
 test "$counter" -eq 5
 
 # workflow with actions expected to fail
@@ -85,7 +85,7 @@ action "stage_one" {
 }
 EOF
 
-(! popper run --parallel --engine "$ENGINE")
+(! popper run --wfile main.workflow --parallel --engine "$ENGINE")
 echo "Some actions failed as expected !"
 
 echo "Test PARALLEL passed."

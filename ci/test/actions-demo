@@ -67,7 +67,7 @@ action "test" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE" > output
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
@@ -75,15 +75,15 @@ grep -q "dependency three" output
 grep -q "dependency four" output
 
 # test --with-dependencies flag
-popper run --dry-run --engine "$ENGINE" test > output
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" test > output
 grep -q "test" output
-popper run --dry-run --with-dependencies --engine "$ENGINE" test > output
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" test > output
 grep -q "test" output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
 grep -q "dependency four" output
-popper run --dry-run --with-dependencies --engine "$ENGINE" 'dependency one' > output
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" 'dependency one' > output
 grep -q "dependency one" output
 grep -q "dependency two" output
 grep -q "dependency three" output
@@ -123,20 +123,20 @@ action "d" {
 }
 EOF
 
-(! popper run --dry-run --with-dependencies --engine "$ENGINE")
-popper run --dry-run --with-dependencies --engine "$ENGINE" a1 > output
+(! popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE")
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" a1 > output
 grep -q "a1" output
-popper run --dry-run --with-dependencies --engine "$ENGINE" a2 > output
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" a2 > output
 grep -q "a2" output
-popper run --dry-run --with-dependencies --engine "$ENGINE" b > output 
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" b > output 
 grep -q "a1"  output
 grep -q "a2" output 
 grep -q "b" output
-popper run --dry-run --with-dependencies --engine "$ENGINE" c > output
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" c > output
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "c" output
-popper run --dry-run --with-dependencies --engine "$ENGINE" d > output 
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" d > output 
 grep -q "a1" output 
 grep -q "a2" output 
 grep -q "b" output 
