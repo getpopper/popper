@@ -7,33 +7,52 @@
 [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
-<p align="center">
-  <img src="docs/figures/demo.gif" width="800">
-</p>
-
 Popper is a tool for defining and executing [container-native][cn] 
-workflows. With Popper, you define a workflow in a YAML file, and then 
-execute it with a single command. The goal of this project is to 
-provide the following:
+workflows in multiple container engines (Docker by default). With 
+Popper, you define a workflow in a YAML file, and then execute it with 
+a single command. A workflow file looks like this:
+
+```yaml
+version: '1'
+steps:
+- uses: docker://byrnedo/alpine-curl:0.1.8
+  args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
+
+- uses: docker://python:3.8.1-alpine
+  args: [scripts/get_mean_by_group.py, global.csv, '5']
+```
+
+Assuming the above is stored in a `wf.yml` file, the workflow gets 
+executed by running:
+
+```bash
+popper run -f wf.yml
+```
+
+Keep reading down to find [installation instructions](#installation). 
+For more information on the YAML syntax, see [here][cnwf].
+
+The goal of this project is to provide the following:
 
   * **Lightweight workflow definition syntax.** Defining a workflow is 
-  as simple as writing file in a [lightweight YAML syntax][cnwf] and 
-  invoking `popper run` (see demo above). If you're familiar with 
-  [Docker Compose][compose], you can think of Popper as Compose but 
-  for workflows instead of services.
-  * **Abstract container runtimes**. In addition to Docker, Popper can 
-  execute workflows in other runtimes by interacting with distinct 
-  container engines. We currently support [Singularity][sylabs], as 
-  well as running Docker inside virtual machines (via 
-  [Vagrant][vagrant]). We are working on adding 
-  [Podman](https://podman.io) to the list.
+    as simple as writing file in a [lightweight YAML syntax][cnwf] and 
+    invoking `popper run` (see demo above). If you're familiar with 
+    [Docker Compose][compose], you can think of Popper as Compose but 
+    for workflows instead of services.
+  * **An abstraction over container runtimes**. In addition to Docker, 
+    Popper can seamlessly execute workflows in other runtimes by 
+    interacting with distinct container engines. We currently support 
+    [Singularity][sylabs], as well as running Docker inside virtual 
+    machines (via [Vagrant][vagrant]). We are working on adding 
+    [Podman](https://podman.io) to the list.
   * **Continuous integration**. Generate configuration files for 
-  distinct CI services, allowing users to seamlessly execute workflows 
-  on Travis, Jenkins, Gitlab, Circle and others.
+    distinct CI services, allowing users to run the exact same 
+    workflows they run locally on Travis, Jenkins, Gitlab, Circle and 
+    others.
   * **Workflow development**. Aid in the implementation and debugging 
-  of [workflows][scaffold], and provide with an extensive list of 
-  [example workflows](https://github.com/popperized) that can serve as 
-  a starting point.
+    of [workflows][scaffold], and provide with an extensive list of 
+    [example workflows](https://github.com/popperized) that can serve 
+    as a starting point.
 
 -----
 
@@ -81,6 +100,7 @@ Popper, you're expected to uphold this code. If you encounter
 unacceptable behavior, please immediately [email 
 us](mailto:ivo@cs.ucsc.edu).
 
+[minimalpy]: https://github.com/popperized/popper-examples/tree/master/workflows/minimal-python
 [gfi]: https://github.com/systemslab/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen
 [singularity]: https://github.com/sylabs/singularity
 [docker]: https://get.docker.com
