@@ -137,12 +137,17 @@ class WorkflowRunner(object):
             Same is the case when the `uses` attribute is equal to 'sh'.
 
         Args:
-          runtime(str): Identifier of the workflow being executed.
+          engine(str): Identifier of the workflow being executed.
           wf(popper.parser.workflow): Instance of the Workflow class.
           workspace(str): Location of the workspace.
           dry_run(bool): True if workflow flag is being dry-run.
+<<<<<<< HEAD
           skip_pull(bool): True if pulling step has to be skipped.
           wid(str):
+=======
+          skip_pull(bool): True if pulling action has to be skipped.
+          wid(str): with dependencies
+>>>>>>> removed the `on` attribute from workflow
 
         Returns:
             None
@@ -174,7 +179,42 @@ class WorkflowRunner(object):
 
             elif engine == 'vagrant':
                 a['runner'] = VagrantRunner(
+<<<<<<< HEAD
                     a, workspace, dry_run, skip_pull, wid, engine_conf)
+=======
+                    a, workspace, env, dry_run, skip_pull, wid, engine_config)
+
+    @staticmethod
+    def get_workflow_env(wf, workspace):
+        """Updates the Popper environment variable with Github environment
+        variables.
+
+        Args:
+          wf(popper.parser.Workflow): Instance of the Workflow class.
+          workspace(str): Location of the workspace.
+
+        Returns:
+            dict: dictionary containing Github variables.
+        """
+        if scm.get_user():
+            repo_id = '{}/{}'.format(scm.get_user(), scm.get_name())
+        else:
+            repo_id = 'unknown'
+
+        env = {
+            'HOME': os.environ['HOME'],
+            'GITHUB_WORKFLOW': wf.name,
+            'GITHUB_ACTION': '',
+            'GITHUB_ACTOR': 'popper',
+            'GITHUB_REPOSITORY': repo_id,
+            'GITHUB_WORKSPACE': workspace,
+            'GITHUB_SHA': scm.get_sha(),
+            'GITHUB_REF': scm.get_ref()
+        }
+
+        for e in dict(env):
+            env.update({e.replace('GITHUB_', 'POPPER_'): env[e]})
+>>>>>>> removed the `on` attribute from workflow
 
     def run(self, step, skip_clone, skip_pull, skip, workspace,
             reuse, dry_run, parallel, with_dependencies, engine,

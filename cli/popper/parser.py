@@ -11,8 +11,13 @@ import re
 import os
 
 
+<<<<<<< HEAD
 VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves", "on"]
+=======
+VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
+VALID_WORKFLOW_ATTRS = ["resolves"]
+>>>>>>> removed the `on` attribute from workflow
 
 
 class Workflow(object):
@@ -180,9 +185,6 @@ class Workflow(object):
             log.fail('[resolves] attribute must be a string or a list '
                      'of strings.')
 
-        if workflow_block.get('on', None):
-            if not pu.of_type(workflow_block['on'], ['str']):
-                log.fail('[on] attribute mist be a string.')
 
     def validate_step_blocks(self):
         """Validate the syntax of the step blocks.
@@ -585,7 +587,6 @@ class YMLWorkflow(Workflow):
             None
         """
         self.name = os.path.basename(self.wfile)[:-4]
-        self.on = ""
         self.root = set()
         self.props = dict()
         self.step = self.wf_dict['step']
@@ -769,7 +770,6 @@ class HCLWorkflow(Workflow):
 
             self.name = wf_name
             self.resolves = wf_block['resolves']
-            self.on = wf_block.get('on', 'push')
             self.root = set()
             self.step = self.wf_dict['step']
             self.props = dict()
