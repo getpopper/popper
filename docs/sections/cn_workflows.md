@@ -1,7 +1,8 @@
-# Workflow Specification Syntax and Execution Runtime
+# Workflow Syntax and Execution Runtime
 
-This section introduces the YAML syntax used by Popper, and describes 
-the workflow execution runtime.
+This section introduces the YAML syntax used by Popper, describes the 
+workflow execution runtime and shows how to execute workflows in 
+alternative container engines.
 
 > _**NOTE**: Popper also supports the [now-deprecated HCL 
 > syntax][drophcl] that was introduced in the alpha version of [Github 
@@ -141,14 +142,14 @@ the exit code to set the workflow execution status, which can be
 | `78`              | `neutral`          | The configuration error exit status ([`EX_CONFIG`](https://github.com/freebsd/freebsd/blob/6c262608dd9129e8699bd3c3a84425b8076b83ae/include/sysexits.h#L114)) indicates that the step terminated but did not fail. For example, a [filter step](https://github.com/popperized/bin/tree/master/filter) can use a `neutral` status to stop a workflow if certain conditions aren\'t met. When a step returns this exit status, Popper terminates all concurrently running steps and prevents any future steps from starting. The associated check run shows a `neutral` status, and the overall check suite will have a status of `success` as long as there were no failed or cancelled steps. |
 | All other codes   | `failure`          | Any other exit code indicates the step failed. When a step fails, all concurrent steps are cancelled and future steps are skipped. The check run and check suite both get a `failure` status. |
 
-## Alternative container engines
+## Container Engines
 
-By default, steps in Popper workflows run in Docker. In addition to 
-Docker, Popper can execute workflows in other runtimes by interacting 
-with other container engines. An `--engine <engine>` flag for the 
-`popper run` can be used to invoke alternative engines (where 
-`<engine>` is one of the supported engines). When no value for the 
-`--engine` option is given, Popper executes workflows in Docker.
+By default, steps in Popper workflows run in Docker. In addition, 
+Popper can execute workflows in other runtimes by interacting with 
+their corresponding container engines. An `--engine <engine>` flag for 
+the `popper run` is used to invoke alternative engines, where 
+`<engine>` is one of the supported engines. When no value for this 
+flag is given, Popper executes workflows in Docker.
 
 > _**NOTE**: As part of our roadmap, we plan to add support for the 
 > [Podman](https://podman.io/) runtime. Open a [new
@@ -167,8 +168,7 @@ popper run --engine singularity
 #### Limitations
 
   * The use of `ARG` in `Dockerfile`s is not supported by Singularity.
-  * Currently, the `--reuse` functionality of the `popper run` command 
-    is not available when running in Singularity.
+  * The `--reuse` flag of the `popper run` command is not supported.
 
 ### Vagrant
 
@@ -187,9 +187,9 @@ popper run --engine vagrant
 
 #### Limitations
 
-Currently, only one workflow can be executed at the time in Vagrant 
-runtime, since popper assumes that there is only one VM running at any 
-given point in time.
+Only one workflow can be executed at the time in Vagrant runtime, 
+since popper assumes that there is only one VM running at any given 
+point in time.
 
 ### Host
 
