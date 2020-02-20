@@ -367,7 +367,6 @@ class StepRunner(object):
             list: Volume bindings.
         """
         volumes = [
-            '/var/run/docker.sock:/var/run/docker.sock',
             '{}:{}'.format(env['HOME'], env['HOME']),
             '{}:{}'.format(env['HOME'], '/popper/home'),
             '{}:{}'.format(env['POPPER_WORKSPACE'],
@@ -376,8 +375,8 @@ class StepRunner(object):
             '{}:{}'.format(env['POPPER_WORKSPACE'], '/github/workspace'),
         ]
         if include_docker_socket:
-            return volumes
-        return volumes[1:]
+            volumes.append('/var/run/docker.sock:/var/run/docker.sock')
+        return volumes
 
     def prepare_environment(self, set_env=False):
         """Prepare the environment variables to be set while running an step.
