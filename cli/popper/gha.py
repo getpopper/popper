@@ -639,10 +639,9 @@ class SingularityRunner(StepRunner):
             build = False
 
         elif './' in self.step['uses']:
-            image = 'step/' + self.step['uses']
-            build_source = os.path.join(
-                scm.get_git_root_folder(), self.step['uses'])
-
+            image = pu.sanitized_name(self.step['name']) + ':' + scm.get_sha()
+            build_source = os.path.join(scm.get_git_root_folder(),
+                                        self.step['uses'])
         else:
             image = self.step['uses']
             build_source = os.path.join(
@@ -873,8 +872,7 @@ class SingularityRunner(StepRunner):
         log.info(info)
 
         if self.dry_run:
-            ecode = 0
-            return
+            return 0
 
         curr_env = os.environ.copy()
         os.environ = self.prepare_environment()
