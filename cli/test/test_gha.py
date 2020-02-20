@@ -601,7 +601,7 @@ class TestSingularityRunner(unittest.TestCase):
         self.assertTupleEqual(
             res,
             (True,
-             'action/./actions/jshint',
+             'step/./actions/jshint',
              '/tmp/test_folder/./actions/jshint'))
 
     @unittest.skipIf(

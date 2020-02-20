@@ -967,8 +967,7 @@ class VagrantRunner(DockerRunner):
             return True
         vg_file_path = os.path.join(vagrant_box_path, 'Vagrantfile')
         if os.path.exists(vg_file_path):
-            if vagrant.Vagrant(vagrant_box_path).status()[
-                    0].state == 'running':
+            if vagrant.Vagrant(vagrant_box_path).status()[0].state == 'running':
                 return True
         return False
 
