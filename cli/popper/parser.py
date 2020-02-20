@@ -193,8 +193,6 @@ class Workflow(object):
         Returns:
             None
         """
-        self.check_duplicate_steps()
-
         if not self.wf_dict.get('step', None):
             log.fail('At least one step block must be present.')
 
@@ -237,32 +235,6 @@ class Workflow(object):
                     log.fail(
                         '[secrets] attribute must be a string or a list '
                         'of strings.')
-
-    def check_duplicate_steps(self):
-        """Checks whether duplicate step blocks are present or not.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        if self.wf_fmt == 'yml':
-            step_line_identifier = '-'
-
-        if self.wf_fmt == 'hcl':
-            step_line_identifier = 'action '
-
-        parsed_acount = 0
-        if self.wf_dict.get('step', None):
-            parsed_acount = len(list(self.wf_dict['step'].items()))
-        acount = 0
-        for line in self.wf_content:
-            line = line.strip()
-            if line.startswith(step_line_identifier):
-                acount += 1
-        if parsed_acount != acount:
-            log.fail('Duplicate step identifiers found.')
 
     def check_for_unreachable_steps(self, skip=None):
         """Validates a workflow by checking for unreachable nodes / gaps in the
