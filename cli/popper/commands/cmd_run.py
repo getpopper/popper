@@ -1,5 +1,4 @@
 import os
-import re
 import sys
 
 import click
@@ -8,7 +7,6 @@ import popper.cli
 from popper.cli import pass_context, log
 from popper.gha import WorkflowRunner
 from popper.parser import Workflow
-from popper import utils as pu, scm
 from popper import log as logging
 
 
@@ -126,55 +124,8 @@ from popper import log as logging
 )
 @pass_context
 def cli(ctx, **kwargs):
-    """Runs a Popper workflow. If STEP is given, it only executes this step.
-
-    Note: When executing in CI mode (CI environment variable is set), this
-    command examines the current commit's message and looks for special
-    keywords of the form `popper:run[...]`. If one or more of these are found,
-    they are used as arguments to this command.
-    """
-
-    # Args:
-    #   ctx(Popper.cli.context): For process inter-command communication
-    #         context is used. See https://click.palletsprojects.com/en/7.x/
-    #         for more.
-    #   **kwargs(dictionary): key-worded,variable-length argument dictionary.
-    #
-    # Returns:
-    #     None
-
-    if os.environ.get('CI') == 'true':
-        # When CI is set,
-        log.info('Running in CI environment...')
-        popper_run_instances = parse_commit_message()
-        if popper_run_instances:
-            for args in get_args(popper_run_instances):
-                kwargs.update(args)
-                prepare_workflow_execution(**kwargs)
-        else:
-            # If no special keyword is found, we run all the workflows,
-            # recursively.
-            prepare_workflow_execution(recursive=True, **kwargs)
-    else:
-        # When CI is not set,
-        prepare_workflow_execution(**kwargs)
-
-
-def prepare_workflow_execution(recursive=False, **kwargs):
-    """Set parameters for the workflow execution
-    and run the workflow.
-
-    Args:
-      recursive(bool, optional):  True if workflow is to be executed
-                                recursively.(Default value = False)
-      **kwargs: key-worded,variable-length argument dictionary.
-
-    Returns:
-        None
-
-    """
-
-    # Set the logging levels.
+    """Runs a Popper workflow. Only execute STEP if given."""
+    # set the logging levels.
     level = 'STEP_INFO'
     if kwargs['quiet']:
         level = 'INFO'
@@ -184,21 +135,15 @@ def prepare_workflow_execution(recursive=False, **kwargs):
     if kwargs['log_file']:
         logging.add_log(log, kwargs['log_file'])
 
-    # Remove the unnecessary kwargs.
+    # remove the unnecessary kwargs.
     kwargs.pop('quiet')
     kwargs.pop('debug')
     kwargs.pop('log_file')
 
-    # Run the workflow accordingly as recursive/CI and Non-CI.
-    if recursive:
-        for wfile in pu.find_recursive_wfile():
-            kwargs['wfile'] = wfile
-            run_workflow(**kwargs)
-    else:
-        run_workflow(**kwargs)
+    _run_workflow(**kwargs)
 
 
-def run_workflow(**kwargs):
+def _run_workflow(**kwargs):
     """Runs the workflow for the set parameters.
 
     Args:
@@ -209,6 +154,7 @@ def run_workflow(**kwargs):
 
     """
     log.info('Running workflow defined in ' + kwargs['wfile'])
+
     # Initialize a Workflow. During initialization all the validation
     # takes place automatically.
 
@@ -268,48 +214,3 @@ def run_workflow(**kwargs):
         log.info('Step "{}" finished successfully.'.format(kwargs['step']))
     else:
         log.info('Workflow "{}" finished successfully.'.format(wfile))
-
-
-def parse_commit_message():
-    """Parse `popper:run[]` keywords from head commit message.
-
-    Args:
-        None
-
-    Returns:
-        None
-
-    """
-    head_commit = scm.get_head_commit()
-    if not head_commit:
-        return None
-
-    msg = head_commit.message
-    if 'Merge' in msg:
-        log.info("Merge detected. Reading message from merged commit.")
-        if len(head_commit.parents) == 2:
-            msg = head_commit.parents[1].message
-
-    if 'popper:run[' not in msg:
-        return None
-
-    pattern = r'popper:run\[(.+?)\]'
-    popper_run_instances = re.findall(pattern, msg)
-    return popper_run_instances
-
-
-def get_args(popper_run_instances):
-    """Parse the argument strings from popper:run[..] instances
-    and return the args.
-
-    Args:
-      popper_run_instances: Argument string from popper run command
-
-    Returns:
-      string: Arguments that are passed with command.
-
-    """
-    for args in popper_run_instances:
-        args = args.split(" ")
-        ci_context = cli.make_context('popper run', args)
-        yield ci_context.params
