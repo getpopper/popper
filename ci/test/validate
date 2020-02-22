@@ -124,35 +124,35 @@ EOF
 
 popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
-## on attribute present but wrong type
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = "show env"
-  on = ["push", "pull"]
-}
+# ## on attribute present but wrong type
+# cat <<EOF > main.workflow
+# workflow "test" {
+#   resolves = "show env"
+#   on = ["push", "pull"]
+# }
 
-action "show env" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-EOF
+# action "show env" {
+#   uses = "popperized/bin/sh@master"
+#   args = "ls"
+# }
+# EOF
 
-(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
+# (! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
-## on attribute present and correct type
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = "show env"
-  on = "push"
-}
+# ## on attribute present and correct type
+# cat <<EOF > main.workflow
+# workflow "test" {
+#   resolves = "show env"
+#   on = "push"
+# }
 
-action "show env" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-EOF
+# action "show env" {
+#   uses = "popperized/bin/sh@master"
+#   args = "ls"
+# }
+# EOF
 
-popper run --wfile main.workflow --dry-run --engine "$ENGINE"
+# popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 #----------------------#
 # Action block tests   #

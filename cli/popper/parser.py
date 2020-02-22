@@ -12,7 +12,7 @@ import os
 
 
 VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
-VALID_WORKFLOW_ATTRS = ["resolves"]
+VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
 
 class Workflow(object):
@@ -168,7 +168,7 @@ class Workflow(object):
 
         workflow_block = list(self.wf_dict['workflow'].values())[0]
         for key in workflow_block.keys():
-            if key not in VALID_WORKFLOW_ATTRS and key != "on":
+            if key not in VALID_WORKFLOW_ATTRS:
                 log.fail(
                     'Invalid workflow attribute \'{}\' was found.'.format(key))
 
