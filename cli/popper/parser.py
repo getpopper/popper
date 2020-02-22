@@ -27,9 +27,9 @@ class Workflow(object):
         """Parse and validate a workflow.
 
         Args:
-          substitutions(list): Substituitions that are to be passed
+            substitutions(list): Substituitions that are to be passed
                                 as an argumnets. (Default value = None)
-          allow_loose(bool): Flag if the unused variables are to be
+            allow_loose(bool): Flag if the unused variables are to be
                                 ignored. (Default value = False)
 
         Returns:
