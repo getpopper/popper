@@ -8,7 +8,7 @@
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
 Popper is a tool for defining and executing [container-native][cn] 
-workflows in Docker, as [well as other][engines] container engines. 
+workflows in Docker, as well as [other container engines][engines]. 
 With Popper, you define a workflow in a YAML file, and then execute it 
 with a single command. A workflow file looks like this:
 
@@ -32,7 +32,7 @@ popper run -f wf.yml
 Keep reading down to find [installation instructions](#installation). 
 For more information on the YAML syntax, see [here][cnwf].
 
-The goal of this project is to provide the following:
+The high-level goals of this project are to provide:
 
   * **Lightweight workflow definition syntax.** Defining a workflow is 
     as simple as writing file in a [lightweight YAML syntax][cnwf] and 

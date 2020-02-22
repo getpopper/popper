@@ -7,12 +7,6 @@ action "lint" {
   args = "./ci/test/*"
 }
 
-action "test ci" {
-  needs = "lint"
-  uses = "sh"
-  args = "ci/test/ci"
-}
-
 action "test reuse" {
   needs = "lint"
   uses = "sh"
@@ -22,8 +16,7 @@ action "test reuse" {
 action "test actions-demo" {
   needs = "lint"
   uses = "sh"
-  args = "ci/test/actions-demo"
-}
+  args = "ci/test/actions-demo" }
 
 action "test validate" {
   needs = "lint"
@@ -108,7 +101,6 @@ action "end" {
   args = "ci/test/version"
   needs = [
     "test actions-demo",
-    "test ci",
     "test dot",
     "test dry-run",
     "test inject",
