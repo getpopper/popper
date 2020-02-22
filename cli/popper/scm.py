@@ -24,7 +24,7 @@ def init_repo_object():
         # Optimistically assume that this is due to .git/ folder not being
         # found, in which case all the methods in this module assume
         # os.getcwd() as the root of a project. This path will then be the
-        # relative path used by actions (GITHUB_WORKSPACE variable).
+        # relative path used by steps (POPPER_WORKSPACE variable).
         pass
     return repo
 
@@ -273,7 +273,7 @@ def parse(url):
       url(str): The url in string format.
 
     Returns:
-        tuple(service_url, service, user, repo, action_dir, version)
+        tuple(service_url, service, user, repo, step_dir, version)
 
     """
 
@@ -288,14 +288,14 @@ def parse(url):
         r'([\w\-]+)(?:\/([^\@^\/]+)\/?([^\@]+)?(?:\@([\w\W]+))?)$')
 
     try:
-        protocol, service, user, repo, action_dir, version = pattern.search(
+        protocol, service, user, repo, step_dir, version = pattern.search(
             url).groups()
     except AttributeError:
         log.fail(
             'Invalid url. The url should be in any of the 3 forms: \n'
-            '1) https://github.com/user/repo/path/to/action@version \n'
-            '2) gitlab.com/user/repo/path/to/action@version \n'
-            '3) user/repo/path/to/action@version'
+            '1) https://github.com/user/repo/path/to/step@version \n'
+            '2) gitlab.com/user/repo/path/to/step@version \n'
+            '3) user/repo/path/to/step@version'
         )
 
     if not service:
@@ -304,8 +304,8 @@ def parse(url):
     if not protocol:
         protocol = 'https://'
 
-    if not action_dir:
-        action_dir = ''
+    if not step_dir:
+        step_dir = ''
 
     service_url = protocol + service
 
@@ -314,7 +314,7 @@ def parse(url):
     log.debug(f'  service: {service}')
     log.debug(f'  user: {user}')
     log.debug(f'  repo: {repo}')
-    log.debug(f'  action_dir: {action_dir}')
+    log.debug(f'  step_dir: {step_dir}')
     log.debug(f'  version: {version}')
 
-    return service_url, service, user, repo, action_dir, version
+    return service_url, service, user, repo, step_dir, version

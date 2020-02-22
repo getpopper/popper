@@ -84,23 +84,18 @@ popper run --engine-conf settings.py
 ## Environment Variables
 
 Popper defines a set of environment variables (see [Environment 
-Variables][envvars] section) that are available to all actions. To see 
-the values assigned to these variables, run the following workflow:
+Variables][envvars] section) that are available for all steps in a 
+workflow. To see the values assigned to these variables, run the 
+following workflow:
 
-[envvars]: gha_workflows.html#environment-variables
+[envvars]: cn_workflows.html#environment-variables
 
 ```hcl
-workflow "env workflow" {
-  resolves = "show env"
-}
-
-action "show env" {
-  uses = "popperized/bin/sh@master"
-  args = ["env"]
-}
+- uses: popperized/bin/sh@master
+  args: env
 ```
 
-To define new variables, the `env` keyword can be used (see [Action 
+To define new variables, the `env` keyword can be used (see [ 
 Attributes][act-attr] for more).
 
 [act-attr]: gha_workflows.html#action-attributes
@@ -288,21 +283,6 @@ how to create a new project using the Blue Ocean UI can be found
 [here](https://jenkins.io/doc/book/blueocean/creating-pipelines/). In 
 particular, the `New Pipeline from a Single Repository` has to be 
 selected (as opposed to `Auto-discover Pipelines`).
-
-### Specifying which workflows to run via commit messages
-
-When a CI service executes a popper workflow by invoking `popper run` on the CI server, it does so without passing any flags and hence we cannot specify which workflow to skip or execute. To make this more flexible, popper provides the ability to control which workflows to be executed by looking for special keywords in commit messages.
-
-The `popper:whitelist[<list-of-workflows>]` keyword can be used in a commit message to specify which workflows to execute among all the workflows present in the project. For example,
-
-```
-This is a sample commit message that shows how we can request the
-execution of a particular workflow.
-
-popper:whitelist[/path/to/workflow/a.workflow]
-```
-
-The above commit message specifies that only the workflow `a` will be executed and any other workflow will be skipped. A comma-separated list of workflow paths can be given in order to request the execution of more than one workflow. Alternatively, a skip list is also supported with the `popper:skip[<list-of-workflows>]` keyword to specify the list of workflows to be skipped.
 
 
 ## Visualizing workflows

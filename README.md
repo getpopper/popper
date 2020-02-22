@@ -7,31 +7,52 @@
 [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
 [![GitHub license](https://img.shields.io/github/license/systemslab/popper.svg)](https://github.com/systemslab/popper/blob/master/LICENSE)
 
-<p align="center">
-  <img src="docs/figures/demo.gif" width="800">
-</p>
+Popper is a tool for defining and executing [container-native][cn] 
+workflows in Docker, as well as [other container engines][engines]. 
+With Popper, you define a workflow in a YAML file, and then execute it 
+with a single command. A workflow file looks like this:
 
-Popper is a [Github Actions](https://github.com/features/actions) 
-(GHA) execution engine for running [HCL-syntax GHA workflows][ghawf] 
-locally on your machine and on CI services. The goal of this project 
-is to provide the following functionality:
+```yaml
+version: '1'
+steps:
+- uses: docker://byrnedo/alpine-curl:0.1.8
+  args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 
-  * **Continuous integration**. Generate configuration files for 
-    distinct CI services, allowing users to execute GHA workflows on 
-    Travis, Jenkins, Gitlab or Circle. [See here for more][ci].
-  * **Alternative Container Runtimes**. In addition to Docker, Popper 
-    can execute workflows in other runtimes by interacting with other 
-    container engines. We currently support [Singularity][sylabs], as 
-    well as running Docker inside virtual machines (via 
-    [Vagrant][vagrant]). We are working on adding 
+- uses: docker://python:3.8.1-alpine
+  args: [scripts/get_mean_by_group.py, global.csv, '5']
+```
+
+Assuming the above is stored in a `wf.yml` file, the workflow gets 
+executed by running:
+
+```bash
+popper run -f wf.yml
+```
+
+Keep reading down to find [installation instructions](#installation). 
+For more information on the YAML syntax, see [here][cnwf].
+
+The high-level goals of this project are to provide:
+
+  * **Lightweight workflow definition syntax.** Defining a workflow is 
+    as simple as writing file in a [lightweight YAML syntax][cnwf] and 
+    invoking `popper run` (see demo above). If you're familiar with 
+    [Docker Compose][compose], you can think of Popper as Compose but 
+    for workflows instead of services.
+  * **An abstraction over container runtimes**. In addition to Docker, 
+    Popper can seamlessly execute workflows in other runtimes by 
+    interacting with distinct container engines. We currently support 
+    [Singularity][sylabs], as well as running Docker inside virtual 
+    machines (via [Vagrant][vagrant]). We are working on adding 
     [Podman](https://podman.io) to the list.
-  * **Action search**. Provide with a [searchable catalog][search] of 
-    publicly available actions so that users can easily find which 
-    actions already exist (do not re-invent the wheel!).
-  * **Scaffolding**. Aid in the implementation of [new actions and 
-    workflows][scaffold].
-  * **Action library**. Provide with a list of reusable actions and 
-    example workflows at <https://github.com/popperized>.
+  * **Continuous integration**. Generate configuration files for 
+    distinct CI services, allowing users to run the exact same 
+    workflows they run locally on Travis, Jenkins, Gitlab, Circle and 
+    others.
+  * **Workflow development**. Aid in the implementation and debugging 
+    of [workflows][scaffold], and provide with an extensive list of 
+    [example workflows](https://github.com/popperized) that can serve 
+    as a starting point.
 
 -----
 
@@ -45,12 +66,12 @@ This repository contains:
 
 ## Installation
 
-To run workflows, you need to have Git and a container runtime installed
-([Docker][docker], [Singularity][singularity] and [Vagrant](https://vagrantup.com/) are currently
-supported). To install Popper you can use 
-[`pip`](https://pypi.python.org/pypi). We recommend to install in a 
-virtual environment (see [here][venv] for more on `virtualenv`). To 
-install:
+To run workflows, you need to have Python 3.6+, Git and a container 
+engine installed ([Docker][docker], [Singularity][singularity] and 
+[Vagrant](https://vagrantup.com/) are currently supported). To install 
+Popper you can use [`pip`](https://pypi.python.org/pypi). We recommend 
+to install in a virtual environment (see [here][venv] for more on 
+`virtualenv`). To install:
 
 ```bash
 pip install popper
@@ -63,15 +84,13 @@ commands:
 popper --help
 ```
 
-For a Quickstart guide on how to use Popper, look [here][quickstart].
+For a Quickstart guide on how to use Popper, look [here][getting_started].
 
 ## Contributing
 
 Anyone is welcome to contribute to Popper! To get started, take a look 
 at our [contributing guidelines](CONTRIBUTING.md), then dive in with 
-our [list of good first 
-issues](https://github.com/systemslab/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen) 
-and [open projects](https://github.com/systemslab/popper/projects).
+our [list of good first issues][gfi].
 
 ## Participation Guidelines
 
@@ -81,16 +100,19 @@ Popper, you're expected to uphold this code. If you encounter
 unacceptable behavior, please immediately [email 
 us](mailto:ivo@cs.ucsc.edu).
 
+[minimalpy]: https://github.com/popperized/popper-examples/tree/master/workflows/minimal-python
+[gfi]: https://github.com/systemslab/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen
 [singularity]: https://github.com/sylabs/singularity
 [docker]: https://get.docker.com
-[quickstart]: https://popper.readthedocs.io/en/latest/sections/getting_started.html
+[getting_started]: https://popper.readthedocs.io/en/latest/sections/getting_started.html
 [venv]: https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv
-[ci]: https://medium.com/getpopper/waiting-for-your-github-actions-invite-wait-no-longer-cf310b8c630c
 [popper2]: https://github.com/systemslab/popper/projects/12
-[search]: https://medium.com/getpopper/searching-for-existing-github-actions-has-never-been-easier-268c463f0257
 [docs]: https://popper.readthedocs.io/en/latest/
 [gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
 [scaffold]: https://popper.readthedocs.io/en/latest/sections/getting_started.html#create-a-workflow
-[ghawf]: docs/sections/gha_workflows.md
+[cnwf]: docs/sections/cn_workflows.md
+[engines]: docs/sections/cn_workflows.md#container-engines
 [sylabs]: https://sylabs.io/
 [vagrant]: https://vagrantup.com/
+[cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
+[compose]: https://docs.docker.com/compose/

@@ -39,38 +39,38 @@ action "d" {
 }
 EOF
 
-(! popper run a1 --skip a2)
+(! popper run --wfile main.workflow a1 --skip a2)
 
-popper run --dry-run --engine "$ENGINE" a1 | grep "a1"
-popper run --dry-run --engine "$ENGINE" a2 | grep "a2"
-popper run --dry-run --engine "$ENGINE" b | grep "b"
-popper run --dry-run --engine "$ENGINE" c | grep "c"
-popper run --dry-run --engine "$ENGINE" d | grep "d"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" a1 | grep "a1"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" a2 | grep "a2"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" b | grep "b"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" c | grep "c"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" d | grep "d"
 
-(! popper run --dry-run --skip e1)
-(! popper run --dry-run --skip a1 --skip a2)
-popper run --dry-run --engine "$ENGINE" --skip a1 > output
+(! popper run --wfile main.workflow --dry-run --skip e1)
+(! popper run --wfile main.workflow --dry-run --skip a1 --skip a2)
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" --skip a1 > output
 grep -q "a2" output
 grep -q "b" output
 grep -q "c" output
 grep -q "d" output
-popper run --dry-run --engine "$ENGINE" --skip a2 > output
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" --skip a2 > output
 grep -q "a1" output
 grep -q "b" output
 grep -q "c" output
 grep -q "d" output
-(! popper run --dry-run --engine "$ENGINE" --skip b --skip c)
-popper run --dry-run --engine "$ENGINE" --skip b > output
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE" --skip b --skip c)
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" --skip b > output
 grep -q "a1" output
 grep -q "a2" output
 grep -q "c" output
 grep -q "d" output
-popper run --dry-run --engine "$ENGINE" --skip c > output
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" --skip c > output
 grep -q "a1" output
 grep -q "a2" output
 grep -q "b" output
 grep -q "d" output
-popper run --dry-run --engine "$ENGINE" --skip d > output
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" --skip d > output
 grep -q "a1" output
 grep -q "a2" output
 grep -q "b" output
@@ -110,7 +110,7 @@ action "d" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 cat <<EOF > main.workflow
 workflow "wf" {
@@ -146,6 +146,6 @@ action "d" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 echo "Test SKIP passed."

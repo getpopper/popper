@@ -1,17 +1,10 @@
 workflow "cli tests" {
-  on = "push"
   resolves = "end"
 }
 
 action "lint" {
   uses = "popperized/bin/shellcheck@master"
   args = "./ci/test/*"
-}
-
-action "test ci" {
-  needs = "lint"
-  uses = "sh"
-  args = "ci/test/ci"
 }
 
 action "test reuse" {
@@ -23,8 +16,7 @@ action "test reuse" {
 action "test actions-demo" {
   needs = "lint"
   uses = "sh"
-  args = "ci/test/actions-demo"
-}
+  args = "ci/test/actions-demo" }
 
 action "test validate" {
   needs = "lint"
@@ -80,12 +72,6 @@ action "test skip" {
   args = "ci/test/skip"
 }
 
-action "test search" {
-  needs = "lint"
-  uses = "sh"
-  args = "ci/test/search"
-}
-
 action "test substitutions" {
   needs = "lint"
   uses = "sh"
@@ -115,7 +101,6 @@ action "end" {
   args = "ci/test/version"
   needs = [
     "test actions-demo",
-    "test ci",
     "test dot",
     "test dry-run",
     "test inject",
@@ -125,7 +110,6 @@ action "end" {
     "test quiet",
     "test reuse",
     "test scaffold",
-    "test search",
     "test sh",
     "test skip",
     "test substitutions",

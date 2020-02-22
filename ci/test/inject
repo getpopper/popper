@@ -63,8 +63,8 @@ EOF
 export POPPER_PRE_WORKFLOW_PATH="$PWD/inject-pre.workflow"
 export POPPER_POST_WORKFLOW_PATH="$PWD/inject-post.workflow"
 
-popper run --dry-run | grep "pre-action"
-popper run --dry-run | grep "post2-action"
+popper run --wfile main.workflow --dry-run | grep "pre-action"
+popper run --wfile main.workflow --dry-run | grep "post2-action"
 
 
 echo "Test INJECT ACTIONS passed."

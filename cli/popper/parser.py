@@ -3,13 +3,15 @@ from copy import deepcopy
 from builtins import str, dict
 
 import hcl
+import yaml
 
 from popper.cli import log
 from popper import utils as pu
 import re
+import os
 
 
-VALID_ACTION_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
+VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
 VALID_WORKFLOW_ATTRS = ["resolves", "on"]
 
 
@@ -17,28 +19,9 @@ class Workflow(object):
     """Represent's a immutable workflow."""
 
     def __init__(self, wfile, substitutions=None, allow_loose=False):
-        # Read and parse the workflow file.
-        with open(wfile, 'r') as fp:
-            self.parsed_workflow = hcl.load(fp)
-            self.substitutions = substitutions
-            self.allow_loose = allow_loose
-            fp.seek(0)
-            self.workflow_content = fp.readlines()
-            self.workflow_path = wfile
-
-    def get_action(self, action):
-        """Returns an action from a workflow.
-
-        Args:
-          action(str): Name of the action currently being executed.
-
-        Returns:
-            None
-        """
-        if self.parsed_workflow['action'].get(action, None):
-            return self.parsed_workflow['action'][action]
-        else:
-            log.fail(f"Action '{action}' doesn\'t exist.")
+        self.wfile = wfile
+        self.substitutions = substitutions
+        self.allow_loose = allow_loose
 
     def parse(self):
         """Parse and validate a workflow.
@@ -54,16 +37,55 @@ class Workflow(object):
 
         """
         self.validate_workflow_block()
-        self.validate_action_blocks()
+        self.validate_step_blocks()
         self.normalize()
         if self.substitutions:
             self.parse_substitutions(self.substitutions, self.allow_loose)
-        self.check_for_empty_workflow()
+        self.check_for_broken_workflow()
         self.complete_graph()
+
+    def load_file(self):
+        raise NotImplementedError(
+            "This method is required to be implemented in the derived class."
+        )
+
+    def complete_graph(self):
+        raise NotImplementedError(
+            "This method is required to be implemented in the derived class."
+        )
+
+    def normalize(self):
+        raise NotImplementedError(
+            "This method is required to be implemented in the derived class."
+        )
+
+    @staticmethod
+    def new_workflow(wfile, substitutions=None, allow_loose=False):
+        if wfile.endswith('.workflow'):
+            return HCLWorkflow(wfile, substitutions, allow_loose)
+        elif wfile.endswith('.yml') or wfile.endswith('.yaml'):
+            return YMLWorkflow(wfile, substitutions, allow_loose)
+        else:
+            log.fail('Unrecognized workflow file format.')
+
+    @staticmethod
+    def format_command(params):
+        """A static method that formats the `runs` and `args` attributes into a
+        list of strings.
+
+        Args:
+          params(list/str): run or args that are being executed.
+
+        Returns:
+            list: List of strings of parameters.
+        """
+        if pu.of_type(params, ['str']):
+            return params.split(" ")
+        return params
 
     @pu.threadsafe_generator
     def get_stages(self):
-        """Generator of stages. A stages is a list of actions that can be
+        """Generator of stages. A stages is a list of steps that can be
         executed in parallel.
 
         Args:
@@ -73,25 +95,25 @@ class Workflow(object):
             None
         """
         def resolve_intersections(stage):
-            """Removes actions from a stage that creates conflict between the
+            """Removes steps from a stage that creates conflict between the
             selected stage candidates.
 
             Args:
-              stage(set): Stage from which conflicted actions are to be
+              stage(set): Stage from which conflicted steps are to be
                             removed.
 
             Returns:
                 None
             """
-            actions_to_remove = set()
+            steps_to_remove = set()
             for a in stage:
-                if self.action[a].get('next', None):
-                    intersection = self.action[a]['next'].intersection(stage)
+                if self.step[a].get('next', None):
+                    intersection = self.step[a]['next'].intersection(stage)
                     if intersection:
                         for i in intersection:
-                            actions_to_remove.add(i)
+                            steps_to_remove.add(i)
 
-            for a in actions_to_remove:
+            for a in steps_to_remove:
                 stage.remove(a)
 
         current_stage = self.root
@@ -101,65 +123,27 @@ class Workflow(object):
             next_stage = set()
             for n in current_stage:
                 next_stage.update(
-                    self.action[n].get(
+                    self.step[n].get(
                         'next', set()))
                 resolve_intersections(next_stage)
             current_stage = next_stage
 
-    def check_for_empty_workflow(self):
-        """Checks whether all the actions mentioned in resolves attribute is
-        actually present in the workflow.
+    def verify_step(self, step):
+        return step in self.step.keys()
 
-        If none of them are present, then the workflow is assumed to
-        be empty and the execution halts.
+    def check_for_broken_workflow(self):
+        step_dependencies = set()
+        for a_name, a_block in self.step.items():
+            step_dependencies.update(set(a_block.get('needs', list())))
 
-        Args:
-            None
+        if self.wf_fmt == "hcl":
+            step_dependencies.update(set(self.resolves))
 
-        Returns:
-            None
-        """
-        actions_in_workflow = set(map(lambda a: a[0], self.action.items()))
-        actions_in_resolves = set(self.resolves)
-        if not actions_in_resolves.intersection(actions_in_workflow):
-            log.fail(
-                'Can\'t resolve any of the actions present in [resolves].')
-
-    def find_root(self, entrypoint, root):
-        """A GHA workflow is defined by specifying edges that point to the
-        previous nodes they depend on. To make the workflow easier to process,
-        we add forward edges. This also obtains the root nodes.
-
-        Args:
-          entrypoint(list): List of nodes from where to start
-        generating the graph.
-          root(set): Set of nodes without dependencies,
-        that would eventually be used as root.
-
-        Returns:
-            None
-        """
-        for node in entrypoint:
-            if self.get_action(node).get('needs', None):
-                for n in self.action[node]['needs']:
-                    self.find_root([n], root)
-                    if not self.get_action(n).get('next', None):
-                        self.action[n]['next'] = set()
-                    self.action[n]['next'].add(node)
-            else:
-                root.add(node)
-
-    def complete_graph(self):
-        """Driver function to run the recursive function
-        `_complete_graph_util()` which adds forward edges.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        self.find_root(self.resolves, self.root)
+        for step in step_dependencies:
+            if not self.verify_step(step):
+                log.fail(
+                    'Step {} is referenced in the workflow '
+                    'but is missing.'.format(step))
 
     def validate_workflow_block(self):
         """Validate the syntax of the workflow block.
@@ -170,8 +154,11 @@ class Workflow(object):
         Returns:
             None
         """
+        if self.wf_fmt == 'yml':
+            return
+
         workflow_block_cnt = len(
-            self.parsed_workflow.get(
+            self.wf_dict.get(
                 'workflow', dict()).items())
         if workflow_block_cnt == 0:
             log.fail('A workflow block must be present.')
@@ -179,7 +166,7 @@ class Workflow(object):
         if workflow_block_cnt > 1:
             log.fail('Cannot have more than one workflow blocks.')
 
-        workflow_block = list(self.parsed_workflow['workflow'].values())[0]
+        workflow_block = list(self.wf_dict['workflow'].values())[0]
         for key in workflow_block.keys():
             if key not in VALID_WORKFLOW_ATTRS:
                 log.fail(
@@ -197,8 +184,8 @@ class Workflow(object):
             if not pu.of_type(workflow_block['on'], ['str']):
                 log.fail('[on] attribute mist be a string.')
 
-    def validate_action_blocks(self):
-        """Validate the syntax of the action blocks.
+    def validate_step_blocks(self):
+        """Validate the syntax of the step blocks.
 
         Args:
             None
@@ -206,18 +193,17 @@ class Workflow(object):
         Returns:
             None
         """
-        self.check_duplicate_actions()
-        if not self.parsed_workflow.get('action', None):
-            log.fail('Atleast one action block must be present.')
+        if not self.wf_dict.get('step', None):
+            log.fail('At least one step block must be present.')
 
-        for _, a_block in self.parsed_workflow['action'].items():
+        for _, a_block in self.wf_dict['step'].items():
             for key in a_block.keys():
-                if key not in VALID_ACTION_ATTRS:
+                if key not in VALID_STEP_ATTRS:
                     log.fail(
-                        f'Invalid action attribute \'{key}\' found.')
+                        f'Invalid step attribute \'{key}\' found.')
 
             if not a_block.get('uses', None):
-                log.fail('[uses] attribute must be present in action block.')
+                log.fail('[uses] attribute must be present in step block.')
 
             if not pu.of_type(a_block['uses'], ['str']):
                 log.fail('[uses] attribute must be a string.')
@@ -250,100 +236,19 @@ class Workflow(object):
                         '[secrets] attribute must be a string or a list '
                         'of strings.')
 
-    @staticmethod
-    def format_command(params):
-        """A static method that formats the `runs` and `args` attributes into a
-        list of strings.
-
-        Args:
-          params(list/str): run or args that are being executed.
-
-        Returns:
-            list: List of strings of parameters.
-        """
-        if pu.of_type(params, ['str']):
-            return params.split(" ")
-        return params
-
-    def normalize(self):
-        """Takes properties from the `self.parsed_workflow` dict and makes them
-        native to the `Workflow` class. Also it normalizes some of the
-        attributes of a parsed workflow according to the Github defined
-        specifications.
-
-        For example, it changes `args`, `runs` and `secrets` attribute,
-        if provided as a string to a list of string by splitting around
-        whitespace. Also, it changes parameters like `uses` and `resolves`,
-        if provided as a string to a list.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        for wf_name, wf_block in self.parsed_workflow['workflow'].items():
-
-            self.name = wf_name
-            self.resolves = wf_block['resolves']
-            self.on = wf_block.get('on', 'push')
-            self.root = set()
-            self.action = self.parsed_workflow['action']
-            self.props = dict()
-
-            if pu.of_type(self.resolves, ['str']):
-                self.resolves = [self.resolves]
-
-        for a_name, a_block in self.action.items():
-            a_block['name'] = a_name
-
-            if a_block.get('needs', None):
-                if pu.of_type(a_block['needs'], ['str']):
-                    a_block['needs'] = [a_block['needs']]
-
-            if a_block.get('args', None):
-                a_block['args'] = Workflow.format_command(a_block['args'])
-
-            if a_block.get('runs', None):
-                a_block['runs'] = Workflow.format_command(a_block['runs'])
-
-            if a_block.get('secrets', None):
-                a_block['secrets'] = Workflow.format_command(
-                    a_block['secrets'])
-
-    def check_duplicate_actions(self):
-        """Checks whether duplicate action blocks are present or not.
-
-        Args:
-            None
-
-        Returns:
-            None
-        """
-        parsed_acount = 0
-        if self.parsed_workflow.get('action', None):
-            parsed_acount = len(list(self.parsed_workflow['action'].items()))
-        acount = 0
-        for line in self.workflow_content:
-            line = line.strip()
-            if line.startswith('action '):
-                acount += 1
-        if parsed_acount != acount:
-            log.fail('Duplicate action identifiers found.')
-
-    def check_for_unreachable_actions(self, skip=None):
+    def check_for_unreachable_steps(self, skip=None):
         """Validates a workflow by checking for unreachable nodes / gaps in the
         workflow.
 
         Args:
-          skip(list, optional): The list actions to skip if applicable.
+          skip(list, optional): The list of steps to skip if applicable.
                                 (Default value = None)
 
         Returns:
             None
         """
 
-        def _traverse(entrypoint, reachable, actions):
+        def _traverse(entrypoint, reachable, steps):
             """
 
             Args:
@@ -351,7 +256,7 @@ class Workflow(object):
                                 workflow.
               reachable(set): Set containing all the reachable parts of
                                 workflow.
-              actions(dict): Dictionary containing the identifier of the
+              steps(dict): Dictionary containing the identifier of the
                                 workflow and its description.
 
             Returns:
@@ -359,24 +264,29 @@ class Workflow(object):
             """
             for node in entrypoint:
                 reachable.add(node)
-                _traverse(actions[node].get(
-                    'next', []), reachable, actions)
+                _traverse(steps[node].get(
+                    'next', []), reachable, steps)
+
+        if self.wf_fmt == 'yml':
+            return
 
         reachable = set()
         skipped = set(self.props.get('skip_list', []))
-        actions = set(map(lambda a: a[0], self.action.items()))
+        steps = set(map(lambda a: a[0], self.step.items()))
 
-        _traverse(self.root, reachable, self.action)
+        _traverse(self.root, reachable, self.step)
 
-        unreachable = actions - reachable
+        unreachable = steps - reachable
         if unreachable - skipped:
             if skip:
-                log.fail(f'Actions {', '.join(unreachable - skipped)} are unreachable.')
+                log.fail(f'Unreachable step(s): {', '.join(unreachable - skipped)}.'
+                )
             else:
-                log.warning(f'Actions {', '.join(unreachable)} are unreachable.')
+                log.warning(f'Unreachable step(s): {', '.join(unreachable)}.'
+                )
 
         for a in unreachable:
-            self.action.pop(a)
+            self.step.pop(a)
 
     def parse_substitutions(self, substitutions, allow_loose):
         """
@@ -398,7 +308,7 @@ class Workflow(object):
             item = args.split('=', 1)
             if len(item) < 2:
                 raise Exception("Excepting '=' as seperator")
-            substitution_dict['$'+item[0]] = item[1]
+            substitution_dict['$' + item[0]] = item[1]
 
         for keys in substitution_dict:
             if(not bool(re.match(r"\$_[A-Z0-9]+", keys))):
@@ -407,7 +317,7 @@ class Workflow(object):
 
         used = {}
 
-        for wf_name, wf_block in self.action.items():
+        for wf_name, wf_block in self.step.items():
 
             attr = wf_block.get('needs', [])
             for i in range(len(attr)):
@@ -470,13 +380,13 @@ class Workflow(object):
                      "the workflow file")
 
     @staticmethod
-    def skip_actions(wf, skip_list=list()):
-        """Removes the actions to be skipped from the workflow graph and return
+    def skip_steps(wf, skip_list=list()):
+        """Removes the steps to be skipped from the workflow graph and return
         a new `Workflow` object.
 
         Args:
           wf(Workflow): The workflow object to operate upon.
-          skip_list(list): List of actions to be skipped.
+          skip_list(list): List of steps to be skipped.
                             (Default value = list())
 
         Returns:
@@ -484,17 +394,21 @@ class Workflow(object):
         """
         workflow = deepcopy(wf)
         for sa_name in skip_list:
-            sa_block = workflow.get_action(sa_name)
+            if not workflow.verify_step(sa_name):
+                log.fail(
+                    'Step {} can\'t be skipped as it is '
+                    'missing from the workflow.'.format(sa_name))
+            sa_block = workflow.step[sa_name]
             # Clear up all connections from sa_block
             sa_block.get('next', set()).clear()
             del sa_block.get('needs', list())[:]
 
-            # Handle skipping of root action's
+            # Handle skipping of root step's
             if sa_name in workflow.root:
                 workflow.root.remove(sa_name)
 
-            # Handle skipping of non-root action's
-            for a_name, a_block in workflow.action.items():
+            # Handle skipping of non-root step's
+            for a_name, a_block in workflow.step.items():
                 if sa_name in a_block.get('next', set()):
                     a_block['next'].remove(sa_name)
 
@@ -505,84 +419,347 @@ class Workflow(object):
         return workflow
 
     @staticmethod
-    def filter_action(wf, action, with_dependencies=False):
-        """Filters out all actions except the one passed in the argument from
+    def filter_step(wf, step, with_dependencies=False):
+        """Filters out all steps except the one passed in the argument from
         the workflow.
-
         Args:
           wf(Workflow): The workflow object to operate upon.
-          action(str): The action to run.
-          with_dependencies(bool, optional): Filter out action to
+          step(str): The step to run.
+          with_dependencies(bool, optional): Filter out step to
         run with dependencies or not. (Default value = False)
-
         Returns:
           Workflow: The updated workflow object.
         """
-        # Recursively generate root when an action is run
+        # Recursively generate root when an step is run
         # with the `--with-dependencies` flag.
-        def find_root_recursively(workflow, action, required_actions):
+        def find_root_recursively(workflow, step, required_steps):
             """
-
             Args:
               workflow(worklfow): The workflow object to operate upon.
-              action(str): The action to run.
-              required_actions(set): Set containing actions that are
+              step(str): The step to run.
+              required_steps(set): Set containing steps that are
                                     to be executed.
-
             Returns:
                 None
-
             """
-            required_actions.add(action)
-            if workflow.get_action(action).get('needs', None):
-                for a in workflow.get_action(action)['needs']:
-                    find_root_recursively(workflow, a, required_actions)
-                    if not workflow.get_action(a).get('next', None):
-                        workflow.get_action(a)['next'] = set()
-                    workflow.get_action(a)['next'].add(action)
+            required_steps.add(step)
+            if workflow.step[step].get('needs', None):
+                for a in workflow.step[step]['needs']:
+                    find_root_recursively(workflow, a, required_steps)
+                    if not workflow.step[a].get('next', None):
+                        workflow.step[a]['next'] = set()
+                    workflow.step[a]['next'].add(step)
             else:
-                workflow.root.add(action)
+                workflow.root.add(step)
 
-        # The list of actions that needs to be preserved.
+        # The list of steps that needs to be preserved.
         workflow = deepcopy(wf)
 
-        actions = set(map(lambda x: x[0], workflow.action.items()))
+        if not workflow.verify_step(step):
+            log.fail(
+                'Step {} can\'t be filtered as it is '
+                'missing from the workflow.'.format(step))
 
-        required_actions = set()
+        steps = set(map(lambda x: x[0], workflow.step.items()))
+
+        required_steps = set()
 
         if with_dependencies:
-            # Prepare the graph for running only the given action
+            # Prepare the graph for running only the given step
             # only with its dependencies.
-            find_root_recursively(workflow, action, required_actions)
+            find_root_recursively(workflow, step, required_steps)
 
-            filtered_actions = actions - required_actions
+            filtered_steps = steps - required_steps
 
-            for ra in required_actions:
-                a_block = workflow.get_action(ra)
-                common_actions = filtered_actions.intersection(
+            for ra in required_steps:
+                a_block = workflow.step[ra]
+                common_steps = filtered_steps.intersection(
                     a_block.get('next', set()))
-                if common_actions:
-                    for ca in common_actions:
+                if common_steps:
+                    for ca in common_steps:
                         a_block['next'].remove(ca)
         else:
-            # Prepare the action for its execution only.
-            required_actions.add(action)
+            # Prepare the step for its execution only.
+            required_steps.add(step)
 
-            if workflow.get_action(action).get('next', None):
-                workflow.get_action(action)['next'] = set()
+            if workflow.step[step].get('next', None):
+                workflow.step[step]['next'] = set()
 
-            if workflow.get_action(action).get('needs', None):
-                workflow.get_action(action)['needs'] = list()
+            if workflow.step[step].get('needs', None):
+                workflow.step[step]['needs'] = list()
 
-            workflow.root.add(action)
+            workflow.root.add(step)
 
-        # Make the list of the actions to be removed.
-        actions = actions - required_actions
+        # Make the list of the steps to be removed.
+        steps = steps - required_steps
 
-        # Remove the remaining actions
-        for a in actions:
+        # Remove the remaining steps
+        for a in steps:
             if a in workflow.root:
                 workflow.root.remove(a)
-            workflow.action.pop(a)
+            workflow.step.pop(a)
 
         return workflow
+
+
+class YMLWorkflow(Workflow):
+    """Parse a yml based workflow and generate the workflow graph.
+    """
+
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
+        super(YMLWorkflow, self).__init__(wfile, substitutions, allow_loose)
+        self.wf_fmt = "yml"
+        self.load_file()
+
+    def load_file(self):
+        """Loads the workflow as a dict from the `.yml` file.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        with open(self.wfile) as fp:
+            self.wf_list = yaml.safe_load(fp)['steps']
+            fp.seek(0)
+            self.wf_content = fp.readlines()
+            if not self.wf_list:
+                return
+
+        self.wf_dict = {'step': dict()}
+        self.id_map = dict()
+
+        for idx, step in enumerate(self.wf_list):
+            # If no id attribute present, make one
+            _id = step.get('id', str(idx + 1))
+            self.wf_dict['step'][_id] = step
+            self.id_map[idx + 1] = _id
+            step.pop('id', None)
+
+    def normalize(self):
+        """Takes properties from the `self.wf_dict` dict and makes them
+        native to the `Workflow` class. Also it normalizes some of the
+        attributes of a parsed workflow according to the Github defined
+        specifications.
+
+        For example, it changes `args`, `runs` and `secrets` attribute,
+        if provided as a string to a list of string by splitting around
+        whitespace. Also, it changes parameters like `uses` and `resolves`,
+        if provided as a string to a list.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        self.name = os.path.basename(self.wfile)[:-4]
+        self.on = ""
+        self.root = set()
+        self.props = dict()
+        self.step = self.wf_dict['step']
+
+        for a_name, a_block in self.step.items():
+            a_block['name'] = a_name
+
+            if a_block.get('needs', None):
+                if pu.of_type(a_block['needs'], ['str']):
+                    a_block['needs'] = [a_block['needs']]
+
+            if a_block.get('args', None):
+                a_block['args'] = Workflow.format_command(a_block['args'])
+
+            if a_block.get('runs', None):
+                a_block['runs'] = Workflow.format_command(a_block['runs'])
+
+            if a_block.get('secrets', None):
+                a_block['secrets'] = Workflow.format_command(
+                    a_block['secrets'])
+
+    def get_containing_set(self, idx):
+        """Find the set from the list of sets of step dependencies, where
+        the step with the given index is present.
+
+        Args:
+            idx(int): The index of the step to be searched.
+
+        Returns:
+            set: The required set.
+        """
+        for _set in self.dep_sets:
+            if self.id_map[idx] in _set:
+                return _set
+
+        required_set = set()
+        required_set.add(self.id_map[idx])
+        return required_set
+
+    def complete_graph(self):
+        """Function to generate the workflow graph by
+        adding forward edges.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        # Connect the graph as much as possible.
+        for a_id, a_block in self.step.items():
+            if a_block.get('needs', None):
+                for a in a_block['needs']:
+                    if not self.step[a].get('next', None):
+                        self.step[a]['next'] = set()
+                    self.step[a]['next'].add(a_id)
+
+        # Generate the dependency sets.
+        self.dep_sets = list()
+        self.visited = dict()
+
+        for a_id, a_block in self.step.items():
+            if a_block.get('next', None):
+                if a_block['next'] not in self.dep_sets:
+                    self.dep_sets.append(a_block['next'])
+                    self.visited[tuple(a_block['next'])] = False
+
+            if a_block.get('needs', None):
+                if a_block['needs'] not in self.dep_sets:
+                    self.dep_sets.append(set(a_block['needs']))
+                    self.visited[tuple(a_block['needs'])] = False
+
+        # Moving from top to bottom
+        for idx, id in self.id_map.items():
+            step = self.step[id]
+            if not step.get('next', None):
+                # if this is not the last step,
+                if idx + 1 <= len(self.step.items()):
+                    curr = self.id_map[idx]
+                    next = self.id_map[idx + 1]
+                    # If the current step and next step is not in any
+                    # set,
+                    if ({curr, next} not in self.dep_sets) and (
+                            {next, curr} not in self.dep_sets):
+                        next_set = self.get_containing_set(idx + 1)
+                        curr_set = self.get_containing_set(idx)
+
+                        if not self.visited.get(tuple(next_set), None):
+                            step['next'] = next_set
+                            for nsa in next_set:
+                                self.step[nsa]['needs'] = id
+                            self.visited[tuple(curr_set)] = True
+
+        # Finally, generate the root.
+        for a_id, a_block in self.step.items():
+            if not a_block.get('needs', None):
+                self.root.add(a_id)
+
+
+class HCLWorkflow(Workflow):
+    """Parse a hcl based workflow and generate
+    the workflow graph.
+    """
+
+    def __init__(self, wfile, substitutions=None, allow_loose=False):
+        super(HCLWorkflow, self).__init__(wfile, substitutions, allow_loose)
+        self.wf_fmt = "hcl"
+        self.load_file()
+
+    def load_file(self):
+        """Loads the workflow as a dict from the `.workflow` file.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        with open(self.wfile) as fp:
+            self.wf_dict = hcl.load(fp)
+            fp.seek(0)
+            self.wf_content = fp.readlines()
+
+        if 'action' in self.wf_dict:
+            self.wf_dict['step'] = self.wf_dict.pop('action')
+
+    def find_root(self, entrypoint, root):
+        """A GHA workflow is defined by specifying edges that point to the
+        previous nodes they depend on. To make the workflow easier to process,
+        we add forward edges. This also obtains the root nodes.
+
+        Args:
+          entrypoint(list): List of nodes from where to start
+        generating the graph.
+          root(set): Set of nodes without dependencies,
+        that would eventually be used as root.
+
+        Returns:
+            None
+        """
+        for node in entrypoint:
+            if self.step[node].get('needs', None):
+                for n in self.step[node]['needs']:
+                    self.find_root([n], root)
+                    if not self.step[n].get('next', None):
+                        self.step[n]['next'] = set()
+                    self.step[n]['next'].add(node)
+            else:
+                root.add(node)
+
+    def complete_graph(self):
+        """Driver function to run the recursive function
+        `find_root()` which adds forward edges.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        self.find_root(self.resolves, self.root)
+
+    def normalize(self):
+        """Takes properties from the `self.wf_dict` dict and makes them
+        native to the `Workflow` class. Also it normalizes some of the
+        attributes of a parsed workflow according to the Github defined
+        specifications.
+
+        For example, it changes `args`, `runs` and `secrets` attribute,
+        if provided as a string to a list of string by splitting around
+        whitespace. Also, it changes parameters like `uses` and `resolves`,
+        if provided as a string to a list.
+
+        Args:
+            None
+
+        Returns:
+            None
+        """
+        for wf_name, wf_block in self.wf_dict['workflow'].items():
+
+            self.name = wf_name
+            self.resolves = wf_block['resolves']
+            self.on = wf_block.get('on', 'push')
+            self.root = set()
+            self.step = self.wf_dict['step']
+            self.props = dict()
+
+            if pu.of_type(self.resolves, ['str']):
+                self.resolves = [self.resolves]
+
+        for a_name, a_block in self.step.items():
+            a_block['name'] = a_name
+
+            if a_block.get('needs', None):
+                if pu.of_type(a_block['needs'], ['str']):
+                    a_block['needs'] = [a_block['needs']]
+
+            if a_block.get('args', None):
+                a_block['args'] = Workflow.format_command(a_block['args'])
+
+            if a_block.get('runs', None):
+                a_block['runs'] = Workflow.format_command(a_block['runs'])
+
+            if a_block.get('secrets', None):
+                a_block['secrets'] = Workflow.format_command(
+                    a_block['secrets'])

@@ -35,7 +35,7 @@ action "show env one" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## workflow block present with unknown attributes.
 
@@ -52,7 +52,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## workflow block not present
 cat <<EOF > main.workflow
@@ -66,7 +66,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## workflow block present
 cat <<EOF > main.workflow
@@ -80,7 +80,7 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## resolves attribute not present
 cat <<EOF > main.workflow
@@ -94,7 +94,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## resolves attribute present but wrong type
 cat <<EOF > main.workflow
@@ -108,7 +108,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## resolves attribute present and correct type
 cat <<EOF > main.workflow
@@ -122,7 +122,7 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## on attribute present but wrong type
 cat <<EOF > main.workflow
@@ -137,7 +137,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## on attribute present and correct type
 cat <<EOF > main.workflow
@@ -152,30 +152,11 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 #----------------------#
 # Action block tests   #
 #----------------------#
-
-## workflow with duplicate action blocks
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = "show env"
-}
-
-action "show env" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-
-action "show env" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-EOF
-
-(! popper run --dry-run --engine "$ENGINE")
 
 ## action block present with unknown attributes
 cat <<EOF > main.workflow
@@ -191,7 +172,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## action block not present
 cat <<EOF > main.workflow
@@ -205,7 +186,7 @@ acccction "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## action block present
 cat <<EOF > main.workflow
@@ -219,7 +200,7 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## uses attribute not present
 cat <<EOF > main.workflow
@@ -237,7 +218,7 @@ action "show env one" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## uses attribute present but wrong type
 cat <<EOF > main.workflow
@@ -251,7 +232,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## uses attribute present and correct type
 cat <<EOF > main.workflow
@@ -265,7 +246,7 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## needs present but wrong type
 cat <<EOF > main.workflow
@@ -280,7 +261,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## needs attribute present and correct type
 cat <<EOF > main.workflow
@@ -300,7 +281,7 @@ action "show env again" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## runs attribute present but wrong type
 cat <<EOF > main.workflow
@@ -314,7 +295,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## runs attribute present and correct type
 cat <<EOF > main.workflow
@@ -327,7 +308,7 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 # args attribute present but wrong type
 cat <<EOF > main.workflow
@@ -345,7 +326,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## args attribute present and correct type
 cat <<EOF > main.workflow
@@ -359,7 +340,7 @@ action "show env" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## env attribute present but wrong type
 cat <<EOF > main.workflow
@@ -374,7 +355,7 @@ action "show env" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## env attribute present and correct type
 cat <<EOF > main.workflow
@@ -392,7 +373,7 @@ action "test env-good" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## secrets attribute present but wrong type
 cat <<EOF > main.workflow
@@ -409,7 +390,7 @@ action "secrets wrong" {
 }
 EOF
 
-(! popper run --dry-run --engine "$ENGINE")
+(! popper run --wfile main.workflow --dry-run --engine "$ENGINE")
 
 ## secrets attribute present and correct type
 export F_NAME=F_NAME
@@ -430,7 +411,7 @@ action "secrets good" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE"
+popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
 ## show WARNING on unreachable actions
 cat <<EOF > main.workflow
@@ -449,6 +430,6 @@ action "unreachable" {
 }
 EOF
 
-popper run --dry-run --engine "$ENGINE" 2>&1 | grep 'WARNING'
+popper run --wfile main.workflow --dry-run --engine "$ENGINE" 2>&1 | grep 'WARNING'
 
 echo "Test VALIDATE passed."

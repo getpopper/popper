@@ -1,59 +1,32 @@
-import os
-import stat
-from string import Template
-
 import click
+import os
 
-from popper import scm, utils as pu
+from popper import scm
 from popper.cli import pass_context, log
 
-base_script_content = """
-#!/bin/bash
-set -ex
-"""
-
-install_scripts_content = {
-    'singularity': """
-sudo apt-get update
-sudo apt-get install -y build-essential \
-                        libssl-dev \
-                        uuid-dev \
-                        libgpgme11-dev \
-                        libseccomp-dev \
-                        pkg-config \
-                        squashfs-tools
-mkdir -p ${GOPATH}/src/github.com/sylabs
-cd ${GOPATH}/src/github.com/sylabs
-git clone https://github.com/sylabs/singularity.git
-cd singularity
-git checkout v3.2.0
-cd ${GOPATH}/src/github.com/sylabs/singularity
-./mconfig
-cd ./builddir
-make
-sudo make install
-singularity version
-cd $TRAVIS_BUILD_DIR
-"""}
-
 ci_files = {
+
+    # ##########################################################3
+
     'travis': {
-        './.travis.yml': Template("""
+        './.travis.yml': """
 ---
 dist: xenial
 language: python
 python: 3.7
 services: docker
-$install_scripts
 install:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
 - pip install /tmp/popper/cli
-script: popper run
-""")
+script: popper run -f {}
+"""
     },
+
+    # ##########################################################3
+
     'circle': {
-        './.circleci/config.yml': Template("""
+        './.circleci/config.yml': """
 ---
 version: 2
 jobs:
@@ -63,26 +36,31 @@ jobs:
     - checkout
     - run:
         command: |
-        $install_scripts
         git clone https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
         pip install /tmp/popper/cli
-        popper run
-""")
+        popper run -f {}
+"""
     },
+
+    # ##########################################################3
+
     'jenkins': {
-        './Jenkinsfile': Template("""
+        './Jenkinsfile': """
 ---
 stage ('Popper') {{ node {{
   sh "git clone https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
   sh "pip install /tmp/popper/cli"
-  sh "popper run"
+  sh "popper run -f {}"
 }}}}
-""")
+"""
     },
+
+    # ##########################################################3
+
     'gitlab': {
-        '.gitlab-ci.yml': Template("""
+        '.gitlab-ci.yml': """
 ---
 image: docker:stable
 
@@ -101,26 +79,28 @@ before_script:
 - git clone https://github.com/systemslab/popper /tmp/popper
 - pip install /tmp/popper/cli
 popper:
-  script: popper run
-""")
+  script: popper run -f {}
+"""
     },
+
+    # ##########################################################3
+
     'brigade': {
-        'brigade.js': Template("""
+        'brigade.js': """
 const { events, Job } = require("brigadier")
 events.on("push", () => {
     var popper = new Job("popper", "python:3.7-slim-stretch")
     popper.tasks = [
         "apt-get update",
         "apt-get install -y git",
-        $install_scripts
         "git clone https://github.com/systemslab/popper /tmp/popper",
         "export PYTHONUNBUFFERED=1",
         "pip install /tmp/popper/cli",
-        "popper run"
+        "popper run -f {}"
     ]
     popper.run()
 })
-""")
+"""
     }
 }
 
@@ -132,29 +112,13 @@ events.on("push", () => {
     required=True
 )
 @click.option(
-    '--install',
-    help='Specify the runtime dependencies to install.',
-    required=False,
-    type=click.Choice(['singularity']),
-    default=list(),
-    multiple=True
+    '-f', '--wfile', help='Specify workflow to run in CI.', required=True
 )
 @pass_context
-def cli(ctx, service, install):
+def cli(ctx, service, wfile):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
-
-    # Args:
-    #   ctx(Popper.cli.context): For process inter-command communication
-    #         context is used.For reference visit
-    #         https://click.palletsprojects.com/en/7.x/commands/#nested-handling-and-contexts .
-    #   service(string): Defines the service.
-    #   install(tuple): Tuple with custom installation scripts.
-
-    # Returns:
-    #     None
-
     project_root = scm.get_git_root_folder()
 
     if project_root != os.getcwd():
@@ -162,65 +126,10 @@ def cli(ctx, service, install):
             'This command needs to be executed on the root of your '
             'Git project folder (where the .git/ folder is located).')
 
-    for ci_file, ci_file_content in pu.get_items(ci_files[service]):
-
-        # Prepare and write the CI config file.
+    for ci_file, ci_file_content in ci_files[service].items():
         ci_file = os.path.join(project_root, ci_file)
-        if not os.path.isdir(os.path.dirname(ci_file)):
-            os.makedirs(os.path.dirname(ci_file))
-
-        install_script_cmd = ''
-        if install:
-            if service == 'jenkins' or service == 'gitlab':
-                log.fail(
-                    'Scaffolding of custom install scripts is not '
-                    'supported for Jenkins and Gitlab CI. Include it '
-                    'manually depending upon the CI\'s OS.')
-
-            elif service == 'travis':
-                install_script_cmd = ('before_install: scripts/'
-                                      'install_scripts.sh')
-
-            elif service == 'circle':
-                install_script_cmd = 'bash scripts/install_scripts.sh'
-
-            elif service == 'brigade':
-                install_script_cmd = '"bash scripts/install_scripts.sh",'
-
+        os.makedirs(os.path.dirname(ci_file), exist_ok=True)
         with open(ci_file, 'w') as f:
-            f.write(reformat(ci_file_content.safe_substitute(
-                {'install_scripts': install_script_cmd})))
-
-        # Prepare and Write the install scripts.
-        if install:
-            install = set(install)
-            install_script_file = os.path.join(
-                project_root, 'scripts', 'install_scripts.sh')
-            script_content = base_script_content
-            for runtime in install:
-                script_content += install_scripts_content[runtime]
-
-            if not os.path.isdir(os.path.dirname(install_script_file)):
-                os.makedirs(os.path.dirname(install_script_file))
-
-            with open(install_script_file, 'w') as f:
-                f.write(script_content)
-
-            st = os.stat(install_script_file)
-            os.chmod(install_script_file, st.st_mode | stat.S_IEXEC)
+            f.write(ci_file_content.format(wfile))
 
     log.info(f'Wrote {service} configuration successfully.')
-
-
-def reformat(config):
-    """"
-    Returns the string in formatted order.
-
-    Args:
-      config(string): String that is required to be formatted.
-
-    Returns:
-      string: String in required format.
-
-    """
-    return '\n'.join([s for s in config.splitlines() if s.strip()])

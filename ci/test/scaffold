@@ -7,21 +7,8 @@ cd "$test_repo_path"
 
 popper scaffold
 
-test -f main.workflow
-test -f actions/example/Dockerfile
-test -f actions/example/entrypoint.sh
-test -f actions/example/README.md
+test -f wf.yml
 
-popper run --engine "$ENGINE"
-
-mkdir -p pipelines/mypipe
-cd pipelines/mypipe
-
-popper scaffold
-
-test -f main.workflow
-test -f actions/example/Dockerfile
-test -f actions/example/entrypoint.sh
-test -f actions/example/README.md
+popper run -f wf.yml
 
 echo "Test SCAFFOLD passed."
