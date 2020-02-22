@@ -1,6 +1,5 @@
 import unittest
 import os
-import shutil
 
 from popper import utils as pu
 from popper.cli import log
@@ -38,21 +37,6 @@ class TestUtils(unittest.TestCase):
 
     def touch_file(self, path):
         open(path, 'w').close()
-
-    def test_find_recursive_wfile(self):
-        os.makedirs('/tmp/one/two/three', exist_ok=True)
-        os.chdir('/tmp')
-        self.touch_file('/tmp/one/a.workflow')
-        self.touch_file('/tmp/one/two/b.workflow')
-        self.touch_file('/tmp/one/two/three/c.workflow')
-
-        wfiles = pu.find_recursive_wfile()
-        self.assertListEqual(wfiles, [
-            '/tmp/one/a.workflow',
-            '/tmp/one/two/b.workflow',
-            '/tmp/one/two/three/c.workflow'])
-
-        shutil.rmtree('/tmp/one')
 
     def test_setup_base_cache(self):
         cache_dir = pu.setup_base_cache()

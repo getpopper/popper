@@ -82,26 +82,6 @@ def threadsafe_generator(f):
     return g
 
 
-def find_recursive_wfile():
-    """Used to search for `.workflow` files in $PWD and then recursively in sub
-    directories.
-
-    Args:
-      None
-
-    Returns:
-      list: List of path of workflow files.
-    """
-    wfile_list = list()
-    for root, _, files in os.walk('.'):
-        for file in files:
-            if file.endswith('.workflow'):
-                wfile = os.path.join(root, file)
-                wfile = os.path.abspath(wfile)
-                wfile_list.append(wfile)
-    return wfile_list
-
-
 def sanitized_name(name, wid=''):
     """Clean a step name and change it to proper format. It replaces all the
     unwanted characters with `_`.
