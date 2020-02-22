@@ -305,16 +305,16 @@ class TestActionRunner(unittest.TestCase):
         env = self.runner.prepare_environment()
         volumes = self.runner.prepare_volumes(env)
         self.assertEqual(volumes, [
-            '{}:{}'.format(os.environ['HOME'], os.environ['HOME']),
-            '{}:/github/home'.format(os.environ['HOME']),
+            f'{os.environ['HOME']}:{os.environ['HOME']}',
+            f'{os.environ['HOME']}:/github/home',
             '/tmp/test_folder:/tmp/test_folder',
             '/tmp/test_folder:/github/workspace',
             '/tmp/github_event.json:/github/workflow/event.json'])
         volumes = self.runner.prepare_volumes(env, include_docker_socket=True)
         self.assertEqual(volumes, [
             '/var/run/docker.sock:/var/run/docker.sock',
-            '{}:{}'.format(os.environ['HOME'], os.environ['HOME']),
-            '{}:/github/home'.format(os.environ['HOME']),
+            f'{os.environ['HOME']}:{os.environ['HOME']}',
+            f'{os.environ['HOME']}:/github/home',
             '/tmp/test_folder:/tmp/test_folder',
             '/tmp/test_folder:/github/workspace',
             '/tmp/github_event.json:/github/workflow/event.json'])
@@ -808,13 +808,13 @@ class TestVagrantRunner(unittest.TestCase):
         'Skipping vagrant tests...')
     def test_vagrant_write_vagrantfile(self):
         self.runner.vagrant_write_vagrantfile('/tmp/test_folder/test_vm')
-        required_content = """
+        required_content = f"""
         Vagrant.configure("2") do |config|
             config.vm.box = "ailispaw/barge"
-            config.vm.synced_folder "{}", "{}"
+            config.vm.synced_folder "{os.environ['HOME']}", "{os.environ['HOME']}"
             config.vm.synced_folder "/tmp/test_folder", "/tmp/test_folder"
         end
-        """.format(os.environ['HOME'], os.environ['HOME'])
+        """
         f = open('/tmp/test_folder/test_vm/Vagrantfile')
         content = f.readlines()
         f.close()

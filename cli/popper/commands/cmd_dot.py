@@ -70,10 +70,10 @@ def cli(ctx, wfile, skip, recursive, colors):
 
         """
         for n in children:
-            edge = '  "{}" -> "{}";\n'.format(parent, n)
+            edge = f'  "{parent}" -> "{n}";\n'
             if edge in stage_edges:
                 continue
-            dot_str += edge + '  "{}" [{}];\n'.format(n, node_attrs)
+            dot_str += edge + f'  "{n}" [{node_attrs}];\n'
 
             stage_edges.add(edge)
 
@@ -101,7 +101,7 @@ def cli(ctx, wfile, skip, recursive, colors):
         wf_attr = node_attrs.format(',rounded', ',color=red' if colors else '')
         act_attr = node_attrs.format('', ',color=cyan' if colors else '')
         dot_str = add_to_graph("", wf, wf.name, wf.root, act_attr, set())
-        dot_str += '  "{}" [{}];\n'.format(wf.name, wf_attr)
+        dot_str += f'  "{wf.name}" [{wf_attr}];\n'
         log.info(
             "digraph G { graph [bgcolor=transparent];\n" + dot_str + "}\n"
         )

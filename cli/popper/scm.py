@@ -141,8 +141,7 @@ def get_sha():
             return repo.git.rev_parse(repo.head.object.hexsha, short=True)
         except ValueError as e:
             log.debug(e)
-            log.fail('Could not obtain revision of repository located at {}'
-                     .format(get_git_root_folder()))
+            log.fail(f'Could not obtain revision of repository located at {get_git_root_folder()}')
     else:
         return 'unknown'
 
@@ -241,7 +240,7 @@ def clone(url, org, repo, repo_dir, version=None):
             # The length of protocol is 8 in case of https://
             url = url[:8]+auth_token+'@'+url[8:]
 
-        repo_url = '{}{}/{}'.format(url, org, repo)
+        repo_url = f'{url}{org}/{repo}'
         cloned_repo = git.Repo.clone_from(repo_url, repo_dir)
 
     cloned_repo.git.checkout(get_default_branch(cloned_repo))
@@ -310,12 +309,12 @@ def parse(url):
 
     service_url = protocol + service
 
-    log.debug('parse("{}"):'.format(url))
-    log.debug('  service_url: {}'.format(service_url))
-    log.debug('  service: {}'.format(service))
-    log.debug('  user: {}'.format(user))
-    log.debug('  repo: {}'.format(repo))
-    log.debug('  action_dir: {}'.format(action_dir))
-    log.debug('  version: {}'.format(version))
+    log.debug(f'parse("{url}"):')
+    log.debug(f'  service_url: {service_url}')
+    log.debug(f'  service: {service}')
+    log.debug(f'  user: {user}')
+    log.debug(f'  repo: {repo}')
+    log.debug(f'  action_dir: {action_dir}')
+    log.debug(f'  version: {version}')
 
     return service_url, service, user, repo, action_dir, version

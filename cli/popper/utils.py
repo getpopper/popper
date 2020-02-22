@@ -167,10 +167,9 @@ def find_default_wfile(wfile=None):
 
     if not wfile:
         log.fail(
-            "Files {} or {} not found.".format("./main.workflow",
-                                               ".github/main.workflow"))
+            f"Files {"./main.workflow"} or {".github/main.workflow"} not found."
     if not os.path.isfile(wfile):
-        log.fail("File {} not found.".format(wfile))
+        log.fail(f"File {wfile} not found.")
 
     return wfile
 
@@ -279,7 +278,7 @@ def fetch_metadata(update_cache=False):
                 user, repo, path_to_action, version = r[0], r[1], r[2], r[3]
                 action = os.path.normpath(
                     os.path.join(user, repo, path_to_action))
-                bar.label = "{}".format(action)
+                bar.label = f"{action}"
                 metadata[action] = fetch_repo_metadata(
                     user, repo, path_to_action, version)
 
@@ -339,10 +338,7 @@ def sanitized_name(name, wid):
     Returns:
       str: The sanitized action name.
     """
-    return "popper_{}_{}".format(
-        re.sub('[^a-zA-Z0-9_.-]', '_', name),
-        wid
-    )
+    return f"popper_{re.sub('[^a-zA-Z0-9_.-]', '_', name)}_{wid}"
 
 
 def of_type(param, valid_types):
@@ -438,7 +434,7 @@ def parse_engine_configuration(engine_conf_file):
         return None
 
     if not os.path.exists(engine_conf_file):
-        log.fail('File {} was not found.'.format(engine_conf_file))
+        log.fail(f'File {engine_conf_file} was not found.')
 
     if not engine_conf_file.endswith('.py'):
         log.fail('Config file must be a python source file.')

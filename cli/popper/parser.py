@@ -38,7 +38,7 @@ class Workflow(object):
         if self.parsed_workflow['action'].get(action, None):
             return self.parsed_workflow['action'][action]
         else:
-            log.fail("Action '{}' doesn\'t exist.".format(action))
+            log.fail(f"Action '{action}' doesn\'t exist.")
 
     def parse(self):
         """Parse and validate a workflow.
@@ -183,7 +183,7 @@ class Workflow(object):
         for key in workflow_block.keys():
             if key not in VALID_WORKFLOW_ATTRS:
                 log.fail(
-                    'Invalid workflow attribute \'{}\' was found.'.format(key))
+                    f'Invalid workflow attribute \'{key}\' was found.')
 
         if not workflow_block.get('resolves', None):
             log.fail('[resolves] attribute must be present in a '
@@ -214,7 +214,7 @@ class Workflow(object):
             for key in a_block.keys():
                 if key not in VALID_ACTION_ATTRS:
                     log.fail(
-                        'Invalid action attribute \'{}\' found.'.format(key))
+                        f'Invalid action attribute \'{key}\' found.')
 
             if not a_block.get('uses', None):
                 log.fail('[uses] attribute must be present in action block.')
@@ -371,13 +371,9 @@ class Workflow(object):
         unreachable = actions - reachable
         if unreachable - skipped:
             if skip:
-                log.fail('Actions {} are unreachable.'.format(
-                    ', '.join(unreachable - skipped))
-                )
+                log.fail(f'Actions {', '.join(unreachable - skipped)} are unreachable.')
             else:
-                log.warning('Actions {} are unreachable.'.format(
-                    ', '.join(unreachable))
-                )
+                log.warning(f'Actions {', '.join(unreachable)} are unreachable.')
 
         for a in unreachable:
             self.action.pop(a)
@@ -406,8 +402,8 @@ class Workflow(object):
 
         for keys in substitution_dict:
             if(not bool(re.match(r"\$_[A-Z0-9]+", keys))):
-                log.fail("Substitution variable '{}' doesn't "
-                         "satify required format ".format(keys))
+                log.fail(f"Substitution variable '{keys}' doesn't "
+                         "satify required format ")
 
         used = {}
 

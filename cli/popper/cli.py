@@ -122,20 +122,20 @@ def signal_handler(sig, frame):
             future.cancel()
 
     for pid in process_list:
-        log.info("Stopping process '{}'".format(pid))
+        log.info(f"Stopping process '{pid}'")
         try:
             os.killpg(os.getpgid(pid), signal.SIGTERM)
         except OSError:
             pass
 
     for container in docker_list:
-        log.info("Stopping container '{}'".format(container.name))
+        log.info(f"Stopping container '{container.name}'")
         container.stop(timeout=1)
 
     if vagrant_list:
         import vagrant
         for box_path in vagrant_list:
-            log.info("Stopping box '{}'".format(box_path))
+            log.info(f"Stopping box '{box_path}'")
             vagrant.Vagrant(root=box_path).halt()
 
     sys.exit(0)

@@ -209,7 +209,7 @@ def cli(ctx, service, install):
             st = os.stat(install_script_file)
             os.chmod(install_script_file, st.st_mode | stat.S_IEXEC)
 
-    log.info('Wrote {} configuration successfully.'.format(service))
+    log.info(f'Wrote {service} configuration successfully.')
 
 
 def reformat(config):

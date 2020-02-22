@@ -293,9 +293,9 @@ def run_workflow(**kwargs):
             raise
 
     if kwargs['action']:
-        log.info('Action "{}" finished successfully.'.format(kwargs['action']))
+        log.info(f'Action "{kwargs['action']}" finished successfully.')
     else:
-        log.info('Workflow "{}" finished successfully.'.format(wfile))
+        log.info(f'Workflow "{wfile}" finished successfully.')
 
 
 def parse_commit_message():
