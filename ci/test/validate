@@ -413,23 +413,23 @@ EOF
 
 popper run --wfile main.workflow --dry-run --engine "$ENGINE"
 
-## show WARNING on unreachable actions
-cat <<EOF > main.workflow
-workflow "test" {
-  resolves = "reachable"
-}
-
-action "reachable" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-
-action "unreachable" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-EOF
-
-popper run --wfile main.workflow --dry-run --engine "$ENGINE" 2>&1 | grep 'WARNING'
-
-echo "Test VALIDATE passed."
+### show WARNING on unreachable actions
+#cat <<EOF > main.workflow
+#workflow "test" {
+#  resolves = "reachable"
+#}
+#
+#action "reachable" {
+#  uses = "popperized/bin/sh@master"
+#  args = "ls"
+#}
+#
+#action "unreachable" {
+#  uses = "popperized/bin/sh@master"
+#  args = "ls"
+#}
+#EOF
+#
+#popper run --wfile main.workflow --dry-run --engine "$ENGINE" 2>&1 | grep 'WARNING'
+#
+#echo "Test VALIDATE passed."
