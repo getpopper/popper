@@ -14,7 +14,7 @@ workflow "test" {
 
 action "sh" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 EOF
 
@@ -216,7 +216,7 @@ action "sh" {
         "sh10"
     ]
     uses = "sh"
-    args = ["echo", "Running sh action parallely..."]
+    runs = ["echo", "Running sh action parallely..."]
 }
 EOF
 
@@ -230,52 +230,52 @@ workflow "test" {
 
 action "sh1" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh2" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh3" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh4" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh5" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh6" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh7" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh8" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh9" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh10" {
     uses = "sh"
-    args = ["ls", "-l"]
+    runs = ["ls", "-l"]
 }
 
 action "sh" {
@@ -292,7 +292,7 @@ action "sh" {
         "sh10"
     ]
     uses = "sh"
-    args = ["echo", "Running sh action parallely..."]
+    runs = ["echo", "Running sh action parallely..."]
 }
 EOF
 

@@ -12,7 +12,7 @@ workflow "wf" {
 
 action "a" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "b" {
@@ -35,7 +35,7 @@ workflow "wf" {
 
 action "pre" {
   uses = "sh"
-  args = "echo pre-action"
+  runs = "echo pre-action"
 }
 
 EOF
@@ -48,7 +48,7 @@ workflow "wf" {
 
 action "post1" {
   uses = "sh"
-  args = "echo post1-action"
+  runs = "echo post1-action"
 }
 
 action "post2" {

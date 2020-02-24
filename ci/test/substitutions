@@ -12,7 +12,7 @@ workflow "wf" {
 
 action "b" {
   uses = "\$_VAR1"
-  args = "\$_VAR2"
+  runs = "\$_VAR2"
 }
 EOF
 
@@ -29,7 +29,7 @@ workflow "wf" {
 
 action "b" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
@@ -56,13 +56,13 @@ workflow "wf" {
 
 action "a" {
   uses = "\$_VAR1"
-  args = "\$_VAR2"
+  runs = "\$_VAR2"
 }
 
 action "b" {
   needs = "\$_VAR3"
   uses = "\$_VAR1"
-  args = "\$_VAR2"
+  runs = "\$_VAR2"
 }
 EOF
 
