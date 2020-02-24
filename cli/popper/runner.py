@@ -220,20 +220,22 @@ class StepRunner(object):
             log.fail("Step '{}' failed !".format(step['name']))
 
     @staticmethod
-    def prepare_environment(step):
+    def prepare_environment(step, env={}):
         """Prepare environment variables for a step, which includes those in
         the 'env' and 'secrets' attributes.
 
         Args:
           step(dict): step information
+          env(dict): optional environment to include in returned environment
 
         Returns:
           dict: key-value map of environment variables.
         """
-        env = step.get('env', {}).copy()
+        step_env = step.get('env', {}).copy()
         for s in step.get('secrets', []):
-            env.update({s: os.environ[s]})
-        return env
+            step_env.update({s: os.environ[s]})
+        step_env.update(env)
+        return step_env
 
     def stop_running_tasks(self):
         raise NotImplementedError("Needs implementation in derived classes.")

@@ -107,6 +107,6 @@ class TestStepRunner(unittest.TestCase):
     def test_prepare_environment(self):
         step = {'name': 'a', 'env': {'FOO': 'BAR'}, 'secrets': ['A']}
         os.environ['A'] = 'BC'
-        env = StepRunner.prepare_environment(step)
-        self.assertDictEqual(env, {'FOO': 'BAR', 'A': 'BC'})
+        env = StepRunner.prepare_environment(step, {'another': 'b'})
+        self.assertDictEqual(env, {'FOO': 'BAR', 'A': 'BC', 'another': 'b'})
         os.environ.pop('A')
