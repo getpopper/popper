@@ -12,7 +12,7 @@ from popper.cli import log as log
 import popper.utils as pu
 
 
-VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
+VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env", "name", "next"]
 
 
 class Workflow(object):

@@ -116,7 +116,7 @@ class DockerRunner(StepRunner):
             build_source = os.path.join(workspace_dir, step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
-            image = '{}/{}:{}'.format(user, repo, version)
+            image = f'{user}/{repo}:{version}'
             build_source = os.path.join(step['repo_dir'], step['step_dir'])
 
         image = image.lower()
@@ -173,7 +173,7 @@ class DockerRunner(StepRunner):
         Returns:
             None
         """
-        log.info('[{step["name"]}] docker pull {img}')
+        log.info(f'[{step["name"]}] docker pull {img}')
         if dry_run:
             return
         DockerRunner.d.images.pull(repository=img)
