@@ -75,10 +75,4 @@ popper run --wfile main.workflow --conf settings && exit 1
 
 popper run --wfile main.workflow --conf conf && exit 1
 
-cat <<EOF > newconf.py
-print('No config')
-EOF
-
-popper run --wfile main.workflow --conf newconf.py && exit 1
-
 echo "Test ENGINE-CONF passed."
