@@ -18,23 +18,25 @@ runners_g = {}
 class WorkflowRunner(object):
     """The workflow runner."""
     def __init__(self, config_file=None, workspace_dir=os.getcwd(),
-                 reuse=False, engine='docker', dry_run=False, quiet=False,
-                 on_failure=None, skip_pull=False, skip_clone=False):
+                 reuse=False, engine_name='docker', dry_run=False, quiet=False,
+                 skip_pull=False, skip_clone=False):
 
         # save all args in a member dictionary
         self.config = DotMap(locals())
-        self.config.workspace_dir = os.path.abspath(workspace_dir)
-        self.config.wid = shake_256(workspace_dir.encode('utf-8')).hexdigest(7)
+        self.config.pop('self')
+        self.config.workspace_dir = os.path.realpath(workspace_dir)
+        self.config.wid = shake_256(workspace_dir.encode('utf-8')).hexdigest(4)
 
         # cretate a repo object for the project
-        self.config.repo = scm.new_repo()
+        self.repo = scm.new_repo()
+        self.config.workspace_sha = scm.get_sha(self.repo)
 
         if config_file:
             # read options from config file
             config_from_file = pu.load_config_file(config_file)
 
             if hasattr(config_from_file, 'ENGINE'):
-                self.config.engine = config_from_file.ENGINE
+                self.config.engine_options = config_from_file.ENGINE
 
         import popper.runner_docker
         import popper.runner_host
@@ -52,17 +54,20 @@ class WorkflowRunner(object):
         self.runners = {}
 
         # check that given engine is supported
-        if engine not in self.runner_classes:
-            raise ValueError(f"Invalid value for engine: '{engine}'.")
+        if engine_name not in self.runner_classes:
+            raise ValueError(f"Invalid value for engine: '{engine_name}'.")
 
         global runners_g
         runners_g = self.runners
+
+        log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
+        self.repo.close()
         for _, r in self.runners.items():
             r.__exit__(exc_type, exc, traceback)
 
@@ -175,11 +180,11 @@ class WorkflowRunner(object):
         WorkflowRunner.clone_repos(wf, self.config)
 
         for _, step in wf.steps.items():
-            log.debug(f'Executing step: {step}')
+            log.debug(f'Executing step:\n{pu.prettystr(step)}')
             if step['uses'] == 'sh':
                 self.get_step_runner('host').run(step)
             else:
-                self.get_step_runner(self.config.engine).run(step)
+                self.get_step_runner(self.config.engine_name).run(step)
 
         log.info(f"Workflow finished successfully.")
 
