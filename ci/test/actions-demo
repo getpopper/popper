@@ -83,30 +83,30 @@ workflow "wf" {
 
 action "a1" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "a2" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "b" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "d" {
   needs = ["b", "c"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 EOF
 
@@ -115,19 +115,19 @@ popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE
 grep -q "a1" output
 popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" a2 > output
 grep -q "a2" output
-popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" b > output 
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" b > output
 grep -q "a1"  output
-grep -q "a2" output 
+grep -q "a2" output
 grep -q "b" output
 popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" c > output
-grep -q "a1" output 
-grep -q "a2" output 
+grep -q "a1" output
+grep -q "a2" output
 grep -q "c" output
-popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" d > output 
-grep -q "a1" output 
-grep -q "a2" output 
-grep -q "b" output 
-grep -q "c" output 
+popper run --wfile main.workflow --dry-run --with-dependencies --engine "$ENGINE" d > output
+grep -q "a1" output
+grep -q "a2" output
+grep -q "b" output
+grep -q "c" output
 grep -q "d" output
 
 # test bindings
@@ -209,138 +209,79 @@ workflow "test-on-failure" {
 
 action "test" {
   uses = "sh"
-  args = ["lss"]
+  runs = ["lss"]
 }
 
 action "cleanup" {
   uses = "sh"
-  args = ["echo", "Cleaning up..."]
+  runs = ["echo", "Cleaning up..."]
 }
 EOF
 
-# test action fails, cleanup runs successfully.
-popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE" > output
-grep -q "Cleaning up..." output
-
-# test action fails, clean action couldnt be found.
-(! popper run --wfile main.workflow --on-failure clean --engine "$ENGINE")
-
-cat <<EOF > main.workflow
-workflow "test-on-failure" {
-  resolves = ["test"]
-}
-
-action "test" {
-  uses = "sh"
-  args = ["lss"]
-}
-
-action "cleanup" {
-  uses = "sh"
-  args = ["echdo", "Cleaning up..."]
-}
-EOF
-
-# test action fails, cleanup action also fails.
-(! popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE")
-
-cat <<EOF > main.workflow
-workflow "test-on-failure" {
-  resolves = ["test"]
-}
-
-action "test" {
-  uses = "sh"
-  args = ["lss"]
-}
-
-action "cleanup" {
-  uses = "sh"
-  args = ["echo", "Cleaning up..."]
-}
-EOF
-
-# test action fails, no --on-failure cleanup action.
-(! popper run --wfile main.workflow --engine "$ENGINE")
-
-cat <<EOF > main.workflow
-workflow "test-on-failure" {
-  resolves = ["test"]
-}
-
-action "test" {
-  uses = "sh"
-  args = ["ls", "-ltr"]
-}
-
-action "cleanup" {
-  uses = "sh"
-  args = ["echo", "Cleaning up..."]
-}
-EOF
-
-# test action runs sucessfully, cleanup action in not triggered
-popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE" > output
-(! grep -q "Cleaning up..." output)
-
-# test prevention of double cloning of actions, instantiation of runners etc.
-cat <<EOF > main.workflow
-workflow "sample" {
-  resolves = ["test"]
-}
-
-action "test" {
-  uses = "popperized/npm@master"
-  args = ["--verssion"]
-}
-
-action "cleanup" {
-  uses = "popperized/bin/sh@master"
-  runs = ["sh", "-c", "echo Cleaning up..."]
-}
-EOF
-
-popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE"
-
-cat <<EOF > main.workflow
-workflow "sample" {
-  resolves = ["test1"]
-}
-
-action "test1" {
-  uses = "popperized/npm@master"
-  args = ["--version"]
-}
-
-action "test2" {
-  uses = "popperized/bin/sh@master"
-  runs = ["sh", "-c", "echo Cleaning up..."]
-}
-EOF
-
-popper run --wfile main.workflow --engine "$ENGINE" > output
-grep -q "https://github.com/popperized/npm@master" output
-(! grep -q "https://github.com/popperized/bin@master" output)
-
-cat <<EOF > main.workflow
-workflow "sample" {
-  resolves = ["test1", "test2"]
-}
-
-action "test1" {
-  uses = "popperized/npm@master"
-  args = ["--version"]
-}
-
-action "test2" {
-  uses = "popperized/bin/sh@master"
-  runs = ["sh", "-c", "echo Cleaning up..."]
-}
-EOF
-
-popper run --wfile main.workflow --skip test1 --engine "$ENGINE" > output
-(! grep -q "https://github.com/popperized/npm@master" output)
-grep -q "https://github.com/popperized/bin@master" output
+## test action fails, cleanup runs successfully.
+#popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE" > output
+#grep -q "Cleaning up..." output
+#
+## test action fails, clean action couldnt be found.
+#(! popper run --wfile main.workflow --on-failure clean --engine "$ENGINE")
+#
+#cat <<EOF > main.workflow
+#workflow "test-on-failure" {
+#  resolves = ["test"]
+#}
+#
+#action "test" {
+#  uses = "sh"
+#  runs = ["lss"]
+#}
+#
+#action "cleanup" {
+#  uses = "sh"
+#  runs = ["echdo", "Cleaning up..."]
+#}
+#EOF
+#
+## test action fails, cleanup action also fails.
+#(! popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE")
+#
+#cat <<EOF > main.workflow
+#workflow "test-on-failure" {
+#  resolves = ["test"]
+#}
+#
+#action "test" {
+#  uses = "sh"
+#  runs = ["lss"]
+#}
+#
+#action "cleanup" {
+#  uses = "sh"
+#  runs = ["echo", "Cleaning up..."]
+#}
+#EOF
+#
+## test action fails, no --on-failure cleanup action.
+#(! popper run --wfile main.workflow --engine "$ENGINE")
+#
+#cat <<EOF > main.workflow
+#workflow "test-on-failure" {
+#  resolves = ["test"]
+#}
+#
+#action "test" {
+#  uses = "sh"
+#  runs = ["ls", "-ltr"]
+#}
+#
+#action "cleanup" {
+#  uses = "sh"
+#  runs = ["echo", "Cleaning up..."]
+#}
+#EOF
+#
+## test action runs sucessfully, cleanup action in not triggered
+#popper run --wfile main.workflow --on-failure cleanup --engine "$ENGINE" > output
+#(! grep -q "Cleaning up..." output)
 
 # Test environment variables
 cat <<EOF > main.workflow
@@ -360,20 +301,6 @@ EOF
 popper run --wfile main.workflow --engine "$ENGINE" > output
 grep "FOOBAR=yeah" output
 
-# Test Docker image references
-cat <<EOF > main.workflow
-workflow "a" {
-  resolves = "b"
-}
-
-action "b" {
-  uses = "popperized/bin/sh@master"
-  args = "ls"
-}
-EOF
-
-popper run --wfile main.workflow --engine docker
-
 # Test implementation of handling exit code 78
 cat <<EOF > main.workflow
 workflow "sample" {
@@ -388,7 +315,7 @@ action "b" {
 action "end" {
   needs = ["b"]
   uses = "sh"
-  args = "whoami"
+  runs = "whoami"
 }
 EOF
 
@@ -398,10 +325,12 @@ grep -q "Step 'b' ran successfully !" output
 
 
 if [[ -z "${GITHUB_API_TOKEN}" ]]; then
-echo "Test for private-repo skipped"
+
+  echo "Test for private-repo skipped"
 
 else
-cat<<EOF > main.workflow
+
+  cat<<EOF > main.workflow
 workflow "sample" {
   resolves = "end"
 }
@@ -414,13 +343,13 @@ action "a" {
 action "end" {
   needs = ["a"]
   uses = "sh"
-  args = "whoami"
+  runs = "whoami"
 }
 EOF
 
-popper run --wfile main.workflow --engine "$ENGINE" > output
-grep -q "This is hello from private repo" output
-echo "Test for private-repo passed"
+  popper run --wfile main.workflow --engine "$ENGINE" > output
+  grep -q "This is hello from private repo" output
+  echo "Test for private-repo passed"
 fi
 
 echo "Test ACTIONS-DEMO passed."

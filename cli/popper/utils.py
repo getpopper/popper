@@ -1,9 +1,12 @@
+import importlib.util
 import os
 import re
-import hashlib
 import threading
-import importlib.util
+import yaml
+
 from builtins import str
+from distutils.spawn import find_executable
+from dotmap import DotMap
 
 from popper.cli import log
 
@@ -127,22 +130,6 @@ def of_type(param, valid_types):
     return False
 
 
-def get_id(*args):
-    """Function to generate an unique hashid for identifying a workflow by
-    joining the args provided.
-
-    Args:
-      args(tuple): The items to join in order to form
-    an identifier.
-
-    Returns:
-      str: The generated hashid.
-    """
-    identifier = '_'.join([str(x) for x in args])
-    workflow_id = str(hashlib.md5(identifier.encode()).hexdigest())
-    return workflow_id
-
-
 def write_file(path, content=''):
     """Create and write contents to a file. If no content is provided a blank
     file is created.
@@ -176,28 +163,37 @@ def module_from_file(module_name, file_path):
     return module
 
 
-def parse_engine_configuration(conf_file):
+def load_config_file(config_file):
     """Validate and parse the engine configuration file.
 
     Args:
-      conf_file(str): Path to the file to be parsed.
+      config_file(str): Path to the file to be parsed.
 
     Returns:
       dict: Engine configuration.
     """
-    if not conf_file:
-        return None
+    if not os.path.exists(config_file):
+        log.fail('File {} was not found.'.format(config_file))
 
-    if not os.path.exists(conf_file):
-        log.fail('File {} was not found.'.format(conf_file))
+    if not config_file.endswith('.py'):
+        log.fail('Configuration file must be a python source file.')
 
-    if not conf_file.endswith('.py'):
-        log.fail('Config file must be a python source file.')
+    module_name = os.path.basename(config_file)[:-3]
+    module = module_from_file(module_name, config_file)
 
-    module_name = os.path.basename(conf_file)[:-3]
-    module = module_from_file(module_name, conf_file)
+    return module
 
-    try:
-        return module.engine_configuration
-    except AttributeError:
-        log.fail('No variable named \"engine_configuration\" was found.')
+
+def assert_executable_exists(command):
+    """Check if the given command can be invoked; fails if not."""
+    if not find_executable(command):
+        log.fail(f"Could not find '{command}'.")
+
+
+def prettystr(a):
+    if type(a) == DotMap:
+        a = a.toDict()
+    if type(a) == os._Environ:
+        a = dict(a)
+    if type(a) == dict:
+        return f'{yaml.dump(a, default_flow_style=False)}'
