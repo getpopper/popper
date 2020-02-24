@@ -65,12 +65,12 @@ def cli(ctx, wfile, skip, colors):
 
             stage_edges.add(edge)
 
-            for M in wf.step[n].get('next', []):
+            for M in wf.steps[n].get('next', []):
                 dot_str = add_to_graph(dot_str, wf, n, [M],
                                        node_attrs, stage_edges)
         return dot_str
 
-    wf = Workflow.new_workflow(wfile)
+    wf = Workflow.new(wfile)
     wf.parse()
     wf = Workflow.skip_steps(wf, skip)
     wf.check_for_unreachable_steps()

@@ -1,6 +1,6 @@
 import os
-import sys
 import shutil
+import tempfile
 import unittest
 
 import git
@@ -10,108 +10,76 @@ from popper.cli import log
 
 
 class TestScm(unittest.TestCase):
-    """Unit tests for popper.scm module.
-    """
-
-    def setUp(self):
-        if os.environ.get('POPPER_TEST_MODE') == 'with-git':
-            self.with_git = True
-        else:
-            self.with_git = False
-
+    @classmethod
+    def setUpClass(self):
         log.setLevel('CRITICAL')
-        if os.path.exists('/tmp/test_folder'):
-            shutil.rmtree('/tmp/test_folder')
-        os.makedirs('/tmp/test_folder')
-        os.chdir('/tmp/test_folder')
-        scm.clone(
-            'https://github.com',
-            'popperized',
-            'github-actions-demo',
-            os.path.join(os.getcwd(), 'github-actions-demo')
-        )
-        if not self.with_git:
-            shutil.rmtree('/tmp/test_folder/github-actions-demo/.git')
-        os.chdir('/tmp/test_folder/github-actions-demo')
 
-    def tearDown(self):
+        self.tempdir = tempfile.mkdtemp()
+        self.curr_dir = os.getcwd()
+
+        self.repo = git.Repo.clone_from('https://github.com/popperized/bin',
+                                        os.path.join(self.tempdir, 'bin'))
+
+        self.repodir = os.path.join(self.tempdir, 'bin')
+
+        os.chdir(self.repodir)
+
+        self.gitdir = os.path.join(self.repodir, '.git')
+        self.gotdor = os.path.join(self.repodir, '.got')
+
+    @classmethod
+    def tearDownClass(self):
         log.setLevel('NOTSET')
-        os.chdir('/tmp')
-        shutil.rmtree('/tmp/test_folder')
 
-    def test_get_git_root_folder(self):
-        root_folder = scm.get_git_root_folder()
-        self.assertEqual(
-            root_folder,
-            '/tmp/test_folder/github-actions-demo')
+        # return to where we were before this test
+        os.chdir(self.curr_dir)
 
-    def test_get_name(self):
-        name = scm.get_name()
-        self.assertEqual(name, 'github-actions-demo')
+        self.repo.close()
 
-    def test_get_user(self):
-        user = scm.get_user()
-        if self.with_git:
-            self.assertEqual(user, 'popperized')
+    def test_with_git(self):
+
+        if not os.path.exists(self.gitdir):
+            shutil.move(self.gotdor, self.gitdir)
+
+        # root folder
+        root_folder = scm.get_project_root_folder(self.repo)
+        self.assertEqual(os.path.realpath(root_folder),
+                         os.path.realpath(os.path.join(self.tempdir, 'bin')))
+
+        # get_remote_url
+        url = scm.get_remote_url(self.repo)
+        auth_token = os.getenv('GITHUB_API_TOKEN')
+        if not auth_token:
+            self.assertEqual(url, 'https://github.com/popperized/bin')
         else:
-            self.assertEqual(user, '')
+            self.assertTrue('github.com/popperized/bin' in url)
 
-    def test_get_remote_url(self):
-        url = scm.get_remote_url()
-        if self.with_git:
-            auth_token = os.getenv('GITHUB_API_TOKEN')
-            if(auth_token is None):
-                self.assertEqual(
-                    url, 'https://github.com/popperized/github-actions-demo')
-            else:
-                self.assertEqual(
-                    url[:8]+url[url.find('@')+1:],
-                    'https://github.com/popperized/github-actions-demo')
-        else:
-            self.assertEqual(url, '')
+        # get sha
+        sha = scm.get_sha(self.repo)
+        expected = self.repo.git.rev_parse(self.repo.head.object.hexsha,
+                                           short=True)
+        self.assertEqual(sha, expected)
 
-    def test_get_ref(self):
-        ref = scm.get_ref()
-        if self.with_git:
-            self.assertEqual(ref, 'refs/heads/master')
-        else:
-            self.assertEqual(ref, 'unknown')
+    def test_without_git(self):
+        shutil.move(self.gitdir, self.gotdor)
 
-    def test_get_sha(self):
-        sha = scm.get_sha()
-        if self.with_git:
-            self.assertEqual(sha, '9ec4d31')
-        else:
-            self.assertEqual(sha, 'unknown')
+        # root folder
+        root_folder = scm.get_project_root_folder(None)
+        self.assertEqual(os.path.realpath(root_folder),
+                         os.path.realpath(os.path.join(self.tempdir, 'bin')))
 
-    def test_get_head_commit(self):
-        head_commit_object = scm.get_head_commit()
-        if self.with_git:
-            hexsha = head_commit_object.hexsha
-            self.assertEqual(
-                hexsha, '9ec4d316eb8da32a5e7153309464aa8fb8b0803a')
-        else:
-            self.assertIsNone(head_commit_object)
+        # get_remote_url
+        self.assertEqual(scm.get_remote_url(None), '')
 
-    def test_get_git_files(self):
-        files = scm.get_git_files()
-        if self.with_git:
-            self.assertListEqual(files, [
-                '.github/actions/jshint/Dockerfile',
-                '.github/main.workflow',
-                '.gitignore',
-                'LICENSE',
-                'README.md',
-                'index.js',
-                'package-lock.json',
-                'package.json', 'tests/test-app.js'
-            ])
-        else:
-            self.assertIsNone(files)
+        # get sha
+        sha = scm.get_sha(None)
+        self.assertEqual(sha, 'unknown')
 
     def test_clone(self):
-        os.makedirs('/tmp/test_folder/test_clone')
-        os.chdir('/tmp/test_folder/test_clone')
+        tdir = os.path.join(self.tempdir, 'test_clone')
+        os.makedirs(tdir)
+        currdir = os.getcwd()
+        os.chdir(tdir)
         scm.clone(
             'https://github.com',
             'popperized',
@@ -130,6 +98,8 @@ class TestScm(unittest.TestCase):
         )
         repo = git.Repo(os.path.join(os.getcwd(), 'gad'))
         self.assertEqual(repo.active_branch.name, 'master')
+        repo.close()
+        os.chdir(currdir)
 
     def test_parse(self):
         test_url = ("ssh://git@github.com:popperized"

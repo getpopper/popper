@@ -2,12 +2,12 @@
 dist: xenial
 language: python
 python:
+- "3.6"
 - "3.7"
+- "3.8"
 env:
-- ENGINE=singularity POPPER_TEST_MODE=with-git
-- ENGINE=docker POPPER_TEST_MODE=without-git
-- ENGINE=docker POPPER_TEST_MODE=with-git
-- ENGINE=singularity POPPER_TEST_MODE=without-git
+- ENGINE=docker
+#- ENGINE=singularity
 services: docker
 before_install:
 - ci/scripts/install_scripts.sh
@@ -15,7 +15,7 @@ before_install:
 install:
 - pip install cli/
 script:
-- coverage run -m unittest discover --start-directory cli/
-- popper run -f ci/cli.workflow
+- coverage run -m unittest discover --start-directory cli/test
+- ci/run_tests.sh
 after_success:
 - bash <(curl -s https://codecov.io/bash)

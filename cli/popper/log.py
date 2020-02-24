@@ -5,6 +5,8 @@ import os
 STEP_INFO = 15
 logging.addLevelName(STEP_INFO, 'STEP_INFO')
 
+msg_prefix = ""
+
 
 class PopperFormatter(logging.Formatter):
     """A Formatter which sets the format for popper custom log messages.
@@ -69,7 +71,7 @@ class PopperFormatter(logging.Formatter):
             self._fmt = fmt
         else:
             self._style._fmt = fmt
-        result = logging.Formatter.format(self, record)
+        result = f'{msg_prefix}{logging.Formatter.format(self, record)}'
         return result
 
 

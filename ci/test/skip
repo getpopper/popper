@@ -12,30 +12,30 @@ workflow "wf" {
 
 action "a1" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "a2" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "b" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "d" {
   needs = ["b", "c"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 EOF
 
@@ -83,30 +83,30 @@ workflow "wf" {
 
 action "a1" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "a2" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "b" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "d" {
   needs = ["b", "c"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 EOF
 
@@ -119,30 +119,30 @@ workflow "wf" {
 
 action "a1" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "a2" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "b" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
   needs = ["a1", "a2"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "d" {
   needs = ["b1", "c"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 EOF
 

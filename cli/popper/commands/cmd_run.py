@@ -1,13 +1,10 @@
-import os
-import sys
-
 import click
 
-import popper.cli
-from popper.cli import pass_context, log
-from popper.gha import WorkflowRunner
-from popper.parser import Workflow
 from popper import log as logging
+from popper.cli import log, pass_context
+from popper.parser import Workflow
+from popper.runner import WorkflowRunner
+from popper.scm import get_project_root_folder
 
 
 @click.command(
@@ -39,17 +36,6 @@ from popper import log as logging
     '--log-file',
     help='Path to a log file. No log is created if this is not given.',
     required=False
-)
-@click.option(
-    '--on-failure',
-    help='Run the given step if there is a failure.',
-    required=False
-)
-@click.option(
-    '--parallel',
-    help='Execute steps contained in stage in parallel.',
-    required=False,
-    is_flag=True
 )
 @click.option(
     '--quiet',
@@ -117,100 +103,44 @@ from popper import log as logging
     required=False,
     show_default=False,
     hidden=True,
-    default=popper.scm.get_git_root_folder()
+    default=get_project_root_folder()
 )
 @click.option(
     '-c', '--conf', help='Runtime configuration options.', required=False
 )
 @pass_context
-def cli(ctx, **kwargs):
+def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
+        engine, skip, skip_pull, skip_clone, substitution, allow_loose,
+        with_dependencies, workspace, conf):
     """Runs a Popper workflow. Only execute STEP if given."""
     # set the logging levels.
     level = 'STEP_INFO'
-    if kwargs['quiet']:
+    if quiet:
         level = 'INFO'
-    if kwargs['debug']:
+    if debug:
         level = 'DEBUG'
     log.setLevel(level)
-    if kwargs['log_file']:
-        logging.add_log(log, kwargs['log_file'])
 
-    # remove the unnecessary kwargs.
-    kwargs.pop('quiet')
-    kwargs.pop('debug')
-    kwargs.pop('log_file')
+    if dry_run:
+        logging.msg_prefix = "DRYRUN: "
 
-    _run_workflow(**kwargs)
+    if log_file:
+        # also log to a file
+        logging.add_log(log, log_file)
 
-
-def _run_workflow(**kwargs):
-    """Runs the workflow for the set parameters.
-
-    Args:
-      **kwargs: key-worded,variable-length argument dictionary.
-
-    Returns:
-        None
-
-    """
-    log.info('Running workflow defined in ' + kwargs['wfile'])
-
-    # Initialize a Workflow. During initialization all the validation
-    # takes place automatically.
-
-    wf = Workflow.new_workflow(kwargs['wfile'], kwargs['substitution'],
-                               kwargs['allow_loose'])
-    wf_runner = WorkflowRunner(wf)
-
-    # remove substitution arguments from kwargs
-    kwargs.pop('substitution')
-    kwargs.pop('allow_loose')
-
-    # Check for injected steps
-    pre_wfile = os.environ.get('POPPER_PRE_WORKFLOW_PATH')
-    post_wfile = os.environ.get('POPPER_POST_WORKFLOW_PATH')
-
-    # Saving workflow instance for signal handling
-    popper.cli.interrupt_params['parallel'] = kwargs['parallel']
-
-    if kwargs['parallel']:
-        if sys.version_info[0] < 3:
-            log.fail('--parallel is only supported on Python3')
-        log.warning("Using --parallel may result in interleaved output. "
-                    "You may use --quiet flag to avoid confusion.")
-
-    if kwargs['with_dependencies'] and (not kwargs['step']):
+    # check conflicting flags and fail if needed
+    if with_dependencies and not step:
         log.fail('`--with-dependencies` can only be used when '
                  'STEP argument is given.')
-
-    if kwargs['skip'] and kwargs['step']:
+    if skip and step:
         log.fail('`--skip` can not be used when STEP argument is passed.')
 
-    on_failure = kwargs.pop('on_failure')
-    wfile = kwargs.pop('wfile')
+    # invoke wf factory; handles formats, validations, filtering
+    wf = Workflow.new(wfile, step=step, skipped_steps=skip,
+                      substitutions=substitution, allow_loose=allow_loose,
+                      include_step_dependencies=with_dependencies)
 
-    try:
-        if pre_wfile:
-            pre_wf = Workflow.new_workflow(pre_wfile)
-            pre_wf_runner = WorkflowRunner(pre_wf)
-            pre_wf_runner.run(**kwargs)
-
-        wf_runner.run(**kwargs)
-
-        if post_wfile:
-            post_wf = Workflow.new_workflow(post_wfile)
-            pre_wf_runner = WorkflowRunner(post_wf)
-            pre_wf_runner.run(**kwargs)
-
-    except SystemExit as e:
-        if (e.code != 0) and on_failure:
-            kwargs['skip'] = list()
-            kwargs['step'] = on_failure
-            wf_runner.run(**kwargs)
-        else:
-            raise
-
-    if kwargs['step']:
-        log.info('Step "{}" finished successfully.'.format(kwargs['step']))
-    else:
-        log.info('Workflow "{}" finished successfully.'.format(wfile))
+    # instantiate the runner
+    runner = WorkflowRunner(config_file=conf, dry_run=dry_run, reuse=reuse,
+                            skip_pull=skip_pull, skip_clone=skip_clone)
+    runner.run(wf)

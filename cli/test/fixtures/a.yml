@@ -1,0 +1,28 @@
+version: '1'
+steps:
+- id: "a"
+  uses: "sh"
+  args: "ls"
+
+- id: "b"
+  uses: "sh"
+  args: "ls"
+
+- id: "c"
+  uses: "sh"
+  args: "ls"
+
+- id: "d"
+  needs: ["c"]
+  uses: "sh"
+  args: "ls"
+
+- id: "e"
+  needs: ["d", "b", "a"]
+  uses: "sh"
+  args: "ls"
+
+- id: "end"
+  needs: "e"
+  uses: "sh"
+  args: "ls"

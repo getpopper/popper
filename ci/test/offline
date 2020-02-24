@@ -7,10 +7,8 @@ cd "$test_repo_path"
 
 # generate the workfow id
 cat <<EOF > id.py
-import os
 import hashlib
-identifier = str(os.getuid()) + "_main.workflow"
-id = str(hashlib.md5(identifier.encode()).hexdigest())
+id = hashlib.shake_256('$test_repo_path'.encode('utf-8')).hexdigest(4)
 print(id)
 EOF
 

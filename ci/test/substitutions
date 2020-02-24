@@ -12,11 +12,11 @@ workflow "wf" {
 
 action "b" {
   uses = "\$_VAR1"
-  args = "\$_VAR2"
+  runs = "\$_VAR2"
 }
 EOF
 
-(! popper run --wfile main.workflow --substitution)
+(! popper run --dry-run --wfile main.workflow --substitution)
 popper run --wfile main.workflow --dry-run --substitution _VAR1=sh --substitution _VAR2=ls --engine "$ENGINE" | grep "ls"
 (! popper run --wfile main.workflow --dry-run --substitution _VAR1=shx --substitution _VAR2=ls --engine "$ENGINE")
 popper run --wfile main.workflow --dry-run --substitution _VAR1=shx --substitution _VAR1=sh --substitution _VAR2=ls --engine "$ENGINE" | grep "ls"
@@ -29,7 +29,7 @@ workflow "wf" {
 
 action "b" {
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
@@ -56,13 +56,13 @@ workflow "wf" {
 
 action "a" {
   uses = "\$_VAR1"
-  args = "\$_VAR2"
+  runs = "\$_VAR2"
 }
 
 action "b" {
   needs = "\$_VAR3"
   uses = "\$_VAR1"
-  args = "\$_VAR2"
+  runs = "\$_VAR2"
 }
 EOF
 

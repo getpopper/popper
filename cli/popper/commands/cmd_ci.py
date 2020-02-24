@@ -119,7 +119,7 @@ def cli(ctx, service, wfile):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
-    project_root = scm.get_git_root_folder()
+    project_root = scm.get_project_root_folder(scm.new_repo())
 
     if project_root != os.getcwd():
         log.fail(
