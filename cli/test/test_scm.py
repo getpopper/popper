@@ -52,9 +52,7 @@ class TestScm(unittest.TestCase):
         if not auth_token:
             self.assertEqual(url, 'https://github.com/popperized/bin')
         else:
-            self.assertEqual(
-                url[:8]+url[url.find('@')+1:],
-                'https://github.com/popperized/bin')
+            self.assertTrue(url.contains('github.com/popperized/bin'))
 
         # get sha
         sha = scm.get_sha(self.repo)
