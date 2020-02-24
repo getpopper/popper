@@ -47,7 +47,7 @@ class DockerRunner(StepRunner):
         if build:
             DockerRunner.docker_build(step, img, dockerfile,
                                       self.config.dry_run)
-        elif not self.config.skip_pulls and not step.get('skip_pull', False):
+        elif not self.config.skip_pull and not step.get('skip_pull', False):
             DockerRunner.docker_pull(step, img, self.config.dry_run)
 
         msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
