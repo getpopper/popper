@@ -154,8 +154,8 @@ class DockerRunner(StepRunner):
 
     @staticmethod
     def update_engine_config(engine_conf, update_with):
-        engine_conf["volumes"] = [engine_conf["volumes"],
-                                  update_with.get('volumes', list())]
+        engine_conf["volumes"] = [*engine_conf["volumes"],
+                                  *update_with.get('volumes', list())]
         for k, v in update_with.get('environment', dict()).items():
             engine_conf["environment"].update({k: v})
 
