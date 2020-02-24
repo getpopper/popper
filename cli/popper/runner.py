@@ -58,6 +58,14 @@ class WorkflowRunner(object):
         global runners_g
         runners_g = self.runners
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        """calls __exit__ on all instantiated step runners"""
+        for _, r in self.runners.items():
+            r.__exit__(exc_type, exc, traceback)
+
     @staticmethod
     def signal_handler(sig, frame):
         """Handles the interrupt signal.
@@ -172,7 +180,7 @@ class WorkflowRunner(object):
 
         log.info(f"Workflow '{self.config.wfile}' finished successfully.")
 
-    def get_runner(self, rtype):
+    def get_step_runner(self, rtype):
         """Singleton factory of runners"""
         if rtype not in self.runners:
             self.runners[rtype] = self.runner_classes[rtype](self.config)
@@ -191,15 +199,21 @@ class WorkflowRunner(object):
         for i in stage:
             for _, step in wf.steps[i].items():
                 if step['uses'] == 'sh':
-                    self.get_runner('host').run(step)
+                    self.get_step_runner('host').run(step)
                 else:
-                    self.get_runner(self.config.engine).run(step)
+                    self.get_step_runner(self.config.engine).run(step)
 
 
 class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
     def __init__(self, config):
         self.config = config
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        pass
 
     @staticmethod
     def handle_exit(step, ecode):
