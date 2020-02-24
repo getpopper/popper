@@ -1,8 +1,10 @@
 import os
-import shutil
+import tempfile
 import unittest
 
 import git
+
+from . import utils as testutils
 
 from popper import scm
 from popper.cli import log
@@ -13,21 +15,16 @@ class TestScm(unittest.TestCase):
     def setUpClass(self):
         log.setLevel('CRITICAL')
 
+        self.tempdir = tempfile.mkdtemp()
         self.curr_dir = os.getcwd()
-
-        # clone an existing repo
-        shutil.rmtree('/tmp/pptest', ignore_errors=True)
-        os.makedirs('/tmp/pptest')
-        os.chdir('/tmp/pptest')
-        repourl = 'https://github.com/popperized/bin'
-        self.repo = git.Repo.clone_from(repourl, '/tmp/pptest/bin')
 
         # git mode or not
         self.with_git = bool(os.environ.get('POPPER_TEST_MODE') == 'with-git')
 
-        if not self.with_git:
-            shutil.rmtree('/tmp/pptest/bin/.git')
-        os.chdir('/tmp/pptest/bin')
+        self.repo = testutils.clone_repo('https://github.com/popperized/bin',
+                                         os.path.join(self.tempdir, 'bin'),
+                                         self.with_git)
+        os.chdir(os.path.join(self.tempdir, 'bin'))
 
     @classmethod
     def tearDownClass(self):
@@ -36,8 +33,7 @@ class TestScm(unittest.TestCase):
         # return to where we were before this test
         os.chdir(self.curr_dir)
 
-        if self.repo:
-            self.repo.close()
+        self.repo.close()
 
     def test_get_git_root_folder(self):
         if self.with_git:
@@ -45,7 +41,7 @@ class TestScm(unittest.TestCase):
         else:
             root_folder = scm.get_project_root_folder(None)
         self.assertEqual(os.path.realpath(root_folder),
-                         os.path.realpath('/tmp/pptest/bin'))
+                         os.path.realpath(os.path.join(self.tempdir, 'bin')))
 
     def test_get_remote_url(self):
         url = scm.get_remote_url(self.repo)
@@ -71,9 +67,10 @@ class TestScm(unittest.TestCase):
             self.assertEqual(sha, 'unknown')
 
     def test_clone(self):
-        os.makedirs('/tmp/pptest/test_clone')
+        tdir = os.path.join(self.tempdir, 'test_clone')
+        os.makedirs(tdir)
         currdir = os.getcwd()
-        os.chdir('/tmp/pptest/test_clone')
+        os.chdir(tdir)
         scm.clone(
             'https://github.com',
             'popperized',
