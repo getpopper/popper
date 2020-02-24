@@ -11,7 +11,7 @@ from popper.cli import log as log
 
 class TestHostRunner(unittest.TestCase):
     def setUp(self):
-        log.setLevel('CRITICAL')
+        log.setLevel('DEBUG')
 
     def test_run(self):
         repo = testutils.mk_repo()
@@ -23,11 +23,25 @@ class TestHostRunner(unittest.TestCase):
             version: '1'
             steps:
             - uses: sh
-              runs: [cat, README.md]
+              runs: [cat]
+              args: README.md
             """)
             wf.parse()
-
             r.run(wf)
+
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'sh'
+              runs: ['bash', '-c', 'echo $FOO > hello.txt ; pwd']
+              env: {
+                  FOO: bar
+              }
+            """)
+            wf.parse()
+            r.run(wf)
+            with open(os.path.join(repo.working_dir, 'hello.txt'), 'r') as f:
+                self.assertEqual(f.read(), 'bar\n')
 
             wf = YMLWorkflow("""
             version: '1'
@@ -36,7 +50,6 @@ class TestHostRunner(unittest.TestCase):
               runs: 'nocommandisnamedlikethis'
             """)
             wf.parse()
-
             self.assertRaises(SystemExit, r.run, wf)
 
         repo.close()

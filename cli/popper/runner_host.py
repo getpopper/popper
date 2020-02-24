@@ -1,6 +1,6 @@
 import os
 
-from subprocess import CalledProcessError, PIPE, Popen, STDOUT
+from subprocess import PIPE, Popen, STDOUT, SubprocessError
 
 from popper import utils as pu
 from popper.cli import log as log
@@ -17,24 +17,31 @@ class HostRunner(StepRunner):
         if self.config.reuse:
             log.warning('Reuse not supported for HostRunner.')
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, traceback):
+        pass
+
     def run(self, step):
-        curr_env = os.environ
-        os.environ = StepRunner.prepare_environment(step, curr_env)
+        step_env = StepRunner.prepare_environment(step, os.environ)
 
         cmd = step.get('runs', [])
         if not cmd:
             raise AttributeError(f"Expecting 'runs' attribute in step.")
         cmd.extend(step.get('args', []))
 
-        log.info(f'[{step["name"]}] {" ".join(cmd)}')
+        log.info(f'[{step["name"]}] {cmd}')
 
         if self.config.dry_run:
             StepRunner.handle_exit(step, 0)
 
-        with Popen(' '.join(cmd), stdout=PIPE, stderr=STDOUT,
-                   shell=True, universal_newlines=True,
-                   preexec_fn=os.setsid) as p:
-            try:
+        log.debug(f'Environment: {os.environ}')
+
+        try:
+            with Popen(cmd, stdout=PIPE, stderr=STDOUT,
+                       universal_newlines=True, preexec_fn=os.setsid,
+                       env=step_env) as p:
                 global host_running_processes
                 host_running_processes.append(p.pid)
 
@@ -46,14 +53,14 @@ class HostRunner(StepRunner):
 
                 p.wait()
                 ecode = p.poll()
-                log.debug('Code returned by process: {}'.format(ecode))
 
-            except CalledProcessError as ex:
-                msg = "Command '{}' failed: {}".format(cmd, ex)
-                ecode = ex.returncode
-                log.step_info(msg)
-            finally:
-                log.step_info()
+            log.debug(f'Code returned by process: {ecode}')
 
-        os.environ = curr_env
+        except SubprocessError as ex:
+            ecode = ex.returncode
+            log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
+        except Exception as ex:
+            ecode = 1
+            log.step_info(f"Command raised non-SubprocessError error: {ex}")
+
         StepRunner.handle_exit(step, ecode)
