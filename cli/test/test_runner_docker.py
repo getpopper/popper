@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from . import utils as testutils
+import utils as testutils
 
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
