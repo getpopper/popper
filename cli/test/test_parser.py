@@ -5,12 +5,10 @@ from popper.parser import Workflow, YMLWorkflow, HCLWorkflow
 from popper.cli import log
 
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
-FORMAT = os.environ.get('POPPER_TEST_FORMAT', 'yml')
-WFCLASS = HCLWorkflow if FORMAT == 'workflow' else YMLWorkflow
 
 
-def _wfile(name):
-    return f'{FIXDIR}/{name}.{FORMAT}'
+def _wfile(name, format):
+    return f'{FIXDIR}/{name}.{format}'
 
 
 class TestWorkflow(unittest.TestCase):
@@ -21,10 +19,16 @@ class TestWorkflow(unittest.TestCase):
         log.setLevel('NOTSET')
 
     def test_new_workflow(self):
-        self.assertIsInstance(Workflow.new(_wfile('a')), WFCLASS)
+        self.assertIsInstance(
+            Workflow.new(_wfile('a', 'yml')), YMLWorkflow)
+        self.assertIsInstance(
+            Workflow.new(_wfile('a', 'workflow')), HCLWorkflow)
 
     def test_missing_dependency(self):
-        wf = WFCLASS(_wfile('missing_dependency'))
+        wf = HCLWorkflow(_wfile('missing_dependency', 'workflow'))
+        wf.normalize()
+        self.assertRaises(SystemExit, wf.check_for_broken_workflow)
+        wf = YMLWorkflow(_wfile('missing_dependency', 'yml'))
         wf.normalize()
         self.assertRaises(SystemExit, wf.check_for_broken_workflow)
 
@@ -37,9 +41,8 @@ class TestWorkflow(unittest.TestCase):
         res = Workflow.format_command(cmd)
         self.assertEqual(res, ["docker", "version"])
 
-    @unittest.skipIf(FORMAT != 'workflow', 'Skip HCL tests.')
     def test_validate_workflow_block(self):
-        wf = WFCLASS("""workflow "w1" {
+        wf = HCLWorkflow("""workflow "w1" {
     resolves = ["a"]
 }
 workflow "w2" {
@@ -48,14 +51,14 @@ workflow "w2" {
 """)
         self.assertRaises(SystemExit, wf.validate_workflow_block)
 
-        wf = WFCLASS("""
+        wf = HCLWorkflow("""
 action "a" {
     uses = "sh"
 }
 """)
         self.assertRaises(SystemExit, wf.validate_workflow_block)
 
-        wf = WFCLASS("""
+        wf = HCLWorkflow("""
 workflow "sample workflow 1" {
     resolves = ["a"]
     runs = ["sh", "-c", "ls"]
@@ -66,7 +69,7 @@ action "a" {
 """)
         self.assertRaises(SystemExit, wf.validate_workflow_block)
 
-        wf = WFCLASS("""
+        wf = HCLWorkflow("""
 workflow "sample workflow 1" {
     on = "push"
 }
@@ -76,14 +79,13 @@ action "a" {
 """)
         self.assertRaises(SystemExit, wf.validate_workflow_block)
 
-    @unittest.skipIf(FORMAT != 'workflow', 'Skip HCL tests.')
     def test_validate_step_blocks(self):
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
             resolves = "a"
         }""")
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -92,7 +94,7 @@ action "a" {
 }""")
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -100,7 +102,7 @@ action "a" {
 }""")
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -108,7 +110,7 @@ action "a" {
 }""")
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 
@@ -118,7 +120,7 @@ action "a" {
 }""")
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -128,7 +130,7 @@ action "a" {
 """)
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -138,7 +140,7 @@ action "a" {
 """)
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -151,7 +153,7 @@ action "a" {
 """)
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -164,7 +166,7 @@ action "a" {
         self.assertRaises(SystemExit, wf.validate_step_blocks)
 
     def test_skip_steps(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = YMLWorkflow(_wfile('a', 'yml'))
         wf.parse()
         changed_wf = Workflow.skip_steps(wf, ['b'])
         self.assertDictEqual(changed_wf.steps, {
@@ -237,7 +239,7 @@ action "a" {
                 'name': 'end'}})
 
     def test_filter_step(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = YMLWorkflow(_wfile('a', 'yml'))
         wf.parse()
         changed_wf = Workflow.filter_step(wf, 'e')
         self.assertSetEqual(changed_wf.root, {'e'})
@@ -308,9 +310,8 @@ action "a" {
                     'name': 'd',
                     'next': set()}})
 
-    @unittest.skipIf(FORMAT != 'workflow', 'Skip HCL tests.')
     def test_check_for_unreachable_steps(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = HCLWorkflow(_wfile('a', 'workflow'))
         wf.parse()
         changed_wf = Workflow.skip_steps(wf, ['d', 'a', 'b'])
         self.assertDictEqual(changed_wf.steps, {
@@ -350,12 +351,12 @@ action "a" {
 
         changed_wf.check_for_unreachable_steps()
 
-        wf = WFCLASS(_wfile('ok'))
+        wf = HCLWorkflow(_wfile('ok', 'workflow'))
         wf.parse()
         wf.check_for_unreachable_steps()
 
     def test_get_stages(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = HCLWorkflow(_wfile('a', 'workflow'))
         wf.parse()
         stages = list()
         for stage in wf.get_stages():
@@ -368,7 +369,7 @@ action "a" {
             {'end'}
         ])
 
-        wf = WFCLASS(_wfile('b'))
+        wf = YMLWorkflow(_wfile('b', 'yml'))
         wf.parse()
         stages = list()
         for stage in wf.get_stages():
@@ -388,7 +389,7 @@ action "a" {
             '_VAR1=sh', '_VAR2=ls', '_VAR4=test_env',
             '_VAR5=TESTING', '_VAR6=TESTER', '_VAR7=TEST'
         ]
-        wf = WFCLASS(_wfile('substitutions'))
+        wf = YMLWorkflow(_wfile('substitutions', 'yml'))
         wf.parse(subs, False)
         self.assertDictEqual(wf.steps, {
             'a': {
@@ -408,7 +409,7 @@ action "a" {
                 'name': 'b'}
         })
 
-        wf = WFCLASS(_wfile('substitutions'))
+        wf = YMLWorkflow(_wfile('substitutions', 'yml'))
         wf.parse(subs, False)
         self.assertDictEqual(wf.steps, {
             'a': {
@@ -429,7 +430,6 @@ action "a" {
         })
 
 
-@unittest.skipIf(FORMAT != 'workflow', 'Skip HCL tests.')
 class TestHCLWorkflow(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
@@ -438,7 +438,7 @@ class TestHCLWorkflow(unittest.TestCase):
         log.setLevel('NOTSET')
 
     def test_load_file(self):
-        wf = WFCLASS("""workflow "sample" {
+        wf = HCLWorkflow("""workflow "sample" {
     resolves = "b"
 }
 action "a" {
@@ -459,7 +459,7 @@ action "b" {
                             'needs': 'a', 'uses': 'sh'}}})
 
     def test_normalize(self):
-        wf = WFCLASS("""workflow "sample workflow" {
+        wf = HCLWorkflow("""workflow "sample workflow" {
     resolves = "a"
 }
 action "a" {
@@ -480,7 +480,7 @@ action "a" {
         self.assertEqual(step_a['secrets'], ['SECRET_KEY'])
 
     def test_complete_graph(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = HCLWorkflow(_wfile('a', 'workflow'))
         wf.normalize()
         wf.complete_graph()
         self.assertEqual(wf.name, 'example')
@@ -526,7 +526,6 @@ action "a" {
         self.assertDictEqual(wf.steps, steps_dict)
 
 
-@unittest.skipIf(FORMAT != 'yml', 'Skip HCL tests.')
 class TestYMLWorkflow(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
@@ -535,7 +534,7 @@ class TestYMLWorkflow(unittest.TestCase):
         log.setLevel('NOTSET')
 
     def test_load_file(self):
-        wf = WFCLASS("""
+        wf = YMLWorkflow("""
         steps:
         - id: 'a'
           uses: 'sh'
@@ -558,7 +557,7 @@ class TestYMLWorkflow(unittest.TestCase):
             {1: 'a', 2: 'b'})
 
     def test_normalize(self):
-        wf = WFCLASS("""
+        wf = YMLWorkflow("""
         steps:
         - id: "a"
           needs: "b"
@@ -576,20 +575,20 @@ class TestYMLWorkflow(unittest.TestCase):
         self.assertEqual(step_a['secrets'], ['SECRET_KEY'])
 
     def test_get_containing_set(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = YMLWorkflow(_wfile('a', 'yml'))
         wf.normalize()
         wf.complete_graph()
         set_1 = wf.get_containing_set(2)
         self.assertSetEqual(set_1, {'b', 'a', 'd'})
 
-        wf = WFCLASS(_wfile('b'))
+        wf = YMLWorkflow(_wfile('b', 'yml'))
         wf.normalize()
         wf.complete_graph()
         set_2 = wf.get_containing_set(3)
         self.assertSetEqual(set_2, {'c', 'b'})
 
     def test_complete_graph(self):
-        wf = WFCLASS(_wfile('a'))
+        wf = YMLWorkflow(_wfile('a', 'yml'))
         wf.normalize()
         wf.complete_graph()
         self.assertEqual(wf.name, 'a')
