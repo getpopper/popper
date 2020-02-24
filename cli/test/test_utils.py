@@ -75,6 +75,8 @@ class TestUtils(unittest.TestCase):
             self.assertEqual(f.read(), "Hello world")
         with open('testfile2.txt', 'r') as f:
             self.assertEqual(f.read(), '')
+        os.remove('testfile1.txt')
+        os.remove('testfile2.txt')
 
     def test_get_id(self):
         id = pu.get_id('abcd', 1234, 'efgh')
@@ -89,6 +91,7 @@ class TestUtils(unittest.TestCase):
         config = pu.load_config_file('settings.py')
         self.assertTrue(hasattr(config, 'ENGINE'))
         self.assertDictEqual(config.ENGINE, {'runtime': 'nvidia'})
+        os.remove('settings.py')
 
     def test_assert_executable_exists(self):
         self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')
