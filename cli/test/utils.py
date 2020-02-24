@@ -27,7 +27,7 @@ def mk_repo():
     git commit -m 'first commit'
     """
     tempdir = tempfile.mkdtemp()
-    repo = git.Repo(tempdir)
+    repo = git.Repo.init(tempdir)
     readme = os.path.join(tempdir, 'README.md')
     open(readme, 'w').close()
     repo.index.add([readme])

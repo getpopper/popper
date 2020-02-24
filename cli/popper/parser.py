@@ -509,7 +509,7 @@ class YMLWorkflow(Workflow):
 
         for idx, step in enumerate(self.wf_list):
             # If no id attribute present, make one
-            _id = step.get('id', str(idx + 1))
+            _id = str(step.get('id', idx + 1))
             self.wf_dict['steps'][_id] = step
             self.id_map[idx + 1] = _id
             step.pop('id', None)
