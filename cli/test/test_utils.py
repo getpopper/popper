@@ -80,39 +80,15 @@ class TestUtils(unittest.TestCase):
         id = pu.get_id('abcd', 1234, 'efgh')
         self.assertEqual(id, 'cbae02068489f7577862718287862a3b')
 
-    def test_parse_engine_configuration(self):
-        conf = pu.parse_engine_configuration(None)
-        self.assertEqual(conf, None)
-        self.assertRaises(
-            SystemExit,
-            pu.parse_engine_configuration,
-            'myconf.py')
-
-        conf_content = """
-- engine_configuration
-        """
-        pu.write_file('settings.yml', conf_content)
-        self.assertRaises(
-            SystemExit,
-            pu.parse_engine_configuration,
-            'settings.yml')
-
-        conf_content = """
-runtime_configuration = {
+    def test_load_config_file(self):
+        conf_content = """ENGINE = {
     "runtime": "nvidia"
 }
         """
         pu.write_file('settings.py', conf_content)
-        self.assertRaises(
-            SystemExit,
-            pu.parse_engine_configuration,
-            'settings.py')
+        config = pu.load_config_file('settings.py')
+        self.assertTrue(hasattr(config, 'ENGINE'))
+        self.assertDictEqual(config.ENGINE, {'runtime': 'nvidia'})
 
-        conf_content = """
-engine_configuration = {
-    "runtime": "nvidia"
-}
-        """
-        pu.write_file('settings.py', conf_content)
-        config = pu.parse_engine_configuration('settings.py')
-        self.assertDictEqual(config, {'runtime': 'nvidia'})
+    def test_assert_executable_exists(self):
+        self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')
