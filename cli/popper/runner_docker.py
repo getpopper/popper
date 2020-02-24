@@ -112,7 +112,7 @@ class DockerRunner(StepRunner):
                 image += ":latest"
             build = False
         elif './' in step['uses']:
-            image = f'{pu.sanitized_name(step["name"])}:{workspace_sha}'
+            image = f'{pu.sanitized_name(step["name"], "step")}:{workspace_sha}'
             build_source = os.path.join(workspace_dir, step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
