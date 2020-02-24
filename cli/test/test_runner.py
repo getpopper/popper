@@ -1,7 +1,6 @@
 import os
 import unittest
 import shutil
-import signal
 
 from dotmap import DotMap
 from unittest.mock import patch
@@ -89,20 +88,6 @@ class TestWorkflowRunner(unittest.TestCase):
 class TestStepRunner(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
-
-    def test_handle_exit(self):
-        self.flag = 0
-
-        def signal_handler(sig, frame):
-            self.flag = 1
-        signal.signal(signal.SIGUSR1, signal_handler)
-
-        step = {'name': 'a'}
-        self.assertRaises(SystemExit, StepRunner.handle_exit, step, 1)
-        StepRunner.handle_exit(step, 0)
-        self.assertEqual(self.flag, 0)
-        StepRunner.handle_exit(step, 78)
-        self.assertEqual(self.flag, 1)
 
     def test_prepare_environment(self):
         step = {'name': 'a', 'env': {'FOO': 'BAR'}, 'secrets': ['A']}
