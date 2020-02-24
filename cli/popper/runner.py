@@ -174,34 +174,20 @@ class WorkflowRunner(object):
         WorkflowRunner.process_secrets(wf, self.config)
         WorkflowRunner.clone_repos(wf, self.config)
 
-        for s in wf.get_stages():
-            log.debug(f'Executing stage: {s}')
-            self.run_stage(wf, s)
+        for _, step in wf.steps.items():
+            log.debug(f'Executing step: {step}')
+            if step['uses'] == 'sh':
+                self.get_step_runner('host').run(step)
+            else:
+                self.get_step_runner(self.config.engine).run(step)
 
-        log.info(f"Workflow '{self.config.wfile}' finished successfully.")
+        log.info(f"Workflow finished successfully.")
 
     def get_step_runner(self, rtype):
         """Singleton factory of runners"""
         if rtype not in self.runners:
             self.runners[rtype] = self.runner_classes[rtype](self.config)
         return self.runners[rtype]
-
-    def run_stage(self, wf, stage):
-        """Runs steps in a stage.
-
-        Args:
-          wf(popper.parser.Workflow): Instance of the Workflow class.
-          stage(set): Set containing stages to be executed in the workflow.
-
-        Returns:
-            None
-        """
-        for i in stage:
-            for _, step in wf.steps[i].items():
-                if step['uses'] == 'sh':
-                    self.get_step_runner('host').run(step)
-                else:
-                    self.get_step_runner(self.config.engine).run(step)
 
 
 class StepRunner(object):
