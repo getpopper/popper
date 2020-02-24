@@ -78,10 +78,6 @@ class TestUtils(unittest.TestCase):
         os.remove('testfile1.txt')
         os.remove('testfile2.txt')
 
-    def test_get_id(self):
-        id = pu.get_id('abcd', 1234, 'efgh')
-        self.assertEqual(id, 'cbae02068489f7577862718287862a3b')
-
     def test_load_config_file(self):
         conf_content = """ENGINE = {
     "runtime": "nvidia"

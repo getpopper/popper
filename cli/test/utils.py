@@ -1,18 +1,7 @@
 import os
 import tempfile
-import shutil
 
 import git
-
-
-def clone_repo(url, path, with_git=True):
-    """clones the given repo url into given path and returns a git.Repo object.
-    If with_git is False, it removes the .git/ folder before returning."""
-    repourl = 'https://github.com/popperized/bin'
-    repo = git.Repo.clone_from(repourl, path)
-    if not with_git:
-        shutil.rmtree(os.path.join(path, '.git'))
-    return repo
 
 
 def mk_repo():

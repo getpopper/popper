@@ -1,11 +1,12 @@
 import os
 import re
-import hashlib
 import threading
 import importlib.util
+import yaml
 
 from builtins import str
 from distutils.spawn import find_executable
+from dotmap import DotMap
 
 from popper.cli import log
 
@@ -129,22 +130,6 @@ def of_type(param, valid_types):
     return False
 
 
-def get_id(*args):
-    """Function to generate an unique hashid for identifying a workflow by
-    joining the args provided.
-
-    Args:
-      args(tuple): The items to join in order to form
-    an identifier.
-
-    Returns:
-      str: The generated hashid.
-    """
-    identifier = '_'.join([str(x) for x in args])
-    workflow_id = str(hashlib.md5(identifier.encode()).hexdigest())
-    return workflow_id
-
-
 def write_file(path, content=''):
     """Create and write contents to a file. If no content is provided a blank
     file is created.
@@ -203,3 +188,10 @@ def assert_executable_exists(command):
     """Check if the given command can be invoked; fails if not."""
     if not find_executable(command):
         log.fail(f"Could not find '{command}'.")
+
+
+def pprint(a):
+    if type(a) == DotMap:
+        a = a.toDict()
+    if type(a) == dict:
+        return f'{yaml.dump(a, default_flow_style=False)}'
