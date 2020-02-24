@@ -6,7 +6,14 @@ import sys
 import click
 from click.exceptions import ClickException
 
-from popper import __version__ as popper_version, log as log
+import popper.log as logging
+
+from popper import __version__
+
+log = logging.setup_logging()
+popper_version = __version__
+cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
+                                          'commands'))
 
 
 class Context(object):
@@ -16,11 +23,7 @@ class Context(object):
     pass
 
 
-log = log.setup_logging()
 pass_context = click.make_pass_decorator(Context, ensure=True)
-cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                          'commands'))
-popper_version = popper_version
 
 
 class PopperCLI(click.MultiCommand):
@@ -80,48 +83,6 @@ class PopperCLI(click.MultiCommand):
 @pass_context
 def cli(ctx):
     """Popper command line interface."""
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGUSR1, signal_handler)
-
-
-docker_list = list()
-vagrant_list = list()
-process_list = list()
-interrupt_params = dict()
-flist = None
-
-
-def signal_handler(sig, frame):
-    """Handles the interrupt signal.
-
-    Args:
-        sig(int): Signal number of signal being passed to cli.
-        frame(class):It represents execution frame. For more
-            details visit
-            https://docs.python.org/3/reference/datamodel.html#frame-objects .
-
-    Returns:
-        None
-    """
-    if interrupt_params.get('parallel', None) and flist:
-        for future in flist:
-            future.cancel()
-
-    for pid in process_list:
-        log.info("Stopping process '{}'".format(pid))
-        try:
-            os.killpg(os.getpgid(pid), signal.SIGTERM)
-        except OSError:
-            pass
-
-    for container in docker_list:
-        log.info("Stopping container '{}'".format(container.name))
-        container.stop(timeout=1)
-
-    if vagrant_list:
-        import vagrant
-        for box_path in vagrant_list:
-            log.info("Stopping box '{}'".format(box_path))
-            vagrant.Vagrant(root=box_path).halt()
-
-    sys.exit(0)
+    from popper.runner import WorkflowRunner
+    signal.signal(signal.SIGINT, WorkflowRunner.signal_handler)
+    signal.signal(signal.SIGUSR1, WorkflowRunner.signal_handler)
