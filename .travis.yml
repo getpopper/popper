@@ -16,6 +16,6 @@ install:
 - pip install cli/
 script:
 - coverage run -m unittest discover --start-directory cli/
-- popper run -f ci/cli.workflow
+- ci/run_tests.sh
 after_success:
 - bash <(curl -s https://codecov.io/bash)

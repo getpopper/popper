@@ -14,23 +14,14 @@ function delete_dir {
 }
 
 function init_test_repo {
-  if [ "$POPPER_TEST_MODE" == "with-git" ]
-  then
-    delete_dir $test_repo_path
-    mkdir $test_repo_path
-    pushd $test_repo_path
-    git init
-    echo 'foo' > README.md
-    git add .
-    git commit -m 'first'
-    popd
-  else
-    delete_dir $test_repo_path
-    mkdir $test_repo_path
-    pushd $test_repo_path
-    echo 'foo' > README.md
-    popd
-  fi
+  delete_dir $test_repo_path
+  mkdir $test_repo_path
+  pushd $test_repo_path
+  git init
+  echo 'foo' > README.md
+  git add .
+  git commit -m 'first'
+  popd
 }
 
 function send_sigint {
