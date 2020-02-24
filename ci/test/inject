@@ -18,13 +18,13 @@ action "a" {
 action "b" {
   needs = ["a"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 
 action "c" {
   needs = ["b"]
   uses = "sh"
-  args = "ls"
+  runs = "ls"
 }
 EOF
 
@@ -54,7 +54,7 @@ action "post1" {
 action "post2" {
   needs= "post1"
   uses = "sh"
-  args = "echo post2-action"
+  runs = "echo post2-action"
 }
 
 EOF

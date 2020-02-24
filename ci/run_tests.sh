@@ -11,7 +11,7 @@ echo "actions-demo"
 ci/test/actions-demo
 echo "###################################"
 echo "reuse"
-ci/test/reuse
+#ci/test/reuse
 echo "###################################"
 ci/test/validate
 echo "###################################"
@@ -31,10 +31,8 @@ ci/test/sh
 echo "###################################"
 ci/test/skip
 echo "###################################"
-ci/test/substitutions
+#ci/test/substitutions
 echo "###################################"
 ci/test/offline
-echo "###################################"
-ci/test/inject
 echo "###################################"
 ci/test/engine-conf

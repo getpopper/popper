@@ -16,7 +16,7 @@ action "b" {
 }
 EOF
 
-(! popper run --wfile main.workflow --substitution)
+(! popper run --dry-run --wfile main.workflow --substitution)
 popper run --wfile main.workflow --dry-run --substitution _VAR1=sh --substitution _VAR2=ls --engine "$ENGINE" | grep "ls"
 (! popper run --wfile main.workflow --dry-run --substitution _VAR1=shx --substitution _VAR2=ls --engine "$ENGINE")
 popper run --wfile main.workflow --dry-run --substitution _VAR1=shx --substitution _VAR1=sh --substitution _VAR2=ls --engine "$ENGINE" | grep "ls"

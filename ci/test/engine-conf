@@ -19,7 +19,7 @@ EOF
 
 # config file called settings.py in the project root.
 cat <<EOF > settings.py
-engine_configuration = {
+ENGINE = {
     "name": "dont use this name",
     "image": "abc/xyz",
     "hostname": "xYz.local"
@@ -34,7 +34,7 @@ grep -vFxq "xYz.local" output
 
 # config file with different name in the project root.
 cat <<EOF > myconf.py
-engine_configuration = {
+ENGINE = {
     "name": "dont use this name",
     "image": "abc/xyz",
     "hostname": "xYz.local"
@@ -50,7 +50,7 @@ grep -vFxq "xYz.local" output
 # config file in different directory than project root.
 mkdir -p /tmp/myengineconf/
 cat <<EOF > /tmp/myengineconf/mysettings.py
-engine_configuration = {
+ENGINE = {
     "name": "dont use this name",
     "image": "abc/xyz",
     "hostname": "xYz.local"
@@ -64,7 +64,7 @@ popper run --wfile main.workflow > output
 grep -vFxq "xYz.local" output
 
 cat <<EOF > settings
-engine_configuration = {
+ENGINE = {
     "name": "dont use this name",
     "image": "abc/xyz",
     "hostname": "xYz.local"
