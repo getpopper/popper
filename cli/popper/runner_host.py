@@ -35,13 +35,14 @@ class HostRunner(StepRunner):
 
         if self.config.dry_run:
             StepRunner.handle_exit(step, 0)
+            return
 
-        log.debug(f'Environment: {os.environ}')
+        log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
         try:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                        universal_newlines=True, preexec_fn=os.setsid,
-                       env=step_env) as p:
+                       env=step_env, cwd=self.config.workspace_dir) as p:
                 global host_running_processes
                 host_running_processes.append(p.pid)
 
