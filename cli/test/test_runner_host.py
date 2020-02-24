@@ -11,14 +11,12 @@ from popper.cli import log as log
 
 class TestHostRunner(unittest.TestCase):
     def setUp(self):
-        log.setLevel('DEBUG')
+        log.setLevel('CRITICAL')
 
     def test_run(self):
         repo = testutils.mk_repo()
-        currdir = os.getcwd()
-        os.chdir(repo.working_dir)
 
-        with WorkflowRunner() as r:
+        with WorkflowRunner(workspace_dir=repo.working_dir) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:
@@ -53,4 +51,3 @@ class TestHostRunner(unittest.TestCase):
             self.assertRaises(SystemExit, r.run, wf)
 
         repo.close()
-        os.chdir(currdir)

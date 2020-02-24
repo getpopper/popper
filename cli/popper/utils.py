@@ -1,7 +1,7 @@
+import importlib.util
 import os
 import re
 import threading
-import importlib.util
 import yaml
 
 from builtins import str
@@ -190,8 +190,10 @@ def assert_executable_exists(command):
         log.fail(f"Could not find '{command}'.")
 
 
-def pprint(a):
+def prettystr(a):
     if type(a) == DotMap:
         a = a.toDict()
+    if type(a) == os._Environ:
+        a = dict(a)
     if type(a) == dict:
         return f'{yaml.dump(a, default_flow_style=False)}'
