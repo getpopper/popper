@@ -1,6 +1,5 @@
 import getpass
 import os
-import signal
 import sys
 
 from dotmap import DotMap
@@ -182,9 +181,17 @@ class WorkflowRunner(object):
         for _, step in wf.steps.items():
             log.debug(f'Executing step:\n{pu.prettystr(step)}')
             if step['uses'] == 'sh':
-                self.get_step_runner('host').run(step)
+                e = self.get_step_runner('host').run(step)
             else:
-                self.get_step_runner(self.config.engine_name).run(step)
+                e = self.get_step_runner(self.config.engine_name).run(step)
+
+            if e != 0 and e != 78:
+                log.fail(f"Step '{step['name']}' failed !")
+
+            log.info(f"Step '{step['name']}' ran successfully !")
+
+            if e == 78:
+                break
 
         log.info(f"Workflow finished successfully.")
 
@@ -205,24 +212,6 @@ class StepRunner(object):
 
     def __exit__(self, exc_type, exc, traceback):
         pass
-
-    @staticmethod
-    def handle_exit(step, ecode):
-        """Exit handler for the step.
-
-        Args:
-          ecode(int): The exit code of the step's process.
-
-        Returns:
-            None
-        """
-        if ecode == 0:
-            log.info("Step '{}' ran successfully !".format(step['name']))
-        elif ecode == 78:
-            log.info("Step '{}' ran successfully !".format(step['name']))
-            os.kill(os.getpid(), signal.SIGUSR1)
-        else:
-            log.fail("Step '{}' failed !".format(step['name']))
 
     @staticmethod
     def prepare_environment(step, env={}):

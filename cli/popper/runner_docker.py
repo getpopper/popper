@@ -78,8 +78,7 @@ class DockerRunner(StepRunner):
         log.info(f'[{step["name"]}] docker start')
 
         if self.config.dry_run:
-            StepRunner.handle_exit(step, 0)
-            return
+            return 0
 
         global docker_spawned_containers
         docker_spawned_containers.append(container)
@@ -91,7 +90,7 @@ class DockerRunner(StepRunner):
 
         e = container.wait()['StatusCode']
 
-        StepRunner.handle_exit(step, e)
+        return e
 
     @staticmethod
     def get_build_info(step, workspace_dir, workspace_sha):

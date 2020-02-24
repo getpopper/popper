@@ -34,8 +34,7 @@ class HostRunner(StepRunner):
         log.info(f'[{step["name"]}] {cmd}')
 
         if self.config.dry_run:
-            StepRunner.handle_exit(step, 0)
-            return
+            return 0
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
@@ -64,4 +63,4 @@ class HostRunner(StepRunner):
             ecode = 1
             log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
-        StepRunner.handle_exit(step, ecode)
+        return ecode
