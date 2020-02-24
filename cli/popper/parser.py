@@ -1,14 +1,15 @@
 from __future__ import unicode_literals
-from copy import deepcopy
-from builtins import str, dict
 
+import re
 import hcl
+import os
 import yaml
 
-from popper.cli import log
-from popper import utils as pu
-import re
-import os
+from copy import deepcopy
+from builtins import str, dict
+from popper.cli import log as log
+
+import popper.utils as pu
 
 
 VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env"]
