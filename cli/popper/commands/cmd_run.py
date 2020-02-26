@@ -1,10 +1,10 @@
 import click
+import os
 
 from popper import log as logging
 from popper.cli import log, pass_context
 from popper.parser import Workflow
 from popper.runner import WorkflowRunner
-from popper.scm import get_project_root_folder
 
 
 @click.command(
@@ -103,7 +103,7 @@ from popper.scm import get_project_root_folder
     required=False,
     show_default=False,
     hidden=True,
-    default=get_project_root_folder()
+    default=os.getcwd()
 )
 @click.option(
     '-c', '--conf', help='Runtime configuration options.', required=False
@@ -142,5 +142,6 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
 
     # instantiate the runner
     runner = WorkflowRunner(config_file=conf, dry_run=dry_run, reuse=reuse,
-                            skip_pull=skip_pull, skip_clone=skip_clone)
+                            skip_pull=skip_pull, skip_clone=skip_clone,
+                            workspace_dir=workspace)
     runner.run(wf)

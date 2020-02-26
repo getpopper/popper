@@ -70,7 +70,7 @@ def get_sha(repo):
             log.fail('Could not obtain revision of repository located at {}'
                      .format(get_project_root_folder(repo)))
     else:
-        return 'unknown'
+        return 'na'
 
 
 def get_remote_url(repo=None):
