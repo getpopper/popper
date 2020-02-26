@@ -73,7 +73,7 @@ class TestScm(unittest.TestCase):
 
         # get sha
         sha = scm.get_sha(None)
-        self.assertEqual(sha, 'unknown')
+        self.assertEqual(sha, 'na')
 
     def test_clone(self):
         tdir = os.path.join(self.tempdir, 'test_clone')

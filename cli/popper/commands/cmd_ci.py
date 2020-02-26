@@ -1,7 +1,6 @@
 import click
 import os
 
-from popper import scm
 from popper.cli import pass_context, log
 
 ci_files = {
@@ -119,15 +118,13 @@ def cli(ctx, service, wfile):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
-    project_root = scm.get_project_root_folder(scm.new_repo())
-
-    if project_root != os.getcwd():
+    if not os.path.exists('.git'):
         log.fail(
             'This command needs to be executed on the root of your '
             'Git project folder (where the .git/ folder is located).')
 
     for ci_file, ci_file_content in ci_files[service].items():
-        ci_file = os.path.join(project_root, ci_file)
+        ci_file = os.path.join(os.getcwd(), ci_file)
         os.makedirs(os.path.dirname(ci_file), exist_ok=True)
         with open(ci_file, 'w') as f:
             f.write(ci_file_content.format(wfile))
