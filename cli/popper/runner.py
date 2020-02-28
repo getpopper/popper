@@ -110,10 +110,10 @@ class WorkflowRunner(object):
             for s in a.get('secrets', []):
                 if s not in os.environ:
                     if os.environ.get('CI', '') == 'true':
-                        log.fail('Secret {} not defined'.format(s))
+                        log.fail(f'Secret {s} not defined')
                     else:
                         val = getpass.getpass(
-                            'Enter the value for {} : '.format(s))
+                            f'Enter the value for {s} : ')
                         os.environ[s] = val
 
     @staticmethod
@@ -159,12 +159,12 @@ class WorkflowRunner(object):
                 log.info('[popper] Cloning step repositories')
                 infoed = True
 
-            if '{}/{}'.format(user, repo) in cloned:
+            if f'{user}/{repo}' in cloned:
                 continue
 
-            log.info('[popper] - {}/{}/{}@{}'.format(url, user, repo, version))
+            log.info(f'[popper] - {url}/{user}/{repo}@{version}')
             scm.clone(url, user, repo, repo_dir, version)
-            cloned.add('{}/{}'.format(user, repo))
+            cloned.add(f'{user}/{repo}')
 
     def run(self, wf):
         """Run the given workflow.

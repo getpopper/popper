@@ -96,7 +96,7 @@ def sanitized_name(name, wid=''):
     Returns:
       str: The sanitize step name.
     """
-    return "popper_{}_{}".format(re.sub('[^a-zA-Z0-9_.-]', '_', name), wid)
+    return f"popper_{re.sub('[^a-zA-Z0-9_.-]', '_', name)}_{wid}"
 
 
 def of_type(param, valid_types):
@@ -173,7 +173,7 @@ def load_config_file(config_file):
       dict: Engine configuration.
     """
     if not os.path.exists(config_file):
-        log.fail('File {} was not found.'.format(config_file))
+        log.fail(f'File {config_file} was not found.')
 
     if not config_file.endswith('.py'):
         log.fail('Configuration file must be a python source file.')
