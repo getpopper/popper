@@ -7,12 +7,12 @@ from popper.cli import log
 from popper.runner import StepRunner as StepRunner
 
 
-docker_spawned_containers = []
-
-
 class DockerRunner(StepRunner):
     """Runs steps in docker."""
     d = None
+
+    # hold references to spawned containers
+    spawned_containers = []
 
     def __init__(self, config):
         super(DockerRunner, self).__init__(config)
@@ -22,7 +22,7 @@ class DockerRunner(StepRunner):
             DockerRunner.d.version()
         except Exception as e:
             log.debug(f'Docker error: {e}')
-            log.fail(f'Unable to connect to docker.')
+            log.fail(f'Unable to connect to the docker daemon.')
 
         log.debug(f'Docker info: {pu.prettystr(DockerRunner.d.info())}')
 
@@ -80,8 +80,7 @@ class DockerRunner(StepRunner):
         if self.config.dry_run:
             return 0
 
-        global docker_spawned_containers
-        docker_spawned_containers.append(container)
+        DockerRunner.spawned_containers.append(container)
 
         container.start()
         cout = container.logs(stream=True)
@@ -91,6 +90,11 @@ class DockerRunner(StepRunner):
         e = container.wait()['StatusCode']
 
         return e
+
+    def stop_running_tasks(self):
+        for c in DockerRunner.spawned_containers:
+            log.info(f'Stopping container {c.name}')
+            c.stop()
 
     @staticmethod
     def get_build_info(step, workspace_dir, workspace_sha):
@@ -103,25 +107,23 @@ class DockerRunner(StepRunner):
             (str, str, str): 'pull' or 'build', image ref, path to Dockerfile
         """
         build = True
-        image = None
+        img = None
         build_source = None
 
         if 'docker://' in step['uses']:
-            image = step['uses'].replace('docker://', '')
-            if ':' not in image:
-                image += ":latest"
+            img = step['uses'].replace('docker://', '')
+            if ':' not in img:
+                img += ":latest"
             build = False
         elif './' in step['uses']:
-            image = f'{pu.sanitized_name(step["name"], "step")}:{workspace_sha}'
+            img = f'{pu.sanitized_name(step["name"], "step")}:{workspace_sha}'
             build_source = os.path.join(workspace_dir, step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
-            image = f'{user}/{repo}:{version}'
+            img = f'{user}/{repo}:{version}'
             build_source = os.path.join(step['repo_dir'], step['step_dir'])
 
-        image = image.lower()
-
-        return (build, image, build_source)
+        return (build, img.lower(), build_source)
 
     @staticmethod
     def find_container(cid):

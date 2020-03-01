@@ -6,11 +6,12 @@ from popper import utils as pu
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 
-host_running_processes = []
 
 
 class HostRunner(StepRunner):
     """Run an step on the Host Machine."""
+
+    spawned_processes = []
 
     def __init__(self, config):
         super(HostRunner, self).__init__(config)
@@ -42,8 +43,7 @@ class HostRunner(StepRunner):
             with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                        universal_newlines=True, preexec_fn=os.setsid,
                        env=step_env, cwd=self.config.workspace_dir) as p:
-                global host_running_processes
-                host_running_processes.append(p.pid)
+                HostRunner.spawned_processes.append(p)
 
                 log.debug('Reading process output')
 
@@ -64,3 +64,8 @@ class HostRunner(StepRunner):
             log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
         return ecode
+
+    def stop_running_tasks(self):
+        for p in HostRunner.spawned_processes:
+            log.info(f'Stopping proces {p.pid}')
+            p.kill()
