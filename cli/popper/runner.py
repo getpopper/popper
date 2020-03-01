@@ -10,12 +10,13 @@ import popper.utils as pu
 
 from popper.cli import log
 
-# auxiliary global variable that holds all runners
-runners_g = {}
-
 
 class WorkflowRunner(object):
     """The workflow runner."""
+
+    # class variable that holds references to runner singletons
+    runners = {}
+
     def __init__(self, config_file=None, workspace_dir=os.getcwd(),
                  reuse=False, engine_name='docker', dry_run=False, quiet=False,
                  skip_pull=False, skip_clone=False):
@@ -49,15 +50,13 @@ class WorkflowRunner(object):
             # 'singularity': popper.runner_singularity.SingularityRunner,
             # 'vagrant': popper.runner_vagrant.VagrantRunner,
         }
-        # self.runners holds (singleton) instances of runners
-        self.runners = {}
 
         # check that given engine is supported
         if engine_name not in self.runner_classes:
             raise ValueError(f"Invalid value for engine: '{engine_name}'.")
 
-        global runners_g
-        runners_g = self.runners
+        # holds references to (singleton) instances of runners
+        WorkflowRunner.runners = {}
 
         log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
 
@@ -82,8 +81,8 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        global runners_g
-        for _, runner in runners_g:
+        log.info(f'Got {sig} signal. Stopping running steps.')
+        for _, runner in WorkflowRunner.runners.items():
             runner.stop_running_tasks()
         sys.exit(0)
 
