@@ -56,30 +56,41 @@ popper run --recursive
 
 ## Customizing container engine behavior
 
-By default, Popper instantiates containers in the underlying engine by using
-basic configuration options (see [here](https://popper.readthedocs.io/en/latest/sections/gha_workflows.html?highlight=mount#execution-runtime)). When these options are not suitable
-to your needs, you can modify or extend them by providing engine-specific options.
-These options allow you to specify fine-grained capabilities, bind-mounting additional folders, etc.
-In order to do this, you can provide a configuration file to modify the underlying container engine configuration used to spawn containers. This file is a python script that defines an `engine_configuration` dictionary with custom options and is passed to the `popper run` command via the `--engine-conf` flag.
+By default, Popper instantiates containers in the underlying engine by 
+using basic configuration options. When these options are not suitable 
+to your needs, you can modify or extend them by providing 
+engine-specific options. These options allow you to specify 
+fine-grained capabilities, bind-mounting additional folders, etc. In 
+order to do this, you can provide a configuration file to modify the 
+underlying container engine configuration used to spawn containers. 
+This file is a python script that defines an `ENGINE` dictionary with 
+custom options and is passed to the `popper run` command via the 
+`--conf` flag.
 
-For example, to make Popper spawn Docker containers in [privileged](https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities) mode,
-we can write the following options:
+For example, to make Popper spawn Docker containers in
+[privileged mode][privmode], we can write the following options:
+
 ```python
-engine_configuration = {
+ENGINE = {
   'privileged': True
 }
 ```
 
-Assuming the above is stored in a file called `settings.py`, we pass it to Popper by running:
+Assuming the above is stored in a file called `settings.py`, we pass 
+it to Popper by running:
+
 ```
-popper run --engine-conf settings.py
+popper run --conf settings.py
 ```
 
 > **NOTE**:
-> 1. Currently, the `--engine-conf` option is only supported for the `docker` engine.
-> 2. The `settings.py` file must contain a `dict` type variable with
-> the name `engine_configuration` as shown above.
+>
+> 1. Currently, the `--conf` option is only supported for the `docker` 
+>    engine.
+> 2. The `settings.py` file must contain a `dict` type variable with 
+>    the name `ENGINE` as shown above.
 
+[privmode]: https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
 
 ## Environment Variables
 
