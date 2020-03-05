@@ -129,4 +129,4 @@ def cli(ctx, service, wfile):
         with open(ci_file, 'w') as f:
             f.write(ci_file_content.format(wfile))
 
-    log.info('Wrote {} configuration successfully.'.format(service))
+    log.info(f'Wrote {service} configuration successfully.')
