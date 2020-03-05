@@ -18,4 +18,4 @@ def cli(ctx):
     # Returns:
     #   None
 
-    log.info('Popper version {}'.format(popper_version))
+    log.info(f'Popper version {popper_version}')

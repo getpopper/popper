@@ -34,12 +34,12 @@ class PopperFormatter(logging.Formatter):
     BOLD_RED = '[01;31m'
 
     log_format = {
-        'DEBUG':       '{}%(levelname)s: %(msg)s {}'.format(BOLD_CYAN, RESET),
+        'DEBUG':       f'{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}',
         'STEP_INFO': '%(msg)s',
         'INFO':        '%(msg)s',
-        'WARNING':     '{}%(levelname)s: %(msg)s{}'.format(BOLD_YELLOW, RESET),
-        'ERROR':       '{}%(levelname)s: %(msg)s{}'.format(BOLD_RED, RESET),
-        'CRITICAL':    '{}%(levelname)s: %(msg)s{}'.format(BOLD_RED, RESET)
+        'WARNING':     f'{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}',
+        'ERROR':       f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}',
+        'CRITICAL':    f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}'
     }
 
     log_format_no_colors = {
