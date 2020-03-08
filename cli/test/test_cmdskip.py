@@ -3,13 +3,21 @@ import unittest
 from popper_test import PopperTest
 import popper.commands.cmd_run as run
 import unittest
+import os
+import subprocess
+import sys
+
+FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
+
+def _wfile(name,format):
+	return f'{FIXDIR}/{name}.{format}'
 
 
 class TestSkip(unittest.TestCase, PopperTest):
 
     def test_skip(self):
 
-        workflow_file_loc = 'cli/test/fixtures/skip.workflow'
+        workflow_file_loc = _wfile("skip","workflow")
 
         runner = CliRunner()
         result = runner.invoke(
@@ -53,6 +61,32 @@ class TestSkip(unittest.TestCase, PopperTest):
         assert result.exit_code == 1
 
         result = runner.invoke(
-            run.cli, ['--dry-run', '--wfile', workflow_file_loc,
-                      '--skip', 'a1', '--skip', 'a2'])
+            run.cli, ['--wfile', workflow_file_loc,'--dry-run','--skip','a1','--skip','a2'])
         assert result.exit_code == 1
+
+        result = self.check_output(['popper','run','--dry-run', '--wfile', workflow_file_loc ,'--skip', 'a1'],["a2","b","c","d"])
+        assert result == 0
+
+        result = self.check_output(['popper','run','--wfile',workflow_file_loc,'--dry-run','--skip','a2'], ['a1','b','c','d'])
+        assert result == 0
+
+        result = runner.invoke(
+            run.cli, ['--wfile', workflow_file_loc,'--dry-run','--skip', 'b', '--skip', 'c'])
+        assert result.exit_code == 1
+
+        result = self.check_output(['popper', 'run', '--wfile', workflow_file_loc, '--dry-run', '--skip', 'b'],['a1','a2','c','d'])
+        assert result == 0
+
+        result = self.check_output(['popper', 'run', '--wfile', workflow_file_loc, '--dry-run', '--skip', 'c'],['a1','a2','b','d'])
+        assert result == 0
+
+        result = self.check_output(['popper', 'run', '--wfile', workflow_file_loc, '--dry-run', '--skip', 'd'],['a1','a2','b','c'])
+        assert result == 0
+
+        workflow_file_loc = _wfile("wrong","workflow")
+
+        result = runner.invoke(run.cli, ['--wfile',workflow_file_loc,'--dry-run'])
+        assert result.exit_code == 1
+		        
+
+

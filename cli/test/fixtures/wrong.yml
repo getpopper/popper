@@ -1,0 +1,25 @@
+version: '1'
+steps:
+- id: "a1"
+  uses: "sh"
+  runs: "ls"
+
+- id: "a2"
+  needs: "a1"
+  uses: "sh"
+  runs: "ls"
+
+- id: "b"
+  needs: ["a1","a2"]
+  uses: "sh"
+  runs: "ls"
+
+- id: "c"
+  needs: ["a1","a2"]
+  uses: "sh"
+  runs: "ls"
+
+- id: "d"
+  needs: ["b","c","wrong"]
+  uses: "sh"
+  runs: "ls"
