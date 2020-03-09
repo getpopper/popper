@@ -61,6 +61,7 @@ from popper.runner import WorkflowRunner
     help=('Skip the given step (can be given multiple times).'),
     required=False,
     default=list(),
+    hidden=True,
     multiple=True
 )
 @click.option(
@@ -94,6 +95,7 @@ from popper.runner import WorkflowRunner
     '--with-dependencies',
     help='When STEP is given, execute all its dependencies as well.',
     required=False,
+    hidden=True,
     is_flag=True
 )
 @click.option(
@@ -102,7 +104,6 @@ from popper.runner import WorkflowRunner
     help='Path to workspace folder.',
     required=False,
     show_default=False,
-    hidden=True,
     default=os.getcwd()
 )
 @click.option(
