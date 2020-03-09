@@ -61,7 +61,7 @@ class Workflow(object):
         else:
             log.fail('Unrecognized workflow file format.')
 
-        wf.parse(substitutions=None, allow_loose=False)
+        wf.parse(substitutions=substitutions, allow_loose=allow_loose)
 
         log.debug(
             f'Parsed workflow:\n'

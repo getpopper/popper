@@ -44,10 +44,12 @@ action "c" {
 }
 EOF
 
-popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --engine "$ENGINE" | grep "ls pwd"
-(! popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --substitution _VAR6=EXTRA --engine "$ENGINE" | grep "ls pwd")
-popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --substitution _VAR6=EXTRA --allow-loose --engine "$ENGINE" | grep "ls pwd"
-(! popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --substitution _var6=EXTRA --engine "$ENGINE" | grep "ls pwd")
+EXPECTED="'ls', 'pwd'"
+
+popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --engine "$ENGINE" | grep "$EXPECTED"
+(! popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --substitution _VAR6=EXTRA --engine "$ENGINE" | grep "$EXPECTED")
+popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --substitution _VAR6=EXTRA --allow-loose --engine "$ENGINE" | grep "$EXPECTED"
+(! popper run --wfile main.workflow --dry-run --substitution _VAR1=pwd --substitution _VAR2=ubuntu-latest --substitution _VAR3=TESTING --substitution _VAR4=TEST_ENV --substitution _VAR5=TEST --substitution _var6=EXTRA --engine "$ENGINE" | grep "$EXPECTED")
 
 cat <<EOF > main.workflow
 workflow "wf" {
