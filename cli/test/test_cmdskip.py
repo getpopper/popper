@@ -7,18 +7,12 @@ import os
 import subprocess
 import sys
 
-FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
-
-
-def _wfile(name, format):
-    return f'{FIXDIR}/{name}.{format}'
-
 
 class TestSkip(unittest.TestCase, PopperTest):
 
     def test_skip(self):
 
-        workflow_file_loc = _wfile("skip", "workflow")
+        workflow_file_loc = self._wfile("skip", "workflow")
 
         runner = CliRunner()
         result = runner.invoke(
@@ -96,8 +90,8 @@ class TestSkip(unittest.TestCase, PopperTest):
              '--skip', 'd'], ['a1', 'a2', 'b', 'c'])
         assert result == 0
 
-        workflow_file_loc = _wfile("wrong", "workflow")
+        workflow_file_loc = self._wfile("wrong", "yml")
 
         result = runner.invoke(
-            run.cli, ['--wfile', workflow_file_loc, '--dry-run'])
+            run.cli, ['-f', workflow_file_loc, '--dry-run'])
         assert result.exit_code == 1

@@ -3,6 +3,7 @@ steps:
 - id: "a"
   uses: "$_VAR1"
   args: "$_VAR2"
+  runs: "$_VAR4"
 
 - id: "b"
   needs: "a"

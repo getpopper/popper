@@ -5,6 +5,8 @@ import contextlib
 import subprocess
 from git import Repo
 
+FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
+
 
 class PopperTest:
 
@@ -27,6 +29,9 @@ class PopperTest:
         os.mkdir(path)
         file = open(path+'/README.md', 'w+')
         file.write("foo")
+
+    def _wfile(self, name, format):
+        return f'{FIXDIR}/{name}.{format}'
 
     def check_output(self, command, actions):
 

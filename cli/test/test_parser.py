@@ -395,6 +395,7 @@ action "a" {
             'a': {
                 'uses': 'sh',
                 'args': ['ls'],
+                'runs': ['test_env'],
                 'name': 'a',
                 'next': {'b'}},
             'b': {
@@ -415,6 +416,7 @@ action "a" {
             'a': {
                 'uses': 'sh',
                 'args': ['ls'],
+                'runs': ['test_env'],
                 'name': 'a',
                 'next': {'b'}},
             'b': {
