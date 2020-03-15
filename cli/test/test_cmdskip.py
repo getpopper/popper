@@ -2,7 +2,6 @@ from click.testing import CliRunner
 import unittest
 from popper_test import PopperTest
 import popper.commands.cmd_run as run
-import unittest
 import os
 import subprocess
 import sys
