@@ -1,25 +1,26 @@
 import os
 import unittest
 
-
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
 from popper.cli import log as log
 from popper_test import PopperTest
 
 
-class TestHostRunner(unittest.TestCase, PopperTest):
+class TestDockerRunner(unittest.TestCase, PopperTest):
+
     def setUp(self):
         log.setLevel('CRITICAL')
 
-    def test_run(self):
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    def test_basic_run(self):
         repo = self.mk_repo()
 
         with WorkflowRunner(workspace_dir=repo.working_dir) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:
-            - uses: sh
+            - uses: 'popperized/bin/sh@master'
               runs: [cat]
               args: README.md
             """)
@@ -29,8 +30,8 @@ class TestHostRunner(unittest.TestCase, PopperTest):
             wf = YMLWorkflow("""
             version: '1'
             steps:
-            - uses: 'sh'
-              runs: ['bash', '-c', 'echo $FOO > hello.txt ; pwd']
+            - uses: 'docker://alpine:3.9'
+              runs: ['sh', '-c', 'echo $FOO > hello.txt ; pwd']
               env: {
                   FOO: bar
               }
@@ -43,10 +44,17 @@ class TestHostRunner(unittest.TestCase, PopperTest):
             wf = YMLWorkflow("""
             version: '1'
             steps:
-            - uses: 'sh'
+            - uses: 'docker://alpine:3.9'
               runs: 'nocommandisnamedlikethis'
             """)
             wf.parse()
-            self.assertRaises(SystemExit, r.run, wf)
+            self.assertRaises(Exception, r.run, wf)
 
         repo.close()
+
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    def test_local_dockerfile(self):
+        pass
+
+    def test_skip_pull(self):
+        pass
