@@ -1,4 +1,5 @@
 import getpass
+import importlib
 import os
 import sys
 
@@ -37,28 +38,21 @@ class WorkflowRunner(object):
 
             if hasattr(config_from_file, 'ENGINE'):
                 self.config.engine_options = config_from_file.ENGINE
+            if hasattr(config_from_file, 'RESOURCE_MANAGER'):
+                self.config.resman_options = config_from_file.RESOURCE_MANAGER
 
-        import popper.runner_docker
-        import popper.runner_host
-        # import popper.runner_singularity
-        # import popper.runner_vagrant
+        if not self.config.resman:
+            self.config.resman = 'host'
 
-        # create dict with runner classes
-        self.runner_classes = {
-            'docker': popper.runner_docker.DockerRunner,
-            'host': popper.runner_host.HostRunner,
-            # 'singularity': popper.runner_singularity.SingularityRunner,
-            # 'vagrant': popper.runner_vagrant.VagrantRunner,
-        }
-
-        # check that given engine is supported
-        if engine_name not in self.runner_classes:
-            raise ValueError(f"Invalid value for engine: '{engine_name}'.")
-
-        # holds references to (singleton) instances of runners
-        WorkflowRunner.runners = {}
+        # dynamically load resource manager
+        resman_mod_name = f'popper.runner_{self.config.resman}'
+        resman_spec = importlib.util.find_spec(resman_mod_name)
+        if not resman_spec:
+            raise ValueError(f'Invalid resource manager: {self.config.resman}')
+        self.resman_mod = importlib.import_module(resman_mod_name)
 
         log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
+
 
     def __enter__(self):
         return self
@@ -66,8 +60,9 @@ class WorkflowRunner(object):
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
         self.repo.close()
-        for _, r in self.runners.items():
+        for _, r in WorkflowRunner.runners.items():
             r.__exit__(exc_type, exc, traceback)
+        WorkflowRunner.runners = {}
 
     @staticmethod
     def signal_handler(sig, frame):
@@ -180,9 +175,9 @@ class WorkflowRunner(object):
         for _, step in wf.steps.items():
             log.debug(f'Executing step:\n{pu.prettystr(step)}')
             if step['uses'] == 'sh':
-                e = self.get_step_runner('host').run(step)
+                e = self.step_runner('host', step).run(step)
             else:
-                e = self.get_step_runner(self.config.engine_name).run(step)
+                e = self.step_runner(self.config.engine_name, step).run(step)
 
             if e != 0 and e != 78:
                 log.fail(f"Step '{step['name']}' failed !")
@@ -194,11 +189,15 @@ class WorkflowRunner(object):
 
         log.info(f"Workflow finished successfully.")
 
-    def get_step_runner(self, rtype):
-        """Singleton factory of runners"""
-        if rtype not in self.runners:
-            self.runners[rtype] = self.runner_classes[rtype](self.config)
-        return self.runners[rtype]
+    def step_runner(self, engine_name, step):
+        """Factory of singleton runners"""
+        if engine_name not in WorkflowRunner.runners:
+            engine_cls_name = f'{engine_name.capitalize()}Runner'
+            engine_cls = getattr(self.resman_mod, engine_cls_name, None)
+            if not engine_cls:
+                raise ValueError(f'Unknown engine {engine_name}')
+            WorkflowRunner.runners[engine_name] = engine_cls(self.config)
+        return WorkflowRunner.runners[engine_name]
 
 
 class StepRunner(object):

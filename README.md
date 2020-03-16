@@ -42,9 +42,7 @@ The high-level goals of this project are to provide:
   * **An abstraction over container runtimes**. In addition to Docker, 
     Popper can seamlessly execute workflows in other runtimes by 
     interacting with distinct container engines. We currently support 
-    [Singularity][sylabs], as well as running Docker inside virtual 
-    machines (via [Vagrant][vagrant]). We are working on adding 
-    [Podman](https://podman.io) to the list.
+    [Singularity][sylabs] and are working on adding [Podman][podman].
   * **Continuous integration**. Generate configuration files for 
     distinct CI services, allowing users to run the exact same 
     workflows they run locally on Travis, Jenkins, Gitlab, Circle and 
@@ -67,11 +65,11 @@ This repository contains:
 ## Installation
 
 To run workflows, you need to have Python 3.6+, Git and a container 
-engine installed ([Docker][docker], [Singularity][singularity] and 
-[Vagrant](https://vagrantup.com/) are currently supported). To install 
-Popper you can use [`pip`](https://pypi.python.org/pypi). We recommend 
-to install in a virtual environment (see [here][venv] for more on 
-`virtualenv`). To install:
+engine installed ([Docker][docker] and [Singularity][singularity] are 
+currently supported). To install Popper you can use 
+[`pip`](https://pypi.python.org/pypi). We recommend to install in a 
+virtual environment (see [here][venv] for more on `virtualenv`). To 
+install:
 
 ```bash
 pip install popper
@@ -113,6 +111,6 @@ us](mailto:ivo@cs.ucsc.edu).
 [cnwf]: docs/sections/cn_workflows.md
 [engines]: docs/sections/cn_workflows.md#container-engines
 [sylabs]: https://sylabs.io/
-[vagrant]: https://vagrantup.com/
 [cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
 [compose]: https://docs.docker.com/compose/
+[podman]: https://podman.io
