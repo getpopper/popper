@@ -53,6 +53,7 @@ class WorkflowRunner(object):
 
         log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
 
+
     def __enter__(self):
         return self
 
@@ -61,6 +62,7 @@ class WorkflowRunner(object):
         self.repo.close()
         for _, r in WorkflowRunner.runners.items():
             r.__exit__(exc_type, exc, traceback)
+        WorkflowRunner.runners = {}
 
     @staticmethod
     def signal_handler(sig, frame):
@@ -187,15 +189,15 @@ class WorkflowRunner(object):
 
         log.info(f"Workflow finished successfully.")
 
-    def step_runner(self, rtype, step):
+    def step_runner(self, engine_name, step):
         """Factory of singleton runners"""
-        if rtype not in WorkflowRunner.runners:
-            engine_cls_name = f'{self.config.engine_name.capitalize()}Runner'
+        if engine_name not in WorkflowRunner.runners:
+            engine_cls_name = f'{engine_name.capitalize()}Runner'
             engine_cls = getattr(self.resman_mod, engine_cls_name, None)
             if not engine_cls:
-                raise ValueError(f'Unknown engine {self.config.engine_name}')
-            WorkflowRunner.runners[rtype] = engine_cls(self.config)
-        return WorkflowRunner.runners[rtype]
+                raise ValueError(f'Unknown engine {engine_name}')
+            WorkflowRunner.runners[engine_name] = engine_cls(self.config)
+        return WorkflowRunner.runners[engine_name]
 
 
 class StepRunner(object):

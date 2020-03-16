@@ -25,7 +25,7 @@ class HostRunner(StepRunner):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
-        pass
+        HostRunner.spawned_processes = []
 
     def run(self, step):
         step_env = StepRunner.prepare_environment(step, os.environ)
@@ -93,9 +93,11 @@ class DockerRunner(StepRunner):
 
         log.debug(f'Docker info: {pu.prettystr(DockerRunner.d.info())}')
 
+
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if DockerRunner.d:
             DockerRunner.d.close()
+        DockerRunner.spawned_containers = []
         return True
 
     def run(self, step):
