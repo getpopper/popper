@@ -10,7 +10,6 @@ from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 
 
-
 class HostRunner(StepRunner):
     """Run an step on the Host Machine."""
 

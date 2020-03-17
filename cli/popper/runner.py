@@ -36,23 +36,28 @@ class WorkflowRunner(object):
             # read options from config file
             config_from_file = pu.load_config_file(config_file)
 
-            if hasattr(config_from_file, 'ENGINE'):
-                self.config.engine_options = config_from_file.ENGINE
-            if hasattr(config_from_file, 'RESOURCE_MANAGER'):
-                self.config.resman_options = config_from_file.RESOURCE_MANAGER
+            # lets consider for now, name property will be present.
+            if config_from_file.get('engine', None):
+                self.config.engine_name = config_from_file['engine']['name']
+                self.config.engine_options = config_from_file['engine'].get(
+                    'options', None)
+            if config_from_file.get('resource_manager', None):
+                self.config.resman_name = config_from_file['resource_manager']['name']
+                self.config.resman_options = config_from_file['resource_manager'].get(
+                    'options', None)
 
-        if not self.config.resman:
-            self.config.resman = 'host'
+        if not self.config.resman_name:
+            self.config.resman_name = 'host'
 
         # dynamically load resource manager
-        resman_mod_name = f'popper.runner_{self.config.resman}'
+        resman_mod_name = f'popper.runner_{self.config.resman_name}'
         resman_spec = importlib.util.find_spec(resman_mod_name)
         if not resman_spec:
-            raise ValueError(f'Invalid resource manager: {self.config.resman}')
+            raise ValueError(
+                f'Invalid resource manager: {self.config.resman_name}')
         self.resman_mod = importlib.import_module(resman_mod_name)
 
         log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
-
 
     def __enter__(self):
         return self
@@ -202,6 +207,7 @@ class WorkflowRunner(object):
 
 class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
+
     def __init__(self, config):
         self.config = config
 

@@ -623,7 +623,7 @@ class YMLWorkflow(Workflow):
                         if not self.visited.get(tuple(next_set), None):
                             step['next'] = next_set
                             for nsa in next_set:
-                                self.steps[nsa]['needs'] = id
+                                self.steps[nsa]['needs'] = [id]
                             self.visited[tuple(curr_set)] = True
 
         # Finally, generate the root.

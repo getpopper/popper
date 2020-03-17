@@ -147,22 +147,6 @@ def write_file(path, content=''):
     f.close()
 
 
-def module_from_file(module_name, file_path):
-    """Import a file as a module.
-
-    Args:
-      module_name(str): The name of the module.
-      file_path(str): The path to the file to be imported.
-
-    Returns:
-      module
-    """
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def load_config_file(config_file):
     """Validate and parse the engine configuration file.
 
@@ -175,13 +159,13 @@ def load_config_file(config_file):
     if not os.path.exists(config_file):
         log.fail(f'File {config_file} was not found.')
 
-    if not config_file.endswith('.py'):
-        log.fail('Configuration file must be a python source file.')
+    if not config_file.endswith('.yml'):
+        log.fail('Configuration file must be a YAML file.')
 
-    module_name = os.path.basename(config_file)[:-3]
-    module = module_from_file(module_name, config_file)
+    with open(config_file, 'r') as cf:
+        data = yaml.load(cf, Loader=yaml.Loader)
 
-    return module
+    return data
 
 
 def assert_executable_exists(command):
