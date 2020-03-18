@@ -163,7 +163,7 @@ class WorkflowRunner(object):
                 e = self.step_runner(self.config.engine_name, step).run(step)
 
             if e != 0 and e != 78:
-                log.fail(f"Step '{step['name']}' failed !")
+                log.fail(f"Step '{step['name']}' failed ('{e}') !")
 
             log.info(f"Step '{step['name']}' ran successfully !")
 
@@ -174,13 +174,17 @@ class WorkflowRunner(object):
 
     def step_runner(self, engine_name, step):
         """Factory of singleton runners"""
-        if engine_name not in WorkflowRunner.runners:
+        runner = WorkflowRunner.runners.get(engine_name, None)
+
+        if not runner:
             engine_cls_name = f'{engine_name.capitalize()}Runner'
             engine_cls = getattr(self.resman_mod, engine_cls_name, None)
             if not engine_cls:
-                raise ValueError(f'Unknown engine {engine_name}')
-            WorkflowRunner.runners[engine_name] = engine_cls(self.config)
-        return WorkflowRunner.runners[engine_name]
+                raise ValueError(f'Cannot find class for {engine_name}')
+            runner = engine_cls(self.config)
+            WorkflowRunner.runners[engine_name] = runner
+
+        return runner
 
 
 class StepRunner(object):
