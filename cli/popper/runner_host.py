@@ -11,7 +11,7 @@ from popper.runner import StepRunner as StepRunner
 
 
 class HostRunner(StepRunner):
-    """Run an step on the Host Machine."""
+    """Run a step directly on the host machine."""
 
     spawned_processes = set()
 
@@ -55,7 +55,7 @@ class HostRunner(StepRunner):
 
 
 class DockerRunner(StepRunner):
-    """Runs steps in docker."""
+    """Runs steps in docker on the local machine."""
     d = None
 
     # hold references to spawned containers
