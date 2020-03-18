@@ -1,5 +1,6 @@
 import click
 import os
+import traceback
 
 from popper import log as logging
 from popper.cli import log, pass_context
@@ -156,4 +157,9 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
         skip_pull=skip_pull,
         skip_clone=skip_clone,
         workspace_dir=workspace)
-    runner.run(wf)
+
+    try:
+        runner.run(wf)
+    except Exception as e:
+        log.debug(traceback.format_exc())
+        log.fail(e)
