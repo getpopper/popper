@@ -105,7 +105,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         # build or pull
         if build:
             HostDockerRunner.docker_build(step, img, dockerfile,
-                                      self.config.dry_run)
+                                          self.config.dry_run)
         elif not self.config.skip_pull and not step.get('skip_pull', False):
             HostDockerRunner.docker_pull(step, img, self.config.dry_run)
 
@@ -128,8 +128,8 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             }
 
             if self.config.engine_options:
-                HostDockerRunner.update_engine_config(engine_config,
-                                                  self.config.engine_options)
+                HostDockerRunner.update_engine_config(
+                    engine_config, self.config.engine_options)
             log.debug(f'Engine configuration: {pu.prettystr(engine_config)}\n')
 
             container = HostDockerRunner.d.containers.create(**engine_config)
