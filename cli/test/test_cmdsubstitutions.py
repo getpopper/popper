@@ -51,7 +51,6 @@ class TestSubstitutions(unittest.TestCase, PopperTest):
         self.assertListEqual(test.output, ['ERROR:popper:Invalid url. The url should be in any of the 3 forms: \n1) https://github.com/user/repo/path/to/step@version \n2) gitlab.com/user/repo/path/to/step@version \n3) user/repo/path/to/step@version'])
 
         result = runner.invoke(run.cli, ['--dry-run', '-f', workflow_file_loc,
-                                         '--substitution', '_VAR1=shx',
                                          '--substitution', '_VAR1=sh',
                                          '--substitution', '_VAR2=ls',
                                          '--substitution', '_VAR4=pwd',
@@ -63,7 +62,6 @@ class TestSubstitutions(unittest.TestCase, PopperTest):
 
         with self.assertLogs('popper') as test: 
             result = runner.invoke(run.cli, ['--dry-run', '-f', workflow_file_loc,
-                                             '--substitution', '_VAR1=shx',
                                              '--substitution', '_VAR1=sh',
                                              '--substitution', '_VAR2=ls',
                                              '--substitution', '_VAR4=pwd',
@@ -74,10 +72,9 @@ class TestSubstitutions(unittest.TestCase, PopperTest):
 
             assert result.exit_code == 1
 
-        self.assertListEqual(test.output, ['ERROR:popper:Not all given substitutions are used inthe workflow file'])   
+        self.assertListEqual(test.output, ['ERROR:popper:Not all given substitutions are used in the workflow file'])   
 
         result = runner.invoke(run.cli, ['--dry-run', '-f', workflow_file_loc,
-                                         '--substitution', '_VAR1=shx',
                                          '--substitution', '_VAR1=sh',
                                          '--substitution', '_VAR2=ls',
                                          '--substitution', '_VAR4=pwd',
@@ -92,7 +89,6 @@ class TestSubstitutions(unittest.TestCase, PopperTest):
         with self.assertLogs('popper') as test:
 
             result = runner.invoke(run.cli, ['--dry-run', '-f', workflow_file_loc,
-                                             '--substitution', '_VAR1=shx',
                                              '--substitution', '_VAR1=sh',
                                              '--substitution', '_VAR2=ls',
                                              '--substitution', '_VAR4=pwd',
@@ -108,7 +104,6 @@ class TestSubstitutions(unittest.TestCase, PopperTest):
         with self.assertLogs('popper') as test:
         
             result = runner.invoke(run.cli, ['--dry-run', '-f', workflow_file_loc,
-                                             '--substitution', '_VAR1=shx',
                                              '--substitution', '_VAR1=sh',
                                              '--substitution', '_VAR2=ls',
                                              '--substitution', '_VAR4=pwd',
