@@ -79,15 +79,17 @@ class TestUtils(unittest.TestCase):
         os.remove('testfile2.txt')
 
     def test_load_config_file(self):
-        conf_content = """ENGINE = {
-    "runtime": "nvidia"
-}
+        conf_content = """
+engine:
+    name: docker
+    options:
+        runtime: nvidia
         """
-        pu.write_file('settings.py', conf_content)
-        config = pu.load_config_file('settings.py')
-        self.assertTrue(hasattr(config, 'ENGINE'))
-        self.assertDictEqual(config.ENGINE, {'runtime': 'nvidia'})
-        os.remove('settings.py')
+        pu.write_file('settings.yml', conf_content)
+        config = pu.load_config_file('settings.yml')
+        self.assertTrue(config.get('engine'), True)
+        self.assertDictEqual(config['engine']['options'], {'runtime': 'nvidia'})
+        os.remove('settings.yml')
 
     def test_assert_executable_exists(self):
         self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')
