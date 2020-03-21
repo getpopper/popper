@@ -8,6 +8,7 @@ from popper import scm
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 from popper.runner_host import DockerRunner as HostDockerRunner
+from popper.runner_host import HostRunner
 
 
 class SlurmRunner(StepRunner):
@@ -53,34 +54,6 @@ class SlurmRunner(StepRunner):
         for p in SlurmRunner.spawned_processes:
             log.info(f'Stopping proces {p.pid}')
             p.kill()
-
-
-class HostRunner(SlurmRunner):
-
-    def __init__(self, config):
-        super(HostRunner, self).__init__(config)
-        if self.config.reuse:
-            log.warning('Reuse not supported for HostRunner.')
-
-    def run(self, step):
-        self.step = step
-        cmd = step.get('runs', [])
-        if not cmd:
-            raise AttributeError(f"Expecting 'runs' attribute in step.")
-        cmd.extend(step.get('args', []))
-
-        log.info(f'[{step["name"]}] {cmd}')
-
-        if self.config.dry_run:
-            return 0
-
-        log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
-
-        ecode = self.exec_srun_cmd(cmd)
-        return ecode
-
-    def stop_running_tasks(self):
-        self.stop_srun_cmd()
 
 
 class DockerRunner(SlurmRunner, HostDockerRunner):
