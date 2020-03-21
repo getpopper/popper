@@ -19,7 +19,7 @@ setup(
         'GitPython',
         'spython',
         'click',
-        'pyhcl',
+        'pyhcl==0.4.0',
         'pyyaml',
         'docker'
     ],
