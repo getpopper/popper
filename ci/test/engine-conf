@@ -17,31 +17,31 @@ action "run" {
 }
 EOF
 
-# config file called settings.py in the project root.
-cat <<EOF > settings.py
-ENGINE = {
-    "name": "dont use this name",
-    "image": "abc/xyz",
-    "hostname": "xYz.local"
-}
+# config file called settings.yml in the project root.
+cat <<EOF > settings.yml
+engine:
+  name: docker
+  options:
+    image: abc/xyz
+    hostname: xYz.local
 EOF
 
-popper run --wfile main.workflow --conf settings.py > output
+popper run --wfile main.workflow --conf settings.yml > output
 grep -Fxq "xYz.local" output
 
 popper run --wfile main.workflow > output
 grep -vFxq "xYz.local" output
 
 # config file with different name in the project root.
-cat <<EOF > myconf.py
-ENGINE = {
-    "name": "dont use this name",
-    "image": "abc/xyz",
-    "hostname": "xYz.local"
-}
+cat <<EOF > myconf.yml
+engine:
+  name: docker
+  options:
+    image: abc/xyz
+    hostname: xYz.local
 EOF
 
-popper run --wfile main.workflow --conf myconf.py > output
+popper run --wfile main.workflow --conf myconf.yml > output
 grep -Fxq "xYz.local" output
 
 popper run --wfile main.workflow > output
@@ -49,26 +49,26 @@ grep -vFxq "xYz.local" output
 
 # config file in different directory than project root.
 mkdir -p /tmp/myengineconf/
-cat <<EOF > /tmp/myengineconf/mysettings.py
-ENGINE = {
-    "name": "dont use this name",
-    "image": "abc/xyz",
-    "hostname": "xYz.local"
-}
+cat <<EOF > /tmp/myengineconf/mysettings.yml
+engine:
+  name: docker
+  options:
+    image: abc/xyz
+    hostname: xYz.local
 EOF
 
-popper run --wfile main.workflow --conf /tmp/myengineconf/mysettings.py > output
+popper run --wfile main.workflow --conf /tmp/myengineconf/mysettings.yml > output
 grep -Fxq "xYz.local" output
 
 popper run --wfile main.workflow > output
 grep -vFxq "xYz.local" output
 
 cat <<EOF > settings
-ENGINE = {
-    "name": "dont use this name",
-    "image": "abc/xyz",
-    "hostname": "xYz.local"
-}
+engine:
+  name: docker
+  options:
+    image: abc/xyz
+    hostname: xYz.local
 EOF
 
 popper run --wfile main.workflow --conf settings && exit 1
