@@ -1,0 +1,41 @@
+#!/bin/bash
+set -ex
+# shellcheck source=./ci/test/common
+source ./ci/test/common
+init_test_repo
+cd "$test_repo_path"
+
+cat <<EOF > wf.yml
+steps:
+- id: one
+  uses: docker://alpine
+  args: echo step one
+
+- id: two
+  uses: sh
+  runs: echo step two
+EOF
+
+cat <<EOF > settings.yml
+engine:
+  name: docker
+
+resource_manager:
+  name: slurm
+EOF
+
+cat <<EOF > test.sh
+#!/bin/bash
+set -ex
+
+export LANG=en_US.utf8
+
+popper run -f wf.yml -c settings.yml > output
+grep -q "step one" output
+grep -q "step two" output
+EOF
+
+
+# run the tests in the cluster
+docker pull popperized/docker-slurm-cluster:latest
+docker run --workdir /src -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/src popperized/docker-slurm-cluster:latest /src/test.sh
