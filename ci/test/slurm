@@ -33,9 +33,12 @@ export LANG=en_US.utf8
 popper run -f wf.yml -c settings.yml > output
 grep -q "step one" output
 grep -q "step two" output
+echo "TEST SLURM PASSED"
 EOF
 
+chmod +x test.sh
 
 # run the tests in the cluster
 docker pull popperized/docker-slurm-cluster:latest
-docker run --workdir /src -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/src popperized/docker-slurm-cluster:latest /src/test.sh
+docker run -h ernie --workdir /src -v /var/run/docker.sock:/var/run/docker.sock -v $PWD:/src popperized/docker-slurm-cluster:latest /src/test.sh
+
