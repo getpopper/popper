@@ -13,13 +13,13 @@ from popper.runner_host import HostRunner
 
 class SlurmRunner(StepRunner):
 
-    spawned_processes = []
+    spawned_processes = set()
 
     def __init__(self, config):
         super(SlurmRunner, self).__init__(config)
 
     def __exit__(self, exc_type, exc, traceback):
-        SlurmRunner.spawned_processes = []
+        SlurmRunner.spawned_processes = set()
 
     def exec_srun_cmd(self, cmd):
         step_env = SlurmRunner.prepare_environment(self.step, os.environ)
@@ -28,7 +28,7 @@ class SlurmRunner(StepRunner):
             with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                        universal_newlines=True, preexec_fn=os.setsid,
                        env=step_env, cwd=self.config.workspace_dir) as p:
-                SlurmRunner.spawned_processes.append(p)
+                SlurmRunner.spawned_processes.add(p)
 
                 log.debug('Reading process output')
 
@@ -38,6 +38,7 @@ class SlurmRunner(StepRunner):
 
                 p.wait()
                 ecode = p.poll()
+                SlurmRunner.spawned_processes.remove(p)
 
             log.debug(f'Code returned by process: {ecode}')
 
