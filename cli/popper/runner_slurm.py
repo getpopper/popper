@@ -107,7 +107,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
             container = HostDockerRunner.d.containers.create(**engine_config)
 
-        log.info(f'[{step["name"]}] docker start')
+        log.info(f'[{step["name"]}] srun docker start')
 
         if self.config.dry_run:
             return 0
