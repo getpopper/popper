@@ -88,7 +88,9 @@ engine:
         pu.write_file('settings.yml', conf_content)
         config = pu.load_config_file('settings.yml')
         self.assertTrue(config.get('engine'), True)
-        self.assertDictEqual(config['engine']['options'], {'runtime': 'nvidia'})
+        self.assertDictEqual(
+            config['engine']['options'], {
+                'runtime': 'nvidia'})
         os.remove('settings.yml')
 
     def test_assert_executable_exists(self):

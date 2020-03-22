@@ -22,12 +22,11 @@ class SlurmRunner(StepRunner):
         SlurmRunner.spawned_processes = set()
 
     def exec_srun_cmd(self, cmd):
-        step_env = SlurmRunner.prepare_environment(self.step, os.environ)
         try:
             cmd.insert(0, 'srun')
             with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                        universal_newlines=True, preexec_fn=os.setsid,
-                       env=step_env, cwd=self.config.workspace_dir) as p:
+                       cwd=self.config.workspace_dir) as p:
                 SlurmRunner.spawned_processes.add(p)
 
                 log.debug('Reading process output')
@@ -65,7 +64,6 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
     def run(self, step):
         """Execute the given step in docker."""
-        self.step = step
         cid = pu.sanitized_name(step['name'], self.config.wid)
 
         build, img, dockerfile = HostDockerRunner.get_build_info(
