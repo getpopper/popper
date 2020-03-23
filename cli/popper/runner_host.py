@@ -13,7 +13,7 @@ from popper.runner import StepRunner as StepRunner
 class HostRunner(StepRunner):
     """Run an step on the Host Machine."""
 
-    spawned_processes = []
+    spawned_processes = set()
 
     def __init__(self, config):
         super(HostRunner, self).__init__(config)
@@ -24,7 +24,7 @@ class HostRunner(StepRunner):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
-        HostRunner.spawned_processes = []
+        HostRunner.spawned_processes = set()
 
     def run(self, step):
         step_env = StepRunner.prepare_environment(step, os.environ)

@@ -20,10 +20,10 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         log.setLevel('CRITICAL')
         self.Popen = MockPopen()
         replacer = Replacer()
-        replacer.replace('popper.runner_slurm.Popen', self.Popen)
+        replacer.replace('popper.utils.Popen', self.Popen)
         self.addCleanup(replacer.restore)
 
-    def test_exec_run(self):
+    def test_exec_srun_cmd(self):
         self.Popen.set_command('srun ls -l', returncode=0)
         config = DotMap()
         config.workspace_dir = os.environ["HOME"]
@@ -37,7 +37,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
         log.setLevel('CRITICAL')
         self.Popen = MockPopen()
         replacer = Replacer()
-        replacer.replace('popper.runner_slurm.Popen', self.Popen)
+        replacer.replace('popper.utils.Popen', self.Popen)
         self.addCleanup(replacer.restore)
 
     def test_start_container(self):

@@ -13,13 +13,13 @@ from popper.runner_host import HostRunner
 
 class SlurmRunner(StepRunner):
 
-    spawned_processes = []
+    spawned_processes = set()
 
     def __init__(self, config):
         super(SlurmRunner, self).__init__(config)
 
     def __exit__(self, exc_type, exc, traceback):
-        SlurmRunner.spawned_processes = []
+        SlurmRunner.spawned_processes = set()
 
     def exec_srun_cmd(self, cmd, env=None):
         cmd.insert(0, 'srun')

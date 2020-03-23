@@ -190,7 +190,7 @@ def exec_cmd(cmd, env, cwd, spawned_processes):
                     universal_newlines=True, preexec_fn=os.setsid,
                     env=env, cwd=cwd) as p:
             
-            spawned_processes.append(p)
+            spawned_processes.add(p)
             log.debug('Reading process output')
 
             for line in iter(p.stdout.readline, ''):
@@ -199,6 +199,7 @@ def exec_cmd(cmd, env, cwd, spawned_processes):
 
             p.wait()
             ecode = p.poll()
+            spawned_processes.remove(p)
 
         log.debug(f'Code returned by process: {ecode}')
 
