@@ -41,30 +41,8 @@ class HostRunner(StepRunner):
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        try:
-            with Popen(cmd, stdout=PIPE, stderr=STDOUT,
-                       universal_newlines=True, preexec_fn=os.setsid,
-                       env=step_env, cwd=self.config.workspace_dir) as p:
-                HostRunner.spawned_processes.append(p)
-
-                log.debug('Reading process output')
-
-                for line in iter(p.stdout.readline, ''):
-                    line_decoded = pu.decode(line)
-                    log.step_info(line_decoded[:-1])
-
-                p.wait()
-                ecode = p.poll()
-
-            log.debug(f'Code returned by process: {ecode}')
-
-        except SubprocessError as ex:
-            ecode = ex.returncode
-            log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
-        except Exception as ex:
-            ecode = 1
-            log.step_info(f"Command raised non-SubprocessError error: {ex}")
-
+        ecode = pu.exec_cmd(
+            cmd, step_env, self.config.workspace_dir, HostRunner.spawned_processes)
         return ecode
 
     def stop_running_tasks(self):

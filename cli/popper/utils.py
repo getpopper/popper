@@ -6,6 +6,7 @@ import yaml
 
 from builtins import str
 from distutils.spawn import find_executable
+from subprocess import Popen, STDOUT, PIPE, SubprocessError
 from dotmap import DotMap
 
 from popper.cli import log
@@ -181,3 +182,31 @@ def prettystr(a):
         a = dict(a)
     if type(a) == dict:
         return f'{yaml.dump(a, default_flow_style=False)}'
+
+
+def exec_cmd(cmd, env, cwd, spawned_processes):
+    try:
+        with Popen(cmd, stdout=PIPE, stderr=STDOUT,
+                    universal_newlines=True, preexec_fn=os.setsid,
+                    env=env, cwd=cwd) as p:
+            
+            spawned_processes.append(p)
+            log.debug('Reading process output')
+
+            for line in iter(p.stdout.readline, ''):
+                line_decoded = decode(line)
+                log.step_info(line_decoded[:-1])
+
+            p.wait()
+            ecode = p.poll()
+
+        log.debug(f'Code returned by process: {ecode}')
+
+    except SubprocessError as ex:
+        ecode = ex.returncode
+        log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
+    except Exception as ex:
+        ecode = 1
+        log.step_info(f"Command raised non-SubprocessError error: {ex}")
+
+    return ecode

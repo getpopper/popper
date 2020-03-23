@@ -13,41 +13,18 @@ from popper.runner_host import HostRunner
 
 class SlurmRunner(StepRunner):
 
-    spawned_processes = set()
+    spawned_processes = []
 
     def __init__(self, config):
         super(SlurmRunner, self).__init__(config)
 
     def __exit__(self, exc_type, exc, traceback):
-        SlurmRunner.spawned_processes = set()
+        SlurmRunner.spawned_processes = []
 
-    def exec_srun_cmd(self, cmd):
-        try:
-            cmd.insert(0, 'srun')
-            with Popen(cmd, stdout=PIPE, stderr=STDOUT,
-                       universal_newlines=True, preexec_fn=os.setsid,
-                       cwd=self.config.workspace_dir) as p:
-                SlurmRunner.spawned_processes.add(p)
-
-                log.debug('Reading process output')
-
-                for line in iter(p.stdout.readline, ''):
-                    line_decoded = pu.decode(line)
-                    log.step_info(line_decoded[:-1])
-
-                p.wait()
-                ecode = p.poll()
-                SlurmRunner.spawned_processes.remove(p)
-
-            log.debug(f'Code returned by process: {ecode}')
-
-        except SubprocessError as ex:
-            ecode = ex.returncode
-            log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
-        except Exception as ex:
-            ecode = 1
-            log.step_info(f"Command raised non-SubprocessError error: {ex}")
-
+    def exec_srun_cmd(self, cmd, env={}):
+        cmd.insert(0, 'srun')
+        ecode = pu.exec_cmd(
+            cmd, env, self.config.workspace_dir, SlurmRunner.spawned_processes)
         return ecode
 
     def stop_srun_cmd(self):
