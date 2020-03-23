@@ -5,6 +5,8 @@ import hcl
 import os
 import yaml
 
+from dotmap import DotMap
+
 from copy import deepcopy
 from builtins import str, dict
 from popper.cli import log as log
@@ -736,3 +738,26 @@ class HCLWorkflow(Workflow):
             if a_block.get('secrets', None):
                 a_block['secrets'] = Workflow.format_command(
                     a_block['secrets'])
+
+
+class PopperConfigParser(object):
+    def __init__(self, config_file):
+        self.config_file = config_file
+        self.parse()
+        self.validate()
+        self.normalize()
+
+    def parse(self):
+        self.config_from_file = pu.load_config_file(self.config_file)
+
+    def validate(self):
+        if self.config_from_file.get('engine', None):
+            if not self.config_from_file['engine'].get('name', None):
+                log.fail('engine config must have the name property.')
+        
+        if self.config_from_file.get('resource_manager', None):
+            if not self.config_from_file['resource_manager'].get('name', None):
+                log.fail('resource_manager config must have the name property.')
+    
+    def normalize(self):
+        self.config = DotMap(self.config_from_file)

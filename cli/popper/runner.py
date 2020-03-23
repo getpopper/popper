@@ -9,6 +9,7 @@ from hashlib import shake_256
 import popper.scm as scm
 import popper.utils as pu
 
+from popper.parser import PopperConfigParser
 from popper.cli import log
 
 
@@ -33,18 +34,15 @@ class WorkflowRunner(object):
         self.config.workspace_sha = scm.get_sha(self.repo)
 
         if config_file:
-            # read options from config file
-            config_from_file = pu.load_config_file(config_file)
+            config_parser = PopperConfigParser(config_file)
 
-            # lets consider for now, name property will be present.
-            if config_from_file.get('engine', None):
-                self.config.engine_name = config_from_file['engine']['name']
-                self.config.engine_options = config_from_file['engine'].get(
-                    'options', None)
-            if config_from_file.get('resource_manager', None):
-                self.config.resman_name = config_from_file['resource_manager']['name']
-                self.config.resman_options = config_from_file['resource_manager'].get(
-                    'options', None)
+            if config_parser.config.engine:
+                self.config.engine_name = config_parser.config.engine.name
+                self.config.engine_options = config_parser.config.engine.options.toDict()
+    
+            if config_parser.config.resource_manager:
+                self.config.resman_name = config_parser.config.resource_manager.name
+                self.config.resman_options = config_parser.config.resource_manager.options.toDict()
 
         if not self.config.resman_name:
             self.config.resman_name = 'host'
