@@ -21,7 +21,7 @@ class SlurmRunner(StepRunner):
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_processes = []
 
-    def exec_srun_cmd(self, cmd, env={}):
+    def exec_srun_cmd(self, cmd, env=None):
         cmd.insert(0, 'srun')
         ecode = pu.exec_cmd(
             cmd, env, self.config.workspace_dir, SlurmRunner.spawned_processes)
