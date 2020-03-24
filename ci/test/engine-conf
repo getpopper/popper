@@ -100,4 +100,10 @@ EOF
 
 popper run --wfile main.workflow --conf settings.yml && exit 1
 
+# fail since config file is empty.
+cat <<EOF > settings.yml
+EOF
+
+popper run --wfile main.workflow --conf settings.yml && exit 1
+
 echo "Test ENGINE-CONF passed."

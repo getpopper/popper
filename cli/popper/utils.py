@@ -166,6 +166,9 @@ def load_config_file(config_file):
     with open(config_file, 'r') as cf:
         data = yaml.load(cf, Loader=yaml.Loader)
 
+    if not data:
+      log.fail('Configuration file is empty.')
+
     return data
 
 
