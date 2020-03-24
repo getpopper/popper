@@ -770,7 +770,17 @@ class PopperConfigParser(object):
                     'resource_manager config must have the name property.')
 
     def normalize(self):
-        self.engine = DotMap(self.config_from_file.get('engine', None))
-        self.resource_manager = DotMap(
-            self.config_from_file.get(
-                'resource_manager', None))
+        self.engine = DotMap()
+        self.resource_manager = DotMap()
+
+        if self.config_from_file.get('engine', None):
+            self.engine.name = self.config_from_file['engine']['name']
+            self.engine.options = self.config_from_file['engine'].get('options', dict())
+        else:
+            self.engine.name = 'docker'
+
+        if self.config_from_file.get('resource_manager', None):
+            self.resource_manager.name = self.config_from_file['resource_manager']['name']
+            self.resource_manager.options = self.config_from_file['resource_manager'].get('options', dict())
+        else:
+            self.resource_manager.name = 'host'

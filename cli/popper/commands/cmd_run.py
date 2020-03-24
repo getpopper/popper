@@ -50,11 +50,18 @@ from popper.runner import WorkflowRunner
     is_flag=True,
 )
 @click.option(
+    '-e',
     '--engine',
-    help='Specify runtime for executing the workflow [default: docker].',
+    help='Specify runtime for executing the workflow.',
     type=click.Choice(['docker', 'singularity', 'vagrant']),
-    required=False,
-    default='docker'
+    required=False
+)
+@click.option(
+    '-r',
+    '--resource-manager',
+    help='Specify resource manager for executing the workflow.',
+    type=click.Choice(['slurm']),
+    required=False
 )
 @click.option(
     '--skip',
@@ -111,7 +118,7 @@ from popper.runner import WorkflowRunner
 )
 @pass_context
 def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
-        engine, skip, skip_pull, skip_clone, substitution, allow_loose,
+        engine, resource_manager, skip, skip_pull, skip_clone, substitution, allow_loose,
         with_dependencies, workspace, conf):
     """Runs a Popper workflow. Only execute STEP if given."""
     # set the logging levels.
@@ -142,7 +149,7 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
                       include_step_dependencies=with_dependencies)
 
     # instantiate the runner
-    runner = WorkflowRunner(config_file=conf, dry_run=dry_run, reuse=reuse,
+    runner = WorkflowRunner(engine, resource_manager, config_file=conf, dry_run=dry_run, reuse=reuse,
                             skip_pull=skip_pull, skip_clone=skip_clone,
                             workspace_dir=workspace)
     runner.run(wf)

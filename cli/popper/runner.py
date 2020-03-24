@@ -19,8 +19,8 @@ class WorkflowRunner(object):
     # class variable that holds references to runner singletons
     runners = {}
 
-    def __init__(self, config_file=None, workspace_dir=os.getcwd(),
-                 reuse=False, engine_name='docker', dry_run=False, quiet=False,
+    def __init__(self, engine, resource_manager, config_file=None, workspace_dir=os.getcwd(),
+                 reuse=False, dry_run=False, quiet=False,
                  skip_pull=False, skip_clone=False):
 
         # save all args in a member dictionary
@@ -32,20 +32,24 @@ class WorkflowRunner(object):
         # cretate a repo object for the project
         self.repo = scm.new_repo()
         self.config.workspace_sha = scm.get_sha(self.repo)
+        self.config.engine_name = engine
+        self.config.resman_name = resource_manager
 
-        if config_file:
-            popper_cfg = PopperConfigParser(config_file)
-
-            if popper_cfg.engine:
+        if not self.config.engine_name:
+            if config_file:
+                popper_cfg = PopperConfigParser(config_file)
                 self.config.engine_name = popper_cfg.engine.name
-                self.config.engine_options = popper_cfg.engine.options.toDict()
-
-            if popper_cfg.resource_manager:
-                self.config.resman_name = popper_cfg.resource_manager.name
-                self.config.resman_options = popper_cfg.resource_manager.options.toDict()
+                self.config.engine_options = popper_cfg.engine.options
+            else:
+                self.config.engine_name = 'docker'
 
         if not self.config.resman_name:
-            self.config.resman_name = 'host'
+            if config_file:
+                popper_cfg = PopperConfigParser(config_file)
+                self.config.resman_name = popper_cfg.resource_manager.name
+                self.config.resman_options = popper_cfg.resource_manager.options
+            else:
+                self.config.resman_name = 'host'
 
         # dynamically load resource manager
         resman_mod_name = f'popper.runner_{self.config.resman_name}'
