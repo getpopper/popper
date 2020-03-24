@@ -43,20 +43,10 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         """Execute the given step in docker."""
         cid = pu.sanitized_name(step['name'], self.config.wid)
 
-        build, img, dockerfile = HostDockerRunner.get_build_info(
-            step, self.config.workspace_dir, self.config.workspace_sha)
-
         container = HostDockerRunner.find_container(cid)
 
         if container and not self.config.reuse and not self.config.dry_run:
             container.remove(force=True)
-
-        # build or pull
-        if build:
-            HostDockerRunner.docker_build(step, img, dockerfile,
-                                          self.config.dry_run)
-        elif not self.config.skip_pull and not step.get('skip_pull', False):
-            HostDockerRunner.docker_pull(step, img, self.config.dry_run)
 
         container = HostDockerRunner.create_container(step, self.config)
         log.info(f'[{step["name"]}] srun docker start')

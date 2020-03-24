@@ -70,7 +70,6 @@ class DockerRunner(StepRunner):
 
         log.debug(f'Docker info: {pu.prettystr(DockerRunner.d.info())}')
 
-
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if DockerRunner.d:
             DockerRunner.d.close()
@@ -81,22 +80,12 @@ class DockerRunner(StepRunner):
         """Execute the given step in docker."""
         cid = pu.sanitized_name(step['name'], self.config.wid)
 
-        build, img, dockerfile = DockerRunner.get_build_info(
-            step, self.config.workspace_dir, self.config.workspace_sha)
-
         container = DockerRunner.find_container(cid)
 
         if container and not self.config.reuse and not self.config.dry_run:
             container.remove(force=True)
 
-        # build or pull
-        if build:
-            DockerRunner.docker_build(step, img, dockerfile,
-                                      self.config.dry_run)
-        elif not self.config.skip_pull and not step.get('skip_pull', False):
-            DockerRunner.docker_pull(step, img, self.config.dry_run)
-
-        container = DockerRunner.create_container(step, self.config)
+        container = DockerRunner.create_container(cid, step, self.config)
 
         log.info(f'[{step["name"]}] docker start')
 
@@ -119,7 +108,21 @@ class DockerRunner(StepRunner):
             c.stop()
 
     @staticmethod
-    def create_container(step, config):
+    def prepare_image(step, config):
+        build, img, dockerfile = DockerRunner.get_build_info(
+            step, config.workspace_dir, config.workspace_sha)
+
+        if build:
+            DockerRunner.docker_build(step, img, dockerfile,
+                                      config.dry_run)
+        elif not config.skip_pull and not step.get('skip_pull', False):
+            DockerRunner.docker_pull(step, img, config.dry_run)
+
+        return build, img, dockerfile
+
+    @staticmethod
+    def create_container(cid, step, config):
+        build, img, dockerfile = DockerRunner.prepare_image(step, config)
         msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
         log.info(f'[{step["name"]}] docker create {msg}')
 
