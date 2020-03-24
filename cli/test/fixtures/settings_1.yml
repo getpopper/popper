@@ -1,0 +1,5 @@
+engine:
+  options:
+    privileged: true
+resource_manager:
+  name: slurm

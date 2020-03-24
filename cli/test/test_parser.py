@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from popper.parser import Workflow, YMLWorkflow, HCLWorkflow
+from popper.parser import Workflow, YMLWorkflow, HCLWorkflow, PopperConfig
 from popper.cli import log
 
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
@@ -633,3 +633,29 @@ class TestYMLWorkflow(unittest.TestCase):
                 'name': 'end'}
         }
         self.assertDictEqual(wf.steps, steps_dict)
+
+
+class TestPopperConfigParser(unittest.TestCase):
+    def setUp(self):
+        log.setLevel('CRITICAL')
+
+    def tearDown(self):
+        log.setLevel('NOTSET')
+
+    def test_parse(self):
+        popper_cfg = PopperConfig(_wfile("settings_3", "yml"))
+        self.assertEqual(popper_cfg.config_from_file, 
+        {'engine': {'name': 'docker', 'options': {'privileged': True}}, 
+        'resource_manager': {'name': 'slurm', 'options': {'foo': 'bar'}}})
+
+    def test_validate(self):
+        self.assertRaises(SystemExit, PopperConfig, _wfile("settings_1", "yml"))
+        self.assertRaises(SystemExit, PopperConfig, _wfile("settings_2", "yml"))
+
+    def test_normalize(self):
+        popper_cfg = PopperConfig(_wfile("settings_3", "yml"))
+        self.assertEqual(popper_cfg.engine.name, "docker")
+        self.assertEqual(popper_cfg.engine.options, {'privileged': True})
+
+        self.assertEqual(popper_cfg.resource_manager.name, "slurm")
+        self.assertEqual(popper_cfg.resource_manager.options, {'foo': 'bar'})

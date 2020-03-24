@@ -748,7 +748,7 @@ class HCLWorkflow(Workflow):
                     a_block['secrets'])
 
 
-class PopperConfigParser(object):
+class PopperConfig(object):
     def __init__(self, config_file):
         self.config_file = config_file
         self.parse()

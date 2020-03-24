@@ -9,7 +9,7 @@ from hashlib import shake_256
 import popper.scm as scm
 import popper.utils as pu
 
-from popper.parser import PopperConfigParser
+from popper.parser import PopperConfig
 from popper.cli import log
 
 
@@ -37,7 +37,7 @@ class WorkflowRunner(object):
 
         if not self.config.engine_name:
             if config_file:
-                popper_cfg = PopperConfigParser(config_file)
+                popper_cfg = PopperConfig(config_file)
                 self.config.engine_name = popper_cfg.engine.name
                 self.config.engine_options = popper_cfg.engine.options
             else:
@@ -45,7 +45,7 @@ class WorkflowRunner(object):
 
         if not self.config.resman_name:
             if config_file:
-                popper_cfg = PopperConfigParser(config_file)
+                popper_cfg = PopperConfig(config_file)
                 self.config.resman_name = popper_cfg.resource_manager.name
                 self.config.resman_options = popper_cfg.resource_manager.options
             else:
