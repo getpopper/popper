@@ -14,7 +14,15 @@ from popper.cli import log as log
 import popper.utils as pu
 
 
-VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env", "name", "next"]
+VALID_STEP_ATTRS = [
+    "uses",
+    "args",
+    "needs",
+    "runs",
+    "secrets",
+    "env",
+    "name",
+    "next"]
 
 
 class Workflow(object):
@@ -754,10 +762,10 @@ class PopperConfigParser(object):
         if self.config_from_file.get('engine', None):
             if not self.config_from_file['engine'].get('name', None):
                 log.fail('engine config must have the name property.')
-        
+
         if self.config_from_file.get('resource_manager', None):
             if not self.config_from_file['resource_manager'].get('name', None):
                 log.fail('resource_manager config must have the name property.')
-    
+
     def normalize(self):
         self.config = DotMap(self.config_from_file)

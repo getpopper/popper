@@ -176,20 +176,20 @@ def assert_executable_exists(command):
 
 
 def prettystr(a):
-    if type(a) == DotMap:
+    if isinstance(a, DotMap):
         a = a.toDict()
-    if type(a) == os._Environ:
+    if isinstance(a, os._Environ):
         a = dict(a)
-    if type(a) == dict:
+    if isinstance(a, dict):
         return f'{yaml.dump(a, default_flow_style=False)}'
 
 
 def exec_cmd(cmd, env, cwd, spawned_processes):
     try:
         with Popen(cmd, stdout=PIPE, stderr=STDOUT,
-                    universal_newlines=True, preexec_fn=os.setsid,
-                    env=env, cwd=cwd) as p:
-            
+                   universal_newlines=True, preexec_fn=os.setsid,
+                   env=env, cwd=cwd) as p:
+
             spawned_processes.add(p)
             log.debug('Reading process output')
 

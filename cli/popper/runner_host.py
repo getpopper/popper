@@ -42,7 +42,10 @@ class HostRunner(StepRunner):
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
         ecode = pu.exec_cmd(
-            cmd, step_env, self.config.workspace_dir, HostRunner.spawned_processes)
+            cmd,
+            step_env,
+            self.config.workspace_dir,
+            HostRunner.spawned_processes)
         return ecode
 
     def stop_running_tasks(self):
@@ -144,7 +147,8 @@ class DockerRunner(StepRunner):
         }
 
         if config.engine_options:
-            DockerRunner.update_engine_config(engine_config, config.engine_options)
+            DockerRunner.update_engine_config(
+                engine_config, config.engine_options)
         log.debug(f'Engine configuration: {pu.prettystr(engine_config)}\n')
 
         container = DockerRunner.d.containers.create(**engine_config)

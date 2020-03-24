@@ -39,7 +39,7 @@ class WorkflowRunner(object):
             if config_parser.config.engine:
                 self.config.engine_name = config_parser.config.engine.name
                 self.config.engine_options = config_parser.config.engine.options.toDict()
-    
+
             if config_parser.config.resource_manager:
                 self.config.resman_name = config_parser.config.resource_manager.name
                 self.config.resman_options = config_parser.config.resource_manager.options.toDict()
