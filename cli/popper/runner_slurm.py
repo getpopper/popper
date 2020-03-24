@@ -58,31 +58,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         elif not self.config.skip_pull and not step.get('skip_pull', False):
             HostDockerRunner.docker_pull(step, img, self.config.dry_run)
 
-        msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
-        log.info(f'[{step["name"]}] docker create {msg}')
-
-        if not self.config.dry_run:
-            engine_config = {
-                "image": img,
-                "command": step.get('args', None),
-                "name": cid,
-                "volumes": [
-                    f'{self.config.workspace_dir}:/workspace',
-                    '/var/run/docker.sock:/var/run/docker.sock'
-                ],
-                "working_dir": '/workspace',
-                "environment": SlurmRunner.prepare_environment(step),
-                "entrypoint": step.get('runs', None),
-                "detach": True
-            }
-
-            if self.config.engine_options:
-                HostDockerRunner.update_engine_config(
-                    engine_config, self.config.engine_options)
-            log.debug(f'Engine configuration: {pu.prettystr(engine_config)}\n')
-
-            container = HostDockerRunner.d.containers.create(**engine_config)
-
+        container = HostDockerRunner.create_container(step, self.config)
         log.info(f'[{step["name"]}] srun docker start')
 
         if self.config.dry_run:
