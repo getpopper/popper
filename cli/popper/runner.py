@@ -34,15 +34,15 @@ class WorkflowRunner(object):
         self.config.workspace_sha = scm.get_sha(self.repo)
 
         if config_file:
-            config_parser = PopperConfigParser(config_file)
+            popper_cfg = PopperConfigParser(config_file)
 
-            if config_parser.config.engine:
-                self.config.engine_name = config_parser.config.engine.name
-                self.config.engine_options = config_parser.config.engine.options.toDict()
+            if popper_cfg.engine:
+                self.config.engine_name = popper_cfg.engine.name
+                self.config.engine_options = popper_cfg.engine.options.toDict()
 
-            if config_parser.config.resource_manager:
-                self.config.resman_name = config_parser.config.resource_manager.name
-                self.config.resman_options = config_parser.config.resource_manager.options.toDict()
+            if popper_cfg.resource_manager:
+                self.config.resman_name = popper_cfg.resource_manager.name
+                self.config.resman_options = popper_cfg.resource_manager.options.toDict()
 
         if not self.config.resman_name:
             self.config.resman_name = 'host'

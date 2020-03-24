@@ -761,11 +761,16 @@ class PopperConfigParser(object):
     def validate(self):
         if self.config_from_file.get('engine', None):
             if not self.config_from_file['engine'].get('name', None):
-                log.fail('engine config must have the name property.')
+                log.fail(
+                    'engine config must have the name property.')
 
         if self.config_from_file.get('resource_manager', None):
             if not self.config_from_file['resource_manager'].get('name', None):
-                log.fail('resource_manager config must have the name property.')
+                log.fail(
+                    'resource_manager config must have the name property.')
 
     def normalize(self):
-        self.config = DotMap(self.config_from_file)
+        self.engine = DotMap(self.config_from_file.get('engine', None))
+        self.resource_manager = DotMap(
+            self.config_from_file.get(
+                'resource_manager', None))
