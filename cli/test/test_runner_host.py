@@ -16,7 +16,7 @@ class TestHostHostRunner(unittest.TestCase):
     def test_run(self):
         repo = testutils.mk_repo()
 
-        with WorkflowRunner(workspace_dir=repo.working_dir) as r:
+        with WorkflowRunner('docker', 'host', workspace_dir=repo.working_dir) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:
@@ -61,7 +61,7 @@ class TestHostDockerRunner(unittest.TestCase):
     def test_docker_basic_run(self):
         repo = testutils.mk_repo()
 
-        with WorkflowRunner(workspace_dir=repo.working_dir) as r:
+        with WorkflowRunner('docker', 'host', workspace_dir=repo.working_dir) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:

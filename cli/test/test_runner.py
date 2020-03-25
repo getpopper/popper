@@ -78,7 +78,7 @@ class TestWorkflowRunner(unittest.TestCase):
                           DotMap({'wid': wid, 'skip_clone': True}))
 
     def test_steprunner_factory(self):
-        with WorkflowRunner() as r:
+        with WorkflowRunner('docker', 'host') as r:
             self.assertEqual(r.step_runner('host', None).__class__.__name__,
                              'HostRunner')
             self.assertEqual(r.step_runner('docker', None).__class__.__name__,
