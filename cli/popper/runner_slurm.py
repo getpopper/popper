@@ -24,9 +24,9 @@ class SlurmRunner(StepRunner):
     def exec_srun_cmd(self, cmd, env=None):
         srun_cmd = ['srun']
 
-        if config.resman_options:
-            if config.resman_options.get(step['name']):
-                step_slurm_config = config.resman_options[step['name']]
+        if self.config.resman_options:
+            if self.config.resman_options.get(step['name']):
+                step_slurm_config = self.config.resman_options[step['name']]
                 for k, v in step_slurm_config.items():
                     if isinstance(v, bool):
                         srun_cmd.append(f"--{k}")
