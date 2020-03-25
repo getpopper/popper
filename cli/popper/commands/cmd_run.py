@@ -117,25 +117,9 @@ from popper.runner import WorkflowRunner
     '-c', '--conf', help='Runtime configuration options.', required=False
 )
 @pass_context
-def cli(
-        ctx,
-        step,
-        wfile,
-        debug,
-        dry_run,
-        log_file,
-        quiet,
-        reuse,
-        engine,
-        resource_manager,
-        skip,
-        skip_pull,
-        skip_clone,
-        substitution,
-        allow_loose,
-        with_dependencies,
-        workspace,
-        conf):
+def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
+        engine, resource_manager, skip, skip_pull, skip_clone,
+        substitution, allow_loose, with_dependencies, workspace, conf):
     """Runs a Popper workflow. Only execute STEP if given."""
     # set the logging levels.
     level = 'STEP_INFO'

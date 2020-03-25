@@ -19,17 +19,9 @@ class WorkflowRunner(object):
     # class variable that holds references to runner singletons
     runners = {}
 
-    def __init__(
-            self,
-            engine,
-            resource_manager,
-            config_file=None,
-            workspace_dir=os.getcwd(),
-            reuse=False,
-            dry_run=False,
-            quiet=False,
-            skip_pull=False,
-            skip_clone=False):
+    def __init__(self, engine, resource_manager, config_file=None,
+                 workspace_dir=os.getcwd(), reuse=False, dry_run=False,
+                 quiet=False, skip_pull=False, skip_clone=False):
 
         # save all args in a member dictionary
         self.config = DotMap(locals())
@@ -51,7 +43,9 @@ class WorkflowRunner(object):
         self.config.engine_name = pu.select_not_none(
             [self.config.engine_name, self.popper_cfg.engine.name, 'docker'])
         self.config.resman_name = pu.select_not_none(
-            [self.config.resman_name, self.popper_cfg.resource_manager.name, 'host'])
+            [self.config.resman_name,
+             self.popper_cfg.resource_manager.name,
+             'host'])
 
         self.config.resman_options = self.popper_cfg.resource_manager.options
         self.config.engine_options = self.popper_cfg.engine.options
