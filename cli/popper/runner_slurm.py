@@ -21,12 +21,13 @@ class SlurmRunner(StepRunner):
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_processes = set()
 
-    def exec_srun_cmd(self,cmd, options, env=None):
+    def exec_srun_cmd(self, cmd, env=None):
         srun_cmd = ['srun']
 
-        if options:
-            if options.get('slurm', None):
-                for k, v in options['slurm'].items():
+        if config.resman_options:
+            if config.resman_options.get(step['name']):
+                step_slurm_config = config.resman_options[step['name']]
+                for k, v in step_slurm_config.items():
                     if isinstance(v, bool):
                         srun_cmd.append(f"--{k}")
                     else:
@@ -55,6 +56,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
     def run(self, step):
         """Execute the given step in docker."""
+        self.step = step
         cid = pu.sanitized_name(step['name'], self.config.wid)
 
         container = HostDockerRunner.find_container(cid)
@@ -69,12 +71,12 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             return 0
 
         HostDockerRunner.spawned_containers.append(container)
-        ecode = self.start_container(cid, step.get('options', None))
+        ecode = self.start_container(cid)
         return ecode
 
-    def start_container(self, cid, options):
+    def start_container(self, cid):
         docker_cmd = f"docker start --attach {cid}"
-        ecode = self.exec_srun_cmd(docker_cmd.split(" "), options)
+        ecode = self.exec_srun_cmd(docker_cmd.split(" "))
         return ecode
 
     def stop_running_tasks(self):
