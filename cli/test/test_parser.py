@@ -644,13 +644,21 @@ class TestPopperConfigParser(unittest.TestCase):
 
     def test_parse(self):
         popper_cfg = PopperConfig(_wfile("settings_3", "yml"))
-        self.assertEqual(popper_cfg.config_from_file, 
-        {'engine': {'name': 'docker', 'options': {'privileged': True}}, 
-        'resource_manager': {'name': 'slurm', 'options': {'foo': 'bar'}}})
+        self.assertEqual(
+            popper_cfg.config_from_file, {
+                'engine': {
+                    'name': 'docker', 'options': {
+                        'privileged': True}}, 'resource_manager': {
+                    'name': 'slurm', 'options': {
+                        'foo': 'bar'}}})
 
     def test_validate(self):
-        self.assertRaises(SystemExit, PopperConfig, _wfile("settings_1", "yml"))
-        self.assertRaises(SystemExit, PopperConfig, _wfile("settings_2", "yml"))
+        self.assertRaises(
+            SystemExit, PopperConfig, _wfile(
+                "settings_1", "yml"))
+        self.assertRaises(
+            SystemExit, PopperConfig, _wfile(
+                "settings_2", "yml"))
 
     def test_normalize(self):
         popper_cfg = PopperConfig(_wfile("settings_3", "yml"))

@@ -19,9 +19,17 @@ class WorkflowRunner(object):
     # class variable that holds references to runner singletons
     runners = {}
 
-    def __init__(self, engine, resource_manager, config_file=None, workspace_dir=os.getcwd(),
-                 reuse=False, dry_run=False, quiet=False,
-                 skip_pull=False, skip_clone=False):
+    def __init__(
+            self,
+            engine,
+            resource_manager,
+            config_file=None,
+            workspace_dir=os.getcwd(),
+            reuse=False,
+            dry_run=False,
+            quiet=False,
+            skip_pull=False,
+            skip_clone=False):
 
         # save all args in a member dictionary
         self.config = DotMap(locals())
@@ -32,14 +40,14 @@ class WorkflowRunner(object):
         # cretate a repo object for the project
         self.repo = scm.new_repo()
         self.config.workspace_sha = scm.get_sha(self.repo)
-        
+
         self.config.engine_name = engine
         self.config.resman_name = resource_manager
         self.popper_cfg = DotMap()
 
         if config_file:
             self.popper_cfg = PopperConfig(config_file)
-        
+
         self.config.engine_name = pu.select_not_none(
             [self.config.engine_name, self.popper_cfg.engine.name, 'docker'])
         self.config.resman_name = pu.select_not_none(

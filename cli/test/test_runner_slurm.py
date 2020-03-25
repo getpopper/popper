@@ -31,7 +31,9 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         self.assertEqual(slurm_runner.exec_srun_cmd(['ls', '-l']), 0)
         self.assertEqual(len(SlurmRunner.spawned_processes), 0)
 
-        self.Popen.set_command('srun --nodes 1 --cpus-per-task 1 sleep 10', returncode=0)
+        self.Popen.set_command(
+            'srun --nodes 1 --cpus-per-task 1 sleep 10',
+            returncode=0)
         config = DotMap()
         config.workspace_dir = os.environ["HOME"]
         config.resman_options = {'mystep': {'nodes': 1, 'cpus-per-task': 1}}

@@ -31,7 +31,7 @@ class SlurmRunner(StepRunner):
                     if isinstance(v, bool):
                         srun_cmd.append(f"--{k}")
                     else:
-                        srun_cmd.append(f"--{k}") 
+                        srun_cmd.append(f"--{k}")
                         srun_cmd.append(f"{v}")
 
         # join the srun prefix

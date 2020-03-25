@@ -775,8 +775,10 @@ class PopperConfig(object):
 
         if self.config_from_file.get('engine', None):
             self.engine.name = self.config_from_file['engine']['name']
-            self.engine.options = self.config_from_file['engine'].get('options', dict())
+            self.engine.options = self.config_from_file['engine'].get(
+                'options', dict())
 
         if self.config_from_file.get('resource_manager', None):
             self.resource_manager.name = self.config_from_file['resource_manager']['name']
-            self.resource_manager.options = self.config_from_file['resource_manager'].get('options', dict())
+            self.resource_manager.options = self.config_from_file['resource_manager'].get(
+                'options', dict())
