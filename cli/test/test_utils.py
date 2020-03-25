@@ -1,6 +1,8 @@
 import unittest
 import os
 
+from dotmap import DotMap
+
 from popper import utils as pu
 from popper.cli import log
 
@@ -95,3 +97,10 @@ engine:
 
     def test_assert_executable_exists(self):
         self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')
+
+    def test_select_not_none(self):
+        a = ["Hello", {}, None]
+        self.assertEqual(pu.select_not_none(a), "Hello")
+
+        b = [DotMap(), "Hello", []]
+        self.assertEqual(pu.select_not_none(b), "Hello")

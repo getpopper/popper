@@ -35,21 +35,15 @@ class WorkflowRunner(object):
         self.config.engine_name = engine
         self.config.resman_name = resource_manager
 
-        if not self.config.engine_name:
-            if config_file:
-                popper_cfg = PopperConfig(config_file)
-                self.config.engine_name = popper_cfg.engine.name
-                self.config.engine_options = popper_cfg.engine.options
-            else:
-                self.config.engine_name = 'docker'
+        if config_file:
+            popper_cfg = PopperConfig(config_file)
+            self.config.engine_name = pu.select_not_none(
+                [self.config.engine_name, popper_cfg.engine.name, 'docker'])
+            self.config.resman_name = pu.select_not_none(
+                [self.config.resman_name, popper_cfg.resource_manager.name, 'host'])
 
-        if not self.config.resman_name:
-            if config_file:
-                popper_cfg = PopperConfig(config_file)
-                self.config.resman_name = popper_cfg.resource_manager.name
-                self.config.resman_options = popper_cfg.resource_manager.options
-            else:
-                self.config.resman_name = 'host'
+            self.config.resman_options = popper_cfg.resource_manager.options
+            self.config.engine_options = popper_cfg.engine.options
 
         # dynamically load resource manager
         resman_mod_name = f'popper.runner_{self.config.resman_name}'

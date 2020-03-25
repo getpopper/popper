@@ -214,3 +214,9 @@ def exec_cmd(cmd, env, cwd, spawned_processes):
         log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
     return ecode
+
+
+def select_not_none(array):
+    for item in array:
+        if item:
+            return item
