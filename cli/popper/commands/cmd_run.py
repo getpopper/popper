@@ -53,15 +53,13 @@ from popper.runner import WorkflowRunner
     '-e',
     '--engine',
     help='Specify runtime for executing the workflow.',
-    type=click.Choice(['docker', 'singularity', 'vagrant']),
-    required=False
+    type=click.Choice(['docker', 'singularity', 'vagrant'])
 )
 @click.option(
     '-r',
     '--resource-manager',
     help='Specify resource manager for executing the workflow.',
-    type=click.Choice(['slurm']),
-    required=False
+    type=click.Choice(['host', 'slurm'])
 )
 @click.option(
     '--skip',
