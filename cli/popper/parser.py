@@ -21,6 +21,7 @@ VALID_STEP_ATTRS = [
     "runs",
     "secrets",
     "env",
+    "options",
     "name",
     "next"]
 
@@ -222,6 +223,11 @@ class Workflow(object):
                     log.fail(
                         '[secrets] attribute must be a string or a list '
                         'of strings.')
+
+            if a_block.get('options', None):
+                if not pu.of_type(a_block['options'], ['dict']):
+                    log.fail(
+                        '[options] attribute must be a dict.')
 
     def check_for_unreachable_steps(self, skip=None):
         """Validates a workflow by checking for unreachable nodes / gaps in the
