@@ -124,18 +124,18 @@ class DockerRunner(StepRunner):
         return build, img, dockerfile
 
     @staticmethod
-    def get_engine_config(step, img, cid):
+    def get_engine_config(step, img, cid, config):
         engine_config = {
             "image": img,
-            "command": step.get('args', None),
+            "command": step.get('args', []),
             "name": cid,
             "volumes": [
-                f'{self.config.workspace_dir}:/workspace',
+                f'{config.workspace_dir}:/workspace',
                 '/var/run/docker.sock:/var/run/docker.sock'
             ],
             "working_dir": '/workspace',
             "environment": StepRunner.prepare_environment(step),
-            "entrypoint": step.get('runs', None),
+            "entrypoint": step.get('runs', []),
             "detach": True
         }
         return engine_config
@@ -149,7 +149,7 @@ class DockerRunner(StepRunner):
         if config.dry_run:
             return
 
-        engine_config = DockerRunner.get_engine_config()
+        engine_config = DockerRunner.get_engine_config(step, img, cid, config)
 
         if config.engine_options:
             DockerRunner.update_engine_config(
