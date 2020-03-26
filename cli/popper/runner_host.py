@@ -124,6 +124,23 @@ class DockerRunner(StepRunner):
         return build, img, dockerfile
 
     @staticmethod
+    def get_engine_config(step, img, cid):
+        engine_config = {
+            "image": img,
+            "command": step.get('args', None),
+            "name": cid,
+            "volumes": [
+                f'{self.config.workspace_dir}:/workspace',
+                '/var/run/docker.sock:/var/run/docker.sock'
+            ],
+            "working_dir": '/workspace',
+            "environment": StepRunner.prepare_environment(step),
+            "entrypoint": step.get('runs', None),
+            "detach": True
+        }
+        return engine_config
+
+    @staticmethod
     def create_container(cid, step, config):
         build, img, dockerfile = DockerRunner.prepare_image(step, config)
         msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
@@ -132,19 +149,7 @@ class DockerRunner(StepRunner):
         if config.dry_run:
             return
 
-        engine_config = {
-            "image": img,
-            "command": step.get('args', None),
-            "name": cid,
-            "volumes": [
-                f'{config.workspace_dir}:/workspace',
-                '/var/run/docker.sock:/var/run/docker.sock'
-            ],
-            "working_dir": '/workspace',
-            "environment": StepRunner.prepare_environment(step),
-            "entrypoint": step.get('runs', None),
-            "detach": True
-        }
+        engine_config = DockerRunner.get_engine_config()
 
         if config.engine_options:
             DockerRunner.update_engine_config(
