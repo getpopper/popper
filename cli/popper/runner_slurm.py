@@ -34,7 +34,7 @@ class SlurmRunner(StepRunner):
         options = self.config.resman_options
         if options:
             if options.get(step['name']):
-                step_slurm_config = options[self.step['name']]
+                step_slurm_config = options[step['name']]
                 for config_key, config_val in step_slurm_config.items():
                     if isinstance(config_val, bool):
                         if len(config_key) == 1:
