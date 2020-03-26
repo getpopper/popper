@@ -29,7 +29,7 @@ class WorkflowRunner(object):
         self.config.workspace_dir = os.path.realpath(workspace_dir)
         self.config.wid = shake_256(workspace_dir.encode('utf-8')).hexdigest(4)
 
-        # cretate a repo object for the project
+        # create a repo object for the project
         self.repo = scm.new_repo()
         self.config.workspace_sha = scm.get_sha(self.repo)
 
