@@ -28,21 +28,31 @@ class SlurmRunner(StepRunner):
 
     def submit_batch_job(self, cmd, step):
         self.generate_script(cmd, step)
-        output = subprocess.check_output([
-            "sbatch", "--wait", f"{pu.sanitized_name(step['name'])}.sh"])
+
+        sbatch_cmd = "sbatch --wait "
+
+        options = self.config.resman_options
+        if options:
+            if options.get(step['name']):
+                step_slurm_config = options[self.step['name']]
+                for config_key, config_val in step_slurm_config.items():
+                    if isinstance(config_val, bool):
+                        if len(config_key) == 1:
+                            sbatch_cmd += f"-{config_key} "
+                        else:
+                            sbatch_cmd += f"--{config_key} "
+                    else:
+                        if len(config_key) == 1:
+                            sbatch_cmd += f"-{config_key} {config_val} "
+                        else:
+                            sbatch_cmd += f"--{config_key} {config_val} "
+
+        sbatch_cmd += f"{pu.sanitized_name(step['name'])}.sh"
+        log.debug(sbatch_cmd)
+
+        output = subprocess.check_output(sbatch_cmd.split(" "))
         job_id = pu.decode(output).split(" ")[-1]
         print(job_id)
-
-        # options = self.config.resman_options
-        # if options:
-        #     if options.get(self.step['name']):
-        #         step_slurm_config = options[self.step['name']]
-        #         for k, v in step_slurm_config.items():
-        #             if isinstance(v, bool):
-        #                 srun_cmd.append(f"--{k}")
-        #             else:
-        #                 srun_cmd.append(f"--{k}")
-        #                 srun_cmd.append(f"{v}")
 
     def cancel_job(self):
         for job_id in SlurmRunner.spawned_jobs:
@@ -116,6 +126,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             if not config_val:
                 continue
 
+            # TODO: handle list of arguments
             if isinstance(config_val, bool):
                 if len(config_key) == 1:
                     docker_cmd += f"-{config_key} "
