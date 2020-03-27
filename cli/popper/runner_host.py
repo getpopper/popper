@@ -127,7 +127,7 @@ class DockerRunner(StepRunner):
     def get_engine_config(step, img, cid, config):
         engine_config = {
             "image": img,
-            "command": step.get('args', []),
+            "command": step.get('args', None),
             "name": cid,
             "volumes": [
                 f'{config.workspace_dir}:/workspace',
@@ -135,7 +135,7 @@ class DockerRunner(StepRunner):
             ],
             "working_dir": '/workspace',
             "environment": StepRunner.prepare_environment(step),
-            "entrypoint": step.get('runs', []),
+            "entrypoint": step.get('runs', None),
             "detach": True
         }
         return engine_config
