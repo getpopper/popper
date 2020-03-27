@@ -20,23 +20,32 @@ class SlurmRunner(StepRunner):
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_jobs = set()
 
-    def generate_script(self, cmd, job_id, job_script):
+    def stream_output(self, job_id):
+        log.debug(f"Attaching to Job {job_id}")
+        while True:
+            log.debug("Retry reading output..\n")
+            ecode, _ = pu.exec_cmd(["sattach", f"{job_id}.3"], stream=False)
+            if ecode == 0:
+                break
+        pu.exec_cmd(["sattach", f"{job_id}.3"])
+
+    def generate_script(self, cmd, job_name, job_script):
         with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
             f.write(cmd)
 
     def submit_batch_job(self, cmd, step):
-        job_id = pu.sanitized_name(step['name'], self.config.wid)
+        job_name = pu.sanitized_name(step['name'], self.config.wid)
         temp_dir = "/tmp/popper/slurm/"
         os.makedirs(temp_dir, exist_ok=True)
-        job_script = os.path.join(temp_dir, f"{job_id}.sh")
-        out_file = os.path.join(temp_dir, f"{job_id}.out")
-        err_file = os.path.join(temp_dir, f"{job_id}.err")
+        job_script = os.path.join(temp_dir, f"{job_name}.sh")
+        out_file = os.path.join(temp_dir, f"{job_name}.out")
+        err_file = os.path.join(temp_dir, f"{job_name}.err")
 
-        self.generate_script(cmd, job_id, job_script)
+        self.generate_script(cmd, job_name, job_script)
 
-        sbatch_cmd = "sbatch --wait "
-        sbatch_cmd += f"--job-name {job_id} "
+        sbatch_cmd = "sbatch "
+        sbatch_cmd += f"--job-name {job_name} "
         sbatch_cmd += f"--output {out_file} "
         sbatch_cmd += f"--error {err_file} "
 
@@ -59,15 +68,19 @@ class SlurmRunner(StepRunner):
         sbatch_cmd += job_script
         log.debug(sbatch_cmd)
 
-        SlurmRunner.spawned_jobs.add(job_id)
-        ecode = pu.exec_cmd(sbatch_cmd.split(" "))
-        SlurmRunner.spawned_jobs.remove(job_id)
+        SlurmRunner.spawned_jobs.add(job_name)
+        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
+        job_id = int(output.split(" ")[-1].strip("\n"))
+
+        self.stream_output(job_id)
+
+        SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
 
     def cancel_job(self):
-        for job_id in SlurmRunner.spawned_jobs:
-            log.info(f'Cancelling job {job_id}')
-            pu.exec_cmd(["scancel", "--name", job_id])
+        for job_name in SlurmRunner.spawned_jobs:
+            log.info(f'Cancelling job {job_name}')
+            pu.exec_cmd(["scancel", "--name", job_name])
 
 
 class DockerRunner(SlurmRunner):
@@ -111,6 +124,7 @@ class DockerRunner(SlurmRunner):
         return ecode
 
     def run_script(self, step):
+        step['cmd_list'] = list(map(lambda x: 'srun ' + x, step['cmd_list']))
         final_cmd = "\n".join(step['cmd_list'])
         return self.submit_batch_job(final_cmd, step)
 
