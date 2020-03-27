@@ -116,7 +116,11 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             docker_cmd += f"-e {env_key}={env_val} "
 
         image = engine_config.pop('image')
-        command = ' '.join(engine_config.pop('command'))
+
+        if engine_config.get('command', None):
+            command = ' '.join(engine_config.pop('command'))
+        else:
+            command = ' '
 
         for config_key, config_val in engine_config.items():
             if not config_val:
