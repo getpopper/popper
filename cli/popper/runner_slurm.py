@@ -25,9 +25,9 @@ class SlurmRunner(StepRunner):
             f.write(cmd)
 
     def submit_batch_job(self, cmd, step):
-        job_id = pu.sanitized_name(step['name'])
+        job_id = pu.sanitized_name(step['name'], self.config.wid)
         self.generate_script(cmd, job_id)
-        
+
         sbatch_cmd = "sbatch --wait "
         sbatch_cmd += f"--job-name {job_id} "
 
