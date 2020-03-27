@@ -1,8 +1,6 @@
 import os
 import subprocess
 
-import docker
-
 from popper import utils as pu
 from popper import scm
 from popper.cli import log as log
@@ -79,10 +77,8 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         elif not self.config.skip_pull and not step.get('skip_pull', False):
             DockerRunner.docker_pull(step, img, self.config.dry_run)
 
-        # check for the existence of the container
-        container = HostDockerRunner.find_container(cid)
-        if container and not self.config.reuse and not self.config.dry_run:
-            DockerRunner.docker_rm(step, cid, self.config.dry_run)
+        # remove container if it exists
+        DockerRunner.docker_rm(step, cid, self.config.dry_run)
         
         # create container
         DockerRunner.docker_create(step, img, cid, self.config)
@@ -171,7 +167,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         log.info(f'[{step["name"]}] docker rm {cid}')
         if dry_run:
             return
-        docker_cmd = f"docker rm -f {cid}"
+        docker_cmd = f"docker rm -f {cid} || true"
         step['cmd_list'].append(docker_cmd)
 
     def stop_running_tasks(self):
