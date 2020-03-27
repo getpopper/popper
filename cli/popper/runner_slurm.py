@@ -128,12 +128,17 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             if not config_val:
                 continue
 
-            # TODO: handle list of arguments
             if isinstance(config_val, bool):
                 if len(config_key) == 1:
                     docker_cmd += f"-{config_key} "
                 else:
                     docker_cmd += f"--{config_key} "
+            elif isinstance(config_val, list):
+                for item in config_val:
+                    if len(config_key) == 1:
+                        docker_cmd += f"-{config_key} {item} "
+                    else:
+                        docker_cmd += f"--{config_key} {item} "
             else:
                 if len(config_key) == 1:
                     docker_cmd += f"-{config_key} {config_val} "
