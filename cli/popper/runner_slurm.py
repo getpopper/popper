@@ -29,11 +29,15 @@ class SlurmRunner(StepRunner):
         job_id = pu.sanitized_name(step['name'], self.config.wid)
         temp_dir = tempfile.mkdtemp()
         job_script = os.path.join(temp_dir, f"{job_id}.sh")
+        out_file = os.path.join(temp_dir, f"{job_id}.out")
+        err_file = os.path.join(temp_dir, f"{job_id}.err")
 
         self.generate_script(cmd, job_id, job_script)
 
         sbatch_cmd = "sbatch --wait "
         sbatch_cmd += f"--job-name {job_id} "
+        sbatch_cmd += f"--output {out_file} "
+        sbatch_cmd += f"--error {err_file} "
 
         if hasattr(self.config, 'resman_options'):
             options = self.config.resman_options
