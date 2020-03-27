@@ -70,7 +70,7 @@ class SlurmRunner(StepRunner):
             pu.exec_cmd(["scancel", "--name", job_id])
 
 
-class DockerRunner(SlurmRunner, HostDockerRunner):
+class DockerRunner(SlurmRunner):
     def __init__(self, config):
         super(DockerRunner, self).__init__(config)
 
