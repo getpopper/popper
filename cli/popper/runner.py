@@ -22,7 +22,7 @@ class WorkflowRunner(object):
                  workspace_dir=os.getcwd(), reuse=False, dry_run=False,
                  quiet=False, skip_pull=False, skip_clone=False):
 
-        # save all args in a member dictionary
+        # create a config object from the given arguments
         kwargs = locals()
         kwargs.pop('self')
         self.config = PopperConfig(**kwargs)
