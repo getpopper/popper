@@ -58,7 +58,7 @@ class SlurmRunner(StepRunner):
     def cancel_job(self):
         for job_id in SlurmRunner.spawned_jobs:
             log.info(f'Cancelling job {job_id}')
-            subprocess.call(["scancel", "--name", job_id])
+            pu.exec_cmd(["scancel", "--name", job_id])
 
 
 class DockerRunner(SlurmRunner, HostDockerRunner):
@@ -177,7 +177,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         step['cmd_list'].append(docker_cmd)
 
     def stop_running_tasks(self):
-        for cid in HostDockerRunner.spawned_containers:
-            log.info(f'Stopping container {cid}')
-            DockerRunner.docker_rm(cid)
-        self.stop_srun_cmd()
+        # for cid in HostDockerRunner.spawned_containers:
+        #     log.info(f'Stopping container {cid}')
+        #     DockerRunner.docker_rm(cid, False)
+        self.cancel_job()
