@@ -199,11 +199,8 @@ def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set()):
             spawned_processes.add(p)
             log.debug('Reading process output')
 
-            output = ""
-
             for line in iter(p.stdout.readline, ''):
                 line_decoded = decode(line)
-                output += line_decoded[:-1] + "\n"
                 log.step_info(line_decoded[:-1])
 
             p.wait()
@@ -213,15 +210,13 @@ def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set()):
         log.debug(f'Code returned by process: {ecode}')
 
     except SubprocessError as ex:
-        output = ""
         ecode = ex.returncode
         log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
     except Exception as ex:
-        output = ""
         ecode = 1
         log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
-    return ecode, output
+    return ecode
 
 
 def select_not_none(array):

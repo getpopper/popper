@@ -19,15 +19,17 @@ class SlurmRunner(StepRunner):
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_jobs = set()
 
-    def generate_script(self, cmd, step):
-        with open(f"{pu.sanitized_name(step['name'])}.sh", "w") as f:
+    def generate_script(self, cmd, job_id):
+        with open(f"{job_id}.sh", "w") as f:
             f.write("#!/bin/bash\n")
             f.write(cmd)
 
     def submit_batch_job(self, cmd, step):
-        self.generate_script(cmd, step)
-
+        job_id = pu.sanitized_name(step['name'])
+        self.generate_script(cmd, job_id)
+        
         sbatch_cmd = "sbatch --wait "
+        sbatch_cmd += f"--job-name {job_id} "
 
         if hasattr(self.config, 'resman_options'):
             options = self.config.resman_options
@@ -45,19 +47,18 @@ class SlurmRunner(StepRunner):
                         else:
                             sbatch_cmd += f"--{config_key} {config_val} "
 
-        sbatch_cmd += f"{pu.sanitized_name(step['name'])}.sh"
+        sbatch_cmd += f"{job_id}.sh"
         log.debug(sbatch_cmd)
 
         SlurmRunner.spawned_jobs.add(job_id)
-        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "))
-        job_id = pu.decode(output).split(" ")[-1]
+        ecode = pu.exec_cmd(sbatch_cmd.split(" "))
         SlurmRunner.spawned_jobs.remove(job_id)
         return ecode
 
     def cancel_job(self):
         for job_id in SlurmRunner.spawned_jobs:
             log.info(f'Cancelling job {job_id}')
-            subprocess.call(["scancel", job_id])
+            subprocess.call(["scancel", "--name", job_id])
 
 
 class DockerRunner(SlurmRunner, HostDockerRunner):
