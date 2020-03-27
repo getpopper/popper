@@ -182,7 +182,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         step['cmd_list'].append(docker_cmd)
 
     def stop_running_tasks(self):
-        # for cid in HostDockerRunner.spawned_containers:
-        #     log.info(f'Stopping container {cid}')
-        #     DockerRunner.docker_rm(cid, False)
+        for cid in HostDockerRunner.spawned_containers:
+            log.info(f'Stopping container {cid}')
+            pu.exec_cmd(["docker", "stop", cid])
         self.cancel_job()
