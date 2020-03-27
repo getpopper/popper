@@ -157,6 +157,9 @@ def load_config_file(config_file):
     Returns:
       dict: Engine configuration.
     """
+    if not config_file:
+        return dict()
+
     if not os.path.exists(config_file):
         log.fail(f'File {config_file} was not found.')
 

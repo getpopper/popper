@@ -5,12 +5,11 @@ import hcl
 import os
 import yaml
 
-from dotmap import DotMap
-
 from copy import deepcopy
 from builtins import str, dict
 from popper.cli import log as log
 
+import popper.scm as scm
 import popper.utils as pu
 
 
@@ -746,39 +745,3 @@ class HCLWorkflow(Workflow):
             if a_block.get('secrets', None):
                 a_block['secrets'] = Workflow.format_command(
                     a_block['secrets'])
-
-
-class PopperConfig(object):
-    def __init__(self, config_file):
-        self.config_file = config_file
-        self.parse()
-        self.validate()
-        self.normalize()
-
-    def parse(self):
-        self.config_from_file = pu.load_config_file(self.config_file)
-
-    def validate(self):
-        if self.config_from_file.get('engine', None):
-            if not self.config_from_file['engine'].get('name', None):
-                log.fail(
-                    'engine config must have the name property.')
-
-        if self.config_from_file.get('resource_manager', None):
-            if not self.config_from_file['resource_manager'].get('name', None):
-                log.fail(
-                    'resource_manager config must have the name property.')
-
-    def normalize(self):
-        self.engine = DotMap()
-        self.resource_manager = DotMap()
-
-        if self.config_from_file.get('engine', None):
-            self.engine.name = self.config_from_file['engine']['name']
-            self.engine.options = self.config_from_file['engine'].get(
-                'options', dict())
-
-        if self.config_from_file.get('resource_manager', None):
-            self.resource_manager.name = self.config_from_file['resource_manager']['name']
-            self.resource_manager.options = self.config_from_file['resource_manager'].get(
-                'options', dict())

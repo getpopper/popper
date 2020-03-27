@@ -151,7 +151,7 @@ class DockerRunner(StepRunner):
 
         engine_config = DockerRunner.get_engine_config(step, img, cid, config)
 
-        if config.engine_options:
+        if hasattr(config, 'engine_options'):
             DockerRunner.update_engine_config(
                 engine_config, config.engine_options)
         log.debug(f'Engine configuration: {pu.prettystr(engine_config)}\n')

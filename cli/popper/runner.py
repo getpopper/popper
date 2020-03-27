@@ -4,12 +4,11 @@ import os
 import sys
 
 from dotmap import DotMap
-from hashlib import shake_256
 
 import popper.scm as scm
 import popper.utils as pu
 
-from popper.parser import PopperConfig
+from popper.config import PopperConfig
 from popper.cli import log
 
 
@@ -24,31 +23,9 @@ class WorkflowRunner(object):
                  quiet=False, skip_pull=False, skip_clone=False):
 
         # save all args in a member dictionary
-        self.config = DotMap(locals())
-        self.config.pop('self')
-        self.config.workspace_dir = os.path.realpath(workspace_dir)
-        self.config.wid = shake_256(workspace_dir.encode('utf-8')).hexdigest(4)
-
-        # create a repo object for the project
-        self.repo = scm.new_repo()
-        self.config.workspace_sha = scm.get_sha(self.repo)
-
-        self.config.engine_name = engine
-        self.config.resman_name = resource_manager
-        self.popper_cfg = DotMap()
-
-        if config_file:
-            self.popper_cfg = PopperConfig(config_file)
-
-        self.config.engine_name = pu.select_not_none(
-            [self.config.engine_name, self.popper_cfg.engine.name, 'docker'])
-        self.config.resman_name = pu.select_not_none(
-            [self.config.resman_name,
-             self.popper_cfg.resource_manager.name,
-             'host'])
-
-        self.config.resman_options = self.popper_cfg.resource_manager.options
-        self.config.engine_options = self.popper_cfg.engine.options
+        kwargs = locals()
+        kwargs.pop('self')
+        self.config = PopperConfig(**kwargs)
 
         # dynamically load resource manager
         resman_mod_name = f'popper.runner_{self.config.resman_name}'
@@ -65,7 +42,7 @@ class WorkflowRunner(object):
 
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
-        self.repo.close()
+        self.config.repo.close()
         for _, r in WorkflowRunner.runners.items():
             r.__exit__(exc_type, exc, traceback)
         WorkflowRunner.runners = {}

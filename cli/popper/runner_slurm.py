@@ -29,8 +29,8 @@ class SlurmRunner(StepRunner):
 
         sbatch_cmd = "sbatch --wait "
 
-        options = self.config.resman_options
-        if options:
+        if hasattr(self.config, 'resman_options'):
+            options = self.config.resman_options
             if options.get(step['name']):
                 step_slurm_config = options[step['name']]
                 for config_key, config_val in step_slurm_config.items():
