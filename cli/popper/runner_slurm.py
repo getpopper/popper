@@ -1,4 +1,5 @@
 import os
+import tempfile
 import subprocess
 
 from popper import utils as pu
@@ -19,14 +20,17 @@ class SlurmRunner(StepRunner):
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_jobs = set()
 
-    def generate_script(self, cmd, job_id):
-        with open(f"{job_id}.sh", "w") as f:
+    def generate_script(self, cmd, job_id, job_script):
+        with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
             f.write(cmd)
 
     def submit_batch_job(self, cmd, step):
         job_id = pu.sanitized_name(step['name'], self.config.wid)
-        self.generate_script(cmd, job_id)
+        temp_dir = tempfile.mkdtemp()
+        job_script = os.path.join(temp_dir, f"{job_id}.sh")
+
+        self.generate_script(cmd, job_id, job_script)
 
         sbatch_cmd = "sbatch --wait "
         sbatch_cmd += f"--job-name {job_id} "
@@ -47,7 +51,7 @@ class SlurmRunner(StepRunner):
                         else:
                             sbatch_cmd += f"--{config_key} {config_val} "
 
-        sbatch_cmd += f"{job_id}.sh"
+        sbatch_cmd += job_script
         log.debug(sbatch_cmd)
 
         SlurmRunner.spawned_jobs.add(job_id)
