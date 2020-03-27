@@ -190,7 +190,7 @@ def prettystr(a):
         return f'{yaml.dump(a, default_flow_style=False)}'
 
 
-def exec_cmd(cmd, env, cwd, spawned_processes):
+def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set()):
     try:
         with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                    universal_newlines=True, preexec_fn=os.setsid,
@@ -199,8 +199,11 @@ def exec_cmd(cmd, env, cwd, spawned_processes):
             spawned_processes.add(p)
             log.debug('Reading process output')
 
+            output = ""
+
             for line in iter(p.stdout.readline, ''):
                 line_decoded = decode(line)
+                output += line_decoded[:-1] + "\n"
                 log.step_info(line_decoded[:-1])
 
             p.wait()
@@ -210,13 +213,15 @@ def exec_cmd(cmd, env, cwd, spawned_processes):
         log.debug(f'Code returned by process: {ecode}')
 
     except SubprocessError as ex:
+        output = ""
         ecode = ex.returncode
         log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
     except Exception as ex:
+        output = ""
         ecode = 1
         log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
-    return ecode
+    return ecode, output
 
 
 def select_not_none(array):

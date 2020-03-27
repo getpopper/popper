@@ -48,9 +48,11 @@ class SlurmRunner(StepRunner):
         sbatch_cmd += f"{pu.sanitized_name(step['name'])}.sh"
         log.debug(sbatch_cmd)
 
-        output = subprocess.check_output(sbatch_cmd.split(" "))
+        SlurmRunner.spawned_jobs.add(job_id)
+        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "))
         job_id = pu.decode(output).split(" ")[-1]
-        print(job_id)
+        SlurmRunner.spawned_jobs.remove(job_id)
+        return ecode
 
     def cancel_job(self):
         for job_id in SlurmRunner.spawned_jobs:
@@ -88,12 +90,11 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
         HostDockerRunner.spawned_containers.append(cid)
         DockerRunner.docker_start(step, cid, self.config.dry_run)
-        self.run_script(step)
-        return 0
+        return self.run_script(step)
 
     def run_script(self, step):
         final_cmd = "\n".join(step['cmd_list'])
-        self.submit_batch_job(final_cmd, step)
+        return self.submit_batch_job(final_cmd, step)
 
     @staticmethod
     def docker_create(step, img, cid, config):
