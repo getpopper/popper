@@ -20,7 +20,7 @@ class PopperConfig(object):
         self.skip_pull = kwargs['skip_pull']
         self.quiet = kwargs['quiet']
         self.reuse = kwargs['reuse']
-        
+
         self.engine_name = kwargs.get('engine', None)
         self.resman_name = kwargs.get('resource_manager', None)
 
@@ -46,10 +46,11 @@ class PopperConfig(object):
         if not self.engine_name:
             if self.config_from_file.get('engine', None):
                 self.engine_name = self.config_from_file['engine']['name']
-                self.engine_options = self.config_from_file['engine'].get('options', dict())
+                self.engine_options = self.config_from_file['engine'].get(
+                    'options', dict())
             else:
                 self.engine_name = 'docker'
-        
+
         if not self.resman_name:
             if self.config_from_file.get('resource_manager', None):
                 self.resman_name = self.config_from_file['resource_manager']['name']

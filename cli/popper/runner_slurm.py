@@ -90,16 +90,17 @@ class DockerRunner(SlurmRunner):
             step, self.config.workspace_dir, self.config.workspace_sha)
 
         if build:
-            DockerRunner.docker_build(step, img, dockerfile, self.config.dry_run)
+            DockerRunner.docker_build(
+                step, img, dockerfile, self.config.dry_run)
         elif not self.config.skip_pull and not step.get('skip_pull', False):
             DockerRunner.docker_pull(step, img, self.config.dry_run)
 
         # remove container if it exists
         DockerRunner.docker_rm(step, cid, self.config.dry_run)
-        
+
         # create container
         DockerRunner.docker_create(step, img, cid, self.config)
-        
+
         if self.config.dry_run:
             return 0
 
@@ -117,8 +118,9 @@ class DockerRunner(SlurmRunner):
     def docker_create(step, img, cid, config):
         msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
         log.info(f'[{step["name"]}] docker create {msg}')
-        
-        engine_config = HostDockerRunner.get_engine_config(step, img, cid, config)
+
+        engine_config = HostDockerRunner.get_engine_config(
+            step, img, cid, config)
         engine_config.pop('detach')
         docker_cmd = "docker create "
         docker_cmd += f"--name {engine_config.pop('name')} "
@@ -160,7 +162,7 @@ class DockerRunner(SlurmRunner):
                     docker_cmd += f"-{config_key} {config_val} "
                 else:
                     docker_cmd += f"--{config_key} {config_val} "
-        
+
         # append the image and the commands
         docker_cmd += f"{image} {command}"
         step['cmd_list'].append(docker_cmd)
