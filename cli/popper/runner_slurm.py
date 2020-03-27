@@ -71,8 +71,13 @@ class SlurmRunner(StepRunner):
 
 
 class DockerRunner(SlurmRunner):
+    spawned_containers = set()
+
     def __init__(self, config):
         super(DockerRunner, self).__init__(config)
+
+    def __exit__(self, exc_type, exc, traceback):
+        spawned_containers = set()
 
     def run(self, step):
         """Execute the given step in docker."""
@@ -98,9 +103,11 @@ class DockerRunner(SlurmRunner):
         if self.config.dry_run:
             return 0
 
-        HostDockerRunner.spawned_containers.append(cid)
+        DockerRunner.spawned_containers.add(cid)
         DockerRunner.docker_start(step, cid, self.config.dry_run)
-        return self.run_script(step)
+        ecode = self.run_script(step)
+        DockerRunner.spawned_containers.remove(cid)
+        return ecode
 
     def run_script(self, step):
         final_cmd = "\n".join(step['cmd_list'])
@@ -191,7 +198,7 @@ class DockerRunner(SlurmRunner):
         step['cmd_list'].append(docker_cmd)
 
     def stop_running_tasks(self):
-        for cid in HostDockerRunner.spawned_containers:
+        for cid in DockerRunner.spawned_containers:
             log.info(f'Stopping container {cid}')
             pu.exec_cmd(["docker", "stop", cid])
         self.cancel_job()
