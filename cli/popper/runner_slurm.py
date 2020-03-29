@@ -50,15 +50,12 @@ class SlurmRunner(StepRunner):
         sbatch_cmd += f"--error {err_file} "
 
         if hasattr(self.config, 'resman_options'):
-            flags = ""
             for k, v in self.config.resman_options.get(step['name'], {}).items():
-                flags += "-" if len(k) == 1 else "--"
+                sbatch_cmd += "-" if len(k) == 1 else "--"
                 if isinstance(v, bool):
-                    flags += f"{k} "
+                    sbatch_cmd += f"{k} "
                 else:
-                    flags += f"{k} {v} "
-
-            sbatch_cmd += flags
+                    sbatch_cmd += f"{k} {v} "
 
         sbatch_cmd += job_script
         log.debug(sbatch_cmd)
@@ -151,26 +148,19 @@ class DockerRunner(SlurmRunner):
         else:
             command = ' '
 
-        for config_key, config_val in engine_config.items():
-            if not config_val:
+        for k, v in engine_config.items():
+            if not v:
                 continue
-
-            if isinstance(config_val, bool):
-                if len(config_key) == 1:
-                    docker_cmd += f"-{config_key} "
-                else:
-                    docker_cmd += f"--{config_key} "
-            elif isinstance(config_val, list):
-                for item in config_val:
-                    if len(config_key) == 1:
-                        docker_cmd += f"-{config_key} {item} "
-                    else:
-                        docker_cmd += f"--{config_key} {item} "
+            if isinstance(v, bool):
+                docker_cmd += "-" if len(k) == 1 else "--"
+                docker_cmd += f"{k} "
+            elif isinstance(v, list):
+                for item in v:
+                    docker_cmd += "-" if len(k) == 1 else "--"
+                    docker_cmd += f"{k} {item} "
             else:
-                if len(config_key) == 1:
-                    docker_cmd += f"-{config_key} {config_val} "
-                else:
-                    docker_cmd += f"--{config_key} {config_val} "
+                docker_cmd += "-" if len(k) == 1 else "--"
+                docker_cmd += f"{k} {v} "
 
         # append the image and the commands
         docker_cmd += f"{image} {command}"
