@@ -41,7 +41,7 @@ class HostRunner(StepRunner):
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        ecode = pu.exec_cmd(
+        ecode, _ = pu.exec_cmd(
             cmd,
             step_env,
             self.config.workspace_dir,
