@@ -20,9 +20,10 @@ class PopperConfig(object):
         self.skip_pull = kwargs['skip_pull']
         self.quiet = kwargs['quiet']
         self.reuse = kwargs['reuse']
-
         self.engine_name = kwargs.get('engine', None)
         self.resman_name = kwargs.get('resource_manager', None)
+        self.engine_options = kwargs['engine_options']
+        self.resman_options = kwargs['resman_options']
 
         self.parse()
         self.validate()

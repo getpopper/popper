@@ -20,7 +20,8 @@ class WorkflowRunner(object):
 
     def __init__(self, engine, resource_manager, config_file=None,
                  workspace_dir=os.getcwd(), reuse=False, dry_run=False,
-                 quiet=False, skip_pull=False, skip_clone=False):
+                 quiet=False, skip_pull=False, skip_clone=False,
+                 engine_options=dict(), resman_options=dict()):
 
         # create a config object from the given arguments
         kwargs = locals()

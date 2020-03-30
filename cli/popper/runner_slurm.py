@@ -50,13 +50,12 @@ class SlurmRunner(StepRunner):
         sbatch_cmd += f"--output {out_file} "
         sbatch_cmd += f"--error {err_file} "
 
-        if hasattr(self.config, 'resman_options'):
-            for k, v in self.config.resman_options.get(step['name'], {}).items():
-                sbatch_cmd += "-" if len(k) == 1 else "--"
-                if isinstance(v, bool):
-                    sbatch_cmd += f"{k} "
-                else:
-                    sbatch_cmd += f"{k} {v} "
+        for k, v in self.config.resman_options.get(step['name'], {}).items():
+            sbatch_cmd += "-" if len(k) == 1 else "--"
+            if isinstance(v, bool):
+                sbatch_cmd += f"{k} "
+            else:
+                sbatch_cmd += f"{k} {v} "
 
         sbatch_cmd += job_script
         log.debug(sbatch_cmd)
