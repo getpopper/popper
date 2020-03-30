@@ -65,7 +65,7 @@ class SlurmRunner(StepRunner):
         _, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
         job_id = int(output.split(" ")[-1].strip("\n"))
 
-        ecode, _ = self.stream_output(job_id)
+        ecode = self.stream_output(job_id)
 
         SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
