@@ -194,7 +194,9 @@ class DockerRunner(StepRunner, HostDockerRunner):
         needs_build, img, tag, dockerfile = self._get_build_info(step)
         if not needs_build:
             return
+        if not self.config.registry:
+            raise Exception("Expecting 'registry' option in configuration.")
+        img = f'{self.config.registry}/{img}'
         self._build(step, img, tag, dockerfile)
-        repo = f'{self.config.registry}/{img}'
-        for l in self.d.push(repo, tag=tag, stream=True, decode=True):
+        for l in self.d.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
