@@ -1,6 +1,10 @@
 import os
+import time
 import tempfile
 import subprocess
+import threading
+
+import sh
 
 from popper import utils as pu
 from popper import scm
@@ -11,7 +15,6 @@ from popper.runner_host import HostRunner
 
 
 class SlurmRunner(StepRunner):
-
     spawned_jobs = set()
 
     def __init__(self, config):
@@ -19,33 +22,51 @@ class SlurmRunner(StepRunner):
 
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_jobs = set()
+    
+    def _stream_output(self, out_file):
+        self.tail_proc_pid = set()
+        pu.exec_cmd(["tail", "-f", out_file], spawned_processes=self.tail_proc_pid)
 
-    def stream_output(self, job_id):
-        log.debug(f"Attaching to Job {job_id}")
-        while True:
-            log.debug("Retry reading output..\n")
-            ecode, _ = pu.exec_cmd(["sattach", f"{job_id}.3"], stream=False)
-            if ecode == 0:
-                break
-        ecode, _ = pu.exec_cmd(["sattach", f"{job_id}.3"])
-        return ecode
+    def start_output_stream(self, out_file):
+        self.stream_thread = threading.Thread(
+            target=self._stream_output, args=(out_file,))
+        self.stream_thread.start()
 
-    def generate_script(self, cmd, job_name, job_script):
+    def stop_output_stream(self):
+        proc = list(self.tail_proc_pid)[0]
+        proc.kill()
+        self.stream_thread.join()
+    
+    @staticmethod
+    def generate_script(cmd, job_name, job_script):
         with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
             f.write(cmd)
+
+    @staticmethod
+    def touch_log_files(out_file, err_file):
+        if os.path.exists(out_file):
+            os.remove(out_file)
+
+        if os.path.exists(err_file):
+            os.remove(err_file)
+
+        sh.touch(out_file)
+        sh.touch(err_file)
 
     def submit_batch_job(self, cmd, step):
         job_name = pu.sanitized_name(step['name'], self.config.wid)
         temp_dir = "/tmp/popper/slurm/"
         os.makedirs(temp_dir, exist_ok=True)
+
         job_script = os.path.join(temp_dir, f"{job_name}.sh")
         out_file = os.path.join(temp_dir, f"{job_name}.out")
         err_file = os.path.join(temp_dir, f"{job_name}.err")
 
-        self.generate_script(cmd, job_name, job_script)
+        SlurmRunner.touch_log_files(out_file, err_file)
+        SlurmRunner.generate_script(cmd, job_name, job_script)
 
-        sbatch_cmd = "sbatch "
+        sbatch_cmd = "sbatch --wait "
         sbatch_cmd += f"--job-name {job_name} "
         sbatch_cmd += f"--output {out_file} "
         sbatch_cmd += f"--error {err_file} "
@@ -61,10 +82,16 @@ class SlurmRunner(StepRunner):
         log.debug(sbatch_cmd)
 
         SlurmRunner.spawned_jobs.add(job_name)
-        _, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
-        job_id = int(output.split(" ")[-1].strip("\n"))
 
-        ecode = self.stream_output(job_id)
+        # start a tail process on the output file
+        self.start_output_stream(out_file)
+
+        # submit the job and wait, then parse the job_id
+        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
+        job_id = int(output.split(" ")[-1].strip("\n"))
+        
+        # kill the tail process
+        self.stop_output_stream()
 
         SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
@@ -163,7 +190,7 @@ class DockerRunner(SlurmRunner):
                 docker_cmd += f"{k} {v} "
 
         # append the image and the commands
-        docker_cmd += f"{image} {command}"
+        docker_cmd += f"{image} {command} > /dev/null"
         step['cmd_list'].append(docker_cmd)
 
     @staticmethod
@@ -179,7 +206,7 @@ class DockerRunner(SlurmRunner):
         log.info(f'[{step["name"]}] docker pull {img}')
         if dry_run:
             return
-        docker_cmd = f"docker pull {img}"
+        docker_cmd = f"docker pull {img} > /dev/null"
         step['cmd_list'].append(docker_cmd)
 
     @staticmethod
@@ -187,15 +214,14 @@ class DockerRunner(SlurmRunner):
         log.info(f'[{step["name"]}] docker build -t {tag} {path}')
         if dry_run:
             return
-        docker_cmd = f"docker build {tag} {path}"
+        docker_cmd = f"docker build {tag} {path} > /dev/null"
         step['cmd_list'].append(docker_cmd)
 
     @staticmethod
     def docker_rm(step, cid, dry_run):
-        log.info(f'[{step["name"]}] docker rm {cid}')
         if dry_run:
             return
-        docker_cmd = f"docker rm -f {cid} || true"
+        docker_cmd = f"docker rm -f {cid} || true > /dev/null"
         step['cmd_list'].append(docker_cmd)
 
     def stop_running_tasks(self):
