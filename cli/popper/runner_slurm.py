@@ -27,7 +27,8 @@ class SlurmRunner(StepRunner):
             ecode, _ = pu.exec_cmd(["sattach", f"{job_id}.3"], stream=False)
             if ecode == 0:
                 break
-        pu.exec_cmd(["sattach", f"{job_id}.3"])
+        ecode, _ = pu.exec_cmd(["sattach", f"{job_id}.3"])
+        return ecode
 
     def generate_script(self, cmd, job_name, job_script):
         with open(job_script, "w") as f:
@@ -61,10 +62,10 @@ class SlurmRunner(StepRunner):
         log.debug(sbatch_cmd)
 
         SlurmRunner.spawned_jobs.add(job_name)
-        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
+        _, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
         job_id = int(output.split(" ")[-1].strip("\n"))
 
-        self.stream_output(job_id)
+        ecode, _ = self.stream_output(job_id)
 
         SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
