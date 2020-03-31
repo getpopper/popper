@@ -202,9 +202,10 @@ def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(), log=True):
             output = ""
             for line in iter(p.stdout.readline, ''):
                 line_decoded = decode(line)
-                output += line_decoded
                 if log:
                     log.step_info(line_decoded[:-1])
+                else:
+                    output += line_decoded
 
             p.wait()
             ecode = p.poll()
