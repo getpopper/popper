@@ -3,8 +3,6 @@ import importlib
 import os
 import sys
 
-from dotmap import DotMap
-
 import popper.scm as scm
 import popper.utils as pu
 
@@ -66,7 +64,7 @@ class WorkflowRunner(object):
         sys.exit(0)
 
     @staticmethod
-    def process_secrets(wf, config=DotMap({})):
+    def process_secrets(wf, config):
         """Checks whether the secrets defined for a step are available in the
         execution environment. When the environment variable `CI` is set to
         `true` and no environment variable is defined for a secret, the
