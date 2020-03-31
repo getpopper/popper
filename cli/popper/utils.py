@@ -190,7 +190,7 @@ def prettystr(a):
         return f'{yaml.dump(a, default_flow_style=False)}'
 
 
-def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(), stream=True):
+def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(), log=True):
     try:
         with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                    universal_newlines=True, preexec_fn=os.setsid,
@@ -203,7 +203,7 @@ def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(), stream=Tru
             for line in iter(p.stdout.readline, ''):
                 line_decoded = decode(line)
                 output += line_decoded
-                if stream:
+                if log:
                     log.step_info(line_decoded[:-1])
 
             p.wait()

@@ -87,7 +87,7 @@ class SlurmRunner(StepRunner):
         self.start_output_stream(out_file)
 
         # submit the job and wait, then parse the job_id
-        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), stream=False)
+        ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), log=False)
         job_id = int(output.split(" ")[-1].strip("\n"))
         
         # kill the tail process
