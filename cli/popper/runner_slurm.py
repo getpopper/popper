@@ -21,10 +21,11 @@ class SlurmRunner(StepRunner):
 
     def __exit__(self, exc_type, exc, traceback):
         SlurmRunner.spawned_jobs = set()
-    
+
     def _stream_output(self, out_file):
         self.tail_proc_pid = set()
-        pu.exec_cmd(["tail", "-f", out_file], spawned_processes=self.tail_proc_pid)
+        pu.exec_cmd(["tail", "-f", out_file],
+                    spawned_processes=self.tail_proc_pid)
 
     def start_output_stream(self, out_file):
         self.stream_thread = threading.Thread(
@@ -35,7 +36,7 @@ class SlurmRunner(StepRunner):
         proc = list(self.tail_proc_pid)[0]
         proc.kill()
         self.stream_thread.join()
-    
+
     @staticmethod
     def generate_script(cmd, job_name, job_script):
         with open(job_script, "w") as f:
@@ -88,7 +89,7 @@ class SlurmRunner(StepRunner):
         # submit the job and wait, then parse the job_id
         ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), logging=False)
         job_id = int(output.split(" ")[-1].strip("\n"))
-        
+
         # kill the tail process
         self.stop_output_stream()
 

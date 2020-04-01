@@ -71,7 +71,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
             'reuse': False,
             'engine_options': dict(),
             'resman_options': dict()}
-        
+
         self.config = PopperConfig(
             config_file=_wfile("settings_3", "yml"),
             engine=None,
@@ -89,8 +89,14 @@ class TestSlurmDockerRunner(unittest.TestCase):
         log.setLevel('NOTSET')
 
     def test_docker_build(self):
-        DockerRunner.docker_build(self.cls.step, 'alpine', '/path/to/build_dir', self.config.dry_run)
-        self.assertEqual(self.cls.step['cmd_list'], ['docker build alpine /path/to/build_dir > /dev/null'])
+        DockerRunner.docker_build(
+            self.cls.step,
+            'alpine',
+            '/path/to/build_dir',
+            self.config.dry_run)
+        self.assertEqual(
+            self.cls.step['cmd_list'],
+            ['docker build alpine /path/to/build_dir > /dev/null'])
 
     def test_docker_create(self):
         DockerRunner.docker_create(self.cls.step, 'alpine', 'c1', self.config)
@@ -102,14 +108,14 @@ class TestSlurmDockerRunner(unittest.TestCase):
         DockerRunner.docker_pull(self.cls.step, 'alpine', self.config.dry_run)
         self.assertEqual(self.cls.step['cmd_list'], [
             'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null', 
+            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null',
             'docker pull alpine > /dev/null'])
-            
+
     def test_docker_rm(self):
         DockerRunner.docker_rm(self.step, 'c1', self.config.dry_run)
         self.assertEqual(self.cls.step['cmd_list'], [
             'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null', 
+            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null',
             'docker pull alpine > /dev/null',
             'docker rm -f c1 || true > /dev/null'])
 
@@ -117,7 +123,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
         DockerRunner.docker_start(self.step, 'c1', self.config.dry_run)
         self.assertEqual(self.cls.step['cmd_list'], [
             'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null', 
-            'docker pull alpine > /dev/null', 
+            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null',
+            'docker pull alpine > /dev/null',
             'docker rm -f c1 || true > /dev/null',
             'docker start --attach c1'])

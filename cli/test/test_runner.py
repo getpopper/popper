@@ -29,13 +29,21 @@ class TestWorkflowRunner(unittest.TestCase):
 
         # when CI=true it should fail
         os.environ['CI'] = 'true'
-        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf, DotMap({}))
+        self.assertRaises(
+            SystemExit,
+            WorkflowRunner.process_secrets,
+            wf,
+            DotMap({}))
 
         # add one secret
         os.environ['SECRET_ONE'] = '1234'
 
         # it should fail again, as we're missing one
-        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf, DotMap({}))
+        self.assertRaises(
+            SystemExit,
+            WorkflowRunner.process_secrets,
+            wf,
+            DotMap({}))
 
         os.environ.pop('CI')
 

@@ -117,6 +117,7 @@ engine:
 
         pu.write_file("/tmp/test.py", "import os\nprint(os.environ['TEST'])")
         cmd = ["python", "test.py"]
-        ecode, output = pu.exec_cmd(cmd, env={ 'TEST': 'test' }, cwd="/tmp", logging=False)
+        ecode, output = pu.exec_cmd(
+            cmd, env={'TEST': 'test'}, cwd="/tmp", logging=False)
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "test\n")

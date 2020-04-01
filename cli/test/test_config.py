@@ -63,16 +63,13 @@ class TestPopperConfig(unittest.TestCase):
 
     def test_parse(self):
         self.assertEqual(
-            self.from_config_file.config_from_file, 
-            {
+            self.from_config_file.config_from_file, {
                 'engine': {
-                    'name': 'docker', 
-                    'options': {'privileged': True}}, 
-                
-                'resource_manager': {
-                    'name': 'slurm', 
-                    'options': {'action_one': {'cpus-per-task': 1,'nodes': 1}}}
-            })
+                    'name': 'docker', 'options': {
+                        'privileged': True}}, 'resource_manager': {
+                    'name': 'slurm', 'options': {
+                        'action_one': {
+                            'cpus-per-task': 1, 'nodes': 1}}}})
 
     def test_validate(self):
         self.assertRaises(SystemExit, self.invalid_popper_cfg_one.validate)
@@ -84,8 +81,13 @@ class TestPopperConfig(unittest.TestCase):
         self.from_config_file.normalize()
         self.assertEqual(self.from_config_file.engine_name, 'docker')
         self.assertEqual(self.from_config_file.resman_name, 'slurm')
-        self.assertEqual(self.from_config_file.engine_options, {'privileged': True})
-        self.assertEqual(self.from_config_file.resman_options, {'action_one': {'nodes': 1, 'cpus-per-task': 1}})
+        self.assertEqual(
+            self.from_config_file.engine_options, {
+                'privileged': True})
+        self.assertEqual(
+            self.from_config_file.resman_options, {
+                'action_one': {
+                    'nodes': 1, 'cpus-per-task': 1}})
 
         # --engine and --resource manager provided, config file is ignored.
         self.from_cli.normalize()
@@ -96,4 +98,3 @@ class TestPopperConfig(unittest.TestCase):
         self.from_defaults.normalize()
         self.assertEqual(self.from_defaults.engine_name, 'docker')
         self.assertEqual(self.from_defaults.resman_name, 'host')
-        

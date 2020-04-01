@@ -67,8 +67,8 @@ def get_sha(repo):
             return repo.git.rev_parse(repo.head.object.hexsha, short=True)
         except ValueError as e:
             log.debug(e)
-            log.fail(f'Could not obtain revision of repository located at {get_project_root_folder(repo)}'
-                    )
+            log.fail(
+                f'Could not obtain revision of repository located at {get_project_root_folder(repo)}')
     else:
         return 'na'
 
@@ -141,7 +141,7 @@ def clone(url, org, repo, repo_dir, version=None):
             # To verify the link of github for private repo support.
             # The authentication token has to be added after protocol
             # The length of protocol is 8 in case of https://
-            url = url[:8]+auth_token+'@'+url[8:]
+            url = url[:8] + auth_token + '@' + url[8:]
 
         repo_url = f'{url}{org}/{repo}'
         cloned_repo = git.Repo.clone_from(repo_url, repo_dir)
