@@ -37,6 +37,10 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         self.Popen.set_command('tail -f slurm-x.out', returncode=0)
         self.slurm_runner._stream_output('slurm-x.out')
 
+    def test__stream_error(self):
+        self.Popen.set_command('tail -f slurm-x.err', returncode=0)
+        self.slurm_runner._stream_error('slurm-x.err')
+
     def test_generate_script(self):
         cmd = " ".join(["docker", "version"])
         job_script = os.path.join(self.repo, 'script.sh')

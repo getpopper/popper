@@ -23,19 +23,34 @@ class SlurmRunner(StepRunner):
         SlurmRunner.spawned_jobs = set()
 
     def _stream_output(self, out_file):
-        self.tail_proc_pid = set()
+        self.output_stream_pid = set()
         pu.exec_cmd(["tail", "-f", out_file],
-                    spawned_processes=self.tail_proc_pid)
+                    spawned_processes=self.output_stream_pid)
 
-    def start_output_stream(self, out_file):
-        self.stream_thread = threading.Thread(
+    def _stream_error(self, err_file):
+        self.error_stream_pid = set()
+        pu.exec_cmd(["tail", "-f", err_file],
+                    spawned_processes=self.error_stream_pid)
+
+    def start_output_error_stream(self, out_file, err_file):
+        self.output_stream_thread = threading.Thread(
             target=self._stream_output, args=(out_file,))
-        self.stream_thread.start()
 
-    def stop_output_stream(self):
-        proc = list(self.tail_proc_pid)[0]
-        proc.kill()
-        self.stream_thread.join()
+        self.error_stream_thread = threading.Thread(
+            target=self._stream_error, args=(err_file,))
+
+        self.output_stream_thread.start()
+        self.error_stream_thread.start()
+
+    def stop_output_error_stream(self):
+        output_stream_proc = list(self.output_stream_pid)[0]
+        error_stream_proc = list(self.error_stream_pid)[0]
+
+        output_stream_proc.kill()
+        error_stream_proc.kill()
+
+        self.output_stream_thread.join()
+        self.error_stream_thread.join()
 
     @staticmethod
     def generate_script(cmd, job_name, job_script):
@@ -83,15 +98,15 @@ class SlurmRunner(StepRunner):
 
         SlurmRunner.spawned_jobs.add(job_name)
 
-        # start a tail process on the output file
-        self.start_output_stream(out_file)
+        # start a tail process on the output and error file
+        self.start_output_error_stream(out_file, err_file)
 
         # submit the job and wait, then parse the job_id
         ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), logging=False)
         job_id = int(output.split(" ")[-1].strip("\n"))
 
         # kill the tail process
-        self.stop_output_stream()
+        self.stop_output_error_stream()
 
         SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
