@@ -24,10 +24,7 @@ class SlurmRunner(StepRunner):
     
     def _stream_output(self, out_file):
         self.tail_proc_pid = set()
-        ecode, _ = pu.exec_cmd(["tail", "-f", out_file], spawned_processes=self.tail_proc_pid)
-        if ecode:
-            log.fail("Failed to tail the output file.")
-        return ecode
+        pu.exec_cmd(["tail", "-f", out_file], spawned_processes=self.tail_proc_pid)
 
     def start_output_stream(self, out_file):
         self.stream_thread = threading.Thread(

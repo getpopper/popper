@@ -35,7 +35,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 
     def test__stream_output(self):
         self.Popen.set_command('tail -f slurm-x.out', returncode=0)
-        self.assertEqual(self.slurm_runner._stream_output('slurm-x.out'), 0)
+        self.slurm_runner._stream_output('slurm-x.out')
 
     def test_generate_script(self):
         cmd = " ".join(["docker", "version"])
