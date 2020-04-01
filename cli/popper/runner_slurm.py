@@ -1,6 +1,5 @@
 import os
 import time
-import tempfile
 import subprocess
 import threading
 

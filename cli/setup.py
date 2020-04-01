@@ -14,6 +14,7 @@ setup(
     packages=['popper', 'popper.commands'],
     include_package_data=True,
     install_requires=[
+        'sh',
         'dotmap',
         'testfixtures',
         'python-vagrant',
