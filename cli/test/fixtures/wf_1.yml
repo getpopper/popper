@@ -1,0 +1,9 @@
+version: 1
+steps:
+- id: one
+  uses: docker://alpine
+  args: sleep 10
+
+- id: two
+  uses: sh
+  runs: ls -l

@@ -7,13 +7,6 @@ from popper.config import PopperConfig
 from popper.cli import log
 
 
-FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
-
-
-def _wfile(name, format):
-    return f'{FIXDIR}/{name}.{format}'
-
-
 class TestPopperConfig(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
