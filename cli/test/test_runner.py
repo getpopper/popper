@@ -29,19 +29,19 @@ class TestWorkflowRunner(unittest.TestCase):
 
         # when CI=true it should fail
         os.environ['CI'] = 'true'
-        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf)
+        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf, DotMap({}))
 
         # add one secret
         os.environ['SECRET_ONE'] = '1234'
 
         # it should fail again, as we're missing one
-        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf)
+        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf, DotMap({}))
 
         os.environ.pop('CI')
 
         # now is fine
         with patch('getpass.getpass', return_value='5678'):
-            WorkflowRunner.process_secrets(wf)
+            WorkflowRunner.process_secrets(wf, DotMap({}))
 
         # pop the other
         os.environ.pop('SECRET_ONE')

@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from popper.parser import Workflow, YMLWorkflow, HCLWorkflow, PopperConfig
+from popper.parser import Workflow, YMLWorkflow, HCLWorkflow
 from popper.cli import log
 
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
