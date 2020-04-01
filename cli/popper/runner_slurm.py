@@ -24,7 +24,10 @@ class SlurmRunner(StepRunner):
     
     def _stream_output(self, out_file):
         self.tail_proc_pid = set()
-        pu.exec_cmd(["tail", "-f", out_file], spawned_processes=self.tail_proc_pid)
+        ecode, _ = pu.exec_cmd(["tail", "-f", out_file], spawned_processes=self.tail_proc_pid)
+        if ecode:
+            log.fail("Failed to tail the output file.")
+        return ecode
 
     def start_output_stream(self, out_file):
         self.stream_thread = threading.Thread(
@@ -95,10 +98,13 @@ class SlurmRunner(StepRunner):
         SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
 
-    def cancel_job(self):
+    @staticmethod
+    def cancel_job():
         for job_name in SlurmRunner.spawned_jobs:
             log.info(f'Cancelling job {job_name}')
-            pu.exec_cmd(["scancel", "--name", job_name])
+            ecode, _ = pu.exec_cmd(["scancel", "--name", job_name])
+            if ecode:
+                log.fail(f"Failed to cancel the job {job_name}.")
 
 
 class DockerRunner(SlurmRunner):
@@ -227,4 +233,4 @@ class DockerRunner(SlurmRunner):
         for cid in DockerRunner.spawned_containers:
             log.info(f'Stopping container {cid}')
             pu.exec_cmd(["docker", "stop", cid])
-        self.cancel_job()
+        SlurmRunner.cancel_job()
