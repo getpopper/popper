@@ -24,13 +24,11 @@ class PopperConfig(object):
         self.resman_name = kwargs.get('resource_manager', None)
         self.engine_options = kwargs['engine_options']
         self.resman_options = kwargs['resman_options']
-
-        self.parse()
-        self.validate()
-        self.normalize()
+        self.config_from_file = pu.load_config_file(self.config_file)
 
     def parse(self):
-        self.config_from_file = pu.load_config_file(self.config_file)
+        self.validate()
+        self.normalize()
 
     def validate(self):
         if self.config_from_file.get('engine', None):

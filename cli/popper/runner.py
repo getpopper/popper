@@ -25,6 +25,7 @@ class WorkflowRunner(object):
         kwargs = locals()
         kwargs.pop('self')
         self.config = PopperConfig(**kwargs)
+        self.config.parse()
 
         # dynamically load resource manager
         resman_mod_name = f'popper.runner_{self.config.resman_name}'
