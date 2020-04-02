@@ -34,12 +34,12 @@ class PopperFormatter(logging.Formatter):
     BOLD_RED = '[01;31m'
 
     log_format = {
-        'DEBUG':       f'{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}',
+        'DEBUG': f'{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}',
         'STEP_INFO': '%(msg)s',
-        'INFO':        '%(msg)s',
-        'WARNING':     f'{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}',
-        'ERROR':       f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}',
-        'CRITICAL':    f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}'
+        'INFO': '%(msg)s',
+        'WARNING': f'{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}',
+        'ERROR': f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}',
+        'CRITICAL': f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}'
     }
 
     log_format_no_colors = {
@@ -168,6 +168,7 @@ class PopperLogger(logging.Logger):
 
 class LevelFilter(logging.Filter):
     """Filters the level that are to be accepted and rejected."""
+
     def __init__(self, passlevels, reject):
         self.passlevels = passlevels
         self.reject = reject
