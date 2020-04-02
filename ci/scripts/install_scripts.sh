@@ -1,6 +1,8 @@
 #!/bin/bash
 set -ex
 
+export LC_ALL=en_US.UTF-8
+
 if [ "$ENGINE" == "singularity" ]; then
     sudo apt-get update
     sudo apt-get install -y build-essential libssl-dev uuid-dev libgpgme11-dev libseccomp-dev pkg-config squashfs-tools

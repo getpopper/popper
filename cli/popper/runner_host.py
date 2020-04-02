@@ -1,8 +1,13 @@
 import os
-
+import threading
+import subprocess
 from subprocess import PIPE, Popen, STDOUT, SubprocessError
 
 import docker
+
+import spython
+from spython.main.parse.parsers import DockerParser
+from spython.main.parse.writers import SingularityWriter
 
 from popper import utils as pu
 from popper import scm
@@ -258,3 +263,190 @@ class DockerRunner(StepRunner):
         if dry_run:
             return
         DockerRunner.d.images.build(path=path, tag=tag, rm=True, pull=True)
+
+
+class SingularityRunner(StepRunner):
+    """Runs steps in singularity on the local machine."""
+    lock = threading.Lock()
+
+    def __init__(self, **kw):
+        super(SingularityRunner, self).__init__(**kw)
+
+        self._spawned_containers = set()
+        self._s = None
+
+        if self.config.reuse:
+            log.fail('Reuse not supported for SingularityRunner.')
+
+        self._s = spython.main.Client
+        self._s.quiet = True
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._spawned_containers = set()
+
+    def _setup_singularity_cache(self):
+        singularity_cache = os.path.join(
+            pu.setup_base_cache(), 'singularity', self._config.wid)
+        if not os.path.exists(singularity_cache):
+            os.makedirs(singularity_cache, exist_ok=True)
+        return singularity_cache
+
+    def run(self, step):
+        singularity_cache = self._setup_singularity_cache()
+        cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
+
+        exists = self._singularity_exists(cid)
+        if exists and not self._config.reuse and not self._config.dry_run:
+            self._singularity_rm(cid)
+
+        self._create_container(step, cid)
+        ecode = self._singularity_start(step, cid)
+        return ecode
+
+    @staticmethod
+    def convert(dockerfile, singularityfile):
+        parser = DockerParser(dockerfile)
+        for p in parser.recipe.files:
+            p[0] = p[0].strip('\"')
+            p[1] = p[1].strip('\"')
+            if os.path.isdir(p[0]):
+                p[0] += '/.'
+
+        writer = SingularityWriter(parser.recipe)
+        recipe = writer.convert()
+        with open(singularityfile, 'w') as sf:
+            sf.write(recipe)
+        return singularityfile
+
+    @staticmethod
+    def get_recipe_file(build_source, cid):
+        dockerfile = os.path.join(build_source, 'Dockerfile')
+        singularityfile = os.path.join(
+            build_source, 'Singularity.{}'.format(cid[:-4]))
+
+        if os.path.isfile(dockerfile):
+            return SingularityRunner.convert(dockerfile, singularityfile)
+        else:
+            log.fail('No Dockerfile was found.')
+
+    @staticmethod
+    def build_from_recipe(build_source, build_dest, cid):
+        SingularityRunner.lock.acquire()
+        pwd = os.getcwd()
+        os.chdir(build_source)
+        recipefile = SingularityRunner.get_recipe_file(build_source, cid)
+        SingularityRunner.s.build(
+            recipe=recipefile,
+            image=cid,
+            build_folder=build_dest)
+        os.chdir(pwd)
+        SingularityRunner.lock.release()
+
+    def _get_container_options(self, config):
+        options = ""
+        options += "--userns "
+        options += "--pwd /workspace "
+
+        if hasattr(config, 'engine_options'):
+            for k, v in config.engine_options.items():
+                if not v:
+                    continue
+                if isinstance(v, bool):
+                    options += "-" if len(k) == 1 else "--"
+                    options += f"{k} "
+                elif isinstance(v, list):
+                    for item in v:
+                        options += "-" if len(k) == 1 else "--"
+                        options += f"{k} {item} "
+                else:
+                    options += "-" if len(k) == 1 else "--"
+                    options += f"{k} {v} "
+
+        options = options.strip().split(" ")
+        log.debug(f'container options: {options}\n')
+
+        return options
+
+    def _create_container(self, step, cid):
+        build, image, tag, build_source = self._get_build_info(step)
+
+        if build:
+            if not self._config.dry_run:
+                self._singularity_build(step, cid, build_source)
+        elif not self._config.skip_pull and not step.get('skip_pull', False):
+            if not self._config.dry_run:
+                self._singularity_pull(step, cid, image)
+
+    def _singularity_exists(self, cid):
+        if self._config.dry_run:
+            return
+        return os.path.exists(
+            os.path.join(self._singularity_cache, cid))
+
+    def _singularity_rm(self, container_path):
+        if self._config.dry_run:
+            return
+        os.remove(
+            os.path.join(self._singularity_cache, container_path))
+
+    def _singularity_pull(self, step, cid, image):
+        """Pull a singularity container."""
+        log.info(f'[{step["name"]}] singularity pull {cid} {image}')
+        self._s.pull(
+            image=image,
+            name=cid,
+            pull_folder=os.path.join(self._singularity_cache, cid))
+
+    def _singularity_build(self, step, cid, build_source):
+        """Build a singularity container."""
+        recipefile = os.path.join(build_source, 'Singularity.{}'.format(cid[:-4]))
+        build_dest = os.path.dirname(container_path)
+
+        log.info(f'[{step["name"]}] singularity build {cid} {recipefile}')
+
+        SingularityRunner.build_from_recipe(
+            build_source, build_dest, cid)
+
+    def _singularity_start(self, step, cid):
+        env = StepRunner.prepare_environment(step)
+        
+        # set the environment variables
+        for k, v in env.items():
+            os.environ[k] = v
+
+        volumes = [
+            f'{config.workspace_dir}:/workspace'
+        ]
+
+        args = step.get('args', None)
+        runs = step.get('runs', None)
+        ecode = None
+
+        if runs:
+            info = f'[{step["name"]}] singularity exec {cid} {runs}'
+            commands = runs
+            start = self._s.execute
+        else:
+            info = f'[{step["name"]}] singularity run {cid} {args}'
+            commands = args
+            start = self._s.run
+
+        log.info(info)
+        
+        if self._config.dry_run:
+            return 0
+
+        options = self._get_container_options(step, config)
+        output = start(os.path.join(self._singularity_cache, cid), commands, bind=volumes,
+                       stream=True, options=options)
+        try:
+            for line in output:
+                log.step_info(line.strip('\n'))
+            ecode = 0
+        except subprocess.CalledProcessError as ex:
+            ecode = ex.returncode
+
+        return ecode
+
+    def stop_running_tasks(self):
+        pass

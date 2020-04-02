@@ -10,6 +10,7 @@ from popper import scm
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 from popper.runner_host import DockerRunner as HostDockerRunner
+from popper.runner_host import SingularityRunner as HostSingularityRunner
 from popper.runner_host import HostRunner
 
 
@@ -232,7 +233,7 @@ class DockerRunner(SlurmRunner):
         log.info(f'[{step["name"]}] docker build -t {tag} {path}')
         if dry_run:
             return
-        docker_cmd = f"docker build {tag} {path} > /dev/null"
+        docker_cmd = f"docker build -t {tag} {path} > /dev/null"
         step['cmd_list'].append(docker_cmd)
 
     @staticmethod
@@ -247,3 +248,126 @@ class DockerRunner(SlurmRunner):
             log.info(f'Stopping container {cid}')
             pu.exec_cmd(["docker", "stop", cid])
         SlurmRunner.cancel_job()
+
+
+class SingularityRunner(SlurmRunner, HostSingularityRunner):
+    """Runs actions in singularity."""
+    def __init__(self, **kw):
+        super(SingularityRunner, self).__init__(**kw)
+        if self.config.reuse:
+            log.fail('Reuse not supported for SingularityRunner.')
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        pass
+
+    def run(self, step):
+        cid = pu.sanitized_name(step["name"], self._config.wid)
+        build, img, tag, build_source = self._get_build_info(step)
+
+        cmd = []
+        cmd.append(f"rm -rf {os.path.join(self._singularity_cache, cid)}")
+
+        if build:
+            cmd.append(f"cd {build_source}")
+            cmd.append(f"singularity build {container_path} {recipefile}")
+
+        else:
+            cmd.append(f"mkdir -p {os.path.dirname(container_path)}")
+            cmd.append(
+                f"singularity pull {container_path} {image}")
+
+        if self._config.dry_run:
+            return 0
+
+        self._spawned_containers.add(cid)
+        ecode = self._submit_batch_job(cmd, step)
+        self._spawned_containers.remove(cid)
+        return ecode
+
+
+    # @staticmethod
+    # def create_container(cid, step, config):
+        # singularity_cache = HostSingularityRunner.setup_singularity_cache(
+        #     config.wid)
+        # container_path = os.path.join(singularity_cache, cid + '.sif')
+
+        # build, image, build_source = HostDockerRunner.get_build_info(
+        #     step, config.workspace_dir, config.workspace_sha)
+
+        # SingularityRunner.singularity_rm(step, container_path, config.dry_run)
+
+        # if build:
+        #     SingularityRunner.singularity_build(
+        #         step, build_source, container_path, config.dry_run)
+        # else:
+        #     SingularityRunner.singularity_pull(
+        #         step, image, container_path, config.dry_run)
+
+        # return container_path
+
+    # @staticmethod
+    # def singularity_rm(step, container_path, dry_run):
+    #     if dry_run:
+    #         return
+    #     step['cmd_list'].append(f"rm -rf {container_path}")
+
+    # @staticmethod
+    # def singularity_pull(step, image, container_path, dry_run):
+    #     image = "docker://" + image
+
+    #     log.info(f'[{step["name"]}] singularity pull {container_path} {image}')
+    #     if dry_run:
+    #         return
+
+
+    # @staticmethod
+    # def singularity_build(step, build_source, container_path, dry_run):
+    #     cid = os.path.basename(container_path)[:-4]
+    #     recipefile = HostSingularityRunner.get_recipe_file(build_source, cid)
+
+    #     log.info(
+    #         f'[{step["name"]}] singularity build {container_path} {recipefile}')
+    #     if dry_run:
+    #         return
+
+        
+
+    @staticmethod
+    def singularity_start(step, config, container_path, dry_run):
+        env = StepRunner.prepare_environment(step)
+        for k, v in env.items():
+            os.environ[k] = v
+
+        volumes = [
+            f'{config.workspace_dir}:/workspace'
+        ]
+
+        args = step.get('args', '')
+        runs = step.get('runs', '')
+        ecode = None
+
+        if runs:
+            info = f'[{step["name"]}] singularity exec {container_path} {runs}'
+            commands = runs
+            singularity_cmd = f"singularity exec "
+        else:
+            info = f'[{step["name"]}] singularity run {container_path} {args}'
+            commands = args
+            singularity_cmd = f"singularity run "
+
+        log.info(info)
+        if dry_run:
+            return 0
+
+        options = HostSingularityRunner.get_engine_options(step, config)
+        for vol in volumes:
+            options.append("--bind")
+            options.append(vol)
+
+        singularity_cmd += " ".join(options)
+        singularity_cmd += f" {container_path}"
+        singularity_cmd += f" {' '.join(commands)}"
+        step['cmd_list'].append(singularity_cmd)
+
+    def stop_running_tasks(self):
+        pass
