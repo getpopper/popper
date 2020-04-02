@@ -29,19 +29,27 @@ class TestWorkflowRunner(unittest.TestCase):
 
         # when CI=true it should fail
         os.environ['CI'] = 'true'
-        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf)
+        self.assertRaises(
+            SystemExit,
+            WorkflowRunner.process_secrets,
+            wf,
+            DotMap({}))
 
         # add one secret
         os.environ['SECRET_ONE'] = '1234'
 
         # it should fail again, as we're missing one
-        self.assertRaises(SystemExit, WorkflowRunner.process_secrets, wf)
+        self.assertRaises(
+            SystemExit,
+            WorkflowRunner.process_secrets,
+            wf,
+            DotMap({}))
 
         os.environ.pop('CI')
 
         # now is fine
         with patch('getpass.getpass', return_value='5678'):
-            WorkflowRunner.process_secrets(wf)
+            WorkflowRunner.process_secrets(wf, DotMap({}))
 
         # pop the other
         os.environ.pop('SECRET_ONE')
@@ -78,7 +86,7 @@ class TestWorkflowRunner(unittest.TestCase):
                           DotMap({'wid': wid, 'skip_clone': True}))
 
     def test_steprunner_factory(self):
-        with WorkflowRunner() as r:
+        with WorkflowRunner('docker', 'host') as r:
             self.assertEqual(r.step_runner('host', None).__class__.__name__,
                              'HostRunner')
             self.assertEqual(r.step_runner('docker', None).__class__.__name__,

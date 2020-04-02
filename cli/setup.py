@@ -14,12 +14,14 @@ setup(
     packages=['popper', 'popper.commands'],
     include_package_data=True,
     install_requires=[
+        'sh',
         'dotmap',
+        'testfixtures',
         'python-vagrant',
         'GitPython',
         'spython',
         'click',
-        'pyhcl',
+        'pyhcl==0.4.0',
         'pyyaml',
         'docker'
     ],

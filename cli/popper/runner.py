@@ -3,12 +3,10 @@ import importlib
 import os
 import sys
 
-from dotmap import DotMap
-from hashlib import shake_256
-
 import popper.scm as scm
 import popper.utils as pu
 
+from popper.config import PopperConfig
 from popper.cli import log
 
 
@@ -18,48 +16,33 @@ class WorkflowRunner(object):
     # class variable that holds references to runner singletons
     runners = {}
 
-    def __init__(self, config_file=None, workspace_dir=os.getcwd(),
-                 reuse=False, engine_name='docker', dry_run=False, quiet=False,
-                 skip_pull=False, skip_clone=False):
+    def __init__(self, engine, resource_manager, config_file=None,
+                 workspace_dir=os.getcwd(), reuse=False, dry_run=False,
+                 quiet=False, skip_pull=False, skip_clone=False,
+                 engine_options=dict(), resman_options=dict()):
 
-        # save all args in a member dictionary
-        self.config = DotMap(locals())
-        self.config.pop('self')
-        self.config.workspace_dir = os.path.realpath(workspace_dir)
-        self.config.wid = shake_256(workspace_dir.encode('utf-8')).hexdigest(4)
-
-        # cretate a repo object for the project
-        self.repo = scm.new_repo()
-        self.config.workspace_sha = scm.get_sha(self.repo)
-
-        if config_file:
-            # read options from config file
-            config_from_file = pu.load_config_file(config_file)
-
-            if hasattr(config_from_file, 'ENGINE'):
-                self.config.engine_options = config_from_file.ENGINE
-            if hasattr(config_from_file, 'RESOURCE_MANAGER'):
-                self.config.resman_options = config_from_file.RESOURCE_MANAGER
-
-        if not self.config.resman:
-            self.config.resman = 'host'
+        # create a config object from the given arguments
+        kwargs = locals()
+        kwargs.pop('self')
+        self.config = PopperConfig(**kwargs)
+        self.config.parse()
 
         # dynamically load resource manager
-        resman_mod_name = f'popper.runner_{self.config.resman}'
+        resman_mod_name = f'popper.runner_{self.config.resman_name}'
         resman_spec = importlib.util.find_spec(resman_mod_name)
         if not resman_spec:
-            raise ValueError(f'Invalid resource manager: {self.config.resman}')
+            raise ValueError(
+                f'Invalid resource manager: {self.config.resman_name}')
         self.resman_mod = importlib.import_module(resman_mod_name)
 
         log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
-
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
-        self.repo.close()
+        self.config.repo.close()
         for _, r in WorkflowRunner.runners.items():
             r.__exit__(exc_type, exc, traceback)
         WorkflowRunner.runners = {}
@@ -82,7 +65,7 @@ class WorkflowRunner(object):
         sys.exit(0)
 
     @staticmethod
-    def process_secrets(wf, config=DotMap({})):
+    def process_secrets(wf, config):
         """Checks whether the secrets defined for a step are available in the
         execution environment. When the environment variable `CI` is set to
         `true` and no environment variable is defined for a secret, the
@@ -202,6 +185,7 @@ class WorkflowRunner(object):
 
 class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
+
     def __init__(self, config):
         self.config = config
 

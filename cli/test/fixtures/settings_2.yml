@@ -1,0 +1,7 @@
+engine:
+  name: docker
+  options:
+    privileged: true
+resource_manager:
+  options:
+    foo: bar

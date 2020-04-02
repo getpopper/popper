@@ -1,6 +1,8 @@
 import unittest
 import os
 
+from dotmap import DotMap
+
 from popper import utils as pu
 from popper.cli import log
 
@@ -79,15 +81,43 @@ class TestUtils(unittest.TestCase):
         os.remove('testfile2.txt')
 
     def test_load_config_file(self):
-        conf_content = """ENGINE = {
-    "runtime": "nvidia"
-}
+        conf_content = """
+engine:
+    name: docker
+    options:
+        runtime: nvidia
         """
-        pu.write_file('settings.py', conf_content)
-        config = pu.load_config_file('settings.py')
-        self.assertTrue(hasattr(config, 'ENGINE'))
-        self.assertDictEqual(config.ENGINE, {'runtime': 'nvidia'})
-        os.remove('settings.py')
+        pu.write_file('settings.yml', conf_content)
+        config = pu.load_config_file('settings.yml')
+        self.assertTrue(config.get('engine'), True)
+        self.assertDictEqual(
+            config['engine']['options'], {
+                'runtime': 'nvidia'})
+        os.remove('settings.yml')
 
     def test_assert_executable_exists(self):
         self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')
+
+    def test_select_not_none(self):
+        a = ["Hello", {}, None]
+        self.assertEqual(pu.select_not_none(a), "Hello")
+
+        b = [DotMap(), "Hello", []]
+        self.assertEqual(pu.select_not_none(b), "Hello")
+
+    def test_exec_cmd(self):
+        cmd = ["echo", "command_1"]
+        ecode, output = pu.exec_cmd(cmd, logging=False)
+        self.assertEqual(ecode, 0)
+        self.assertEqual(output, "command_1\n")
+
+        ecode, output = pu.exec_cmd(cmd, logging=True)
+        self.assertEqual(ecode, 0)
+        self.assertEqual(output, "")
+
+        pu.write_file("/tmp/test.py", "import os\nprint(os.environ['TEST'])")
+        cmd = ["python", "test.py"]
+        ecode, output = pu.exec_cmd(
+            cmd, env={'TEST': 'test'}, cwd="/tmp", logging=False)
+        self.assertEqual(ecode, 0)
+        self.assertEqual(output, "test\n")

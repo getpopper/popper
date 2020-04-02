@@ -6,6 +6,7 @@ import yaml
 
 from builtins import str
 from distutils.spawn import find_executable
+from subprocess import Popen, STDOUT, PIPE, SubprocessError
 from dotmap import DotMap
 
 from popper.cli import log
@@ -147,22 +148,6 @@ def write_file(path, content=''):
     f.close()
 
 
-def module_from_file(module_name, file_path):
-    """Import a file as a module.
-
-    Args:
-      module_name(str): The name of the module.
-      file_path(str): The path to the file to be imported.
-
-    Returns:
-      module
-    """
-    spec = importlib.util.spec_from_file_location(module_name, file_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
-
-
 def load_config_file(config_file):
     """Validate and parse the engine configuration file.
 
@@ -172,16 +157,22 @@ def load_config_file(config_file):
     Returns:
       dict: Engine configuration.
     """
+    if not config_file:
+        return dict()
+
     if not os.path.exists(config_file):
         log.fail(f'File {config_file} was not found.')
 
-    if not config_file.endswith('.py'):
-        log.fail('Configuration file must be a python source file.')
+    if not config_file.endswith('.yml'):
+        log.fail('Configuration file must be a YAML file.')
 
-    module_name = os.path.basename(config_file)[:-3]
-    module = module_from_file(module_name, config_file)
+    with open(config_file, 'r') as cf:
+        data = yaml.load(cf, Loader=yaml.Loader)
 
-    return module
+    if not data:
+        log.fail('Configuration file is empty.')
+
+    return data
 
 
 def assert_executable_exists(command):
@@ -191,9 +182,51 @@ def assert_executable_exists(command):
 
 
 def prettystr(a):
-    if type(a) == DotMap:
+    if isinstance(a, DotMap):
         a = a.toDict()
-    if type(a) == os._Environ:
+    if isinstance(a, os._Environ):
         a = dict(a)
-    if type(a) == dict:
+    if isinstance(a, dict):
         return f'{yaml.dump(a, default_flow_style=False)}'
+
+
+def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(),
+             logging=True):
+    try:
+        with Popen(cmd, stdout=PIPE, stderr=STDOUT,
+                   universal_newlines=True, preexec_fn=os.setsid,
+                   env=env, cwd=cwd) as p:
+
+            spawned_processes.add(p)
+            log.debug('Reading process output')
+
+            output = ""
+            for line in iter(p.stdout.readline, ''):
+                line_decoded = decode(line)
+                if logging:
+                    log.step_info(line_decoded[:-1])
+                else:
+                    output += line_decoded
+
+            p.wait()
+            ecode = p.poll()
+            spawned_processes.remove(p)
+
+        log.debug(f'Code returned by process: {ecode}')
+
+    except SubprocessError as ex:
+        output = ""
+        ecode = ex.returncode
+        log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
+    except Exception as ex:
+        output = ""
+        ecode = 1
+        log.step_info(f"Command raised non-SubprocessError error: {ex}")
+
+    return ecode, output
+
+
+def select_not_none(array):
+    for item in array:
+        if item:
+            return item

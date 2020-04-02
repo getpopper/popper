@@ -10,11 +10,10 @@ from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 
 
-
 class HostRunner(StepRunner):
     """Run an step on the Host Machine."""
 
-    spawned_processes = []
+    spawned_processes = set()
 
     def __init__(self, config):
         super(HostRunner, self).__init__(config)
@@ -25,7 +24,7 @@ class HostRunner(StepRunner):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
-        HostRunner.spawned_processes = []
+        HostRunner.spawned_processes = set()
 
     def run(self, step):
         step_env = StepRunner.prepare_environment(step, os.environ)
@@ -42,30 +41,11 @@ class HostRunner(StepRunner):
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        try:
-            with Popen(cmd, stdout=PIPE, stderr=STDOUT,
-                       universal_newlines=True, preexec_fn=os.setsid,
-                       env=step_env, cwd=self.config.workspace_dir) as p:
-                HostRunner.spawned_processes.append(p)
-
-                log.debug('Reading process output')
-
-                for line in iter(p.stdout.readline, ''):
-                    line_decoded = pu.decode(line)
-                    log.step_info(line_decoded[:-1])
-
-                p.wait()
-                ecode = p.poll()
-
-            log.debug(f'Code returned by process: {ecode}')
-
-        except SubprocessError as ex:
-            ecode = ex.returncode
-            log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
-        except Exception as ex:
-            ecode = 1
-            log.step_info(f"Command raised non-SubprocessError error: {ex}")
-
+        ecode, _ = pu.exec_cmd(
+            cmd,
+            step_env,
+            self.config.workspace_dir,
+            HostRunner.spawned_processes)
         return ecode
 
     def stop_running_tasks(self):
@@ -93,7 +73,6 @@ class DockerRunner(StepRunner):
 
         log.debug(f'Docker info: {pu.prettystr(DockerRunner.d.info())}')
 
-
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if DockerRunner.d:
             DockerRunner.d.close()
@@ -104,45 +83,12 @@ class DockerRunner(StepRunner):
         """Execute the given step in docker."""
         cid = pu.sanitized_name(step['name'], self.config.wid)
 
-        build, img, dockerfile = DockerRunner.get_build_info(
-            step, self.config.workspace_dir, self.config.workspace_sha)
-
         container = DockerRunner.find_container(cid)
 
         if container and not self.config.reuse and not self.config.dry_run:
             container.remove(force=True)
 
-        # build or pull
-        if build:
-            DockerRunner.docker_build(step, img, dockerfile,
-                                      self.config.dry_run)
-        elif not self.config.skip_pull and not step.get('skip_pull', False):
-            DockerRunner.docker_pull(step, img, self.config.dry_run)
-
-        msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
-        log.info(f'[{step["name"]}] docker create {msg}')
-
-        if not self.config.dry_run:
-            engine_config = {
-                "image": img,
-                "command": step.get('args', None),
-                "name": cid,
-                "volumes": [
-                    f'{self.config.workspace_dir}:/workspace',
-                    '/var/run/docker.sock:/var/run/docker.sock'
-                ],
-                "working_dir": '/workspace',
-                "environment": StepRunner.prepare_environment(step),
-                "entrypoint": step.get('runs', None),
-                "detach": True
-            }
-
-            if self.config.engine_options:
-                DockerRunner.update_engine_config(engine_config,
-                                                  self.config.engine_options)
-            log.debug(f'Engine configuration: {pu.prettystr(engine_config)}\n')
-
-            container = DockerRunner.d.containers.create(**engine_config)
+        container = DockerRunner.create_container(cid, step, self.config)
 
         log.info(f'[{step["name"]}] docker start')
 
@@ -157,13 +103,61 @@ class DockerRunner(StepRunner):
             log.step_info(pu.decode(line).strip('\n'))
 
         e = container.wait()['StatusCode']
-
         return e
 
     def stop_running_tasks(self):
         for c in DockerRunner.spawned_containers:
             log.info(f'Stopping container {c.name}')
             c.stop()
+
+    @staticmethod
+    def prepare_image(step, config):
+        build, img, dockerfile = DockerRunner.get_build_info(
+            step, config.workspace_dir, config.workspace_sha)
+
+        if build:
+            DockerRunner.docker_build(step, img, dockerfile,
+                                      config.dry_run)
+        elif not config.skip_pull and not step.get('skip_pull', False):
+            DockerRunner.docker_pull(step, img, config.dry_run)
+
+        return build, img, dockerfile
+
+    @staticmethod
+    def get_engine_config(step, img, cid, config):
+        engine_config = {
+            "image": img,
+            "command": step.get('args', None),
+            "name": cid,
+            "volumes": [
+                f'{config.workspace_dir}:/workspace',
+                '/var/run/docker.sock:/var/run/docker.sock'
+            ],
+            "working_dir": '/workspace',
+            "environment": StepRunner.prepare_environment(step),
+            "entrypoint": step.get('runs', None),
+            "detach": True
+        }
+        return engine_config
+
+    @staticmethod
+    def create_container(cid, step, config):
+        build, img, dockerfile = DockerRunner.prepare_image(step, config)
+        msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
+        log.info(f'[{step["name"]}] docker create {msg}')
+
+        if config.dry_run:
+            return
+
+        engine_config = DockerRunner.get_engine_config(step, img, cid, config)
+
+        if hasattr(config, 'engine_options'):
+            DockerRunner.update_engine_config(
+                engine_config, config.engine_options)
+        log.debug(f'Engine configuration: {pu.prettystr(engine_config)}\n')
+
+        container = DockerRunner.d.containers.create(**engine_config)
+        return container
 
     @staticmethod
     def get_build_info(step, workspace_dir, workspace_sha):

@@ -9,10 +9,19 @@ from copy import deepcopy
 from builtins import str, dict
 from popper.cli import log as log
 
+import popper.scm as scm
 import popper.utils as pu
 
 
-VALID_STEP_ATTRS = ["uses", "args", "needs", "runs", "secrets", "env", "name", "next"]
+VALID_STEP_ATTRS = [
+    "uses",
+    "args",
+    "needs",
+    "runs",
+    "secrets",
+    "env",
+    "name",
+    "next"]
 
 
 class Workflow(object):
@@ -623,7 +632,7 @@ class YMLWorkflow(Workflow):
                         if not self.visited.get(tuple(next_set), None):
                             step['next'] = next_set
                             for nsa in next_set:
-                                self.steps[nsa]['needs'] = id
+                                self.steps[nsa]['needs'] = [id]
                             self.visited[tuple(curr_set)] = True
 
         # Finally, generate the root.
