@@ -1,0 +1,6 @@
+version: '1'
+steps:
+- id: "test"
+  uses: "docker://busybox"
+  args: ["ls", "-ltr"]
+
