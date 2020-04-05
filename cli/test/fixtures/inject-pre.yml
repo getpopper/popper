@@ -1,0 +1,6 @@
+version: '1'
+steps:
+- id: "pre"
+  uses: "sh"
+  runs: "echo pre-action"
+

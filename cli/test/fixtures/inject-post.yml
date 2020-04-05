@@ -1,0 +1,12 @@
+version: '1'
+steps:
+- id: "post1"
+  uses: "sh"
+  runs: "echo post1-action"
+
+- id: "post2"
+  needs: "post1"
+  uses: "sh"
+  runs: "echo post2-action"
+
+
