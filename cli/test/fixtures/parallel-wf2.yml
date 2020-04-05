@@ -1,0 +1,31 @@
+version: '1'
+steps:
+- id: "one"
+  uses: "docker://busybox"
+  args: ["echdo", "Hello from busybox"]
+
+- id: "two"
+  uses: "popperized/bin/curl@master"
+  args: ["google.com"]
+  
+- id: "three"
+  uses: "popperized/bin/sh@master"
+  runs: ["sh", "-c", "echo Hello from sh"]
+
+- id: "four"
+  uses: "popperized/npm@master"
+  args: ["--version"]
+
+- id: "five"
+  uses: "popperized/npm@master"
+  args: ["--vesrsion"]
+
+- id: "stage_one"
+  uses: "docker://debian:buster-slim"
+  args: ["apt", "--version"]
+  needs: [
+    "one",
+    "two",
+    "three",
+    "four"
+  ]
