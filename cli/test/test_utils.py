@@ -1,8 +1,6 @@
 import unittest
 import os
 
-from dotmap import DotMap
-
 from popper import utils as pu
 from popper.cli import log
 
@@ -102,22 +100,25 @@ engine:
         a = ["Hello", {}, None]
         self.assertEqual(pu.select_not_none(a), "Hello")
 
-        b = [DotMap(), "Hello", []]
+        b = [{}, "Hello", []]
         self.assertEqual(pu.select_not_none(b), "Hello")
 
     def test_exec_cmd(self):
         cmd = ["echo", "command_1"]
-        ecode, output = pu.exec_cmd(cmd, logging=False)
+        pid, ecode, output = pu.exec_cmd(cmd, logging=False)
+        self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "command_1\n")
 
-        ecode, output = pu.exec_cmd(cmd, logging=True)
+        pid, ecode, output = pu.exec_cmd(cmd, logging=True)
+        self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "")
 
         pu.write_file("/tmp/test.py", "import os\nprint(os.environ['TEST'])")
         cmd = ["python", "test.py"]
-        ecode, output = pu.exec_cmd(
+        pid, ecode, output = pu.exec_cmd(
             cmd, env={'TEST': 'test'}, cwd="/tmp", logging=False)
+        self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "test\n")

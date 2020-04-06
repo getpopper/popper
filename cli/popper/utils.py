@@ -1,4 +1,3 @@
-import importlib.util
 import os
 import re
 import threading
@@ -7,7 +6,6 @@ import yaml
 from builtins import str
 from distutils.spawn import find_executable
 from subprocess import Popen, STDOUT, PIPE, SubprocessError
-from dotmap import DotMap
 
 from popper.cli import log
 
@@ -157,6 +155,9 @@ def load_config_file(config_file):
     Returns:
       dict: Engine configuration.
     """
+    if isinstance(config_file, dict):
+        return config_file
+
     if not config_file:
         return dict()
 
@@ -182,22 +183,20 @@ def assert_executable_exists(command):
 
 
 def prettystr(a):
-    if isinstance(a, DotMap):
-        a = a.toDict()
     if isinstance(a, os._Environ):
         a = dict(a)
     if isinstance(a, dict):
         return f'{yaml.dump(a, default_flow_style=False)}'
 
 
-def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(),
-             logging=True):
+def exec_cmd(cmd, env=None, cwd=os.getcwd(), pids=set(), logging=True):
+    pid = 0
     try:
         with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                    universal_newlines=True, preexec_fn=os.setsid,
                    env=env, cwd=cwd) as p:
-
-            spawned_processes.add(p)
+            pid = p.pid
+            pids.add(p.pid)
             log.debug('Reading process output')
 
             output = ""
@@ -210,7 +209,6 @@ def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(),
 
             p.wait()
             ecode = p.poll()
-            spawned_processes.remove(p)
 
         log.debug(f'Code returned by process: {ecode}')
 
@@ -223,7 +221,7 @@ def exec_cmd(cmd, env=None, cwd=os.getcwd(), spawned_processes=set(),
         ecode = 1
         log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
-    return ecode, output
+    return pid, ecode, output
 
 
 def select_not_none(array):
