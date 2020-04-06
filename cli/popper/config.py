@@ -9,51 +9,61 @@ import popper.utils as pu
 
 
 class PopperConfig(object):
-    def __init__(self, **kwargs):
+    def __init__(self, engine_name=None, resman_name=None, config_file=None,
+                 workspace_dir=os.getcwd(), reuse=False,
+                 dry_run=False, quiet=False, skip_pull=False,
+                 skip_clone=False):
+
+        self.workspace_dir = os.path.realpath(workspace_dir)
+        self.reuse = reuse
+        self.dry_run = dry_run
+        self.quiet = quiet
+        self.skip_pull = skip_pull
+        self.skip_clone = skip_clone
         self.repo = scm.new_repo()
-        self.workspace_dir = os.path.realpath(kwargs['workspace_dir'])
-        self.wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
         self.workspace_sha = scm.get_sha(self.repo)
-        self.config_file = kwargs['config_file']
-        self.dry_run = kwargs['dry_run']
-        self.skip_clone = kwargs['skip_clone']
-        self.skip_pull = kwargs['skip_pull']
-        self.quiet = kwargs['quiet']
-        self.reuse = kwargs['reuse']
-        self.engine_name = kwargs.get('engine', None)
-        self.resman_name = kwargs.get('resource_manager', None)
-        self.engine_options = kwargs['engine_options']
-        self.resman_options = kwargs['resman_options']
-        self.config_from_file = pu.load_config_file(self.config_file)
 
-    def parse(self):
-        self.validate()
-        self.normalize()
+        wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
+        self.wid = wid
 
-    def validate(self):
-        if self.config_from_file.get('engine', None):
-            if not self.config_from_file['engine'].get('name', None):
-                log.fail(
-                    'engine config must have the name property.')
+        from_file = self.load_config_from_file(config_file, engine_name,
+                                               resman_name)
 
-        if self.config_from_file.get('resource_manager', None):
-            if not self.config_from_file['resource_manager'].get('name', None):
-                log.fail(
-                    'resource_manager config must have the name property.')
+        self.engine_name = from_file['engine_name']
+        self.resman_name = from_file['resman_name']
+        self.engine_opts = from_file['engine_opts']
+        self.resman_opts = from_file['resman_opts']
 
-    def normalize(self):
-        if not self.engine_name:
-            if self.config_from_file.get('engine', None):
-                self.engine_name = self.config_from_file['engine']['name']
-                self.engine_options = self.config_from_file['engine'].get(
-                    'options', dict())
-            else:
-                self.engine_name = 'docker'
+    def load_config_from_file(self, config_file, engine_name, resman_name):
+        from_file = pu.load_config_file(config_file)
+        loaded_conf = {}
 
-        if not self.resman_name:
-            if self.config_from_file.get('resource_manager', None):
-                self.resman_name = self.config_from_file['resource_manager']['name']
-                self.resman_options = self.config_from_file['resource_manager'].get(
-                    'options', dict())
-            else:
-                self.resman_name = 'host'
+        eng_from_file = from_file.get('engine', {}).get('name')
+        if from_file and not eng_from_file and not engine_name:
+            log.fail('No engine name given.')
+
+        resman_from_file = from_file.get('resource_manager', {}).get('name')
+        if from_file and not resman_from_file and not resman_name:
+            log.fail('No resource manager name given.')
+
+        # set name in precedence order (or assigne default values)
+        if engine_name:
+            loaded_conf['engine_name'] = engine_name
+        elif eng_from_file:
+            loaded_conf['engine_name'] = eng_from_file
+        else:
+            loaded_conf['engine_name'] = 'docker'
+
+        if resman_name:
+            loaded_conf['resman_name'] = resman_name
+        elif resman_from_file:
+            loaded_conf['resman_name'] = resman_from_file
+        else:
+            loaded_conf['resman_name'] = 'host'
+
+        engine_opts = from_file.get('engine', {}).get('options', {})
+        resman_opts = from_file.get('resource_manager', {}).get('options', {})
+        loaded_conf['engine_opts'] = engine_opts
+        loaded_conf['resman_opts'] = resman_opts
+
+        return loaded_conf
