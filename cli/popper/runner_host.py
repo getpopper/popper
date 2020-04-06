@@ -1,6 +1,5 @@
 import os
-
-from subprocess import PIPE, Popen, STDOUT, SubprocessError
+import signal
 
 import docker
 
@@ -16,7 +15,7 @@ class HostRunner(StepRunner):
     def __init__(self, config):
         super(HostRunner, self).__init__(config)
 
-        self.spawned_processes = []
+        self.spawned_pids = set()
 
         if self.config.reuse:
             log.warning('Reuse not supported for HostRunner.')
@@ -25,7 +24,7 @@ class HostRunner(StepRunner):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
-        HostRunner.spawned_processes = set()
+        pass
 
     def run(self, step):
         step_env = StepRunner.prepare_environment(step, os.environ)
@@ -42,17 +41,17 @@ class HostRunner(StepRunner):
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        ecode, _ = pu.exec_cmd(
-            cmd,
-            step_env,
-            self.config.workspace_dir,
-            HostRunner.spawned_processes)
+        pid, ecode, _ = pu.exec_cmd(cmd, step_env, self.config.workspace_dir,
+                                    self.spawned_pids)
+        if pid != 0:
+            self.spawned_pids.remove(pid)
+
         return ecode
 
     def stop_running_tasks(self):
-        for p in self.spawned_processes:
-            log.info(f'Stopping proces {p.pid}')
-            p.kill()
+        for pid in self.spawned_pids:
+            log.info(f'Stopping proces {pid}')
+            os.kill(pid, signal.SIGKILL)
 
 
 class DockerRunner(StepRunner):
@@ -82,14 +81,11 @@ class DockerRunner(StepRunner):
         """Execute the given step in docker."""
         cid = pu.sanitized_name(step['name'], self.config.wid)
 
-        build, img, tag, dockerfile = self._get_build_info(step)
-
         container = self._find_container(cid)
-
         if container and not self.config.reuse and not self.config.dry_run:
             container.remove(force=True)
 
-        container = DockerRunner.create_container(cid, step, self.config)
+        container = self._create_container(cid, step)
 
         log.info(f'[{step["name"]}] docker start')
 
@@ -110,35 +106,6 @@ class DockerRunner(StepRunner):
         for c in self.spawned_containers:
             log.info(f'Stopping container {c.name}')
             c.stop()
-
-    def _pull(self, step, img, tag):
-        """Pull an image from a container registry.
-
-        Args:
-          img(str): The image reference to pull.
-
-        Returns:
-            None
-        """
-        log.info(f'[{step["name"]}] docker pull {img}:{tag}')
-        if self.config.dry_run:
-            return
-        self.d.images.pull(repository=f'{img}:{tag}')
-
-    def _build(self, step, img, tag, path):
-        """Build a docker image from a Dockerfile.
-
-        Args:
-          tag(str): The name of the image to build.
-          path(str): The path to the Dockerfile.
-
-        Returns:
-            None
-        """
-        log.info(f'[{step["name"]}] docker build -t {img}:{tag} {path}')
-        if self.config.dry_run:
-            return
-        self.d.images.build(path=path, tag=f'{img}:{tag}', rm=True, pull=True)
 
     def _get_build_info(self, step):
         """Parses the `uses` attribute and returns build information needed.
@@ -173,6 +140,49 @@ class DockerRunner(StepRunner):
 
         return (build, img, tag, build_source)
 
+    def _create_container(self, cid, step):
+        build, img, tag, dockerfile = self._get_build_info(step)
+
+        if build:
+            log.info(f'[{step["name"]}] docker build {img}:{tag}')
+            if not self.config.dry_run:
+                self.d.images.build(path=dockerfile, tag=f'{img}:{tag}',
+                                    rm=True, pull=True)
+        elif not self.config.skip_pull and not step.get('skip_pull', False):
+            log.info(f'[{step["name"]}] docker pull {img}:{tag}')
+            if not self.config.dry_run:
+                self.d.images.pull(repository=f'{img}:{tag}')
+
+        log.info(f'[{step["name"]}] docker create {img}:{tag}')
+        if self.config.dry_run:
+            return
+
+        container_args = self._get_container_kwargs(step, f'{img}:{tag}', cid)
+        container = self.d.containers.create(**container_args)
+
+        return container
+
+    def _get_container_kwargs(self, step, img, name):
+        args = {
+            "image": img,
+            "command": step.get('args', None),
+            "name": name,
+            "volumes": [
+                f'{self.config.workspace_dir}:/workspace',
+                '/var/run/docker.sock:/var/run/docker.sock'
+            ],
+            "working_dir": '/workspace',
+            "environment": StepRunner.prepare_environment(step),
+            "entrypoint": step.get('runs', None),
+            "detach": True
+        }
+
+        self._update_with_engine_config(args)
+
+        log.debug(f'container args: {pu.prettystr(args)}\n')
+
+        return args
+
     def _find_container(self, cid):
         """Check whether the container exists."""
         containers = self.d.containers.list(all=True, filters={'name': cid})
@@ -184,13 +194,16 @@ class DockerRunner(StepRunner):
 
         return None
 
-    def _update_engine_config(self, engine_conf):
-        update_with = self.config.engine_options
-        engine_conf["volumes"] = [*engine_conf["volumes"],
-                                  *update_with.get('volumes', list())]
+    def _update_with_engine_config(self, container_args):
+        update_with = self.config.engine_opts
+        if not update_with:
+            return
+
+        container_args["volumes"] = [*container_args["volumes"],
+                                     *update_with.get('volumes', list())]
         for k, v in update_with.get('environment', dict()).items():
-            engine_conf["environment"].update({k: v})
+            container_args["environment"].update({k: v})
 
         for k, v in update_with.items():
-            if k not in engine_conf.keys():
-                engine_conf[k] = update_with[k]
+            if k not in container_args.keys():
+                container_args[k] = update_with[k]

@@ -3,6 +3,7 @@ import unittest
 
 import utils as testutils
 
+from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
 
@@ -15,9 +16,9 @@ class TestHostHostRunner(unittest.TestCase):
 
     def test_run(self):
         repo = testutils.mk_repo()
+        conf = PopperConfig(workspace_dir=repo.working_dir)
 
-        with WorkflowRunner(
-                'docker', 'host', workspace_dir=repo.working_dir) as r:
+        with WorkflowRunner(conf) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:
@@ -61,9 +62,9 @@ class TestHostDockerRunner(unittest.TestCase):
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_docker_basic_run(self):
         repo = testutils.mk_repo()
+        conf = PopperConfig(workspace_dir=repo.working_dir)
 
-        with WorkflowRunner(
-                'docker', 'host', workspace_dir=repo.working_dir) as r:
+        with WorkflowRunner(conf) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:
