@@ -7,8 +7,6 @@ from popper.config import PopperConfig
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
 
-from dotmap import DotMap
-
 from testfixtures import Replacer
 from testfixtures.popen import MockPopen
 
@@ -28,7 +26,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         replacer.replace('popper.utils.Popen', self.Popen)
         self.addCleanup(replacer.restore)
         self.repo = testutils.mk_repo().working_dir
-        self.slurm_runner = SlurmRunner(DotMap({}))
+        self.slurm_runner = SlurmRunner({})
 
     def tearDown(self):
         log.setLevel('NOTSET')

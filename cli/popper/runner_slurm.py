@@ -14,8 +14,6 @@ from popper.runner_host import HostRunner
 
 
 class SlurmRunner(StepRunner):
-    spawned_jobs = set()
-
     def __init__(self, config):
         super(SlurmRunner, self).__init__(config)
 

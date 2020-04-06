@@ -197,6 +197,6 @@ class DockerRunner(StepRunner, HostDockerRunner):
         if not self.config.registry:
             raise Exception("Expecting 'registry' option in configuration.")
         img = f'{self.config.registry}/{img}'
-        self._build(step, img, tag, dockerfile)
+        self.d.images.build(path=path, tag=f'{img}:{tag}', rm=True, pull=True)
         for l in self.d.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
