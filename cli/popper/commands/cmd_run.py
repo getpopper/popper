@@ -4,6 +4,7 @@ import traceback
 
 from popper import log as logging
 from popper.cli import log, pass_context
+from popper.config import PopperConfig
 from popper.parser import Workflow
 from popper.runner import WorkflowRunner
 
@@ -147,16 +148,12 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
                       substitutions=substitution, allow_loose=allow_loose,
                       include_step_dependencies=with_dependencies)
 
-    # instantiate the runner
-    runner = WorkflowRunner(
-        engine,
-        resource_manager,
-        config_file=conf,
-        dry_run=dry_run,
-        reuse=reuse,
-        skip_pull=skip_pull,
-        skip_clone=skip_clone,
-        workspace_dir=workspace)
+    config = PopperConfig(engine_name=engine, resman_name=resource_manager,
+                          config_file=conf, reuse=reuse, dry_run=dry_run,
+                          skip_pull=skip_pull, skip_clone=skip_clone,
+                          workspace_dir=workspace)
+
+    runner = WorkflowRunner(config)
 
     try:
         runner.run(wf)

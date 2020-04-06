@@ -2,8 +2,8 @@ import os
 import unittest
 import shutil
 
-from dotmap import DotMap
 from unittest.mock import patch
+from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner, StepRunner
 
@@ -25,31 +25,27 @@ class TestWorkflowRunner(unittest.TestCase):
         wf.parse()
 
         # in dry-run, secrets are ignored
-        WorkflowRunner.process_secrets(wf, DotMap({'dry_run': True}))
+        runner = WorkflowRunner(PopperConfig(dry_run=True))
+        runner._process_secrets(wf)
+
+        # now go back to not dry-running
+        runner = WorkflowRunner(PopperConfig())
 
         # when CI=true it should fail
         os.environ['CI'] = 'true'
-        self.assertRaises(
-            SystemExit,
-            WorkflowRunner.process_secrets,
-            wf,
-            DotMap({}))
+        self.assertRaises(SystemExit, runner._process_secrets, wf)
 
         # add one secret
         os.environ['SECRET_ONE'] = '1234'
 
         # it should fail again, as we're missing one
-        self.assertRaises(
-            SystemExit,
-            WorkflowRunner.process_secrets,
-            wf,
-            DotMap({}))
+        self.assertRaises(SystemExit, runner._process_secrets, wf)
 
         os.environ.pop('CI')
 
         # now is fine
         with patch('getpass.getpass', return_value='5678'):
-            WorkflowRunner.process_secrets(wf, DotMap({}))
+            runner._process_secrets(wf)
 
         # pop the other
         os.environ.pop('SECRET_ONE')
@@ -62,31 +58,33 @@ class TestWorkflowRunner(unittest.TestCase):
         """)
         wf.parse()
 
-        wid = '12345'
+        conf = PopperConfig()
         cache_dir = os.path.join(os.environ['HOME'], '.cache/popper/')
 
         # clone repos in the default cache directory.
-        WorkflowRunner.clone_repos(wf, DotMap({'wid': wid}))
-        self.assertTrue(
-            os.path.exists(
-                os.path.join(cache_dir, wid, 'github.com/popperized/bin')))
+        runner = WorkflowRunner(conf)
+        runner._clone_repos(wf)
+        step_dir = os.path.join(cache_dir, conf.wid,
+                                'github.com/popperized/bin')
+        self.assertTrue(os.path.exists(step_dir))
 
         # clone repos in custom cache directory
         os.environ['POPPER_CACHE_DIR'] = '/tmp/smdir'
-        WorkflowRunner.clone_repos(wf, DotMap({'wid': wid}))
-        self.assertTrue(
-            os.path.exists(
-                os.path.join('/tmp/smdir', wid, 'github.com/popperized/bin')))
+        runner._clone_repos(wf)
+        step_dir = os.path.join('/tmp/smdir', conf.wid,
+                                'github.com/popperized/bin')
+        self.assertTrue(os.path.exists(step_dir))
         os.environ.pop('POPPER_CACHE_DIR')
 
         # check failure when container is not available and we skip cloning
         shutil.rmtree('/tmp/smdir')
         shutil.rmtree(cache_dir)
-        self.assertRaises(SystemExit, WorkflowRunner.clone_repos, wf,
-                          DotMap({'wid': wid, 'skip_clone': True}))
+        conf = PopperConfig(skip_clone=True)
+        runner = WorkflowRunner(conf)
+        self.assertRaises(SystemExit, runner._clone_repos, wf)
 
     def test_steprunner_factory(self):
-        with WorkflowRunner('docker', 'host') as r:
+        with WorkflowRunner(PopperConfig()) as r:
             self.assertEqual(r.step_runner('host', None).__class__.__name__,
                              'HostRunner')
             self.assertEqual(r.step_runner('docker', None).__class__.__name__,

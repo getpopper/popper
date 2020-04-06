@@ -6,7 +6,6 @@ import sys
 import popper.scm as scm
 import popper.utils as pu
 
-from popper.config import PopperConfig
 from popper.cli import log
 
 
@@ -16,26 +15,19 @@ class WorkflowRunner(object):
     # class variable that holds references to runner singletons
     runners = {}
 
-    def __init__(self, engine, resource_manager, config_file=None,
-                 workspace_dir=os.getcwd(), reuse=False, dry_run=False,
-                 quiet=False, skip_pull=False, skip_clone=False,
-                 engine_options=dict(), resman_options=dict()):
+    def __init__(self, config):
+        self.config = config
+        self.is_resman_module_loaded = False
 
-        # create a config object from the given arguments
-        kwargs = locals()
-        kwargs.pop('self')
-        self.config = PopperConfig(**kwargs)
-        self.config.parse()
-
-        # dynamically load resource manager
+    def _load_resman_module(self):
+        """dynamically load resource manager module"""
         resman_mod_name = f'popper.runner_{self.config.resman_name}'
         resman_spec = importlib.util.find_spec(resman_mod_name)
         if not resman_spec:
             raise ValueError(
                 f'Invalid resource manager: {self.config.resman_name}')
         self.resman_mod = importlib.import_module(resman_mod_name)
-
-        log.debug(f'WorkflowRunner config:\n{pu.prettystr(self.config)}')
+        self.is_resman_module_loaded = True
 
     def __enter__(self):
         return self
@@ -64,8 +56,7 @@ class WorkflowRunner(object):
             runner.stop_running_tasks()
         sys.exit(0)
 
-    @staticmethod
-    def process_secrets(wf, config):
+    def _process_secrets(self, wf):
         """Checks whether the secrets defined for a step are available in the
         execution environment. When the environment variable `CI` is set to
         `true` and no environment variable is defined for a secret, the
@@ -80,7 +71,7 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        if config.dry_run or config.skip_clone:
+        if self.config.dry_run or self.config.skip_clone:
             return
 
         for _, a in wf.steps.items():
@@ -93,8 +84,7 @@ class WorkflowRunner(object):
                             f'Enter the value for {s} : ')
                         os.environ[s] = val
 
-    @staticmethod
-    def clone_repos(wf, config):
+    def _clone_repos(self, wf):
         """Clone steps that reference a repository.
 
         Args:
@@ -106,7 +96,7 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        repo_cache = os.path.join(pu.setup_base_cache(), config.wid)
+        repo_cache = os.path.join(pu.setup_base_cache(), self.config.wid)
 
         cloned = set()
         infoed = False
@@ -124,10 +114,10 @@ class WorkflowRunner(object):
             a['repo_dir'] = repo_dir
             a['step_dir'] = step_dir
 
-            if config.dry_run:
+            if self.config.dry_run:
                 continue
 
-            if config.skip_clone:
+            if self.config.skip_clone:
                 if not os.path.exists(repo_dir):
                     log.fail(f"Expecting folder '{repo_dir}' not found.")
                 continue
@@ -152,8 +142,8 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        WorkflowRunner.process_secrets(wf, self.config)
-        WorkflowRunner.clone_repos(wf, self.config)
+        self._process_secrets(wf)
+        self._clone_repos(wf)
 
         for _, step in wf.steps.items():
             log.debug(f'Executing step:\n{pu.prettystr(step)}')
@@ -174,6 +164,9 @@ class WorkflowRunner(object):
 
     def step_runner(self, engine_name, step):
         """Factory of singleton runners"""
+        if not self.is_resman_module_loaded:
+            self._load_resman_module()
+
         runner = WorkflowRunner.runners.get(engine_name, None)
 
         if not runner:
@@ -187,6 +180,10 @@ class WorkflowRunner(object):
         return runner
 
 
+# class design guidelines:
+# - if not exposed to users, then it is protected, e.g `_foo()`
+# - if a method does not use internal state then it is a @staticmethod
+# - if both of the above, then it's both protected and static
 class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
 
