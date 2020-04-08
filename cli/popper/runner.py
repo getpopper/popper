@@ -13,28 +13,28 @@ class WorkflowRunner(object):
     """The workflow runner."""
 
     # class variable that holds references to runner singletons
-    runners = {}
+    __runners = {}
 
     def __init__(self, config):
-        self.config = config
-        self.is_resman_module_loaded = False
+        self._config = config
+        self._is_resman_module_loaded = False
 
     def _load_resman_module(self):
         """dynamically load resource manager module"""
-        resman_mod_name = f'popper.runner_{self.config.resman_name}'
+        resman_mod_name = f'popper.runner_{self._config.resman_name}'
         resman_spec = importlib.util.find_spec(resman_mod_name)
         if not resman_spec:
             raise ValueError(
-                f'Invalid resource manager: {self.config.resman_name}')
-        self.resman_mod = importlib.import_module(resman_mod_name)
-        self.is_resman_module_loaded = True
+                f'Invalid resource manager: {self._config.resman_name}')
+        self._resman_mod = importlib.import_module(resman_mod_name)
+        self._is_resman_module_loaded = True
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
-        self.config.repo.close()
+        self._config.repo.close()
         for _, r in WorkflowRunner.runners.items():
             r.__exit__(exc_type, exc, traceback)
         WorkflowRunner.runners = {}
@@ -52,7 +52,7 @@ class WorkflowRunner(object):
             None
         """
         log.info(f'Got {sig} signal. Stopping running steps.')
-        for _, runner in WorkflowRunner.runners.items():
+        for _, runner in WorkflowRunner.__runners.items():
             runner.stop_running_tasks()
         sys.exit(0)
 
@@ -71,7 +71,7 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        if self.config.dry_run or self.config.skip_clone:
+        if self._config.dry_run or self._config.skip_clone:
             return
 
         for _, a in wf.steps.items():
@@ -83,6 +83,24 @@ class WorkflowRunner(object):
                         val = getpass.getpass(
                             f'Enter the value for {s} : ')
                         os.environ[s] = val
+
+    @staticmethod
+    def __setup_base_cache():
+        """Set up the base cache directory.
+
+        Returns:
+          str: The path to the base cache directory.
+        """
+        if os.environ.get('POPPER_CACHE_DIR', None):
+            base_cache = os.environ['POPPER_CACHE_DIR']
+        else:
+            cache_dir_default = os.path.join(os.environ['HOME'], '.cache')
+            cache_dir = os.environ.get('XDG_CACHE_HOME', cache_dir_default)
+            base_cache = os.path.join(cache_dir, 'popper')
+
+        os.makedirs(base_cache, exist_ok=True)
+
+        return base_cache
 
     def _clone_repos(self, wf):
         """Clone steps that reference a repository.
@@ -96,7 +114,8 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        repo_cache = os.path.join(pu.setup_base_cache(), self.config.wid)
+        repo_cache = os.path.join(WorkflowRunner.__setup_base_cache(),
+                                  self._config.wid)
 
         cloned = set()
         infoed = False
@@ -114,10 +133,10 @@ class WorkflowRunner(object):
             a['repo_dir'] = repo_dir
             a['step_dir'] = step_dir
 
-            if self.config.dry_run:
+            if self._config.dry_run:
                 continue
 
-            if self.config.skip_clone:
+            if self._config.skip_clone:
                 if not os.path.exists(repo_dir):
                     log.fail(f"Expecting folder '{repo_dir}' not found.")
                 continue
@@ -148,9 +167,9 @@ class WorkflowRunner(object):
         for _, step in wf.steps.items():
             log.debug(f'Executing step:\n{pu.prettystr(step)}')
             if step['uses'] == 'sh':
-                e = self.step_runner('host', step).run(step)
+                e = self._step_runner('host', step).run(step)
             else:
-                e = self.step_runner(self.config.engine_name, step).run(step)
+                e = self._step_runner(self._config.engine_name, step).run(step)
 
             if e != 0 and e != 78:
                 log.fail(f"Step '{step['name']}' failed ('{e}') !")
@@ -162,19 +181,19 @@ class WorkflowRunner(object):
 
         log.info(f"Workflow finished successfully.")
 
-    def step_runner(self, engine_name, step):
+    def _step_runner(self, engine_name, step):
         """Factory of singleton runners"""
-        if not self.is_resman_module_loaded:
+        if not self._is_resman_module_loaded:
             self._load_resman_module()
 
         runner = WorkflowRunner.runners.get(engine_name, None)
 
         if not runner:
             engine_cls_name = f'{engine_name.capitalize()}Runner'
-            engine_cls = getattr(self.resman_mod, engine_cls_name, None)
+            engine_cls = getattr(self._resman_mod, engine_cls_name, None)
             if not engine_cls:
                 raise ValueError(f'Cannot find class for {engine_name}')
-            runner = engine_cls(self.config)
+            runner = engine_cls(self._config)
             WorkflowRunner.runners[engine_name] = runner
 
         return runner
@@ -188,7 +207,7 @@ class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
 
     def __init__(self, config):
-        self.config = config
+        self._config = config
 
     def __enter__(self):
         return self

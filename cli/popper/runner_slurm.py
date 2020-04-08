@@ -1,16 +1,10 @@
 import os
-import time
-import subprocess
 import threading
 
-import sh
-
 from popper import utils as pu
-from popper import scm
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 from popper.runner_host import DockerRunner as HostDockerRunner
-from popper.runner_host import HostRunner
 
 
 class SlurmRunner(StepRunner):
@@ -18,7 +12,7 @@ class SlurmRunner(StepRunner):
         super(SlurmRunner, self).__init__(config)
 
     def __exit__(self, exc_type, exc, traceback):
-        SlurmRunner.spawned_jobs = set()
+        self._spawned_jobs = set()
 
     def _stream_output(self, out_file):
         self.output_stream_pid = set()
@@ -30,7 +24,7 @@ class SlurmRunner(StepRunner):
         pu.exec_cmd(["tail", "-f", err_file],
                     spawned_processes=self.error_stream_pid)
 
-    def start_output_error_stream(self, out_file, err_file):
+    def _start_output_error_stream(self, out_file, err_file):
         self.output_stream_thread = threading.Thread(
             target=self._stream_output, args=(out_file,))
 
@@ -40,7 +34,7 @@ class SlurmRunner(StepRunner):
         self.output_stream_thread.start()
         self.error_stream_thread.start()
 
-    def stop_output_error_stream(self):
+    def _stop_output_error_stream(self):
         output_stream_proc = list(self.output_stream_pid)[0]
         error_stream_proc = list(self.error_stream_pid)[0]
 
@@ -50,24 +44,7 @@ class SlurmRunner(StepRunner):
         self.output_stream_thread.join()
         self.error_stream_thread.join()
 
-    @staticmethod
-    def generate_script(cmd, job_name, job_script):
-        with open(job_script, "w") as f:
-            f.write("#!/bin/bash\n")
-            f.write(cmd)
-
-    @staticmethod
-    def touch_log_files(out_file, err_file):
-        if os.path.exists(out_file):
-            os.remove(out_file)
-
-        if os.path.exists(err_file):
-            os.remove(err_file)
-
-        sh.touch(out_file)
-        sh.touch(err_file)
-
-    def submit_batch_job(self, cmd, step):
+    def _submit_batch_job(self, cmd, step):
         job_name = pu.sanitized_name(step['name'], self.config.wid)
         temp_dir = "/tmp/popper/slurm/"
         os.makedirs(temp_dir, exist_ok=True)
@@ -76,8 +53,15 @@ class SlurmRunner(StepRunner):
         out_file = os.path.join(temp_dir, f"{job_name}.out")
         err_file = os.path.join(temp_dir, f"{job_name}.err")
 
-        SlurmRunner.touch_log_files(out_file, err_file)
-        SlurmRunner.generate_script(cmd, job_name, job_script)
+        # create/truncate log files
+        with open(out_file, 'w'):
+            pass
+        with open(err_file, 'w'):
+            pass
+
+        with open(job_script, "w") as f:
+            f.write("#!/bin/bash\n")
+            f.write(cmd)
 
         sbatch_cmd = "sbatch --wait "
         sbatch_cmd += f"--job-name {job_name} "
@@ -101,7 +85,6 @@ class SlurmRunner(StepRunner):
 
         # submit the job and wait, then parse the job_id
         ecode, output = pu.exec_cmd(sbatch_cmd.split(" "), logging=False)
-        job_id = int(output.split(" ")[-1].strip("\n"))
 
         # kill the tail process
         self.stop_output_error_stream()
@@ -109,9 +92,8 @@ class SlurmRunner(StepRunner):
         SlurmRunner.spawned_jobs.remove(job_name)
         return ecode
 
-    @staticmethod
-    def cancel_job():
-        for job_name in SlurmRunner.spawned_jobs:
+    def _cancel_job():
+        for job_name in self._spawned_jobs:
             log.info(f'Cancelling job {job_name}')
             ecode, _ = pu.exec_cmd(["scancel", "--name", job_name])
             if ecode:
@@ -119,13 +101,13 @@ class SlurmRunner(StepRunner):
 
 
 class DockerRunner(SlurmRunner):
-    spawned_containers = set()
 
     def __init__(self, config):
         super(DockerRunner, self).__init__(config)
+        self._spawned_containers = set()
 
     def __exit__(self, exc_type, exc, traceback):
-        spawned_containers = set()
+        pass
 
     def run(self, step):
         """Execute the given step in docker."""
@@ -133,13 +115,10 @@ class DockerRunner(SlurmRunner):
         cid = pu.sanitized_name(step['name'], self.config.wid)
         step['cmd_list'] = []
 
-        # prepare image build artifacts
-        build, img, dockerfile = HostDockerRunner.get_build_info(
-            step, self.config.workspace_dir, self.config.workspace_sha)
+        build, img, tag, dockerfile = self._get_build_info(step)
 
         if build:
-            DockerRunner.docker_build(
-                step, img, dockerfile, self.config.dry_run)
+            self._docker_build(step, img, tag, dockerfile)
         elif not self.config.skip_pull and not step.get('skip_pull', False):
             DockerRunner.docker_pull(step, img, self.config.dry_run)
 
@@ -152,10 +131,10 @@ class DockerRunner(SlurmRunner):
         if self.config.dry_run:
             return 0
 
-        DockerRunner.spawned_containers.add(cid)
+        self._spawned_containers.add(cid)
         DockerRunner.docker_start(step, cid, self.config.dry_run)
         ecode = self.run_script(step)
-        DockerRunner.spawned_containers.remove(cid)
+        self._spawned_containers.remove(cid)
         return ecode
 
     def run_script(self, step):
@@ -165,33 +144,29 @@ class DockerRunner(SlurmRunner):
 
     @staticmethod
     def docker_create(step, img, cid, config):
-        msg = f'{img} {step.get("runs", "")} {step.get("args", "")}'
-        log.info(f'[{step["name"]}] docker create {msg}')
+        container_args = self._get_container_kwargs(step, img, cid)
+        container_args.pop('detach')
+        cmd = "docker create "
+        cmd += f"--name {container_args.pop('name')} "
+        cmd += f"--workdir {container_args.pop('working_dir')} "
 
-        engine_config = HostDockerRunner.get_engine_config(
-            step, img, cid, config)
-        engine_config.pop('detach')
-        docker_cmd = "docker create "
-        docker_cmd += f"--name {engine_config.pop('name')} "
-        docker_cmd += f"--workdir {engine_config.pop('working_dir')} "
-
-        if engine_config.get('entrypoint', None):
-            docker_cmd += f"--entrypoint '{' '.join(engine_config.pop('entrypoint'))}' "
+        if container_args.get('entrypoint', None):
+            cmd += f"--entrypoint {' '.join(container_args.pop('entrypoint'))}"
 
         # append the vol and envs
-        for vol in engine_config.pop('volumes'):
+        for vol in container_args.pop('volumes'):
             docker_cmd += f"-v {vol} "
-        for env_key, env_val in engine_config.pop('environment').items():
+        for env_key, env_val in container_args.pop('environment').items():
             docker_cmd += f"-e {env_key}={env_val} "
 
-        image = engine_config.pop('image')
+        image = container_args.pop('image')
 
-        if engine_config.get('command', None):
-            command = ' '.join(engine_config.pop('command'))
+        if container_args.get('command', None):
+            command = ' '.join(container_args.pop('command'))
         else:
             command = ' '
 
-        for k, v in engine_config.items():
+        for k, v in container_args.items():
             if not v:
                 continue
             if isinstance(v, bool):
@@ -241,7 +216,4 @@ class DockerRunner(SlurmRunner):
         step['cmd_list'].append(docker_cmd)
 
     def stop_running_tasks(self):
-        for cid in DockerRunner.spawned_containers:
-            log.info(f'Stopping container {cid}')
-            pu.exec_cmd(["docker", "stop", cid])
-        SlurmRunner.cancel_job()
+        self._cancel_job()

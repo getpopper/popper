@@ -1,11 +1,10 @@
 import os
-
-from hashlib import shake_256
-
-from popper.cli import log as log
+import yaml
 
 import popper.scm as scm
-import popper.utils as pu
+
+from hashlib import shake_256
+from popper.cli import log as log
 
 
 class PopperConfig(object):
@@ -35,7 +34,7 @@ class PopperConfig(object):
         self.resman_opts = from_file['resman_opts']
 
     def load_config_from_file(self, config_file, engine_name, resman_name):
-        from_file = pu.load_config_file(config_file)
+        from_file = PopperConfig.__load_config_file(config_file)
         loaded_conf = {}
 
         eng_from_file = from_file.get('engine', {}).get('name')
@@ -67,3 +66,33 @@ class PopperConfig(object):
         loaded_conf['resman_opts'] = resman_opts
 
         return loaded_conf
+
+    @staticmethod
+    def __load_config_file(config_file):
+        """Validate and parse the engine configuration file.
+
+        Args:
+          config_file(str): Path to the file to be parsed.
+
+        Returns:
+          dict: Engine configuration.
+        """
+        if isinstance(config_file, dict):
+            return config_file
+
+        if not config_file:
+            return dict()
+
+        if not os.path.exists(config_file):
+            log.fail(f'File {config_file} was not found.')
+
+        if not config_file.endswith('.yml'):
+            log.fail('Configuration file must be a YAML file.')
+
+        with open(config_file, 'r') as cf:
+            data = yaml.load(cf, Loader=yaml.Loader)
+
+        if not data:
+            log.fail('Configuration file is empty.')
+
+        return data

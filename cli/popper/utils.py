@@ -10,41 +10,6 @@ from subprocess import Popen, STDOUT, PIPE, SubprocessError
 from popper.cli import log
 
 
-def setup_base_cache():
-    """Set up the base cache directory.
-
-    Args:
-      None
-
-    Returns:
-      str: The path to the base cache directory.
-    """
-    if os.environ.get('POPPER_CACHE_DIR', None):
-        base_cache = os.environ['POPPER_CACHE_DIR']
-    else:
-        cache_dir = os.environ.get('XDG_CACHE_HOME',
-                                   os.path.join(os.environ['HOME'], '.cache'))
-        base_cache = os.path.join(cache_dir, 'popper')
-
-    os.makedirs(base_cache, exist_ok=True)
-
-    return base_cache
-
-
-def decode(line):
-    """Make treatment of stdout Python 2/3 compatible.
-
-    Args:
-      line(str): The string that is required to be converted.
-
-    Returns:
-      str : The string in converted form.
-    """
-    if isinstance(line, bytes):
-        return line.decode('utf-8')
-    return line
-
-
 class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by serializing call
     to the `next` method of given iterator/generator."""
@@ -127,23 +92,6 @@ def of_type(param, valid_types):
                 return False not in res
 
     return False
-
-
-def write_file(path, content=''):
-    """Create and write contents to a file. If no content is provided a blank
-    file is created.
-
-    Args:
-      path(str): The path where the file would be created.
-      content(str, optional): The content to write in the file.
-                            (Default value = '')
-
-    Returns:
-      None
-    """
-    f = open(path, 'w')
-    f.write(content)
-    f.close()
 
 
 def load_config_file(config_file):

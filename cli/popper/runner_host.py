@@ -15,9 +15,9 @@ class HostRunner(StepRunner):
     def __init__(self, config):
         super(HostRunner, self).__init__(config)
 
-        self.spawned_pids = set()
+        self._spawned_pids = set()
 
-        if self.config.reuse:
+        if self._config.reuse:
             log.warning('Reuse not supported for HostRunner.')
 
     def __enter__(self):
@@ -36,20 +36,20 @@ class HostRunner(StepRunner):
 
         log.info(f'[{step["name"]}] {cmd}')
 
-        if self.config.dry_run:
+        if self._config.dry_run:
             return 0
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        pid, ecode, _ = pu.exec_cmd(cmd, step_env, self.config.workspace_dir,
-                                    self.spawned_pids)
+        pid, ecode, _ = pu.exec_cmd(cmd, step_env, self._config.workspace_dir,
+                                    self._spawned_pids)
         if pid != 0:
-            self.spawned_pids.remove(pid)
+            self._spawned_pids.remove(pid)
 
         return ecode
 
     def stop_running_tasks(self):
-        for pid in self.spawned_pids:
+        for pid in self._spawned_pids:
             log.info(f'Stopping proces {pid}')
             os.kill(pid, signal.SIGKILL)
 
@@ -60,50 +60,50 @@ class DockerRunner(StepRunner):
     def __init__(self, config):
         super(DockerRunner, self).__init__(config)
 
-        self.spawned_containers = []
+        self._spawned_containers = []
 
         try:
-            self.d = docker.from_env()
-            self.d.version()
+            self._d = docker.from_env()
+            self._d.version()
         except Exception as e:
             log.debug(f'Docker error: {e}')
             log.fail(f'Unable to connect to the docker daemon.')
 
-        log.debug(f'Docker info: {pu.prettystr(self.d.info())}')
+        log.debug(f'Docker info: {pu.prettystr(self._d.info())}')
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        if self.d:
-            self.d.close()
-        self.spawned_containers = []
+        if self._d:
+            self._d.close()
+        self._spawned_containers = []
         return True
 
     def run(self, step):
         """Execute the given step in docker."""
-        cid = pu.sanitized_name(step['name'], self.config.wid)
+        cid = pu.sanitized_name(step['name'], self._config.wid)
 
         container = self._find_container(cid)
-        if container and not self.config.reuse and not self.config.dry_run:
+        if container and not self._config.reuse and not self._config.dry_run:
             container.remove(force=True)
 
         container = self._create_container(cid, step)
 
         log.info(f'[{step["name"]}] docker start')
 
-        if self.config.dry_run:
+        if self._config.dry_run:
             return 0
 
-        self.spawned_containers.append(container)
+        self._spawned_containers.append(container)
 
         container.start()
         cout = container.logs(stream=True)
         for line in cout:
-            log.step_info(pu.decode(line).strip('\n'))
+            log.step_info(line.strip('\n'))
 
         e = container.wait()['StatusCode']
         return e
 
     def stop_running_tasks(self):
-        for c in self.spawned_containers:
+        for c in self._spawned_containers:
             log.info(f'Stopping container {c.name}')
             c.stop()
 
@@ -129,8 +129,8 @@ class DockerRunner(StepRunner):
             build = False
         elif './' in step['uses']:
             img = f'{pu.sanitized_name(step["name"], "step")}'
-            tag = f'{self.config.workspace_sha}'
-            build_source = os.path.join(self.config.workspace_dir,
+            tag = f'{self._config.workspace_sha}'
+            build_source = os.path.join(self._config.workspace_dir,
                                         step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
@@ -145,20 +145,20 @@ class DockerRunner(StepRunner):
 
         if build:
             log.info(f'[{step["name"]}] docker build {img}:{tag}')
-            if not self.config.dry_run:
-                self.d.images.build(path=dockerfile, tag=f'{img}:{tag}',
-                                    rm=True, pull=True)
-        elif not self.config.skip_pull and not step.get('skip_pull', False):
+            if not self._config.dry_run:
+                self._d.images.build(path=dockerfile, tag=f'{img}:{tag}',
+                                     rm=True, pull=True)
+        elif not self._config.skip_pull and not step.get('skip_pull', False):
             log.info(f'[{step["name"]}] docker pull {img}:{tag}')
-            if not self.config.dry_run:
-                self.d.images.pull(repository=f'{img}:{tag}')
+            if not self._config.dry_run:
+                self._d.images.pull(repository=f'{img}:{tag}')
 
         log.info(f'[{step["name"]}] docker create {img}:{tag}')
-        if self.config.dry_run:
+        if self._config.dry_run:
             return
 
         container_args = self._get_container_kwargs(step, f'{img}:{tag}', cid)
-        container = self.d.containers.create(**container_args)
+        container = self._d.containers.create(**container_args)
 
         return container
 
@@ -168,7 +168,7 @@ class DockerRunner(StepRunner):
             "command": step.get('args', None),
             "name": name,
             "volumes": [
-                f'{self.config.workspace_dir}:/workspace',
+                f'{self._config.workspace_dir}:/workspace',
                 '/var/run/docker.sock:/var/run/docker.sock'
             ],
             "working_dir": '/workspace',
@@ -185,7 +185,7 @@ class DockerRunner(StepRunner):
 
     def _find_container(self, cid):
         """Check whether the container exists."""
-        containers = self.d.containers.list(all=True, filters={'name': cid})
+        containers = self._d.containers.list(all=True, filters={'name': cid})
 
         filtered_containers = [c for c in containers if c.name == cid]
 
@@ -195,7 +195,7 @@ class DockerRunner(StepRunner):
         return None
 
     def _update_with_engine_config(self, container_args):
-        update_with = self.config.engine_opts
+        update_with = self._config.engine_opts
         if not update_with:
             return
 
