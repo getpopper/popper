@@ -96,7 +96,7 @@ class DockerRunner(StepRunner):
     def __init__(self, init_docker_client=True, **kw):
         super(DockerRunner, self).__init__(**kw)
 
-        self._spawned_containers = []
+        self._spawned_containers = set()
         self._d = None
 
         if not init_docker_client:
@@ -114,7 +114,7 @@ class DockerRunner(StepRunner):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self._d:
             self._d.close()
-        self._spawned_containers = []
+        self._spawned_containers = set()
         return True
 
     def run(self, step):
@@ -132,7 +132,7 @@ class DockerRunner(StepRunner):
         if self._config.dry_run:
             return 0
 
-        self._spawned_containers.append(container)
+        self._spawned_containers.add(container)
 
         container.start()
         cout = container.logs(stream=True)
