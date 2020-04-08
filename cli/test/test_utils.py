@@ -13,15 +13,6 @@ class TestUtils(unittest.TestCase):
     def tearDown(self):
         log.setLevel('NOTSET')
 
-    def test_decode(self):
-        string = b'Hello from popper'
-        result = pu.decode(string)
-        self.assertIsInstance(result, str)
-
-        string = 'Hello from popper'
-        result = pu.decode(string)
-        self.assertIsInstance(result, str)
-
     def test_sanitized_name(self):
         name = "test action"
         santizied_name = pu.sanitized_name(name, '1234')
@@ -34,9 +25,6 @@ class TestUtils(unittest.TestCase):
         name = "test(action)"
         santizied_name = pu.sanitized_name(name, '1234')
         self.assertEqual(santizied_name, "popper_test_action__1234")
-
-    def touch_file(self, path):
-        open(path, 'w').close()
 
     def test_setup_base_cache(self):
         cache_dir = pu.setup_base_cache()
@@ -66,21 +54,6 @@ class TestUtils(unittest.TestCase):
             "project": "popper"
         }
         self.assertEqual(pu.of_type(param, ['str', 'dict']), True)
-
-    def test_load_config_file(self):
-        conf_content = """
-engine:
-    name: docker
-    options:
-        runtime: nvidia
-        """
-        pu.write_file('settings.yml', conf_content)
-        config = pu.load_config_file('settings.yml')
-        self.assertTrue(config.get('engine'), True)
-        self.assertDictEqual(
-            config['engine']['options'], {
-                'runtime': 'nvidia'})
-        os.remove('settings.yml')
 
     def test_assert_executable_exists(self):
         self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')

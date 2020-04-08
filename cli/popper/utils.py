@@ -10,45 +10,6 @@ from subprocess import Popen, STDOUT, PIPE, SubprocessError
 from popper.cli import log
 
 
-class threadsafe_iter_3:
-    """Takes an iterator/generator and makes it thread-safe by serializing call
-    to the `next` method of given iterator/generator."""
-
-    def __init__(self, it):
-        self.it = it
-        self.lock = threading.Lock()
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        with self.lock:
-            return self.it.__next__()
-
-
-def threadsafe_generator(f):
-    """A decorator that takes a generator function and makes it thread-safe.
-
-    Args:
-      f(function): Generator function
-
-    Returns:
-      None
-    """
-    def g(*args, **kwargs):
-        """
-
-        Args:
-          *args(list): List of non-key worded,variable length arguments.
-          **kwargs(dict): List of key-worded,variable length arguments.
-
-        Returns:
-          function: The thread-safe function.
-        """
-        return threadsafe_iter_3(f(*args, **kwargs))
-    return g
-
-
 def sanitized_name(name, wid=''):
     """Clean a step name and change it to proper format. It replaces all the
     unwanted characters with `_`.
@@ -92,36 +53,6 @@ def of_type(param, valid_types):
                 return False not in res
 
     return False
-
-
-def load_config_file(config_file):
-    """Validate and parse the engine configuration file.
-
-    Args:
-      config_file(str): Path to the file to be parsed.
-
-    Returns:
-      dict: Engine configuration.
-    """
-    if isinstance(config_file, dict):
-        return config_file
-
-    if not config_file:
-        return dict()
-
-    if not os.path.exists(config_file):
-        log.fail(f'File {config_file} was not found.')
-
-    if not config_file.endswith('.yml'):
-        log.fail('Configuration file must be a YAML file.')
-
-    with open(config_file, 'r') as cf:
-        data = yaml.load(cf, Loader=yaml.Loader)
-
-    if not data:
-        log.fail('Configuration file is empty.')
-
-    return data
 
 
 def assert_executable_exists(command):
