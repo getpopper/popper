@@ -1,7 +1,5 @@
-import os
 import unittest
-
-import utils as testutils
+import tempfile
 
 from popper.config import PopperConfig
 from popper.runner_slurm import SlurmRunner, DockerRunner
@@ -11,121 +9,74 @@ from testfixtures import Replacer
 from testfixtures.popen import MockPopen
 
 
-FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
-
-
-def _wfile(name, format):
-    return f'{FIXDIR}/{name}.{format}'
-
-
 class TestSlurmSlurmRunner(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
         self.Popen = MockPopen()
         replacer = Replacer()
-        replacer.replace('popper.utils.Popen', self.Popen)
+        replacer.replace('popper.runner_host.Popen', self.Popen)
         self.addCleanup(replacer.restore)
-        self.repo = testutils.mk_repo().working_dir
-        self.slurm_runner = SlurmRunner({})
+        self.repo = tempfile.mkdtemp()
+        self.slurm_runner = SlurmRunner(PopperConfig())
 
     def tearDown(self):
         log.setLevel('NOTSET')
 
-    def test__stream_output(self):
+    def test_tail_output(self):
         self.Popen.set_command('tail -f slurm-x.out', returncode=0)
-        self.slurm_runner._stream_output('slurm-x.out')
+        self.slurm_runner._tail_output('slurm-x.out')
+        # TODO: assert that tail was invoked
 
-    def test__stream_error(self):
-        self.Popen.set_command('tail -f slurm-x.err', returncode=0)
-        self.slurm_runner._stream_error('slurm-x.err')
-
-    def test_generate_script(self):
-        cmd = " ".join(["docker", "version"])
-        job_script = os.path.join(self.repo, 'script.sh')
-        SlurmRunner.generate_script(cmd, 'sample_job', job_script)
-        with open(job_script, 'r') as f:
-            content = f.read()
-        self.assertEqual(content, "#!/bin/bash\ndocker version")
-
-    def test_touch_log_files(self):
-        out_file = os.path.join(self.repo, 'slurm-x.out')
-        err_file = os.path.join(self.repo, 'slurm-x.err')
-        self.slurm_runner.touch_log_files(out_file, err_file)
-        self.assertEqual(os.path.exists(out_file), True)
-        self.assertEqual(os.path.exists(err_file), True)
-
-    def test_cancel_job(self):
+    def test_stop_running_tasks(self):
         self.Popen.set_command('scancel --name job_a', returncode=0)
-        SlurmRunner.spawned_jobs.add('job_a')
-        SlurmRunner.cancel_job()
+        self.slurm_runner._spawned_jobs.add('job_a')
+        self.slurm_runner.stop_running_tasks()
+        # TODO: assert that scancel was invoked
+
+    def test_submit_job(self):
+        # TODO:
+        # - assert that sbatch gets invoked with the right parameters
+        # - assert that when command is given (e.g. ['ls', '-la']) the
+        #   generated script contains it
+        # - assert that Popen is invoked twice, one for sbatch and another for
+        #   the tail command
+        # - assert that stream thread is not running
+        # - assert that job is properly removed from list of spawned jobs
+        #
+        # NOTE: the above might be broken in multiple tests
+        pass
+
+    def test_submit_job_failure(self):
+        # TODO:
+        # - test that when a _submit_batch_job fails, a non-zero exit error
+        #   code is returned
+        pass
+
+    def test_dry_run(self):
+        # TODO: assert that when dry_run=True, submit_job is not invoked
+        pass
 
 
 class TestSlurmDockerRunner(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
-        self.test_dir = "/path/to/workspace"
-        common_kwargs = {
-            'skip_clone': False,
-            'skip_pull': False,
-            'dry_run': False,
-            'workspace_dir': self.test_dir,
-            'quiet': False,
-            'reuse': False,
-            'engine_options': dict(),
-            'resman_options': dict()}
-
-        self.config = PopperConfig(
-            config_file=_wfile("settings_3", "yml"),
-            engine_name=None,
-            resource_manager=None,
-            **common_kwargs)
-
-        self.docker_runner = DockerRunner(self.config)
-        self.cls = TestSlurmDockerRunner
-
-    @classmethod
-    def setUpClass(cls):
-        cls.step = {'cmd_list': [], 'name': 'one'}
 
     def tearDown(self):
         log.setLevel('NOTSET')
 
-    def test_docker_build(self):
-        DockerRunner.docker_build(
-            self.cls.step,
-            'alpine',
-            '/path/to/build_dir',
-            self.config.dry_run)
-        self.assertEqual(
-            self.cls.step['cmd_list'],
-            ['docker build alpine /path/to/build_dir > /dev/null'])
+    def test_create_cmd(self):
+        docker_runner = DockerRunner(PopperConfig())
+        step = {'args': ['-a', '-flag']}
+        cmd = docker_runner._create_cmd(step, 'foo:1.9', 'container_name')
 
-    def test_docker_create(self):
-        DockerRunner.docker_create(self.cls.step, 'alpine', 'c1', self.config)
-        self.assertEqual(self.cls.step['cmd_list'], [
-            'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null'])
+        self.assertEqual('docker --name container_name create foo:1.9', cmd)
 
-    def test_docker_pull(self):
-        DockerRunner.docker_pull(self.cls.step, 'alpine', self.config.dry_run)
-        self.assertEqual(self.cls.step['cmd_list'], [
-            'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null',
-            'docker pull alpine > /dev/null'])
+        # TODO: test many times the above, but with distinct contents for step
 
-    def test_docker_rm(self):
-        DockerRunner.docker_rm(self.step, 'c1', self.config.dry_run)
-        self.assertEqual(self.cls.step['cmd_list'], [
-            'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null',
-            'docker pull alpine > /dev/null',
-            'docker rm -f c1 || true > /dev/null'])
-
-    def test_docker_start(self):
-        DockerRunner.docker_start(self.step, 'c1', self.config.dry_run)
-        self.assertEqual(self.cls.step['cmd_list'], [
-            'docker build alpine /path/to/build_dir > /dev/null',
-            'docker create --name c1 --workdir /workspace -v /path/to/workspace:/workspace -v /var/run/docker.sock:/var/run/docker.sock alpine   > /dev/null',
-            'docker pull alpine > /dev/null',
-            'docker rm -f c1 || true > /dev/null',
-            'docker start --attach c1'])
+    def test_run(self):
+        # TODO: create a mock for Popen; create a workflow object and then
+        # instantiate a WorkflowRunner. Then invoke WorkflowRunner.run() and
+        # check that:
+        # - submit_job generates a script containing the right docker commands
+        # - sbatch and tail commands get invoked with the right flags
+        pass

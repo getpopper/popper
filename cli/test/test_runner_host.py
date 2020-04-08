@@ -57,27 +57,36 @@ class TestHostHostRunner(unittest.TestCase):
 
     def test_exec_cmd(self):
         cmd = ["echo", "command_1"]
-        pid, ecode, output = HostRunner.exec_cmd(cmd, logging=False)
+        pid, ecode, output = HostRunner._exec_cmd(cmd, logging=False)
         self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "command_1\n")
 
-        pid, ecode, output = HostRunner.exec_cmd(cmd, logging=True)
+        pid, ecode, output = HostRunner._exec_cmd(cmd, logging=True)
         self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "")
 
         cmd = ["env"]
-        pid, ecode, output = HostRunner.exec_cmd(
+        pid, ecode, output = HostRunner._exec_cmd(
             cmd, env={'TESTACION': 'test'}, cwd="/tmp", logging=False)
         self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
         self.assertTrue('TESTACION' in output)
 
+    # TODO: add test_stop_running_tasks
+
 
 class TestHostDockerRunner(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
+
+    # TODO: add the following tests
+    # - test_update_with_engine_config
+    # - test_get_container_kwargs
+    # - test_get_build_info
+    # - test_create_container
+    # - test_stop_running_tasks
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_docker_basic_run(self):

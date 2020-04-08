@@ -43,9 +43,9 @@ class HostRunner(StepRunner):
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        pid, ecode, _ = HostRunner.exec_cmd(cmd, step_env,
-                                            self._config.workspace_dir,
-                                            self._spawned_pids)
+        pid, ecode, _ = HostRunner._exec_cmd(cmd, step_env,
+                                             self._config.workspace_dir,
+                                             self._spawned_pids)
         if pid != 0:
             self._spawned_pids.remove(pid)
 
@@ -57,7 +57,7 @@ class HostRunner(StepRunner):
             os.kill(pid, signal.SIGKILL)
 
     @staticmethod
-    def exec_cmd(cmd, env=None, cwd=os.getcwd(), pids=set(), logging=True):
+    def _exec_cmd(cmd, env=None, cwd=os.getcwd(), pids=set(), logging=True):
         pid = 0
         try:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT,
@@ -67,12 +67,12 @@ class HostRunner(StepRunner):
                 pids.add(p.pid)
                 log.debug('Reading process output')
 
-                output = ""
+                output = []
                 for line in iter(p.stdout.readline, ''):
                     if logging:
-                        log.step_info(line[:-1])
+                        log.step_info(line)
                     else:
-                        output += line
+                        output.append(line)
 
                 p.wait()
                 ecode = p.poll()
@@ -88,12 +88,11 @@ class HostRunner(StepRunner):
             ecode = 1
             log.step_info(f"Command raised non-SubprocessError error: {ex}")
 
-        return pid, ecode, output
+        return pid, ecode, '\n'.join(output)
 
 
 class DockerRunner(StepRunner):
     """Runs steps in docker on the local machine."""
-    # hold references to spawned containers
     def __init__(self, config):
         super(DockerRunner, self).__init__(config)
 
@@ -232,6 +231,9 @@ class DockerRunner(StepRunner):
         return None
 
     def _update_with_engine_config(self, container_args):
+        """Given container arguments, it extends it so it includes options
+        obtained from the PopperConfig.engine_opts property.
+        """
         update_with = self._config.engine_opts
         if not update_with:
             return

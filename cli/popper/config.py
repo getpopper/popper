@@ -25,15 +25,15 @@ class PopperConfig(object):
         wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
         self.wid = wid
 
-        from_file = self.load_config_from_file(config_file, engine_name,
-                                               resman_name)
+        from_file = self._load_config_from_file(config_file, engine_name,
+                                                resman_name)
 
         self.engine_name = from_file['engine_name']
         self.resman_name = from_file['resman_name']
         self.engine_opts = from_file['engine_opts']
         self.resman_opts = from_file['resman_opts']
 
-    def load_config_from_file(self, config_file, engine_name, resman_name):
+    def _load_config_from_file(self, config_file, engine_name, resman_name):
         from_file = PopperConfig.__load_config_file(config_file)
         loaded_conf = {}
 

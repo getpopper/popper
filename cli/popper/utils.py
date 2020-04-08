@@ -64,3 +64,12 @@ def prettystr(a):
         a = dict(a)
     if isinstance(a, dict):
         return f'{yaml.dump(a, default_flow_style=False)}'
+
+
+def key_value_to_flag(k, v, equals_symbol=False):
+    flag = '-' if len(k) == 1 else '--'
+    if isinstance(v, bool):
+        flag += f'{k}'
+    else:
+        flag += f'{k}{"=" if equals_symbol else " "}{v} '
+    return flag
