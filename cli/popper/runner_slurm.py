@@ -48,7 +48,7 @@ class SlurmRunner(HostRunner):
 
         sbatch_cmd = f'sbatch --wait --job-name {job_name} --output {out_file}'
 
-        for k, v in self._config.resman_options.get(step['name'], {}).items():
+        for k, v in self._config.resman_opts.get(step['name'], {}).items():
             sbatch_cmd.append(pu.key_value_to_flag(k, v))
 
         sbatch_cmd.append(job_script)
