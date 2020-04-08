@@ -8,9 +8,10 @@ python:
 env:
 - ENGINE=docker
 #- ENGINE=singularity
+- RESMAN=kubernetes
 services: docker
 before_install:
-- ci/scripts/install_scripts.sh
+- ci/scripts/install-test-deps.sh
 - pip install coverage
 install:
 - pip install cli/[dev]
