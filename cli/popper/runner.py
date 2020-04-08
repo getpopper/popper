@@ -35,9 +35,9 @@ class WorkflowRunner(object):
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
         self._config.repo.close()
-        for _, r in WorkflowRunner.runners.items():
+        for _, r in WorkflowRunner.__runners.items():
             r.__exit__(exc_type, exc, traceback)
-        WorkflowRunner.runners = {}
+        WorkflowRunner.__runners = {}
 
     @staticmethod
     def signal_handler(sig, frame):
@@ -186,7 +186,7 @@ class WorkflowRunner(object):
         if not self._is_resman_module_loaded:
             self._load_resman_module()
 
-        runner = WorkflowRunner.runners.get(engine_name, None)
+        runner = WorkflowRunner.__runners.get(engine_name, None)
 
         if not runner:
             engine_cls_name = f'{engine_name.capitalize()}Runner'
@@ -194,7 +194,7 @@ class WorkflowRunner(object):
             if not engine_cls:
                 raise ValueError(f'Cannot find class for {engine_name}')
             runner = engine_cls(self._config)
-            WorkflowRunner.runners[engine_name] = runner
+            WorkflowRunner.__runners[engine_name] = runner
 
         return runner
 

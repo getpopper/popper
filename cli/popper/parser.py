@@ -3,13 +3,13 @@ from __future__ import unicode_literals
 import re
 import hcl
 import os
+import threading
 import yaml
 
 from copy import deepcopy
 from builtins import str, dict
 from popper.cli import log as log
 
-import popper.scm as scm
 import popper.utils as pu
 
 
@@ -22,6 +22,7 @@ VALID_STEP_ATTRS = [
     "env",
     "name",
     "next"]
+
 
 class threadsafe_iter_3:
     """Takes an iterator/generator and makes it thread-safe by serializing call
@@ -60,6 +61,7 @@ def threadsafe_generator(f):
         """
         return threadsafe_iter_3(f(*args, **kwargs))
     return g
+
 
 class Workflow(object):
     """Represents an immutable workflow."""

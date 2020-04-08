@@ -43,7 +43,7 @@ class TestPopperConfig(unittest.TestCase):
             'skip_clone': True,
             'skip_pull': True,
             'dry_run': True,
-            'workspace_dir': '/tmp/foo',
+            'workspace_dir': os.path.realpath('/tmp/foo'),
             'quiet': True,
             'reuse': True
         }

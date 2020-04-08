@@ -3,6 +3,8 @@ import signal
 
 import docker
 
+from subprocess import Popen, STDOUT, PIPE, SubprocessError
+
 from popper import utils as pu
 from popper import scm
 from popper.cli import log as log
@@ -41,8 +43,9 @@ class HostRunner(StepRunner):
 
         log.debug(f'Environment:\n{pu.prettystr(os.environ)}')
 
-        pid, ecode, _ = pu.exec_cmd(cmd, step_env, self._config.workspace_dir,
-                                    self._spawned_pids)
+        pid, ecode, _ = HostRunner.exec_cmd(cmd, step_env,
+                                            self._config.workspace_dir,
+                                            self._spawned_pids)
         if pid != 0:
             self._spawned_pids.remove(pid)
 
@@ -52,6 +55,40 @@ class HostRunner(StepRunner):
         for pid in self._spawned_pids:
             log.info(f'Stopping proces {pid}')
             os.kill(pid, signal.SIGKILL)
+
+    @staticmethod
+    def exec_cmd(cmd, env=None, cwd=os.getcwd(), pids=set(), logging=True):
+        pid = 0
+        try:
+            with Popen(cmd, stdout=PIPE, stderr=STDOUT,
+                       universal_newlines=True, preexec_fn=os.setsid,
+                       env=env, cwd=cwd, text=True) as p:
+                pid = p.pid
+                pids.add(p.pid)
+                log.debug('Reading process output')
+
+                output = ""
+                for line in iter(p.stdout.readline, ''):
+                    if logging:
+                        log.step_info(line[:-1])
+                    else:
+                        output += line
+
+                p.wait()
+                ecode = p.poll()
+
+            log.debug(f'Code returned by process: {ecode}')
+
+        except SubprocessError as ex:
+            output = ""
+            ecode = ex.returncode
+            log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
+        except Exception as ex:
+            output = ""
+            ecode = 1
+            log.step_info(f"Command raised non-SubprocessError error: {ex}")
+
+        return pid, ecode, output
 
 
 class DockerRunner(StepRunner):
@@ -97,7 +134,7 @@ class DockerRunner(StepRunner):
         container.start()
         cout = container.logs(stream=True)
         for line in cout:
-            log.step_info(line.strip('\n'))
+            log.step_info(line)
 
         e = container.wait()['StatusCode']
         return e

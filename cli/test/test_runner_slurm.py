@@ -76,7 +76,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
 
         self.config = PopperConfig(
             config_file=_wfile("settings_3", "yml"),
-            engine=None,
+            engine_name=None,
             resource_manager=None,
             **common_kwargs)
 

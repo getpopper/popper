@@ -85,9 +85,9 @@ class TestWorkflowRunner(unittest.TestCase):
 
     def test_steprunner_factory(self):
         with WorkflowRunner(PopperConfig()) as r:
-            self.assertEqual(r.step_runner('host', None).__class__.__name__,
+            self.assertEqual(r._step_runner('host', None).__class__.__name__,
                              'HostRunner')
-            self.assertEqual(r.step_runner('docker', None).__class__.__name__,
+            self.assertEqual(r._step_runner('docker', None).__class__.__name__,
                              'DockerRunner')
 
 
