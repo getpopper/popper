@@ -1,5 +1,4 @@
 import unittest
-import os
 
 from popper import utils as pu
 from popper.cli import log
@@ -26,22 +25,32 @@ class TestUtils(unittest.TestCase):
         santizied_name = pu.sanitized_name(name, '1234')
         self.assertEqual(santizied_name, "popper_test_action__1234")
 
-    def test_setup_base_cache(self):
-        cache_dir = pu.setup_base_cache()
-        try:
-            self.assertEqual(cache_dir, os.environ['XDG_CACHE_HOME'])
-        except KeyError:
-            self.assertEqual(
-                cache_dir,
-                os.path.join(
-                    os.environ['HOME'],
-                    '.cache/popper'))
-
-        os.environ['POPPER_CACHE_DIR'] = '/tmp/popper'
-        cache_dir = pu.setup_base_cache()
-        self.assertEqual(cache_dir, '/tmp/popper')
-        os.environ.pop('POPPER_CACHE_DIR')
-
     def test_assert_executable_exists(self):
         pu.assert_executable_exists('ls')
         self.assertRaises(SystemExit, pu.assert_executable_exists, 'abcd')
+
+    def test_of_type(self):
+        param = [u"hello", u"world"]
+        self.assertEqual(pu.of_type(param, ['los']), True)
+
+        param = u"hello world"
+        self.assertEqual(pu.of_type(param, ['los']), False)
+
+        param = {
+            "org": "systemslab",
+            "project": "popper"
+        }
+        self.assertEqual(pu.of_type(param, ['str', 'dict']), True)
+
+    def test_kv_to_flag(self):
+        self.assertEqual(pu.key_value_to_flag('x', 'a'), '-x a')
+        self.assertEqual(pu.key_value_to_flag('y', True), '-y')
+        self.assertEqual(pu.key_value_to_flag('y', False), '')
+        self.assertEqual(pu.key_value_to_flag('yy', True), '--yy')
+        self.assertEqual(pu.key_value_to_flag('zz', 'c'), '--zz c')
+        eq = True
+        self.assertEqual(pu.key_value_to_flag('x', 'a', eq), '-x=a')
+        self.assertEqual(pu.key_value_to_flag('y', True, eq), '-y=true')
+        self.assertEqual(pu.key_value_to_flag('y', False, eq), '-y=false')
+        self.assertEqual(pu.key_value_to_flag('yy', True, eq), '--yy=true')
+        self.assertEqual(pu.key_value_to_flag('zz', 'c', eq), '--zz=c')

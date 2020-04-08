@@ -90,6 +90,22 @@ class TestWorkflowRunner(unittest.TestCase):
             self.assertEqual(r._step_runner('docker', None).__class__.__name__,
                              'DockerRunner')
 
+    def test_setup_base_cache(self):
+        cache_dir = WorkflowRunner._setup_base_cache()
+        try:
+            self.assertEqual(cache_dir, os.environ['XDG_CACHE_HOME'])
+        except KeyError:
+            self.assertEqual(
+                cache_dir,
+                os.path.join(
+                    os.environ['HOME'],
+                    '.cache/popper'))
+
+        os.environ['POPPER_CACHE_DIR'] = '/tmp/popper'
+        cache_dir = WorkflowRunner._setup_base_cache()
+        self.assertEqual(cache_dir, '/tmp/popper')
+        os.environ.pop('POPPER_CACHE_DIR')
+
 
 class TestStepRunner(unittest.TestCase):
     def setUp(self):

@@ -67,9 +67,18 @@ def prettystr(a):
 
 
 def key_value_to_flag(k, v, equals_symbol=False):
+    is_bool = isinstance(v, bool)
+
+    if is_bool and not v and not equals_symbol:
+        return ''
+
     flag = '-' if len(k) == 1 else '--'
-    if isinstance(v, bool):
-        flag += f'{k}'
+
+    if equals_symbol:
+        flag += f'{k}={str(v).lower() if is_bool else v}'
     else:
-        flag += f'{k}{"=" if equals_symbol else " "}{v} '
+        if isinstance(v, bool):
+            flag += f'{k}'
+        else:
+            flag += f'{k} {v}'
     return flag
