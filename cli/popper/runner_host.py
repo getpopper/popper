@@ -14,8 +14,8 @@ from popper.runner import StepRunner as StepRunner
 class HostRunner(StepRunner):
     """Run a step directly on the host machine."""
 
-    def __init__(self, config):
-        super(HostRunner, self).__init__(config)
+    def __init__(self, **kw):
+        super(HostRunner, self).__init__(**kw)
 
         self._spawned_pids = set()
 
@@ -93,10 +93,14 @@ class HostRunner(StepRunner):
 
 class DockerRunner(StepRunner):
     """Runs steps in docker on the local machine."""
-    def __init__(self, config):
-        super(DockerRunner, self).__init__(config)
+    def __init__(self, init_docker_client=True, **kw):
+        super(DockerRunner, self).__init__(**kw)
 
         self._spawned_containers = []
+        self._d = None
+
+        if not init_docker_client:
+            return
 
         try:
             self._d = docker.from_env()

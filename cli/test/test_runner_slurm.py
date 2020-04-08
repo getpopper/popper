@@ -17,7 +17,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         replacer.replace('popper.runner_host.Popen', self.Popen)
         self.addCleanup(replacer.restore)
         self.repo = tempfile.mkdtemp()
-        self.slurm_runner = SlurmRunner(PopperConfig())
+        self.slurm_runner = SlurmRunner(config=PopperConfig())
 
     def tearDown(self):
         log.setLevel('NOTSET')
@@ -65,11 +65,20 @@ class TestSlurmDockerRunner(unittest.TestCase):
         log.setLevel('NOTSET')
 
     def test_create_cmd(self):
-        docker_runner = DockerRunner(PopperConfig())
-        step = {'args': ['-a', '-flag']}
-        cmd = docker_runner._create_cmd(step, 'foo:1.9', 'container_name')
+        conf = {'workspace_dir': '/w'}
+        with DockerRunner(config=PopperConfig(**conf)) as drunner:
+            step = {'args': ['-two', '-flags']}
+            cmd = drunner._create_cmd(step, 'foo:1.9', 'container_name')
 
-        self.assertEqual('docker --name container_name create foo:1.9', cmd)
+            expected = (
+                'docker create'
+                ' --name container_name'
+                ' --workdir /workspace'
+                ' -v /w:/workspace'
+                ' -v /var/run/docker.sock:/var/run/docker.sock'
+                ' foo:1.9 -two -flags')
+
+            self.assertEqual(expected, cmd)
 
         # TODO: test many times the above, but with distinct contents for step
 

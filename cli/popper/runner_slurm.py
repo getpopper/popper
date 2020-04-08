@@ -8,8 +8,8 @@ from popper.runner_host import DockerRunner as HostDockerRunner
 
 
 class SlurmRunner(HostRunner):
-    def __init__(self, config):
-        super(SlurmRunner, self).__init__(config)
+    def __init__(self, **kw):
+        super(SlurmRunner, self).__init__(**kw)
         self._spawned_jobs = set()
 
     def __exit__(self, exc_type, exc, traceback):
@@ -83,8 +83,8 @@ class SlurmRunner(HostRunner):
 
 class DockerRunner(SlurmRunner, HostDockerRunner):
 
-    def __init__(self, config):
-        super(DockerRunner, self).__init__(config)
+    def __init__(self, **kw):
+        super(DockerRunner, self).__init__(init_docker_client=False, **kw)
 
     def __exit__(self, exc_type, exc, traceback):
         pass
@@ -117,9 +117,9 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
     def _create_cmd(self, step, img, cid):
         container_args = self._get_container_kwargs(step, img, cid)
         container_args.pop('detach')
-        cmd = ['docker create ']
-        cmd.append(f"--name {container_args.pop('name')} ")
-        cmd.append(f"--workdir {container_args.pop('working_dir')} ")
+        cmd = ['docker create']
+        cmd.append(f"--name {container_args.pop('name')}")
+        cmd.append(f"--workdir {container_args.pop('working_dir')}")
 
         entrypoint = container_args.pop('entrypoint', None)
         if entrypoint:
@@ -127,9 +127,9 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
         # append volume and environment flags
         for vol in container_args.pop('volumes'):
-            cmd.append(f'-v {vol} ')
+            cmd.append(f'-v {vol}')
         for env_key, env_val in container_args.pop('environment').items():
-            cmd.append(f'-e {env_key}={env_val} ')
+            cmd.append(f'-e {env_key}={env_val}')
 
         command = ' '.join(container_args.pop('command', []))
         image = container_args.pop('image')

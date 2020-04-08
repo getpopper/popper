@@ -6,6 +6,7 @@ import sys
 import popper.scm as scm
 import popper.utils as pu
 
+from popper.config import PopperConfig
 from popper.cli import log
 
 
@@ -85,7 +86,7 @@ class WorkflowRunner(object):
                         os.environ[s] = val
 
     @staticmethod
-    def __setup_base_cache():
+    def _setup_base_cache():
         """Set up the base cache directory.
 
         Returns:
@@ -114,7 +115,7 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        repo_cache = os.path.join(WorkflowRunner.__setup_base_cache(),
+        repo_cache = os.path.join(WorkflowRunner._setup_base_cache(),
                                   self._config.wid)
 
         cloned = set()
@@ -193,7 +194,7 @@ class WorkflowRunner(object):
             engine_cls = getattr(self._resman_mod, engine_cls_name, None)
             if not engine_cls:
                 raise ValueError(f'Cannot find class for {engine_name}')
-            runner = engine_cls(self._config)
+            runner = engine_cls(config=self._config)
             WorkflowRunner.__runners[engine_name] = runner
 
         return runner
@@ -206,7 +207,7 @@ class WorkflowRunner(object):
 class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
 
-    def __init__(self, config):
+    def __init__(self, config=PopperConfig()):
         self._config = config
 
     def __enter__(self):
