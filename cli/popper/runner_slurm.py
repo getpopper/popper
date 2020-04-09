@@ -67,7 +67,7 @@ class SlurmRunner(HostRunner):
         _, ecode, output = HostRunner._exec_cmd(sbatch_cmd, logging=False)
 
         # kill the tail process
-        self._stop_output_error_stream()
+        self._stop_out_stream()
 
         self._spawned_jobs.remove(job_name)
 
