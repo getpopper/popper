@@ -62,7 +62,7 @@ class HostRunner(StepRunner):
         try:
             with Popen(cmd, stdout=PIPE, stderr=STDOUT,
                        universal_newlines=True, preexec_fn=os.setsid,
-                       env=env, cwd=cwd, text=True) as p:
+                       env=env, cwd=cwd) as p:
                 pid = p.pid
                 pids.add(p.pid)
                 log.debug('Reading process output')
@@ -115,7 +115,6 @@ class DockerRunner(StepRunner):
         if self._d:
             self._d.close()
         self._spawned_containers = set()
-        return True
 
     def run(self, step):
         """Execute the given step in docker."""
