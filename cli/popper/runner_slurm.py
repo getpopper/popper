@@ -1,4 +1,5 @@
 import os
+import signal
 import threading
 
 from popper import utils as pu
@@ -26,8 +27,8 @@ class SlurmRunner(HostRunner):
         self._out_stream_thread.start()
 
     def _stop_out_stream(self):
-        out_stream_proc = list(self._out_stream_pid)[0]
-        out_stream_proc.kill()
+        _out_stream_pid = list(self._out_stream_pid)[0]
+        os.kill(_out_stream_pid, signal.SIGKILL)
         self._out_stream_thread.join()
 
     def _submit_batch_job(self, cmd, step):
@@ -46,7 +47,7 @@ class SlurmRunner(HostRunner):
             f.write('#!/bin/bash\n')
             f.write('\n'.join(cmd))
 
-        sbatch_cmd = [f'sbatch --wait --job-name {job_name} --output {out_file}']
+        sbatch_cmd = f'sbatch --wait --job-name {job_name} --output {out_file}'.split(" ")
 
         for k, v in self._config.resman_opts.get(step['name'], {}).items():
             sbatch_cmd.append(pu.key_value_to_flag(k, v))
