@@ -15,6 +15,7 @@ setup(
     include_package_data=True,
     install_requires=[
         'sh',
+        'psutil',
         'testfixtures',
         'python-vagrant',
         'GitPython',
