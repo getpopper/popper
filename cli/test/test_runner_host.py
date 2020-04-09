@@ -1,13 +1,19 @@
 import os
+import time
 import unittest
 
+from subprocess import Popen
+
+import psutil
+import docker
+
 import utils as testutils
+import popper.utils as pu
 
 from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
-from popper.runner_host import HostRunner
-
+from popper.runner_host import HostRunner, DockerRunner
 from popper.cli import log as log
 
 
@@ -74,19 +80,123 @@ class TestHostHostRunner(unittest.TestCase):
         self.assertEqual(ecode, 0)
         self.assertTrue('TESTACION' in output)
 
-    # TODO: add test_stop_running_tasks
+    def test_stop_running_tasks(self):
+        pid = Popen(["sleep", "2000"]).pid
+        host_runner = HostRunner()
+        host_runner._spawned_pids.add(pid)
+        host_runner.stop_running_tasks()
+        time.sleep(2)
+        proc = psutil.Process(pid)
+        self.assertEqual(proc.status(), psutil.STATUS_ZOMBIE)
 
 
 class TestHostDockerRunner(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
 
-    # TODO: add the following tests
-    # - test_update_with_engine_config
-    # - test_get_container_kwargs
-    # - test_get_build_info
-    # - test_create_container
-    # - test_stop_running_tasks
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    def test_create_container(self):
+        config = PopperConfig()
+        step = {
+            'uses': 'docker://alpine:3.9', 
+            'runs': ['echo hello'], 
+            'name': 'kontainer_one'
+        }
+        cid = pu.sanitized_name(step['name'], config.wid)
+        docker_runner = DockerRunner(init_docker_client=True, config=config)
+        c = docker_runner._create_container(cid, step)
+        self.assertEqual(c.status, 'created')
+        c.remove()
+
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    def test_stop_running_tasks(self):
+        dclient = docker.from_env()
+        docker_runner = DockerRunner()
+        c1 = dclient.containers.run('bfirsh/reticulate-splines', detach=True)
+        c2 = dclient.containers.run('alpine:3.9', 'sleep 10000', detach=True)
+        docker_runner._spawned_containers.add(c1)
+        docker_runner._spawned_containers.add(c2)
+        docker_runner.stop_running_tasks()
+        self.assertEqual(c1.status, 'created') # TODO: check
+        self.assertEqual(c2.status, 'created') # TODO: check
+        dclient.close()
+
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    def test_get_container_kwargs(self):
+        repo = testutils.mk_repo().working_dir
+        config_file = os.path.join(repo, 'settings.yml')
+        with open(config_file, 'w') as f:
+            f.write("""
+            engine:
+              name: docker
+              options:
+                privileged: True
+                hostname: popper.local
+                domainname: www.example.org
+                volumes: ["/path/in/host:/path/in/container"]
+                env:
+                  FOO: bar
+            resource_manager:
+              name: slurm
+            """)
+
+        step = {
+            'uses': 'popperized/bin/sh@master', 
+            'args': ['ls'], 
+            'name': 'one', 
+            'repo_dir': '/home/abc/.cache/popper/123/github.com/popperized/bin', 
+            'step_dir': 'sh'
+        }
+        config = PopperConfig(config_file=config_file, workspace_dir='/path/to/workdir')
+
+        docker_runner = DockerRunner(init_docker_client=False, config=config)
+        args = docker_runner._get_container_kwargs(step, 'alpine:3.9', 'container_a')
+
+        self.assertEqual(args, {
+            'image': 'alpine:3.9', 
+            'command': ['ls'], 
+            'name': 'container_a', 
+            'volumes': [
+                '/path/to/workdir:/workspace', 
+                '/var/run/docker.sock:/var/run/docker.sock', 
+                '/path/in/host:/path/in/container'], 
+            'working_dir': '/workspace', 
+            'environment': {}, 
+            'entrypoint': None, 
+            'detach': True, 
+            'privileged': True, 
+            'hostname': 'popper.local', 
+            'domainname': 'www.example.org', 
+            'env': {'FOO': 'bar'}})
+
+    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    def test_get_build_info(self):
+        step = {
+            'uses': 'popperized/bin/sh@master', 
+            'args': ['ls'], 
+            'name': 'one', 
+            'repo_dir': '/home/abc/.cache/popper/123/github.com/popperized/bin', 
+            'step_dir': 'sh'
+        }
+        docker_runner = DockerRunner(init_docker_client=False)
+        build, img, tag, build_sources = docker_runner._get_build_info(step)
+        self.assertEqual(build, True)
+        self.assertEqual(img, 'popperized/bin')
+        self.assertEqual(tag, 'master')
+        self.assertEqual(build_sources, '/home/abc/.cache/popper/123/github.com/popperized/bin/sh')
+
+        step = {
+            'uses': 'docker://alpine:3.9', 
+            'runs': ['sh', '-c', 'echo $FOO > hello.txt ; pwd'], 
+            'env': {'FOO': 'bar'}, 
+            'name': '1'
+        }
+        docker_runner = DockerRunner(init_docker_client=False)
+        build, img, tag, build_sources = docker_runner._get_build_info(step)
+        self.assertEqual(build, False)
+        self.assertEqual(img, 'alpine')
+        self.assertEqual(tag, '3.9')
+        self.assertEqual(build_sources, None)
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_docker_basic_run(self):

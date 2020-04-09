@@ -18,8 +18,9 @@ class SlurmRunner(HostRunner):
 
     def _tail_output(self, out_file):
         self._out_stream_pid = set()
-        HostRunner._exec_cmd(["tail", "-f", out_file],
+        _, ecode, _ = HostRunner._exec_cmd(["tail", "-f", out_file],
                              pids=self._out_stream_pid)
+        return ecode
 
     def _start_out_stream(self, out_file):
         self._out_stream_thread = threading.Thread(
