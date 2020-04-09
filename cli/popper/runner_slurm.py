@@ -100,7 +100,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cmd.append(f'docker rm -f {cid} || true')
 
         if build:
-            cmd.append(f'docker build {img}:{tag} {dockerfile}')
+            cmd.append(f'docker build -t {img}:{tag} {dockerfile}')
         elif not self._config.skip_pull and not step.get('skip_pull', False):
             cmd.append(f'docker pull {img}:{tag}')
 
