@@ -173,7 +173,7 @@ class DockerRunner(StepRunner):
                                         step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
-            img = f'{user}/{repo}'
+            img = f'{user}/{repo}'.lower()
             tag = version
             build_source = os.path.join(step['repo_dir'], step['step_dir'])
 
