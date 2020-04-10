@@ -37,12 +37,14 @@ class PopperConfig(object):
         from_file = PopperConfig.__load_config_file(config_file)
         loaded_conf = {}
 
+        eng_section = from_file.get('engine', None)
         eng_from_file = from_file.get('engine', {}).get('name')
-        if from_file and not eng_from_file and not engine_name:
+        if from_file and eng_section and not eng_from_file:
             log.fail('No engine name given.')
 
+        resman_section = from_file.get('resource_manager', None)
         resman_from_file = from_file.get('resource_manager', {}).get('name')
-        if from_file and not resman_from_file and not resman_name:
+        if from_file and resman_section and not resman_from_file:
             log.fail('No resource manager name given.')
 
         # set name in precedence order (or assigne default values)
