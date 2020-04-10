@@ -53,9 +53,6 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         pass
 
     def test_submit_job_failure(self):
-        # TODO:
-        # - test that when a _submit_batch_job fails, a non-zero exit error
-        #   code is returned
         pass
 
     def test_dry_run(self):
@@ -83,6 +80,10 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 class TestSlurmDockerRunner(unittest.TestCase):
     def setUp(self):
         log.setLevel('CRITICAL')
+        self.Popen = MockPopen()
+        replacer = Replacer()
+        replacer.replace('popper.runner_host.Popen', self.Popen)
+        self.addCleanup(replacer.restore)
 
     def tearDown(self):
         log.setLevel('NOTSET')
@@ -136,11 +137,55 @@ class TestSlurmDockerRunner(unittest.TestCase):
 
             self.assertEqual(expected, cmd)
 
-
     def test_run(self):
-        # TODO: create a mock for Popen; create a workflow object and then
-        # instantiate a WorkflowRunner. Then invoke WorkflowRunner.run() and
-        # check that:
-        # - submit_job generates a script containing the right docker commands
-        # - sbatch and tail commands get invoked with the right flags
-        pass
+        self.Popen.set_command('sbatch --wait --job-name popper_1_123abc '
+                               '--output /tmp/popper/slurm/popper_1_123abc.out '
+                               '/tmp/popper/slurm/popper_1_123abc.sh', returncode=0)
+
+        self.Popen.set_command('tail -f /tmp/popper/slurm/popper_1_123abc.out', returncode=0)
+        repo = testutils.mk_repo().working_dir
+        config_file = os.path.join(repo, 'settings.yml')
+        with open(config_file, 'w') as f:
+            f.write("""
+            engine:
+              name: docker
+              options:
+                privileged: True
+                hostname: popper.local
+                domainname: www.example.org
+                volumes: ["/path/in/host:/path/in/container"]
+                environment:
+                  FOO: bar
+            resource_manager:
+              name: slurm
+            """)
+
+        conf = PopperConfig(
+            workspace_dir='/w',
+            config_file=config_file)
+        conf.wid = "123abc"
+
+        with WorkflowRunner(conf) as r:
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'popperized/bin/sh@master'
+              runs: [cat]
+              args: README.md
+            """)
+            wf.parse()
+            try:
+                r.run(wf)
+            except ProcessLookupError:
+                pass
+            except Exception as ex:
+                log.fail(f"test_run() failed: {ex}")
+
+        with open('/tmp/popper/slurm/popper_1_123abc.sh', 'r') as f:
+            content = f.read()
+            self.assertEqual(content,
+"""#!/bin/bash
+docker rm -f popper_1_123abc || true
+docker build -t popperized/bin:master /Users/jayjeetchakraborty/.cache/popper/123abc/github.com/popperized/bin/sh
+docker create --name popper_1_123abc --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
+docker start --attach popper_1_123abc""")
