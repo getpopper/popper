@@ -112,7 +112,7 @@ class TestHostDockerRunner(unittest.TestCase):
     def test_stop_running_tasks(self):
         dclient = docker.from_env()
         docker_runner = DockerRunner()
-        c1 = dclient.containers.run('bfirsh/reticulate-splines', detach=True)
+        c1 = dclient.containers.run('debian:buster-slim', 'sleep 20000', detach=True)
         c2 = dclient.containers.run('alpine:3.9', 'sleep 10000', detach=True)
         docker_runner._spawned_containers.add(c1)
         docker_runner._spawned_containers.add(c2)
