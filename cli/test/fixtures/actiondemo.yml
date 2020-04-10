@@ -1,0 +1,99 @@
+version: '1'
+steps:
+- id: "action on root folder"
+  uses: "popperized/ansible@master"
+  args: "--version"
+  secrets: ["ANSIBLE_SSH_KEY_DATA"]
+
+- id: "dependency four"
+  uses: "docker://busybox"
+  runs: ["ls", "-ltr"]
+
+- id: "dependency three"
+  uses: "docker://busybox"
+  runs: ["ls", "-ltr"]
+
+- id: "dependency two"
+  needs: ["dependency three", "dependency four"]
+  uses: "docker://busybox"
+  runs: ["ls", "-ltr"]
+
+- id: "dependency one"
+  needs: ["dependency two"]
+  uses: "docker://busybox"
+  runs: ["ls", "-ltr"]
+
+- id: "test"
+  needs: ["dependency one"]
+  uses: "https://gitlab.com/barbaragd/action-test@master"
+
+- id: "a1"
+  uses: "sh"
+  runs: "ls"
+
+- id: "a2"
+  uses: "sh"
+  runs: "ls"
+
+- id: "b"
+  needs: ["a1", "a2"]
+  uses: "sh"
+  runs: "ls"
+
+- id: "c"
+  needs: ["a1", "a2"]
+  uses: "sh"
+  runs: "ls"
+
+- id: "d"
+  needs: ["b", "c"]
+  uses: "sh"
+  runs: "ls"
+
+- id: "did"
+  uses: "popperized/docker/cli@master"
+  args: "build -t helloworld docker-helloworld"
+
+- id: "ws"
+  uses: "ppopperized/bin/sh@master"
+  runs: ["sh", "-c", "cat /workspace/popperfile"]
+
+- id: "test deeply nested action"
+  uses: "pjayjeetatgithub/sample-action/l1/l2/l3/l4/sh@master"
+  args: ["ls"]
+
+- id: "test-on-failure"
+  uses: "sh"
+  runs: ["lss"]
+
+- id: "test-on-failure cleanup"
+  uses: "sh"
+  args: ["echo", "Cleaning up..."]
+
+- id: "foo show-env"
+  uses: "popperized/bin/sh@master"
+  runs: ["env"]
+  env: {
+    FOOBAR = "yeah"
+  }
+
+- id: "sample b"
+  uses: "JayjeetAtGithub/test-exit-code-78@master"
+  args: "whoami"
+
+- id: "sample b-end"
+  needs: ["sample b"]
+  uses: "sh"
+  args: "whoami"
+
+- id: "sample a"
+  uses: "vipulchhabra99/Dummy-Repo@master"
+  args: "whoami"
+
+- id: "sample a-end"
+  needs: ["sample a"]
+  uses: "sh"
+  args: "whoami"
+
+
+

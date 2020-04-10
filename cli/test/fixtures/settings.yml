@@ -1,0 +1,5 @@
+engine:
+  name: docker
+  options:
+    image: abc/xyz
+    hostname: xYz.local

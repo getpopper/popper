@@ -8,11 +8,11 @@ import subprocess
 import sys
 
 
-# class TestScaffold(unittest.TestCase, PopperTest):
+class TestScaffold(unittest.TestCase, PopperTest):
 
-# 	def test_scaffold(self):
+	def test_scaffold(self):
 
-# 		runner = CliRunner()
-# 		self.init_test_repo()
-# 		#result = runner.invoke(scaffold.cli)
+		runner = CliRunner()
+		repo = self.mk_repo()
+		#result = runner.invoke(scaffold.cli)
 

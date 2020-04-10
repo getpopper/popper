@@ -1,0 +1,5 @@
+version: '1'
+steps:
+- id: "run"
+  uses: "popperized/bin/sh@master"
+  args: ["hostname"]
