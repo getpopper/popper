@@ -1,8 +1,6 @@
 import unittest
 import os
 
-import utils as testutils
-
 from popper.config import PopperConfig
 from popper.cli import log
 from popper_test import PopperTest

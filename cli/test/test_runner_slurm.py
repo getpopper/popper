@@ -1,8 +1,6 @@
 import os
 import unittest
 
-import utils as testutils
-
 from popper.config import PopperConfig
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
