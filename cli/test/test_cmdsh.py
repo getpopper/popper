@@ -31,10 +31,10 @@ class TestSh(unittest.TestCase, PopperTest):
 		
 		with self.assertLogs('popper') as test:
 
-			result = runner.invoke(run.cli, ['--wfile', workflow_file_loc])
+			result = runner.invoke(run.cli, ['--dry-run','--wfile', workflow_file_loc])
 			assert result.exit_code == 0
 
-		if('STEP_INFO:popper:Hello from Popper' in test.output):
+		if('INFO:popper:Workflow finished successfully.' in test.output):
 
 			assert 0 == 0
 

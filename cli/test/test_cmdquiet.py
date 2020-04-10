@@ -15,7 +15,7 @@ class TestQuiet(unittest.TestCase, PopperTest):
     	runner = CliRunner()
 
     	with self.assertLogs('popper') as test:
-    		result = runner.invoke(run.cli, ['--wfile', workflow_file_loc])
+    		result = runner.invoke(run.cli, ['-f', workflow_file_loc])
     		assert result.exit_code == 0
 
     	output_without_quiet = test.output
@@ -23,7 +23,7 @@ class TestQuiet(unittest.TestCase, PopperTest):
 
     	with self.assertLogs('popper') as test:
 
-    		result = runner.invoke(run.cli, ['--wfile', workflow_file_loc, '--quiet'])
+    		result = runner.invoke(run.cli, ['-f', workflow_file_loc, '--quiet'])
     		assert result.exit_code == 0
 
     	output_with_quiet = test.output
