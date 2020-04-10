@@ -44,8 +44,8 @@ class TestValidate(unittest.TestCase, PopperTest):
         self.assertListEqual(
             test.output, ['ERROR:popper:A workflow block must be present.'])
 
-        workflow_file_loc = self._wfile("validate-wf4", "yml")
-        result = runner.invoke(run.cli, ['--dry-run', '-f', workflow_file_loc])
+        workflow_file_loc = self._wfile("validate-wf4", "workflow")
+        result = runner.invoke(run.cli, ['--dry-run', '--wfile', workflow_file_loc])
         assert result.exit_code == 0
 
         with self.assertLogs('popper') as test:
