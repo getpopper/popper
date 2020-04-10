@@ -186,6 +186,6 @@ class TestSlurmDockerRunner(unittest.TestCase):
             self.assertEqual(content,
 """#!/bin/bash
 docker rm -f popper_1_123abc || true
-docker build -t popperized/bin:master /Users/jayjeetchakraborty/.cache/popper/123abc/github.com/popperized/bin/sh
+docker build -t popperized/bin:master /home/travis/.cache/popper/123abc/github.com/popperized/bin/sh
 docker create --name popper_1_123abc --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
 docker start --attach popper_1_123abc""")
