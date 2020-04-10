@@ -1,7 +1,11 @@
+import os
 import unittest
 import tempfile
+import utils as testutils
 
 from popper.config import PopperConfig
+from popper.runner import WorkflowRunner
+from popper.parser import YMLWorkflow
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
 
@@ -24,14 +28,16 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 
     def test_tail_output(self):
         self.Popen.set_command('tail -f slurm-x.out', returncode=0)
-        self.slurm_runner._tail_output('slurm-x.out')
-        # TODO: assert that tail was invoked
+        self.assertEqual(
+            self.slurm_runner._tail_output('slurm-x.out'), 0)
+        self.assertEqual(len(self.slurm_runner._out_stream_pid), 1)
 
     def test_stop_running_tasks(self):
         self.Popen.set_command('scancel --name job_a', returncode=0)
         self.slurm_runner._spawned_jobs.add('job_a')
+        # If no exception is raised, implies scancel was called and
+        # got caught in mock Popen.
         self.slurm_runner.stop_running_tasks()
-        # TODO: assert that scancel was invoked
 
     def test_submit_job(self):
         # TODO:
@@ -53,8 +59,25 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         pass
 
     def test_dry_run(self):
-        # TODO: assert that when dry_run=True, submit_job is not invoked
-        pass
+        repo = testutils.mk_repo()
+        conf = PopperConfig(
+            engine_name='docker',
+            resman_name='slurm',
+            dry_run=True,
+            workspace_dir=repo.working_dir)
+
+        with WorkflowRunner(conf) as r:
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'popperized/bin/sh@master'
+              runs: [cat]
+              args: README.md
+            """)
+            wf.parse()
+            # If not exception raised, that means dry-run worked and
+            # submit_batch_job was not called.
+            r.run(wf)
 
 
 class TestSlurmDockerRunner(unittest.TestCase):
@@ -80,7 +103,39 @@ class TestSlurmDockerRunner(unittest.TestCase):
 
             self.assertEqual(expected, cmd)
 
-        # TODO: test many times the above, but with distinct contents for step
+        repo = testutils.mk_repo().working_dir
+        config_file = os.path.join(repo, 'settings.yml')
+        with open(config_file, 'w') as f:
+            f.write("""
+            engine:
+              name: docker
+              options:
+                privileged: True
+                hostname: popper.local
+                domainname: www.example.org
+                volumes: ["/path/in/host:/path/in/container"]
+                environment:
+                  FOO: bar
+            resource_manager:
+              name: slurm
+            """)
+
+        conf = {'workspace_dir': '/w', 'config_file': config_file}
+        with DockerRunner(config=PopperConfig(**conf)) as drunner:
+            step = {'args': ['-two', '-flags']}
+            cmd = drunner._create_cmd(step, 'foo:1.9', 'container_name')
+
+            expected = ('docker create --name container_name '
+                        '--workdir /workspace '
+                        '-v /w:/workspace '
+                        '-v /var/run/docker.sock:/var/run/docker.sock '
+                        '-v /path/in/host:/path/in/container '
+                        '-e FOO=bar --privileged --hostname popper.local '
+                        '--domainname www.example.org '
+                        'foo:1.9 -two -flags')
+
+            self.assertEqual(expected, cmd)
+
 
     def test_run(self):
         # TODO: create a mock for Popen; create a workflow object and then

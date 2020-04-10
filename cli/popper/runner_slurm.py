@@ -138,7 +138,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
         # anything else is treated as a flag
         for k, v in container_args.items():
-            pu.key_value_to_flag(k, v, equals_symbol=True)
+            cmd.append(pu.key_value_to_flag(k, v))
 
         # append the image and the commands
         cmd.append(f'{image} {command}')
