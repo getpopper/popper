@@ -82,3 +82,15 @@ def key_value_to_flag(k, v, equals_symbol=False):
         else:
             flag += f'{k} {v}'
     return flag
+
+
+def decode(line):
+    """Make treatment of stdout Python 2/3 compatible.
+    Args:
+      line(str): The string that is required to be converted.
+    Returns:
+      str : The string in converted form.
+    """
+    if isinstance(line, bytes):
+        return line.decode('utf-8')
+    return line
