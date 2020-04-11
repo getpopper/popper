@@ -9,7 +9,7 @@ from popper.parser import YMLWorkflow
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
 
-from testfixtures import Replacer, replace
+from testfixtures import Replacer, replace, compare
 from testfixtures.popen import MockPopen
 
 
@@ -43,12 +43,6 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_batch_job(self, mock_kill):
-        # TODO:
-        # - assert that Popen is invoked twice, one for sbatch and another for
-        #   the tail command
-        # - assert that stream thread is not running
-        #
-        # NOTE: the above might be broken in multiple tests
         self.Popen.set_command('sbatch --wait '
                                '--job-name popper_sample_123abc '
                                '--output /tmp/popper/slurm/popper_sample_123abc.out '
@@ -67,6 +61,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 """#!/bin/bash
 ls -la""")
         self.assertEqual(len(slurm_runner._spawned_jobs), 0)
+        self.assertEqual(slurm_runner._out_stream_thread.is_alive(), False)
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_job_failure(self, mock_kill):
