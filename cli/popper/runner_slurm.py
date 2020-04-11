@@ -29,7 +29,11 @@ class SlurmRunner(HostRunner):
 
     def _stop_out_stream(self):
         _out_stream_pid = list(self._out_stream_pid)[0]
-        os.kill(_out_stream_pid, signal.SIGKILL)
+        try:
+            os.kill(_out_stream_pid, 0)
+            os.kill(_out_stream_pid, signal.SIGKILL)
+        except ProcessLookupError:
+            log.warning('Tail process was killed by some other process.')
         self._out_stream_thread.join()
 
     def _submit_batch_job(self, cmd, step):
