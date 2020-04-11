@@ -44,7 +44,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         self.assertEqual(
             call.Popen(
                 ['scancel', '--name', 'job_a'],
-                cwd='/Users/jayjeetchakraborty/popper/cli/test',
+                cwd=os.getcwd(),
                 env=None, preexec_fn=os.setsid, stderr=-2, stdout=-1,
                 universal_newlines=True) in self.Popen.all_calls, True)
 
