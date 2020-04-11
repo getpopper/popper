@@ -11,6 +11,7 @@ from popper.cli import log as log
 
 from testfixtures import Replacer, replace, compare
 from testfixtures.popen import MockPopen
+from testfixtures.mock import call
 
 
 def mock_kill(pid, sig):
@@ -40,6 +41,12 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         self.Popen.set_command('scancel --name job_a', returncode=0)
         self.slurm_runner._spawned_jobs.add('job_a')
         self.slurm_runner.stop_running_tasks()
+        self.assertEqual(
+            call.Popen(
+                ['scancel', '--name', 'job_a'],
+                cwd='/Users/jayjeetchakraborty/popper/cli/test',
+                env=None, preexec_fn=os.setsid, stderr=-2, stdout=-1,
+                universal_newlines=True) in self.Popen.all_calls, True)
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_batch_job(self, mock_kill):
@@ -114,6 +121,8 @@ ls -la""")
             """)
             wf.parse()
             r.run(wf)
+
+        self.assertEqual(self.Popen.all_calls, [])
 
 
 class TestSlurmDockerRunner(unittest.TestCase):
@@ -214,12 +223,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
               args: README.md
             """)
             wf.parse()
-            try:
-                r.run(wf)
-            except ProcessLookupError:
-                pass
-            except Exception as ex:
-                log.fail(f"test_run() failed: {ex}")
+            r.run(wf)
 
         with open('/tmp/popper/slurm/popper_1_123abc.sh', 'r') as f:
             content = f.read()
