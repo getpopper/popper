@@ -1,4 +1,5 @@
 import os
+import time
 import signal
 import threading
 
@@ -26,6 +27,7 @@ class SlurmRunner(HostRunner):
         self._out_stream_thread = threading.Thread(
             target=self._tail_output, args=(out_file,))
         self._out_stream_thread.start()
+        time.sleep(2)
 
     def _stop_out_stream(self):
         _out_stream_pid = list(self._out_stream_pid)[0]

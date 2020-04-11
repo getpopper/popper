@@ -136,7 +136,7 @@ class DockerRunner(StepRunner):
         container.start()
         cout = container.logs(stream=True)
         for line in cout:
-            log.step_info(pu.decode(line).rstrip())
+            log.step_info(line.decode().rstrip())
 
         e = container.wait()['StatusCode']
         return e
