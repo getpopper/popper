@@ -117,8 +117,8 @@ class TestHostDockerRunner(unittest.TestCase):
         docker_runner._spawned_containers.add(c1)
         docker_runner._spawned_containers.add(c2)
         docker_runner.stop_running_tasks()
-        self.assertEqual(c1.status, 'created') # TODO: check
-        self.assertEqual(c2.status, 'created') # TODO: check
+        self.assertEqual(c1.status, 'created')
+        self.assertEqual(c2.status, 'created')
         dclient.close()
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
