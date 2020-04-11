@@ -50,10 +50,12 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_batch_job(self, mock_kill):
-        self.Popen.set_command('sbatch --wait '
-                               '--job-name popper_sample_123abc '
-                               '--output /tmp/popper/slurm/popper_sample_123abc.out '
-                               '/tmp/popper/slurm/popper_sample_123abc.sh', returncode=0)
+        self.Popen.set_command(
+            'sbatch --wait '
+            '--job-name popper_sample_123abc '
+            '--output /tmp/popper/slurm/popper_sample_123abc.out '
+            '/tmp/popper/slurm/popper_sample_123abc.sh',
+            returncode=0)
         self.Popen.set_command(
             'tail -f /tmp/popper/slurm/popper_sample_123abc.out', returncode=0)
         config = PopperConfig(workspace_dir='/w')
@@ -63,20 +65,23 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         slurm_runner._submit_batch_job(["ls -la"], step)
         with open("/tmp/popper/slurm/popper_sample_123abc.sh", 'r') as f:
             content = f.read()
-        
-        self.assertEqual(content, 
-"""#!/bin/bash
+
+        self.assertEqual(content,
+                         """#!/bin/bash
 ls -la""")
         self.assertEqual(len(slurm_runner._spawned_jobs), 0)
         self.assertEqual(slurm_runner._out_stream_thread.is_alive(), False)
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_job_failure(self, mock_kill):
-        self.Popen.set_command('sbatch --wait --job-name popper_1_123abc '
-                               '--output /tmp/popper/slurm/popper_1_123abc.out '
-                               '/tmp/popper/slurm/popper_1_123abc.sh', returncode=12)
+        self.Popen.set_command(
+            'sbatch --wait --job-name popper_1_123abc '
+            '--output /tmp/popper/slurm/popper_1_123abc.out '
+            '/tmp/popper/slurm/popper_1_123abc.sh', returncode=12)
 
-        self.Popen.set_command('tail -f /tmp/popper/slurm/popper_1_123abc.out', returncode=0)
+        self.Popen.set_command(
+            'tail -f /tmp/popper/slurm/popper_1_123abc.out',
+            returncode=0)
         repo = testutils.mk_repo().working_dir
         config_file = os.path.join(repo, 'settings.yml')
         with open(config_file, 'w') as f:
@@ -184,14 +189,17 @@ class TestSlurmDockerRunner(unittest.TestCase):
                         'foo:1.9 -two -flags')
 
             self.assertEqual(expected, cmd)
-    
+
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_run(self, mock_kill):
-        self.Popen.set_command('sbatch --wait --job-name popper_1_123abc '
-                               '--output /tmp/popper/slurm/popper_1_123abc.out '
-                               '/tmp/popper/slurm/popper_1_123abc.sh', returncode=0)
+        self.Popen.set_command(
+            'sbatch --wait --job-name popper_1_123abc '
+            '--output /tmp/popper/slurm/popper_1_123abc.out '
+            '/tmp/popper/slurm/popper_1_123abc.sh', returncode=0)
 
-        self.Popen.set_command('tail -f /tmp/popper/slurm/popper_1_123abc.out', returncode=0)
+        self.Popen.set_command(
+            'tail -f /tmp/popper/slurm/popper_1_123abc.out',
+            returncode=0)
         repo = testutils.mk_repo().working_dir
         config_file = os.path.join(repo, 'settings.yml')
         with open(config_file, 'w') as f:
@@ -228,7 +236,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
         with open('/tmp/popper/slurm/popper_1_123abc.sh', 'r') as f:
             content = f.read()
             self.assertEqual(content,
-f"""#!/bin/bash
+                             f"""#!/bin/bash
 docker rm -f popper_1_123abc || true
 docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/123abc/github.com/popperized/bin/sh
 docker create --name popper_1_123abc --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md

@@ -93,6 +93,7 @@ class HostRunner(StepRunner):
 
 class DockerRunner(StepRunner):
     """Runs steps in docker on the local machine."""
+
     def __init__(self, init_docker_client=True, **kw):
         super(DockerRunner, self).__init__(**kw)
 

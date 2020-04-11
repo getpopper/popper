@@ -20,7 +20,7 @@ class SlurmRunner(HostRunner):
     def _tail_output(self, out_file):
         self._out_stream_pid = set()
         _, ecode, _ = HostRunner._exec_cmd(["tail", "-f", out_file],
-                             pids=self._out_stream_pid)
+                                           pids=self._out_stream_pid)
         return ecode
 
     def _start_out_stream(self, out_file):
@@ -54,7 +54,8 @@ class SlurmRunner(HostRunner):
             f.write('#!/bin/bash\n')
             f.write('\n'.join(cmd))
 
-        sbatch_cmd = f'sbatch --wait --job-name {job_name} --output {out_file}'.split(" ")
+        sbatch_cmd = f'sbatch --wait --job-name {job_name} --output {out_file}'
+        sbatch_cmd = sbatch_cmd.split()
 
         for k, v in self._config.resman_opts.get(step['name'], {}).items():
             sbatch_cmd.append(pu.key_value_to_flag(k, v))
