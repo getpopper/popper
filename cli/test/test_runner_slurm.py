@@ -66,9 +66,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         with open("/tmp/popper/slurm/popper_sample_123abc.sh", 'r') as f:
             content = f.read()
 
-        self.assertEqual(content,
-                         """#!/bin/bash
-ls -la""")
+        self.assertEqual(content, "#!/bin/bash\nls -la")
         self.assertEqual(len(slurm_runner._spawned_jobs), 0)
         self.assertEqual(slurm_runner._out_stream_thread.is_alive(), False)
 
