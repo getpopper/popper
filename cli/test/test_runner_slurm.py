@@ -106,6 +106,29 @@ class TestSlurmSlurmRunner(unittest.TestCase):
             wf.parse()
             self.assertRaises(SystemExit, r.run, wf)
 
+            call_tail = call.Popen(
+                ['tail', '-f', '/tmp/popper/slurm/popper_1_123abc.out'],
+                cwd=f'{os.environ["HOME"]}/popper/cli/test',
+                env=None, preexec_fn=os.setsid,
+                stderr=-2, stdout=-1, universal_newlines=True)
+
+            call_sbatch = call.Popen(['sbatch',
+                                      '--wait',
+                                      '--job-name',
+                                      'popper_1_123abc',
+                                      '--output',
+                                      '/tmp/popper/slurm/popper_1_123abc.out',
+                                      '/tmp/popper/slurm/popper_1_123abc.sh'],
+                                     cwd=f'{os.environ["HOME"]}/popper/cli/test',
+                                     env=None,
+                                     preexec_fn=os.setsid,
+                                     stderr=-2,
+                                     stdout=-1,
+                                     universal_newlines=True)
+
+            self.assertEqual(call_tail in self.Popen.all_calls, True)
+            self.assertEqual(call_sbatch in self.Popen.all_calls, True)
+
     def test_dry_run(self):
         repo = testutils.mk_repo()
         config = PopperConfig(

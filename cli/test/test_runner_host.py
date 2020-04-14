@@ -178,7 +178,7 @@ class TestHostDockerRunner(unittest.TestCase):
             'uses': 'popperized/bin/sh@master',
             'args': ['ls'],
             'name': 'one',
-            'repo_dir': '/home/abc/.cache/popper/123/github.com/popperized/bin',
+            'repo_dir': '/path/to/repo/dir',
             'step_dir': 'sh'}
         docker_runner = DockerRunner(init_docker_client=False)
         build, img, tag, build_sources = docker_runner._get_build_info(step)
@@ -187,7 +187,7 @@ class TestHostDockerRunner(unittest.TestCase):
         self.assertEqual(tag, 'master')
         self.assertEqual(
             build_sources,
-            '/home/abc/.cache/popper/123/github.com/popperized/bin/sh')
+            '/path/to/repo/dir/sh')
 
         step = {
             'uses': 'docker://alpine:3.9',
