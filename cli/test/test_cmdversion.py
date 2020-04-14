@@ -9,13 +9,13 @@ class TestCommandVersion(unittest.TestCase, PopperTest):
 
     def test_version(self):
 
-	    with self.assertLogs('popper') as test:
-	        runner = CliRunner()
-	        result = runner.invoke(version.cli)
-	        assert result.exit_code == 0
+        with self.assertLogs('popper') as test:
+            runner = CliRunner()
+            result = runner.invoke(version.cli)
+            assert result.exit_code == 0
 
-	    if(version_value in test.output[0]):
-	    	assert 1 == 1
+        if(version_value in test.output[0]):
+            assert 1 == 1
 
-	    else:
-	    	assert 1 == 0
+        else:
+            assert 1 == 0
