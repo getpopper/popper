@@ -26,27 +26,29 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         replacer.replace('popper.runner_host.Popen', self.Popen)
         self.addCleanup(replacer.restore)
         self.repo = tempfile.mkdtemp()
-        self.slurm_runner = SlurmRunner(config=PopperConfig())
 
     def tearDown(self):
         log.setLevel('NOTSET')
 
     def test_tail_output(self):
         self.Popen.set_command('tail -f slurm-x.out', returncode=0)
-        self.assertEqual(
-            self.slurm_runner._tail_output('slurm-x.out'), 0)
-        self.assertEqual(len(self.slurm_runner._out_stream_pid), 1)
+        with SlurmRunner(config=PopperConfig()) as sr:
+            self.assertEqual(
+                sr._tail_output('slurm-x.out'), 0)
+            self.assertEqual(
+                len(sr._out_stream_pid), 1)
 
     def test_stop_running_tasks(self):
         self.Popen.set_command('scancel --name job_a', returncode=0)
-        self.slurm_runner._spawned_jobs.add('job_a')
-        self.slurm_runner.stop_running_tasks()
-        self.assertEqual(
-            call.Popen(
-                ['scancel', '--name', 'job_a'],
-                cwd=os.getcwd(),
-                env=None, preexec_fn=os.setsid, stderr=-2, stdout=-1,
-                universal_newlines=True) in self.Popen.all_calls, True)
+        with SlurmRunner(config=PopperConfig()) as sr:
+            sr._spawned_jobs.add('job_a')
+            sr.stop_running_tasks()
+            self.assertEqual(
+                call.Popen(
+                    ['scancel', '--name', 'job_a'],
+                    cwd=os.getcwd(),
+                    env=None, preexec_fn=os.setsid, stderr=-2, stdout=-1,
+                    universal_newlines=True) in self.Popen.all_calls, True)
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_batch_job(self, mock_kill):
@@ -61,14 +63,14 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         config = PopperConfig(workspace_dir='/w')
         config.wid = "123abc"
         step = {"name": "sample"}
-        slurm_runner = SlurmRunner(config=config)
-        slurm_runner._submit_batch_job(["ls -la"], step)
-        with open("/tmp/popper/slurm/popper_sample_123abc.sh", 'r') as f:
-            content = f.read()
+        with SlurmRunner(config=config) as sr:
+            sr._submit_batch_job(["ls -la"], step)
+            with open("/tmp/popper/slurm/popper_sample_123abc.sh", 'r') as f:
+                content = f.read()
 
-        self.assertEqual(content, "#!/bin/bash\nls -la")
-        self.assertEqual(len(slurm_runner._spawned_jobs), 0)
-        self.assertEqual(slurm_runner._out_stream_thread.is_alive(), False)
+            self.assertEqual(content, "#!/bin/bash\nls -la")
+            self.assertEqual(len(sr._spawned_jobs), 0)
+            self.assertEqual(sr._out_stream_thread.is_alive(), False)
 
         call_tail = call.Popen(
             ['tail', '-f', '/tmp/popper/slurm/popper_sample_123abc.out'],
@@ -240,26 +242,26 @@ class TestSlurmDockerRunner(unittest.TestCase):
         self.Popen.set_command(
             'tail -f /tmp/popper/slurm/popper_1_123abc.out',
             returncode=0)
-        repo = testutils.mk_repo().working_dir
-        config_file = os.path.join(repo, 'settings.yml')
-        with open(config_file, 'w') as f:
-            f.write("""
-            engine:
-              name: docker
-              options:
-                privileged: True
-                hostname: popper.local
-                domainname: www.example.org
-                volumes: ["/path/in/host:/path/in/container"]
-                environment:
-                  FOO: bar
-            resource_manager:
-              name: slurm
-            """)
+
+        config_dict = {
+            'engine': {
+                'name': 'docker',
+                'options': {
+                    'privileged': True,
+                    'hostname': 'popper.local',
+                    'domainname': 'www.example.org',
+                    'volumes': ['/path/in/host:/path/in/container'],
+                    'environment': {'FOO': 'bar'}
+                }
+            }, 
+            'resource_manager': {
+                'name': 'slurm'
+            }
+        }
 
         config = PopperConfig(
             workspace_dir='/w',
-            config_file=config_file)
+            config_file=config_dict)
         config.wid = "123abc"
 
         with WorkflowRunner(config) as r:
