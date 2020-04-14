@@ -184,7 +184,7 @@ class DockerRunner(StepRunner):
         build, img, tag, dockerfile = self._get_build_info(step)
 
         if build:
-            log.info(f'[{step["name"]}] docker build {img}:{tag}')
+            log.info(f'[{step["name"]}] docker build {img}:{tag} {os.path.dirname(dockerfile)}')
             if not self._config.dry_run:
                 self._d.images.build(path=dockerfile, tag=f'{img}:{tag}',
                                      rm=True, pull=True)
@@ -193,13 +193,17 @@ class DockerRunner(StepRunner):
             if not self._config.dry_run:
                 self._d.images.pull(repository=f'{img}:{tag}')
 
-        log.info(f'[{step["name"]}] docker create {img}:{tag}')
         if self._config.dry_run:
             return
 
         container_args = self._get_container_kwargs(step, f'{img}:{tag}', cid)
-        container = self._d.containers.create(**container_args)
 
+        cmd = []
+        for k, v in container_args.items():
+            cmd.append(pu.key_value_to_flag(k, v))
+
+        log.info(f'[{step["name"]}] docker create {" ".join(cmd)}')
+        container = self._d.containers.create(**container_args)
         return container
 
     def _get_container_kwargs(self, step, img, name):
