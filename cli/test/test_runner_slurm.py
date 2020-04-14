@@ -80,19 +80,21 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         self.Popen.set_command(
             'tail -f /tmp/popper/slurm/popper_1_123abc.out',
             returncode=0)
-        repo = testutils.mk_repo().working_dir
-        config_file = os.path.join(repo, 'settings.yml')
-        with open(config_file, 'w') as f:
-            f.write("""
-            engine:
-              name: docker
-            resource_manager:
-              name: slurm
-            """)
+
+        config_dict = {
+            'engine': {
+                'name': 'docker',
+                'options': {}
+            },
+            'resource_manager': {
+                'name': 'slurm',
+                'options': {}
+            }
+        }
 
         config = PopperConfig(
             workspace_dir='/w',
-            config_file=config_file)
+            config_file=config_dict)
         config.wid = "123abc"
 
         with WorkflowRunner(config) as r:
@@ -178,24 +180,23 @@ class TestSlurmDockerRunner(unittest.TestCase):
 
             self.assertEqual(expected, cmd)
 
-        repo = testutils.mk_repo().working_dir
-        config_file = os.path.join(repo, 'settings.yml')
-        with open(config_file, 'w') as f:
-            f.write("""
-            engine:
-              name: docker
-              options:
-                privileged: True
-                hostname: popper.local
-                domainname: www.example.org
-                volumes: ["/path/in/host:/path/in/container"]
-                environment:
-                  FOO: bar
-            resource_manager:
-              name: slurm
-            """)
+        config_dict = {
+            'engine': {
+                'name': 'docker',
+                'options': {
+                    'privileged': True,
+                    'hostname': 'popper.local',
+                    'domainname': 'www.example.org',
+                    'volumes': ['/path/in/host:/path/in/container'],
+                    'environment': {'FOO': 'bar'}
+                }
+            }, 
+            'resource_manager': {
+                'name': 'slurm'
+            }
+        }
 
-        config = {'workspace_dir': '/w', 'config_file': config_file}
+        config = {'workspace_dir': '/w', 'config_file': config_dict}
         with DockerRunner(config=PopperConfig(**config)) as drunner:
             step = {'args': ['-two', '-flags']}
             cmd = drunner._create_cmd(step, 'foo:1.9', 'container_name')

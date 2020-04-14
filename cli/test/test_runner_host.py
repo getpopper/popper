@@ -143,7 +143,7 @@ class TestHostDockerRunner(unittest.TestCase):
                     'hostname': 'popper.local',
                     'domainname': 'www.example.org',
                     'volumes': ['/path/in/host:/path/in/container'],
-                    'env': {'FOO': 'bar'}
+                    'environment': {'FOO': 'bar'}
                 }
             }, 
             'resource_manager': {
@@ -168,13 +168,12 @@ class TestHostDockerRunner(unittest.TestCase):
                 '/var/run/docker.sock:/var/run/docker.sock',
                 '/path/in/host:/path/in/container'],
             'working_dir': '/workspace',
-            'environment': {},
+            'environment': {'FOO': 'bar'},
             'entrypoint': None,
             'detach': True,
             'privileged': True,
             'hostname': 'popper.local',
-            'domainname': 'www.example.org',
-            'env': {'FOO': 'bar'}})
+            'domainname': 'www.example.org'})
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_get_build_info(self):
