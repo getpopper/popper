@@ -70,6 +70,24 @@ class TestSlurmSlurmRunner(unittest.TestCase):
         self.assertEqual(len(slurm_runner._spawned_jobs), 0)
         self.assertEqual(slurm_runner._out_stream_thread.is_alive(), False)
 
+        call_tail = call.Popen(
+            ['tail', '-f', '/tmp/popper/slurm/popper_sample_123abc.out'],
+            cwd=os.getcwd(),
+            env=None, preexec_fn=os.setsid,
+            stderr=-2, stdout=-1, universal_newlines=True)
+
+        call_sbatch = call.Popen(
+            ['sbatch', '--wait', '--job-name',
+            'popper_sample_123abc', '--output',
+            '/tmp/popper/slurm/popper_sample_123abc.out',
+            '/tmp/popper/slurm/popper_sample_123abc.sh'],
+            cwd=os.getcwd(), env=None,
+            preexec_fn=os.setsid,
+            stderr=-2, stdout=-1, universal_newlines=True)
+
+        self.assertEqual(call_tail in self.Popen.all_calls, True)
+        self.assertEqual(call_sbatch in self.Popen.all_calls, True)
+
     @replace('popper.runner_slurm.os.kill', mock_kill)
     def test_submit_job_failure(self, mock_kill):
         self.Popen.set_command(
