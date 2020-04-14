@@ -110,7 +110,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 
             call_tail = call.Popen(
                 ['tail', '-f', '/tmp/popper/slurm/popper_1_123abc.out'],
-                cwd=f'{os.environ["HOME"]}/popper/cli/test',
+                cwd=os.getcwd(),
                 env=None, preexec_fn=os.setsid,
                 stderr=-2, stdout=-1, universal_newlines=True)
 
@@ -121,7 +121,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
                                       '--output',
                                       '/tmp/popper/slurm/popper_1_123abc.out',
                                       '/tmp/popper/slurm/popper_1_123abc.sh'],
-                                     cwd=f'{os.environ["HOME"]}/popper/cli/test',
+                                     cwd=os.getcwd(),
                                      env=None,
                                      preexec_fn=os.setsid,
                                      stderr=-2,
