@@ -80,6 +80,10 @@ class TestHostHostRunner(unittest.TestCase):
         self.assertEqual(ecode, 0)
         self.assertTrue('TESTACION' in output)
 
+        _pids = set()
+        _, _, _ = HostRunner._exec_cmd(["sleep", "2"], pids=_pids)
+        self.assertEqual(len(_pids), 1)
+
     def test_stop_running_tasks(self):
         pid = Popen(["sleep", "2000"]).pid
         host_runner = HostRunner()
@@ -124,31 +128,31 @@ class TestHostDockerRunner(unittest.TestCase):
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_get_container_kwargs(self):
-        repo = testutils.mk_repo().working_dir
-        config_file = os.path.join(repo, 'settings.yml')
-        with open(config_file, 'w') as f:
-            f.write("""
-            engine:
-              name: docker
-              options:
-                privileged: True
-                hostname: popper.local
-                domainname: www.example.org
-                volumes: ["/path/in/host:/path/in/container"]
-                env:
-                  FOO: bar
-            resource_manager:
-              name: slurm
-            """)
-
         step = {
             'uses': 'popperized/bin/sh@master',
             'args': ['ls'],
             'name': 'one',
-            'repo_dir': '/home/abc/.cache/popper/123/github.com/popperized/bin',
+            'repo_dir': '/path/to/repo/dir',
             'step_dir': 'sh'}
+
+        config_dict = {
+            'engine': {
+                'name': 'docker',
+                'options': {
+                    'privileged': True,
+                    'hostname': 'popper.local',
+                    'domainname': 'www.example.org',
+                    'volumes': ['/path/in/host:/path/in/container'],
+                    'env': {'FOO': 'bar'}
+                }
+            }, 
+            'resource_manager': {
+                'name': 'slurm'
+            }
+        }
+
         config = PopperConfig(
-            config_file=config_file,
+            config_file=config_dict,
             workspace_dir='/path/to/workdir')
 
         docker_runner = DockerRunner(init_docker_client=False, config=config)
