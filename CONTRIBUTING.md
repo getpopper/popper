@@ -20,7 +20,7 @@ Popper adheres to our code of conduct, [posted in this repository](CODE_OF_CONDU
 Take a look at the issues in our [list of 
 projects](https://github.com/systemslab/popper/projects) to get started!
 
-### Keywords in Issue Titles
+## Keywords in Issue Titles
 
 The title of each open issue is prefixed with a keyword that denotes the 
 following:
@@ -40,7 +40,7 @@ following:
     Workflow that showcases available features of the CLI tool, as 
     well as the catalog of pre-defined actions.
 
-### Branches
+## Branches
 
 There are two main branches of the codebase:
 
@@ -51,7 +51,7 @@ There are two main branches of the codebase:
   * [`master`](./). This tracks the latest 2.x series, which adopted 
     Github actions workflows as the main supported format.
 
-### Install Popper from Source
+## Install Popper from Source
 
 To install Popper in "development mode", we suggest the following 
 approach:
