@@ -10,6 +10,8 @@ import docker
 import utils as testutils
 import popper.utils as pu
 
+from testfixtures import LogCapture
+
 from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
@@ -62,16 +64,18 @@ class TestHostHostRunner(unittest.TestCase):
         repo.close()
 
     def test_exec_cmd(self):
-        cmd = ["echo", "command_1"]
+        cmd = ["echo", "hello-world"]
         pid, ecode, output = HostRunner._exec_cmd(cmd, logging=False)
         self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
-        self.assertEqual(output, "command_1\n")
+        self.assertEqual(output, "hello-world\n")
 
-        pid, ecode, output = HostRunner._exec_cmd(cmd, logging=True)
-        self.assertGreater(pid, 0)
-        self.assertEqual(ecode, 0)
-        self.assertEqual(output, "")
+        with LogCapture('popper') as log:
+            pid, ecode, output = HostRunner._exec_cmd(cmd)
+            self.assertGreater(pid, 0)
+            self.assertEqual(ecode, 0)
+            self.assertEqual(output, "")
+            log.check_present(('popper', 'STEP_INFO', 'hello-world\n'))
 
         cmd = ["env"]
         pid, ecode, output = HostRunner._exec_cmd(
