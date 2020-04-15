@@ -68,7 +68,7 @@ git clone git@github.com:systemslab/popper
 cd popper
 
 # install popper from source
-pip install -e cli
+pip install -e cli/[dev]
 ```
 
 the `-e` flag passed to `pip` tells it to install the package from the 
@@ -77,6 +77,21 @@ you will see the effects when you invoke the `popper` command. So with
 the above approach you have both (1) popper installed in your machine 
 and (2) an environment where you can modify popper and test the 
 results of such modifications.
+
+## Running the unittests locally
+
+To run the unittests on your local machine, we suggest the following
+approach:
+
+```bash
+cd popper/
+
+# activate the virtualenv
+source $HOME/venvs/popper/bin/activate
+
+# run the tests
+ENGINE=docker python -X tracemalloc -m unittest discover -f cli/test/
+```
 
 ## How to contribute changes
 
