@@ -120,20 +120,22 @@ from popper.runner import WorkflowRunner
 def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
         engine, resource_manager, skip, skip_pull, skip_clone,
         substitution, allow_loose, with_dependencies, workspace, conf):
-    """Runs a Popper workflow. Only execute STEP if given.
+    """Runs a Popper workflow. Only executes STEP if given.
     
-    `popper run` allows specifying the engine and the resource manager
-    in two different ways. 
-    
-    * Using the `--engine/-e` option and `--resource-manager/-r` option.
-    
-    * Through the config file.
-    
-    * Otherwise, popper uses docker as the default engine
-      and host as the default resource manager. 
+    This command allows specifying the engine and the resource manager
+    in two different ways.
 
-    * If the engine or resource manager is specified both through CLI and 
-      config file, CLI is given preference over config file.
+    * Using the `--engine/-e` option and `--resource-manager/-r` option.
+
+    * Through a configuration file specified with the `--conf/-c` option.
+
+    NOTE:
+
+    1. If none of the above are given, popper uses docker as the
+       default engine and host as the default resource manager.
+
+    2. If the engine or resource manager is specified through CLI and
+       config file both, CLI is given preference over config file.
     """
     # set the logging levels.
     level = 'STEP_INFO'
