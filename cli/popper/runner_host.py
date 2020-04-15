@@ -184,7 +184,8 @@ class DockerRunner(StepRunner):
         build, img, tag, dockerfile = self._get_build_info(step)
 
         if build:
-            log.info(f'[{step["name"]}] docker build {img}:{tag} {os.path.dirname(dockerfile)}')
+            log.info(
+                f'[{step["name"]}] docker build {img}:{tag} {os.path.dirname(dockerfile)}')
             if not self._config.dry_run:
                 self._d.images.build(path=dockerfile, tag=f'{img}:{tag}',
                                      rm=True, pull=True)

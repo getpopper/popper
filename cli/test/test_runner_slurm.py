@@ -80,9 +80,9 @@ class TestSlurmSlurmRunner(unittest.TestCase):
 
         call_sbatch = call.Popen(
             ['sbatch', '--wait', '--job-name',
-            'popper_sample_123abc', '--output',
-            '/tmp/popper/slurm/popper_sample_123abc.out',
-            '/tmp/popper/slurm/popper_sample_123abc.sh'],
+             'popper_sample_123abc', '--output',
+             '/tmp/popper/slurm/popper_sample_123abc.out',
+             '/tmp/popper/slurm/popper_sample_123abc.sh'],
             cwd=os.getcwd(), env=None,
             preexec_fn=os.setsid,
             stderr=-2, stdout=-1, universal_newlines=True)
@@ -210,7 +210,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
                     'volumes': ['/path/in/host:/path/in/container'],
                     'environment': {'FOO': 'bar'}
                 }
-            }, 
+            },
             'resource_manager': {
                 'name': 'slurm'
             }
@@ -253,7 +253,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
                     'volumes': ['/path/in/host:/path/in/container'],
                     'environment': {'FOO': 'bar'}
                 }
-            }, 
+            },
             'resource_manager': {
                 'name': 'slurm'
             }

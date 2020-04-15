@@ -122,7 +122,8 @@ class TestHostDockerRunner(unittest.TestCase):
             dclient = docker.from_env()
             c1 = dclient.containers.run(
                 'debian:buster-slim', 'sleep 20000', detach=True)
-            c2 = dclient.containers.run('alpine:3.9', 'sleep 10000', detach=True)
+            c2 = dclient.containers.run(
+                'alpine:3.9', 'sleep 10000', detach=True)
             dr._spawned_containers.add(c1)
             dr._spawned_containers.add(c2)
             dr.stop_running_tasks()
@@ -149,7 +150,7 @@ class TestHostDockerRunner(unittest.TestCase):
                     'volumes': ['/path/in/host:/path/in/container'],
                     'environment': {'FOO': 'bar'}
                 }
-            }, 
+            },
             'resource_manager': {
                 'name': 'slurm'
             }

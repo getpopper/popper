@@ -121,7 +121,7 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
         engine, resource_manager, skip, skip_pull, skip_clone,
         substitution, allow_loose, with_dependencies, workspace, conf):
     """Runs a Popper workflow. Only executes STEP if given.
-    
+
     This command allows specifying the engine and the resource manager
     in two different ways.
 
