@@ -198,11 +198,7 @@ class DockerRunner(StepRunner):
 
         container_args = self._get_container_kwargs(step, f'{img}:{tag}', cid)
 
-        cmd = []
-        for k, v in container_args.items():
-            cmd.append(pu.key_value_to_flag(k, v))
-
-        log.info(f'[{step["name"]}] docker create {" ".join(cmd)}')
+        log.info(f'[{step["name"]}] docker create {container_args} {img}:{tag}')
         container = self._d.containers.create(**container_args)
         return container
 
