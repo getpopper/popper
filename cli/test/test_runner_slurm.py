@@ -1,14 +1,13 @@
 import os
 import unittest
 
-import utils as testutils
-
 from popper.config import PopperConfig
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
 
 from dotmap import DotMap
 
+from popper_test import PopperTest
 from testfixtures import Replacer
 from testfixtures.popen import MockPopen
 
@@ -20,14 +19,14 @@ def _wfile(name, format):
     return f'{FIXDIR}/{name}.{format}'
 
 
-class TestSlurmSlurmRunner(unittest.TestCase):
+class TestSlurmSlurmRunner(unittest.TestCase, PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
         self.Popen = MockPopen()
         replacer = Replacer()
         replacer.replace('popper.utils.Popen', self.Popen)
         self.addCleanup(replacer.restore)
-        self.repo = testutils.mk_repo().working_dir
+        self.repo = self.mk_repo().working_dir
         self.slurm_runner = SlurmRunner(DotMap({}))
 
     def tearDown(self):

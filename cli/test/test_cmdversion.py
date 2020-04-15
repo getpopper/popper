@@ -14,8 +14,4 @@ class TestCommandVersion(unittest.TestCase, PopperTest):
             result = runner.invoke(version.cli)
             assert result.exit_code == 0
 
-        if(version_value in test.output[0]):
-            assert 1 == 1
-
-        else:
-            assert 1 == 0
+        self.assertTrue(version_value in test.output[0])

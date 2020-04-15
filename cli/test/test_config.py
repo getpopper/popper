@@ -1,10 +1,9 @@
 import unittest
 import os
 
-import utils as testutils
-
 from popper.config import PopperConfig
 from popper.cli import log
+from popper_test import PopperTest
 
 
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
@@ -14,10 +13,10 @@ def _wfile(name, format):
     return f'{FIXDIR}/{name}.{format}'
 
 
-class TestPopperConfig(unittest.TestCase):
+class TestPopperConfig(unittest.TestCase, PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
-        self.test_dir = testutils.mk_repo().working_dir
+        self.test_dir = self.mk_repo().working_dir
         common_kwargs = {
             'skip_clone': False,
             'skip_pull': False,

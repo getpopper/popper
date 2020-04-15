@@ -11,18 +11,6 @@ FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
 
 class PopperTest:
 
-    def __init__(self):
-
-        self.test_repo_path = '/tmp/mypaper'
-        self.ci = False
-
-    def delete_dir(self, path):
-
-        try:
-            os.rmdir(path)
-        except OSError as e:
-            os.system("docker run --rm -v /tmp:/tmp alpine:3.8 rm -rf "+path)
-
     def _wfile(self, name, format):
         return f'{FIXDIR}/{name}.{format}'
 
