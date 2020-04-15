@@ -4,7 +4,6 @@ import unittest
 
 from subprocess import Popen
 
-import psutil
 import docker
 
 import utils as testutils
@@ -89,13 +88,13 @@ class TestHostHostRunner(unittest.TestCase):
         self.assertEqual(len(_pids), 1)
 
     def test_stop_running_tasks(self):
-        pid = Popen(["sleep", "2000"]).pid
         with HostRunner() as hr:
-            hr._spawned_pids.add(pid)
-            hr.stop_running_tasks()
+            with Popen(["sleep", "2000"]) as p:
+                pid = p.pid
+                hr._spawned_pids.add(pid)
+                hr.stop_running_tasks()
         time.sleep(2)
-        proc = psutil.Process(pid)
-        self.assertEqual(proc.status(), psutil.STATUS_ZOMBIE)
+        self.assertRaises(ProcessLookupError, os.kill, pid, 0)
 
 
 class TestHostDockerRunner(unittest.TestCase):

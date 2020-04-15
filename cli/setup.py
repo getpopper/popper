@@ -23,7 +23,7 @@ setup(
         'docker'
     ],
     extras_require={
-        'dev': ['psutil', 'testfixtures']
+        'dev': ['testfixtures']
     },
     entry_points='''
         [console_scripts]
