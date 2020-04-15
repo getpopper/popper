@@ -30,7 +30,8 @@ popper run -f wf.yml
 ```
 
 Keep reading down to find [installation instructions](#installation). 
-For more information on the YAML syntax, see [here][cnwf].
+The full example above can be found [here][minimalpython]. For more 
+information on the YAML syntax, see [here][cnwf].
 
 The high-level goals of this project are to provide:
 
@@ -114,3 +115,4 @@ us](mailto:ivo@cs.ucsc.edu).
 [cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
 [compose]: https://docs.docker.com/compose/
 [podman]: https://podman.io
+[minimalpython]: https://github.com/popperized/popper-examples/tree/master/workflows/minimal-python
