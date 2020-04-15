@@ -3,13 +3,13 @@ from __future__ import unicode_literals
 import re
 import hcl
 import os
+import threading
 import yaml
 
 from copy import deepcopy
 from builtins import str, dict
 from popper.cli import log as log
 
-import popper.scm as scm
 import popper.utils as pu
 
 
@@ -22,6 +22,45 @@ VALID_STEP_ATTRS = [
     "env",
     "name",
     "next"]
+
+
+class threadsafe_iter_3:
+    """Takes an iterator/generator and makes it thread-safe by serializing call
+    to the `next` method of given iterator/generator."""
+
+    def __init__(self, it):
+        self.it = it
+        self.lock = threading.Lock()
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        with self.lock:
+            return self.it.__next__()
+
+
+def threadsafe_generator(f):
+    """A decorator that takes a generator function and makes it thread-safe.
+
+    Args:
+      f(function): Generator function
+
+    Returns:
+      None
+    """
+    def g(*args, **kwargs):
+        """
+
+        Args:
+          *args(list): List of non-key worded,variable length arguments.
+          **kwargs(dict): List of key-worded,variable length arguments.
+
+        Returns:
+          function: The thread-safe function.
+        """
+        return threadsafe_iter_3(f(*args, **kwargs))
+    return g
 
 
 class Workflow(object):
@@ -98,7 +137,7 @@ class Workflow(object):
             return params.split(" ")
         return params
 
-    @pu.threadsafe_generator
+    @threadsafe_generator
     def get_stages(self):
         """Generator of stages. A stages is a list of steps that can be
         executed in parallel.

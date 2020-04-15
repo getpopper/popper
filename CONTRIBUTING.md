@@ -20,7 +20,7 @@ Popper adheres to our code of conduct, [posted in this repository](CODE_OF_CONDU
 Take a look at the issues in our [list of 
 projects](https://github.com/systemslab/popper/projects) to get started!
 
-### Keywords in Issue Titles
+## Keywords in Issue Titles
 
 The title of each open issue is prefixed with a keyword that denotes the 
 following:
@@ -40,7 +40,7 @@ following:
     Workflow that showcases available features of the CLI tool, as 
     well as the catalog of pre-defined actions.
 
-### Branches
+## Branches
 
 There are two main branches of the codebase:
 
@@ -51,7 +51,7 @@ There are two main branches of the codebase:
   * [`master`](./). This tracks the latest 2.x series, which adopted 
     Github actions workflows as the main supported format.
 
-### Install Popper from Source
+## Install Popper from Source
 
 To install Popper in "development mode", we suggest the following 
 approach:
@@ -68,7 +68,7 @@ git clone git@github.com:systemslab/popper
 cd popper
 
 # install popper from source
-pip install -e cli
+pip install -e cli/[dev]
 ```
 
 the `-e` flag passed to `pip` tells it to install the package from the 
@@ -77,6 +77,21 @@ you will see the effects when you invoke the `popper` command. So with
 the above approach you have both (1) popper installed in your machine 
 and (2) an environment where you can modify popper and test the 
 results of such modifications.
+
+## Running the unittests locally
+
+To run the unittests on your local machine, we suggest the following
+approach:
+
+```bash
+cd popper/
+
+# activate the virtualenv
+source $HOME/venvs/popper/bin/activate
+
+# run the tests
+ENGINE=docker python -X tracemalloc -m unittest discover -f cli/test/
+```
 
 ## How to contribute changes
 

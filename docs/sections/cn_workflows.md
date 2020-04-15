@@ -199,8 +199,9 @@ the exit code to set the workflow execution status, which can be
 
 ## Container Engines
 
-By default, steps in Popper workflows run in Docker. In addition, 
-Popper can execute workflows in other runtimes by interacting with 
+By default, steps in Popper workflows run in Docker using the host machine 
+as the resource manager (see [next section](#resource-managers) on running on other resource managers). 
+In addition, Popper can execute workflows in other runtimes by interacting with 
 their corresponding container engines. An `--engine <engine>` flag for 
 the `popper run` is used to invoke alternative engines, where 
 `<engine>` is one of the supported engines. When no value for this 
@@ -290,3 +291,76 @@ command to specify custom options for the underlying engine in
 question (see [here][engconf] for more).
 
 [engconf]: /cli_features#customizing-container-engine-behavior
+
+## Resource Managers
+
+Popper can execute steps in a workflow through other resource managers
+like `slurm` besides the host machine. The resource manager can be specified 
+either through the  `--resource-manager/-r` option or through the config file.
+If neither of them are provided, the steps are run in the host machine 
+by default. 
+
+### Supported resource managers
+
+#### Slurm
+
+Popper workflows can be run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments) 
+using [Slurm](https://slurm.schedmd.com/overview.html) as the underlying resource manager to distribute the execution of a step to
+several nodes. You can get started with running Popper workflows through Slurm by following the example below.
+
+Let's consider a workflow `sample.yml` like the one shown below.
+```yaml
+version: '1'
+steps:
+- id: one
+  uses: docker://alpine:3.9
+  args: echo hello-world
+
+- id: two
+  uses: popperized/bin/sh@master
+  args: ls -l
+```
+
+To run all the steps of the workflow through slurm resource manager,
+use the `--resource-manager` or `-r` option of the `popper run` subcommand to specify the resource manager.
+
+```bash
+popper run -f sample.yml -r slurm
+```
+
+To have more finer control on which steps to run through slurm resource manager,
+the specifications can be provided through the config file as shown below.
+
+We create a config file called `config.yml` with the following contents.
+
+```yaml
+engine:
+  name: docker
+  options:
+    privileged: True
+    hostname: example.local
+
+resource_manager:
+  name: slurm
+  options:
+    two:
+      nodes: 2
+```
+
+Now, we execute `popper run` with this config file as follows:
+```bash
+popper run -f sample.yml -c config.yml
+```
+
+This runs the step `one` locally in the host and step `two` through slurm on 2 nodes.
+
+#### Host
+
+Popper executes the workflows by default using the `host` machine as the resource manager. So, when no resource manager is provided like the example below, the workflow runs on the local machine.
+
+```bash
+popper run -f sample.yml
+```
+
+The above assumes `docker` as the container engine and `host` as the resource manager to be
+used.
