@@ -86,7 +86,7 @@ if [ "$ENGINE" == "singularity" ]; then
   rm -rf "$HOME/.cache/popper/singularity/$ID"
   mkdir "$HOME/.cache/popper/singularity/$ID"
   singularity pull --name debian_"$ID".sif docker://debian:stretch-slim
-  mv debian_"$ID".sif "$HOME/.cache/popper/singularity/$ID/popper_docker___debian_stretch-slim_$ID.sif"
+  mv debian_"$ID".sif "$HOME/.cache/popper/singularity/$ID/popper_sample_action_one_$ID.sif"
 else
   docker pull debian:stretch-slim
 fi

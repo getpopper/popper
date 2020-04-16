@@ -7,7 +7,7 @@ python:
 - "3.8"
 env:
 - ENGINE=docker
-#- ENGINE=singularity
+- ENGINE=singularity
 services: docker
 before_install:
 - ci/scripts/install_scripts.sh
