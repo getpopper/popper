@@ -11,9 +11,6 @@ FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
 
 class PopperTest:
 
-    def _wfile(self, name, format):
-        return f'{FIXDIR}/{name}.{format}'
-
     def mk_repo(self):
         """creates a test repo in a random temp file. Equivalent to:
         REPODIR=/tmp/<random>
