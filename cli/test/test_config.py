@@ -8,92 +8,84 @@ from popper_test import PopperTest
 
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
 
+class TestPopperConfig(unittest.TestCase):
+    default_args = {
+        'skip_clone': False,
+        'engine_name': 'docker',
+        'engine_opts': {},
+        'resman_name': 'host',
+        'resman_opts': {},
+        'skip_pull': False,
+        'dry_run': False,
+        'workspace_dir': os.getcwd(),
+        'quiet': False,
+        'reuse': False
+    }
 
-def _wfile(name, format):
-    return f'{FIXDIR}/{name}.{format}'
-
-
-class TestPopperConfig(unittest.TestCase, PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
-        self.test_dir = self.mk_repo().working_dir
-        common_kwargs = {
-            'skip_clone': False,
-            'skip_pull': False,
-            'dry_run': False,
-            'workspace_dir': self.test_dir,
-            'quiet': False,
-            'reuse': False,
-            'engine_options': dict(),
-            'resman_options': dict()}
-
-        self.from_config_file = PopperConfig(
-            config_file=_wfile("settings_3", "yml"),
-            engine=None,
-            resource_manager=None,
-            **common_kwargs)
-
-        self.from_cli = PopperConfig(
-            config_file=_wfile("settings_3", "yml"),
-            engine='foo',
-            resource_manager='bar',
-            **common_kwargs)
-
-        self.from_defaults = PopperConfig(
-            config_file=None,
-            engine=None,
-            resource_manager=None,
-            **common_kwargs)
-
-        self.invalid_popper_cfg_one = PopperConfig(
-            config_file=_wfile("settings_1", "yml"),
-            engine=None,
-            resource_manager=None,
-            **common_kwargs)
-
-        self.invalid_popper_cfg_two = PopperConfig(
-            config_file=_wfile("settings_2", "yml"),
-            engine=None,
-            resource_manager=None,
-            **common_kwargs)
+        self.maxDiff = None
 
     def tearDown(self):
         log.setLevel('NOTSET')
 
-    def test_parse(self):
-        self.assertEqual(
-            self.from_config_file.config_from_file, {
-                'engine': {
-                    'name': 'docker', 'options': {
-                        'privileged': True}}, 'resource_manager': {
-                    'name': 'slurm', 'options': {
-                        'action_one': {
-                            'cpus-per-task': 1, 'nodes': 1}}}})
+    def test_config_defaults(self):
+        conf = PopperConfig()
+        actual = conf.__dict__
 
-    def test_validate(self):
-        self.assertRaises(SystemExit, self.invalid_popper_cfg_one.validate)
-        self.assertRaises(SystemExit, self.invalid_popper_cfg_two.validate)
+        expected = TestPopperConfig.default_args
 
-    def test_normalize(self):
-        # --engine and --resource manager not provided through cli
-        # so, test those values get read from the config file.
-        self.from_config_file.normalize()
-        self.assertEqual(self.from_config_file.engine_name, 'docker')
-        self.assertEqual(self.from_config_file.resman_name, 'slurm')
-        self.assertEqual(
-            self.from_config_file.engine_options, {
-                'privileged': True})
-        self.assertEqual(
-            self.from_config_file.resman_options, {
-                'action_one': {
-                    'nodes': 1, 'cpus-per-task': 1}})
+        self.assertEqual(expected,
+                         TestPopperConfig.extract_dict(expected, actual))
 
-        # --engine and --resource manager provided, config file is ignored.
-        self.from_cli.normalize()
-        self.assertEqual(self.from_cli.engine_name, 'foo')
-        self.assertEqual(self.from_cli.resman_name, 'bar')
+    def test_config_non_defaults(self):
+        expected = {
+            'skip_clone': True,
+            'skip_pull': True,
+            'dry_run': True,
+            'workspace_dir': os.path.realpath('/tmp/foo'),
+            'quiet': True,
+            'reuse': True
+        }
+        conf = PopperConfig(**expected)
+        actual = conf.__dict__
 
-        # neither flags nor config flag describes what runtime/resman to use.
-        self.from_defaults.normalize()
-        self.assertEqual(self.from_defaults.engine_name, 'docker')
-        self.assertEqual(self.from_defaults.resman_name, 'host')
+        self.assertEqual(expected,
+                         TestPopperConfig.extract_dict(expected, actual))
+
+    def test_config_from_file(self):
+        config = {
+            'engine': {'options': {'privileged': True}},
+            'resource_manager': {'options': {'foo': 'bar'}}
+        }
+        kwargs = {'config_file': config}
+
+        # engine name missing
+        with self.assertLogs('popper', level='INFO') as cm:
+            self.assertRaises(SystemExit, PopperConfig,  **kwargs)
+            self.assertEqual(len(cm.output), 1)
+            self.assertTrue('No engine name given' in cm.output[0])
+
+        # resman name missing
+        config.update({'engine': {'name': 'foo'}})
+        with self.assertLogs('popper', level='INFO') as cm:
+            self.assertRaises(SystemExit, PopperConfig,  **kwargs)
+            self.assertEqual(len(cm.output), 1)
+            self.assertTrue('No resource manager name given' in cm.output[0])
+
+        # now all OK
+        config.update({'resource_manager': {'name': 'bar'}})
+        conf = PopperConfig(**kwargs)
+        self.assertEqual(conf.engine_name, 'foo')
+        self.assertEqual(conf.resman_name, 'bar')
+        self.assertEqual(conf.engine_opts, {})
+        self.assertEqual(conf.resman_opts, {})
+
+        config.update({'engine': {'name': 'bar', 'options': {'foo': 'baz'}}})
+        conf = PopperConfig(**kwargs)
+        self.assertEqual(conf.engine_opts, {'foo': 'baz'})
+
+    @staticmethod
+    def extract_dict(A, B):
+        # taken from https://stackoverflow.com/a/21213251
+        return dict([(k, B[k]) for k in A.keys() if k in B.keys()])
