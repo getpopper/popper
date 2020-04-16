@@ -291,7 +291,7 @@ class SingularityRunner(StepRunner):
         cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
 
         exists = self._singularity_exists(cid)
-        if exists and not self._config.reuse and not self._config.dry_run:
+        if exists and not self._config.reuse and not self._config.dry_run and not self._config.skip_pull:
             self._singularity_rm(cid)
 
         self._create_container(step, cid)
