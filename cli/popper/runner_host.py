@@ -186,14 +186,14 @@ class DockerRunner(StepRunner):
         return (build, img, tag, build_source)
 
     def _create_container(self, cid, step):
-        build, img, tag, dockerfile = self._get_build_info(step)
+        build, img, tag, build_source = self._get_build_info(step)
 
         if build:
             log.info(
                 f'[{step["name"]}] docker build {img}:{tag} '
-                f'{os.path.dirname(dockerfile)}')
+                f'{build_context}')
             if not self._config.dry_run:
-                self._d.images.build(path=dockerfile, tag=f'{img}:{tag}',
+                self._d.images.build(path=build_source, tag=f'{img}:{tag}',
                                      rm=True, pull=True)
         elif not self._config.skip_pull and not step.get('skip_pull', False):
             log.info(f'[{step["name"]}] docker pull {img}:{tag}')
