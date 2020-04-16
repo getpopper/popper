@@ -6,7 +6,6 @@ from subprocess import Popen
 
 import docker
 
-import utils as testutils
 import popper.utils as pu
 
 from testfixtures import LogCapture
@@ -217,10 +216,9 @@ class TestHostDockerRunner(unittest.TestCase, PopperTest):
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_docker_basic_run(self):
-      
+
         repo = self.mk_repo()
         conf = PopperConfig(workspace_dir=repo.working_dir)
-
 
         with WorkflowRunner(conf) as r:
             wf = YMLWorkflow("""

@@ -1,5 +1,6 @@
 import os
 import unittest
+import tempfile
 
 from popper.config import PopperConfig
 from popper.runner import WorkflowRunner
