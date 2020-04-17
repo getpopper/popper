@@ -3,6 +3,7 @@ import unittest
 
 import utils as testutils
 
+from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
 
@@ -18,8 +19,9 @@ class TestKubernetesDockerRunner(unittest.TestCase):
         'ENGINE != docker or RESMAN != kubernetes')
     def test_docker_basic_run(self):
         repo = testutils.mk_repo()
+        conf = PopperConfig(workspace_dir=repo.working_dir)
 
-        with WorkflowRunner(workspace_dir=repo.working_dir) as r:
+        with WorkflowRunner(conf) as r:
             wf = YMLWorkflow("""
             version: '1'
             steps:
