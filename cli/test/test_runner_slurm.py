@@ -8,7 +8,7 @@ from popper.parser import YMLWorkflow
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
 
-from popper_test import PopperTest
+from test_common import PopperTest
 from testfixtures import Replacer, replace, compare
 from testfixtures.popen import MockPopen
 from testfixtures.mock import call

@@ -16,7 +16,7 @@ from popper.runner import WorkflowRunner
 from popper.runner_host import HostRunner, DockerRunner
 
 
-from popper_test import PopperTest
+from test_common import PopperTest
 
 from popper.cli import log as log
 

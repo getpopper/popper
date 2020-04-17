@@ -3,7 +3,7 @@ import os
 
 from popper.config import PopperConfig
 from popper.cli import log
-from popper_test import PopperTest
+from test_common import PopperTest
 
 
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
