@@ -3,7 +3,7 @@
 A CLI tool to help bootstrap projects that follow the
 [Popper](https://github.com/systemslab/popper) convention. For a
 quickstart guide on how to use the CLI, look
-[here](http://popper.readthedocs.io/en/latest/protocol/getting_started.html#quickstart-guide).
+[here](https://popper.readthedocs.io/en/latest/sections/getting_started.html).
 
 ## Install
 
