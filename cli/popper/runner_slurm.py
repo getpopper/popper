@@ -7,6 +7,7 @@ from popper import utils as pu
 from popper.cli import log as log
 from popper.runner_host import HostRunner
 from popper.runner_host import DockerRunner as HostDockerRunner
+from popper.runner_host import SingularityRunner as HostSingularityRunner
 
 
 class SlurmRunner(HostRunner):
@@ -151,3 +152,77 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cmd.append(f'{image} {command}')
 
         return ' '.join(cmd)
+
+
+class SingularityRunner(SlurmRunner, HostSingularityRunner):
+
+    def __init__(self, **kw):
+        super(SingularityRunner, self).__init__(**kw)
+        if self._config.reuse:
+            log.fail('Reuse not supported for SingularityRunner.')
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        pass
+
+    def run(self, step):
+        self._setup_singularity_cache()
+        cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
+        build, img, tag, build_source = self._get_build_info(step)
+
+        cmd = []
+        cmd.append(f'rm -rf {os.path.join(self._singularity_cache, cid)}')
+
+        if build:
+            recipefile = HostSingularityRunner.get_recipe_file(build_source, cid)
+            cmd.append(f'cd {build_source}')
+            cmd.append(f'singularity build {os.path.join(self._singularity_cache, cid)} {recipefile}')
+        else:
+            cmd.append(f'singularity pull {os.path.join(self._singularity_cache, cid)} {img}')
+
+        cmd.append(self._create_cmd(step, cid))
+
+        if self._config.dry_run:
+            return 0
+
+        self._spawned_containers.add(cid)
+        ecode = self._submit_batch_job(cmd, step)
+        self._spawned_containers.remove(cid)
+        return ecode
+
+    def _create_cmd(self, step, cid):
+        env = SlurmRunner.prepare_environment(step)
+        for k, v in env.items():
+            os.environ[k] = v
+
+        volumes = [
+            f'{self._config.workspace_dir}:/workspace'
+        ]
+
+        args = step.get('args', '')
+        runs = step.get('runs', '')
+        ecode = None
+
+        if runs:
+            commands = runs
+            cmd = ['singularity exec']
+        else:
+            commands = args
+            cmd = ['singularity run']
+        
+        if self._config.dry_run:
+            return 0
+
+        options = self._get_container_options()
+
+        for vol in volumes:
+            options.append('--bind')
+            options.append(vol)
+
+        cmd.append(' '.join(options))
+        cmd.append(os.path.join(self._singularity_cache, cid))
+        cmd.append(' '.join(commands))
+
+        return ' '.join(cmd)
+
+    def stop_running_tasks(self):
+        pass
