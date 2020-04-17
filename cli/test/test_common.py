@@ -30,10 +30,12 @@ class PopperTest:
         repo.index.commit('first commit')
         return repo
 
+
 class PopperCommonTest(unittest.TestCase, PopperTest):
 
     def test_mkrepo(self):
 
         repo = self.mk_repo()
         self.assertTrue(os.path.isdir(repo.working_tree_dir))
-        self.assertTrue(os.path.isfile(os.path.join(repo.working_tree_dir, 'README.md')))
+        self.assertTrue(os.path.isfile(
+            os.path.join(repo.working_tree_dir, 'README.md')))
