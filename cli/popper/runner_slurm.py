@@ -167,17 +167,20 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
     def run(self, step):
         self._setup_singularity_cache()
         cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
-        build, img, tag, build_source = self._get_build_info(step)
+        self._container = os.path.join(self._singularity_cache, cid)
+
+        build, img, build_source = self._get_build_info(step)
 
         cmd = []
-        cmd.append(f'rm -rf {os.path.join(self._singularity_cache, cid)}')
+        cmd.append(f'rm -rf {self._container}')
 
         if build:
-            recipefile = HostSingularityRunner.get_recipe_file(build_source, cid)
+            recipefile = HostSingularityRunner.get_recipe_file(
+                build_source, cid)
             cmd.append(f'cd {build_source}')
-            cmd.append(f'singularity build {os.path.join(self._singularity_cache, cid)} {recipefile}')
+            cmd.append(f'singularity build {self._container} {recipefile}')
         else:
-            cmd.append(f'singularity pull {os.path.join(self._singularity_cache, cid)} {img}')
+            cmd.append(f'singularity pull {self._container} {img}')
 
         cmd.append(self._create_cmd(step, cid))
 
@@ -194,10 +197,6 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         for k, v in env.items():
             os.environ[k] = v
 
-        volumes = [
-            f'{self._config.workspace_dir}:/workspace'
-        ]
-
         args = step.get('args', '')
         runs = step.get('runs', '')
         ecode = None
@@ -208,18 +207,14 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         else:
             commands = args
             cmd = ['singularity run']
-        
+
         if self._config.dry_run:
             return 0
 
         options = self._get_container_options()
 
-        for vol in volumes:
-            options.append('--bind')
-            options.append(vol)
-
         cmd.append(' '.join(options))
-        cmd.append(os.path.join(self._singularity_cache, cid))
+        cmd.append(self._container)
         cmd.append(' '.join(commands))
 
         return ' '.join(cmd)

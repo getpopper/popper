@@ -289,10 +289,11 @@ class SingularityRunner(StepRunner):
     def run(self, step):
         self._setup_singularity_cache()
         cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
+        self._container = os.path.join(self._singularity_cache, cid)
 
-        exists = self._singularity_exists(cid)
-        if exists and not self._config.reuse and not self._config.dry_run and not self._config.skip_pull:
-            self._singularity_rm(cid)
+        exists = os.path.exists(self._container)
+        if exists and not self._config.dry_run and not self._config.skip_pull:
+            os.remove(self._container)
 
         self._create_container(step, cid)
         ecode = self._singularity_start(step, cid)
@@ -337,35 +338,24 @@ class SingularityRunner(StepRunner):
         SingularityRunner.lock.release()
 
     def _get_build_info(self, step):
-        """Parses the `uses` attribute and returns build information needed.
-
-        Args:
-            step(dict): dict with step data
-
-        Returns:
-            (str, str, str, str): bool (build), image, tag, Dockerfile
-        """
         build = True
         img = None
         build_source = None
 
         if 'docker://' in step['uses'] or 'shub://' in step['uses']:
             img = step['uses']
-            tag = ""
             build = False
 
         elif './' in step['uses']:
             img = f'{pu.sanitized_name(step["name"], "step")}'
-            tag = f'{self._config.workspace_sha}'
             build_source = os.path.join(self._config.workspace_dir,
                                         step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
             img = f'{user}/{repo}'.lower()
-            tag = version
             build_source = os.path.join(step['repo_dir'], step['step_dir'])
 
-        return (build, img, tag, build_source)
+        return (build, img, build_source)
 
     def _setup_singularity_cache(self):
         self._singularity_cache = os.path.join(
@@ -373,13 +363,33 @@ class SingularityRunner(StepRunner):
         if not os.path.exists(self._singularity_cache):
             os.makedirs(self._singularity_cache, exist_ok=True)
 
-    def _get_container_options(self):
-        options = []
-        options.append('--userns')
-        options.append('--pwd /workspace')
+    def _update_with_engine_config(self, container_args):
+        update_with = self._config.engine_opts
+        if not update_with:
+            return
 
-        if self._config.engine_opts:
-            for k, v in self._config.engine_opts.items():
+        container_args["bind"] = [*container_args["bind"],
+                                  *update_with.get('bind', list())]
+
+        for k, v in update_with.items():
+            if k not in container_args.keys():
+                container_args[k] = update_with[k]
+
+    def _get_container_options(self):
+        container_args = {
+            'userns': True,
+            'pwd': '/workspace',
+            'bind': [f'{self._config.workspace_dir}:/workspace']
+        }
+
+        self._update_with_engine_config(container_args)
+
+        options = []
+        for k, v in container_args.items():
+            if isinstance(v, list):
+                for item in v:
+                    options.append(pu.key_value_to_flag(k, item))
+            else:
                 options.append(pu.key_value_to_flag(k, v))
 
         options = ' '.join(options).split(' ')
@@ -388,12 +398,14 @@ class SingularityRunner(StepRunner):
         return options
 
     def _create_container(self, step, cid):
-        build, image, tag, build_source = self._get_build_info(step)
+        build, image, build_source = self._get_build_info(step)
 
         if build:
-            log.info(f'[{step["name"]}] singularity build {cid} {build_source}')
+            log.info(
+                f'[{step["name"]}] singularity build {cid} {build_source}')
             if not self._config.dry_run:
-                self._build_from_recipe(build_source, self._singularity_cache, cid)
+                self._build_from_recipe(
+                    build_source, self._singularity_cache, cid)
         elif not self._config.skip_pull and not step.get('skip_pull', False):
             log.info(f'[{step["name"]}] singularity pull {cid} {image}')
             if not self._config.dry_run:
@@ -402,28 +414,12 @@ class SingularityRunner(StepRunner):
                     name=cid,
                     pull_folder=self._singularity_cache)
 
-    def _singularity_exists(self, cid):
-        if self._config.dry_run:
-            return
-        return os.path.exists(
-            os.path.join(self._singularity_cache, cid))
-
-    def _singularity_rm(self, cid):
-        if self._config.dry_run:
-            return
-        os.remove(
-            os.path.join(self._singularity_cache, cid))
-
     def _singularity_start(self, step, cid):
         env = StepRunner.prepare_environment(step)
-        
+
         # set the environment variables
         for k, v in env.items():
             os.environ[k] = v
-
-        volumes = [
-            f'{self._config.workspace_dir}:/workspace'
-        ]
 
         args = step.get('args', None)
         runs = step.get('runs', None)
@@ -439,12 +435,12 @@ class SingularityRunner(StepRunner):
             start = self._s.run
 
         log.info(info)
-        
+
         if self._config.dry_run:
             return 0
 
         options = self._get_container_options()
-        output = start(os.path.join(self._singularity_cache, cid), commands, bind=volumes,
+        output = start(self._container, commands,
                        stream=True, options=options)
         try:
             for line in output:
