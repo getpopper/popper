@@ -7,7 +7,7 @@ python:
 - "3.8"
 env:
 - ENGINE=docker RESMAN=host
-- ENGINE=docker RESMAN-kubernetes
+- ENGINE=docker RESMAN=kubernetes
 #- ENGINE=singularity
 - RESMAN=kubernetes
 services: docker
