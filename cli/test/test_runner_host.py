@@ -255,7 +255,7 @@ class TestHostDockerRunner(PopperTest):
         repo.close()
 
 
-class TestHostSingularityRunner(unittest.TestCase):
+class TestHostSingularityRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
@@ -382,7 +382,7 @@ class TestHostSingularityRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'singularity',
         'ENGINE != singularity')
     def test_singularity_start(self):
-        repo = testutils.mk_repo()
+        repo = self.mk_repo()
         conf = PopperConfig(
             engine_name='singularity',
             workspace_dir=repo.working_dir)
