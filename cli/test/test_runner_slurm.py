@@ -18,7 +18,7 @@ def mock_kill(pid, sig):
     return 0
 
 
-class TestSlurmSlurmRunner(unittest.TestCase, PopperTest):
+class TestSlurmSlurmRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
         self.Popen = MockPopen()

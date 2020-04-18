@@ -5,7 +5,7 @@ from test_common import PopperTest
 from popper import __version__ as version_value
 
 
-class TestCommandVersion(unittest.TestCase, PopperTest):
+class TestCommandVersion(PopperTest):
 
     def test_version(self):
 

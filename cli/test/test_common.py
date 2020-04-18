@@ -10,7 +10,7 @@ import unittest
 FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
 
 
-class PopperTest:
+class PopperTest(unittest.TestCase):
 
     def mk_repo(self):
         """creates a test repo in a random temp file. Equivalent to:
@@ -31,7 +31,7 @@ class PopperTest:
         return repo
 
 
-class PopperCommonTest(unittest.TestCase, PopperTest):
+class PopperCommonTest(PopperTest):
 
     def test_mkrepo(self):
 

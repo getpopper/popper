@@ -21,7 +21,7 @@ from test_common import PopperTest
 from popper.cli import log as log
 
 
-class TestHostHostRunner(unittest.TestCase, PopperTest):
+class TestHostHostRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
@@ -101,7 +101,7 @@ class TestHostHostRunner(unittest.TestCase, PopperTest):
         self.assertRaises(ProcessLookupError, os.kill, pid, 0)
 
 
-class TestHostDockerRunner(unittest.TestCase, PopperTest):
+class TestHostDockerRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
