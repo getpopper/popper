@@ -1,7 +1,6 @@
 import os
 import unittest
 import tempfile
-import utils as testutils
 
 from popper.config import PopperConfig
 from popper.runner import WorkflowRunner
@@ -9,6 +8,7 @@ from popper.parser import YMLWorkflow
 from popper.runner_slurm import SlurmRunner, DockerRunner
 from popper.cli import log as log
 
+from test_common import PopperTest
 from testfixtures import Replacer, replace, compare
 from testfixtures.popen import MockPopen
 from testfixtures.mock import call
@@ -18,7 +18,7 @@ def mock_kill(pid, sig):
     return 0
 
 
-class TestSlurmSlurmRunner(unittest.TestCase):
+class TestSlurmSlurmRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
         self.Popen = MockPopen()
@@ -152,7 +152,7 @@ class TestSlurmSlurmRunner(unittest.TestCase):
             self.assertEqual(call_sbatch in self.Popen.all_calls, True)
 
     def test_dry_run(self):
-        repo = testutils.mk_repo()
+        repo = self.mk_repo()
         config = PopperConfig(
             engine_name='docker',
             resman_name='slurm',

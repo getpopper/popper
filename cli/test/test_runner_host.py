@@ -6,7 +6,6 @@ from subprocess import Popen
 
 import docker
 
-import utils as testutils
 import popper.utils as pu
 
 from testfixtures import LogCapture
@@ -15,15 +14,20 @@ from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
 from popper.runner_host import HostRunner, DockerRunner
+
+
+from test_common import PopperTest
+
 from popper.cli import log as log
 
 
-class TestHostHostRunner(unittest.TestCase):
+class TestHostHostRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
     def test_run(self):
-        repo = testutils.mk_repo()
+
+        repo = self.mk_repo()
         conf = PopperConfig(workspace_dir=repo.working_dir)
 
         with WorkflowRunner(conf) as r:
@@ -97,7 +101,7 @@ class TestHostHostRunner(unittest.TestCase):
         self.assertRaises(ProcessLookupError, os.kill, pid, 0)
 
 
-class TestHostDockerRunner(unittest.TestCase):
+class TestHostDockerRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
@@ -212,7 +216,8 @@ class TestHostDockerRunner(unittest.TestCase):
 
     @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
     def test_docker_basic_run(self):
-        repo = testutils.mk_repo()
+
+        repo = self.mk_repo()
         conf = PopperConfig(workspace_dir=repo.working_dir)
 
         with WorkflowRunner(conf) as r:
