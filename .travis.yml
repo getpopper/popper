@@ -9,7 +9,6 @@ env:
 - ENGINE=docker RESMAN=host
 - ENGINE=docker RESMAN=kubernetes
 #- ENGINE=singularity
-- RESMAN=kubernetes
 services: docker
 before_install:
 - ci/scripts/install-test-deps.sh
