@@ -175,7 +175,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
         if not self._config.dry_run:
             if build:
-                recipefile = HostSingularityRunner.get_recipe_file(
+                recipefile = self._get_recipe_file(
                     build_context, cid)
                 HostRunner._exec_cmd(
                     ['singularity', 'build', '--fakeroot', self._container, recipefile],
