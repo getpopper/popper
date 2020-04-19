@@ -21,5 +21,4 @@ fi
 if [[ $RESMAN == "kubernetes" ]]; then
   git clone --depth 1 -b "v0.7.0-2" --single-branch https://github.com/k8s-school/kind-travis-ci.git
   ./kind-travis-ci/kind/k8s-create.sh
-  sudo $HOME/.kube/config
 fi
