@@ -1,6 +1,7 @@
 # <img src="https://raw.githubusercontent.com/systemslab/popper/57f7a89bed6ff3e4d62ea2a5683ae28e3251931e/docs/figures/popper_logo_just_jug.png" width="64" valign="middle" alt="Popper"/> Popper
 
-[![Downloads](https://pepy.tech/badge/popper/month)](https://pepy.tech/project/popper)
+[![Downloads](https://pepy.tech/badge/popper)](https://pepy.tech/project/popper)
+[![Downloads Per Week](https://pepy.tech/badge/popper/week)](https://pepy.tech/project/popper)
 [![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper)
 [![codecov](https://codecov.io/gh/systemslab/popper/branch/master/graph/badge.svg)](https://codecov.io/gh/systemslab/popper)
 [![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
@@ -42,8 +43,14 @@ The high-level goals of this project are to provide:
     for workflows instead of services.
   * **An abstraction over container runtimes**. In addition to Docker, 
     Popper can seamlessly execute workflows in other runtimes by 
-    interacting with distinct container engines. We currently support 
-    [Singularity][sylabs] and are working on adding [Podman][podman].
+    interacting with distinct container engines. Popper currently 
+    supports [Singularity][sylabs] and we are working on adding 
+    [Podman][podman].
+  * **Run on resource managers**. Popper can also execute workflows on 
+    a variety of resource managers and schedulers such as Kubernetes 
+    and SLURM, without requiring any modifications to a workflow YAML 
+    file. We currently support SLURM and are working on adding support 
+    for Kubernetes.
   * **Continuous integration**. Generate configuration files for 
     distinct CI services, allowing users to run the exact same 
     workflows they run locally on Travis, Jenkins, Gitlab, Circle and 

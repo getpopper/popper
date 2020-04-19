@@ -3,10 +3,7 @@ import os
 
 from popper.config import PopperConfig
 from popper.cli import log
-from test_common import PopperTest
 
-
-FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
 
 class TestPopperConfig(unittest.TestCase):
     default_args = {

@@ -1,13 +1,7 @@
 import os
-import sys
-import shutil
-import contextlib
-import subprocess
 import tempfile
 import git
 import unittest
-
-FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
 
 
 class PopperTest(unittest.TestCase):

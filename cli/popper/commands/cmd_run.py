@@ -114,7 +114,10 @@ from popper.runner import WorkflowRunner
     default=os.getcwd()
 )
 @click.option(
-    '-c', '--conf', help='Runtime configuration options.', required=False
+    '-c',
+    '--conf',
+    help='Path to file with configuration options.',
+    required=False
 )
 @pass_context
 def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
@@ -122,20 +125,16 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
         substitution, allow_loose, with_dependencies, workspace, conf):
     """Runs a Popper workflow. Only executes STEP if given.
 
-    This command allows specifying the engine and the resource manager
-    in two different ways.
+    To specify a container engine to use other than docker, use the --engine/-e
+    flag. For executing on a resource manager such as SLURM or Kubernetes, use
+    the --resource-manager/-r flag. Alternatively, a configuration file can be
+    given (--conf flag) that can specify container options, resource manager
+    options, or both (see "Workflow Syntax and Execution Runtime" section of
+    the Popper documentation for more).
 
-    * Using the `--engine/-e` option and `--resource-manager/-r` option.
-
-    * Through a configuration file specified with the `--conf/-c` option.
-
-    NOTE:
-
-    1. If none of the above are given, popper uses docker as the
-       default engine and host as the default resource manager.
-
-    2. If the engine or resource manager is specified through CLI and
-       config file both, CLI is given preference over config file.
+    If the container engine (-e) or resource manager (-r) are specified with a
+    flag and a configuration file is given as well, the values passed via the
+    flags are given preference over those contained in the configuration file.
     """
     # set the logging levels.
     level = 'STEP_INFO'
