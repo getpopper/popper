@@ -178,7 +178,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
                 recipefile = HostSingularityRunner.get_recipe_file(
                     build_context, cid)
                 HostRunner._exec_cmd(
-                    ['singularity', 'build', self._container, recipefile],
+                    ['singularity', 'build', '--fakeroot', self._container, recipefile],
                     cwd=build_context)
             else:
                 HostRunner._exec_cmd(['singularity', 'pull', self._container, img])
