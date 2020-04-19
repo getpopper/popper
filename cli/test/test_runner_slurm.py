@@ -393,7 +393,4 @@ class TestSlurmSingularityRunner(unittest.TestCase):
             content = f.read()
             self.assertEqual(content,
                              f"""#!/bin/bash
-rm -rf {os.environ['HOME']}/.cache/popper/singularity/123abc/popper_1_123abc.sif
-cd {os.environ['HOME']}/.cache/popper/123abc/github.com/popperized/bin/sh
-singularity build {os.environ['HOME']}/.cache/popper/singularity/123abc/popper_1_123abc.sif {os.environ['HOME']}/.cache/popper/123abc/github.com/popperized/bin/sh/Singularity.popper_1_123abc
 singularity exec --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/123abc/popper_1_123abc.sif ls""")
