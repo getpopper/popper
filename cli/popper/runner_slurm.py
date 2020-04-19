@@ -208,9 +208,6 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
             commands = args
             cmd = ['singularity run']
 
-        if self._config.dry_run:
-            return 0
-
         options = self._get_container_options()
 
         cmd.append(' '.join(options))
