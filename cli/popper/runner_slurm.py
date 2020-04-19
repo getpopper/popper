@@ -169,15 +169,15 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
         self._container = os.path.join(self._singularity_cache, cid)
 
-        build, img, build_source = self._get_build_info(step)
+        build, img, build_context = self._get_build_info(step)
 
         cmd = []
         cmd.append(f'rm -rf {self._container}')
 
         if build:
             recipefile = HostSingularityRunner.get_recipe_file(
-                build_source, cid)
-            cmd.append(f'cd {build_source}')
+                build_context, cid)
+            cmd.append(f'cd {build_context}')
             cmd.append(f'singularity build {self._container} {recipefile}')
         else:
             cmd.append(f'singularity pull {self._container} {img}')
