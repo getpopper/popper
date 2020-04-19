@@ -23,5 +23,5 @@ if [[ $RESMAN == "kubernetes" ]]; then
   ./kind-travis-ci/kind/k8s-create.sh
   rm -r $HOME/.kube
   mkdir $HOME/.kube
-  cp $(kind get kubeconfig-path --name="kind") $HOME/.kube/config
+  cp $(kind get kubeconfig-path) $HOME/.kube/config
 fi
