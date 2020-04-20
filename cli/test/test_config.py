@@ -5,9 +5,6 @@ from popper.config import PopperConfig
 from popper.cli import log
 
 
-FIXDIR = f'{os.path.dirname(os.path.realpath(__file__))}/fixtures'
-
-
 class TestPopperConfig(unittest.TestCase):
     default_args = {
         'skip_clone': False,

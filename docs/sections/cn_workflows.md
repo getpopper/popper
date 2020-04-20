@@ -199,19 +199,25 @@ the exit code to set the workflow execution status, which can be
 
 ## Container Engines
 
-By default, steps in Popper workflows run in Docker using the host machine 
-as the resource manager (see [next section](#resource-managers) on running on other resource managers). 
-In addition, Popper can execute workflows in other runtimes by interacting with 
-their corresponding container engines. An `--engine <engine>` flag for 
-the `popper run` is used to invoke alternative engines, where 
-`<engine>` is one of the supported engines. When no value for this 
-flag is given, Popper executes workflows in Docker. Below we briefly 
-describe each container engine supported (besides Docker), and lastly 
-describe how to customize their configuration.
+By default, Popper workflows run in Docker on the machine where 
+`popper run` is being executed (i.e. the host machine). This section 
+describes how to execute in other container engines. See [next 
+section](#resource-managers) for information on how to run workflows 
+on resource managers  such as SLURM and Kubernetes.
 
-### Supported engines
+To run workflows on other container engines, an `--engine <engine>` 
+flag for the `popper run` command can be given, where `<engine>` is 
+one of the supported ones. When no value for this flag is given, 
+Popper executes workflows in Docker. Below we briefly describe each 
+container engine supported, and lastly describe how to pass 
+engine-specific configuration options via the `--conf` flag.
 
-#### Singularity
+### Docker
+
+Docker is the default engine used by the `popper run`. All the 
+container configuration for the docker engine is supported by Popper.
+
+### Singularity
 
 Popper can execute a workflow in systems where Singularity 3.2+ is 
 available. To execute a workflow in Singularity containers:
@@ -220,12 +226,12 @@ available. To execute a workflow in Singularity containers:
 popper run --engine singularity
 ```
 
-##### Limitations
+#### Limitations
 
   * The use of `ARG` in `Dockerfile`s is not supported by Singularity.
   * The `--reuse` flag of the `popper run` command is not supported.
 
-#### Vagrant
+### Vagrant
 
 While technically not a container engine, executing workflows inside a 
 VM allows users to run workflows in machines where a container engine 
@@ -240,13 +246,13 @@ popper run --engine vagrant
 
 [vagrant]: https://vagrantup.com/
 
-##### Limitations
+#### Limitations
 
 Only one workflow can be executed at the time in Vagrant runtime, 
 since popper assumes that there is only one VM running at any given 
 point in time.
 
-#### Host
+### Host
 
 There are situations where a container runtime is not available and 
 cannot be installed. In these cases, a step can be executed directly 
@@ -295,16 +301,14 @@ question (see [here][engconf] for more).
 ## Resource Managers
 
 Popper can execute steps in a workflow through other resource managers
-like `slurm` besides the host machine. The resource manager can be specified 
-either through the  `--resource-manager/-r` option or through the config file.
+like SLURM besides the host machine. The resource manager can be specified 
+either through the `--resource-manager/-r` option or through the config file.
 If neither of them are provided, the steps are run in the host machine 
 by default. 
 
-### Supported resource managers
+### SLURM
 
-#### Slurm
-
-Popper workflows can be run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments) 
+Popper workflows can run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments) 
 using [Slurm](https://slurm.schedmd.com/overview.html) as the underlying resource manager to distribute the execution of a step to
 several nodes. You can get started with running Popper workflows through Slurm by following the example below.
 
@@ -348,6 +352,7 @@ resource_manager:
 ```
 
 Now, we execute `popper run` with this config file as follows:
+
 ```bash
 popper run -f sample.yml -c config.yml
 ```
