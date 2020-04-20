@@ -175,7 +175,7 @@ class DockerRunner(StepRunner):
             img = f'{pu.sanitized_name(step["name"], "step")}'
             tag = f'{self._config.workspace_sha}'
             build_context = os.path.join(self._config.workspace_dir,
-                                        step['uses'])
+                                         step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
             img = f'{user}/{repo}'.lower()
@@ -342,7 +342,7 @@ class SingularityRunner(StepRunner):
         elif './' in step['uses']:
             img = f'{pu.sanitized_name(step["name"], "step")}'
             build_context = os.path.join(self._config.workspace_dir,
-                                        step['uses'])
+                                         step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
             img = f'{user}/{repo}'.lower()
@@ -352,7 +352,9 @@ class SingularityRunner(StepRunner):
 
     def _setup_singularity_cache(self):
         self._singularity_cache = os.path.join(
-            WorkflowRunner._setup_base_cache(), 'singularity', self._config.wid)
+            WorkflowRunner._setup_base_cache(),
+            'singularity',
+            self._config.wid)
         if not os.path.exists(self._singularity_cache):
             os.makedirs(self._singularity_cache, exist_ok=True)
 
@@ -434,7 +436,7 @@ class SingularityRunner(StepRunner):
 
         options = self._get_container_options()
         output = start_fn(self._container, commands,
-                       stream=True, options=options)
+                          stream=True, options=options)
         try:
             for line in output:
                 log.step_info(line.strip('\n'))

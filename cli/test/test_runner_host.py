@@ -260,12 +260,12 @@ class TestHostSingularityRunner(PopperTest):
         log.setLevel('CRITICAL')
 
     @unittest.skipIf(
-	os.environ['ENGINE'] != 'singularity',
-	'ENGINE != singularity')
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
     def test_get_recipe_file(self):
         repo = self.mk_repo()
         build_context = repo.working_dir
-        
+
         with open(os.path.join(build_context, 'Dockerfile'), 'w') as f:
             f.write("""
 FROM alpine
@@ -275,7 +275,11 @@ ENTRYPOINT ["/bin/bash"]""")
 
         with SingularityRunner() as sr:
             singularity_file = sr._get_recipe_file(build_context, 'sample.sif')
-            self.assertEqual(singularity_file, os.path.join(build_context, 'Singularity.sample'))
+            self.assertEqual(
+                singularity_file,
+                os.path.join(
+                    build_context,
+                    'Singularity.sample'))
             self.assertEqual(os.path.exists(singularity_file), True)
             with open(singularity_file) as f:
                 self.assertEqual(f.read(), '''Bootstrap: docker
@@ -292,7 +296,11 @@ exec /bin/bash "$@"''')
 
         os.remove(os.path.join(build_context, 'Dockerfile'))
         with SingularityRunner() as sr:
-            self.assertRaises(SystemExit, sr._get_recipe_file, build_context, 'sample.sif')
+            self.assertRaises(
+                SystemExit,
+                sr._get_recipe_file,
+                build_context,
+                'sample.sif')
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'singularity',
