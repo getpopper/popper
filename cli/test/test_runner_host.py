@@ -260,6 +260,41 @@ class TestHostSingularityRunner(PopperTest):
         log.setLevel('CRITICAL')
 
     @unittest.skipIf(
+	os.environ['ENGINE'] != 'singularity',
+	'ENGINE != singularity')
+    def test_get_recipe_file(self):
+        repo = self.mk_repo()
+        build_context = repo.working_dir
+        
+        with open(os.path.join(build_context, 'Dockerfile'), 'w') as f:
+            f.write("""
+FROM alpine
+RUN apk update && apk add bash
+ADD README.md /
+ENTRYPOINT ["/bin/bash"]""")
+
+        with SingularityRunner() as sr:
+            singularity_file = sr._get_recipe_file(build_context, 'sample.sif')
+            self.assertEqual(singularity_file, os.path.join(build_context, 'Singularity.sample'))
+            self.assertEqual(os.path.exists(singularity_file), True)
+            with open(singularity_file) as f:
+                self.assertEqual(f.read(), '''Bootstrap: docker
+From: alpine
+%files
+README.md /
+%post
+
+apk update && apk add bash
+%runscript
+exec /bin/bash "$@"
+%startscript
+exec /bin/bash "$@"''')
+
+        os.remove(os.path.join(build_context, 'Dockerfile'))
+        with SingularityRunner() as sr:
+            self.assertRaises(SystemExit, sr._get_recipe_file, build_context, 'sample.sif')
+
+    @unittest.skipIf(
         os.environ['ENGINE'] != 'singularity',
         'ENGINE != singularity')
     def test_create_container(self):
