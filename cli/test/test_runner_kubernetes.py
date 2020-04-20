@@ -1,16 +1,17 @@
 import os
 import unittest
 
-import utils as testutils
 
 from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
 
+from test_common import PopperTest
+
 from popper.cli import log as log
 
 
-class TestKubernetesDockerRunner(unittest.TestCase):
+class TestKubernetesDockerRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
@@ -18,8 +19,9 @@ class TestKubernetesDockerRunner(unittest.TestCase):
         os.environ['ENGINE'] != 'docker' or os.environ['RESMAN'] != 'kubernetes',
         'ENGINE != docker or RESMAN != kubernetes')
     def test_docker_basic_run(self):
-        repo = testutils.mk_repo()
-        conf = PopperConfig(workspace_dir=repo.working_dir)
+        repo = self.mk_repo()
+        resman_name = "kubernetes"
+        conf = PopperConfig(resman_name=resman_name, workspace_dir=repo.working_dir)
         
         with WorkflowRunner(conf) as r:
             wf = YMLWorkflow("""
