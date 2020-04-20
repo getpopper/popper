@@ -126,7 +126,7 @@ class WorkflowRunner(object):
             if ('docker://' in uses
                 or 'shub://' in uses
                 or './' in uses
-                or uses == 'sh'):
+                    or uses == 'sh'):
                 continue
 
             url, service, user, repo, step_dir, version = scm.parse(
