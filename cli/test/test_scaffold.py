@@ -25,21 +25,25 @@ class TestScaffold(PopperTest):
 
         wf = Workflow.new(file_loc)
         self.assertDictEqual(wf.steps, {
-        	'1': {
-        		'uses': 'popperized/bin/sh@master',
-        		'args': ['ls'],
-        		'name': '1',
-        		'next': {'2'}},
-        	'2': {
-        		'uses': 'docker://alpine:3.11',
-        		'args': ['ls'],
-        		'name': '2',
-        		'needs': ['1']}})
+            '1': {
+                'uses': 'popperized/bin/sh@master',
+                'args': ['ls'],
+                        'name': '1',
+                        'next': {'2'}},
+            '2': {
+                'uses': 'docker://alpine:3.11',
+                'args': ['ls'],
+                'name': '2',
+                        'needs': ['1']}})
 
         with self.assertLogs('popper') as test_logger:
 
             result = runner.invoke(run.cli, ['-f', file_loc])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(len(test_logger.output))
-            self.assertTrue("INFO:popper:Step '1' ran successfully !" in test_logger.output)
-            self.assertTrue("INFO:popper:Step '2' ran successfully !" in test_logger.output)
+            self.assertTrue(
+                "INFO:popper:Step '1' ran successfully !"
+                in test_logger.output)
+            self.assertTrue(
+                "INFO:popper:Step '2' ran successfully !"
+                in test_logger.output)
