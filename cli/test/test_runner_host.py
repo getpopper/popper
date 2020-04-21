@@ -443,9 +443,32 @@ exec /bin/bash "$@"''')
             self.assertEqual(sr._singularity_start(step, cid), 0)
 
         step = {
+            'uses': 'library://library/default/alpine:3.7',
+            'runs': ['echo', 'hello'],
+            'name': 'test_2'
+        }
+        cid = pu.sanitized_name(step['name'], conf.wid)
+        with SingularityRunner(config=conf) as sr:
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(sr._singularity_cache, cid)
+            sr._create_container(step, cid)
+            self.assertEqual(sr._singularity_start(step, cid), 0)
+
+        step = {
+            'uses': 'shub://vsoch/hello-world',
+            'name': 'test_3'
+        }
+        cid = pu.sanitized_name(step['name'], conf.wid)
+        with SingularityRunner(config=conf) as sr:
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(sr._singularity_cache, cid)
+            sr._create_container(step, cid)
+            self.assertEqual(sr._singularity_start(step, cid), 0)
+
+        step = {
             'uses': 'docker://alpine:3.9',
             'runs': ['ecdhoo', 'hello'],
-            'name': 'test_2'
+            'name': 'test_4'
         }
         cid = pu.sanitized_name(step['name'], conf.wid)
         with SingularityRunner(config=conf) as sr:
