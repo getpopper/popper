@@ -125,6 +125,7 @@ class WorkflowRunner(object):
             uses = a['uses']
             if ('docker://' in uses
                 or 'shub://' in uses
+                or 'library://' in uses
                 or './' in uses
                     or uses == 'sh'):
                 continue
