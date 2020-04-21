@@ -336,7 +336,9 @@ class SingularityRunner(StepRunner):
         img = None
         build_context = None
 
-        if 'docker://' in step['uses'] or 'shub://' in step['uses']:
+        if ('docker://' in step['uses']
+            or 'shub://' in step['uses']
+            or 'library://' in step['uses']):
             img = step['uses']
             build = False
 
