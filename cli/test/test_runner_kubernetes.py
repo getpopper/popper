@@ -21,7 +21,7 @@ class TestKubernetesDockerRunner(PopperTest):
     def test_docker_basic_run(self):
         repo = self.mk_repo()
         resman_name = "kubernetes"
-        conf = PopperConfig(resman_name=resman_name, workspace_dir=repo.working_dir)
+        conf = PopperConfig(workspace_dir=repo.working_dir)
         
         with WorkflowRunner(conf) as r:
             wf = YMLWorkflow("""

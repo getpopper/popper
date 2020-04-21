@@ -184,7 +184,7 @@ class KubernetesRunner(StepRunner):
                                            body=V1DeleteOptions())
 
 
-class DockerRunner(StepRunner, HostDockerRunner):
+class DockerRunner(KubernetesRunner, HostDockerRunner):
     """Runs steps on kubernetes; builds images locally using docker.
     """
     def __init__(self, conf):
