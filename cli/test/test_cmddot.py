@@ -20,11 +20,11 @@ class TestDot(PopperTest):
         git.Git(wf_dir).clone(
             "https://github.com/popperized/github-actions-demo.git")
 
-        workflow_loc = f'{wf_dir}/github-actions-demo/.github/main.workflow'
+        workflow_path = f'{wf_dir}/github-actions-demo/.github/main.workflow'
 
         with self.assertLogs('popper') as test_logger:
 
-            result = runner.invoke(dot.cli, ['-f', workflow_loc])
+            result = runner.invoke(dot.cli, ['-f', workflow_path])
             self.assertEqual(result.exit_code, 0)
             log_output = test_logger.output[0]
             self.assertTrue('"branch-filter" -> "deploy";' in log_output)
@@ -37,7 +37,7 @@ class TestDot(PopperTest):
 
         with self.assertLogs('popper') as test_logger:
 
-            result = runner.invoke(dot.cli, ['--colors', '-f', workflow_loc])
+            result = runner.invoke(dot.cli, ['--colors', '-f', workflow_path])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(
                 'fillcolor=transparent,color=' in test_logger.output[0])
