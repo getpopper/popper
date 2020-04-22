@@ -273,16 +273,15 @@ RUN apk update && apk add bash
 ADD README.md /
 ENTRYPOINT ["/bin/bash"]""")
 
-        with SingularityRunner() as sr:
-            singularity_file = sr._get_recipe_file(build_context, 'sample.sif')
-            self.assertEqual(
-                singularity_file,
-                os.path.join(
-                    build_context,
-                    'Singularity.sample'))
-            self.assertEqual(os.path.exists(singularity_file), True)
-            with open(singularity_file) as f:
-                self.assertEqual(f.read(), '''Bootstrap: docker
+        singularity_file = SingularityRunner._get_recipe_file(build_context, 'sample.sif')
+        self.assertEqual(
+            singularity_file,
+            os.path.join(
+                build_context,
+                'Singularity.sample'))
+        self.assertEqual(os.path.exists(singularity_file), True)
+        with open(singularity_file) as f:
+            self.assertEqual(f.read(), '''Bootstrap: docker
 From: alpine
 %files
 README.md /
@@ -295,12 +294,8 @@ exec /bin/bash "$@"
 exec /bin/bash "$@"''')
 
         os.remove(os.path.join(build_context, 'Dockerfile'))
-        with SingularityRunner() as sr:
-            self.assertRaises(
-                SystemExit,
-                sr._get_recipe_file,
-                build_context,
-                'sample.sif')
+        self.assertRaises(SystemExit, SingularityRunner._get_recipe_file,
+                            build_context, 'sample.sif')
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'singularity',

@@ -294,7 +294,8 @@ class SingularityRunner(StepRunner):
         ecode = self._singularity_start(step, cid)
         return ecode
 
-    def _convert(self, dockerfile, singularityfile):
+    @staticmethod
+    def _convert(dockerfile, singularityfile):
         parser = DockerParser(dockerfile)
         for p in parser.recipe.files:
             p[0] = p[0].strip('\"')
@@ -308,13 +309,14 @@ class SingularityRunner(StepRunner):
             sf.write(recipe)
         return singularityfile
 
-    def _get_recipe_file(self, build_context, cid):
+    @staticmethod
+    def _get_recipe_file(build_context, cid):
         dockerfile = os.path.join(build_context, 'Dockerfile')
         singularityfile = os.path.join(
             build_context, 'Singularity.{}'.format(cid[:-4]))
 
         if os.path.isfile(dockerfile):
-            return self._convert(dockerfile, singularityfile)
+            return SingularityRunner._convert(dockerfile, singularityfile)
         else:
             log.fail('No Dockerfile was found.')
 
@@ -322,7 +324,7 @@ class SingularityRunner(StepRunner):
         SingularityRunner.lock.acquire()
         pwd = os.getcwd()
         os.chdir(build_context)
-        recipefile = self._get_recipe_file(build_context, cid)
+        recipefile = SingularityRunner._get_recipe_file(build_context, cid)
         self._s.build(
             recipe=recipefile,
             image=cid,
