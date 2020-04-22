@@ -450,17 +450,17 @@ exec /bin/bash "$@"''')
         #     sr._create_container(step, cid)
         #     self.assertEqual(sr._singularity_start(step, cid), 0)
 
-        step = {
-            'uses': 'shub://divetea/debian:latest',
-            'runs': ['echo', 'hello'],
-            'name': 'test_3'
-        }
-        cid = pu.sanitized_name(step['name'], conf.wid)
-        with SingularityRunner(config=conf) as sr:
-            sr._setup_singularity_cache()
-            sr._container = os.path.join(sr._singularity_cache, cid)
-            sr._create_container(step, cid)
-            self.assertEqual(sr._singularity_start(step, cid), 0)
+        # step = {
+        #     'uses': 'shub://divetea/debian:latest',
+        #     'runs': ['echo', 'hello'],
+        #     'name': 'test_3'
+        # }
+        # cid = pu.sanitized_name(step['name'], conf.wid)
+        # with SingularityRunner(config=conf) as sr:
+        #     sr._setup_singularity_cache()
+        #     sr._container = os.path.join(sr._singularity_cache, cid)
+        #     sr._create_container(step, cid)
+        #     self.assertEqual(sr._singularity_start(step, cid), 0)
 
         step = {
             'uses': 'docker://alpine:3.9',
