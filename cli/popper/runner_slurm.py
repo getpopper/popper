@@ -154,7 +154,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
     def __init__(self, **kw):
-        super(SingularityRunner, self).__init__(**kw)
+        super(SingularityRunner, self).__init__(init_spython_client=False, **kw)
         if self._config.reuse:
             log.fail('Reuse not supported for SingularityRunner.')
 

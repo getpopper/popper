@@ -269,7 +269,7 @@ class SingularityRunner(StepRunner):
     """Runs steps in singularity on the local machine."""
     lock = threading.Lock()
 
-    def __init__(self, **kw):
+    def __init__(self, init_spython_client=True, **kw):
         super(SingularityRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
@@ -277,6 +277,9 @@ class SingularityRunner(StepRunner):
 
         if self._config.reuse:
             log.fail('Reuse not supported for SingularityRunner.')
+
+        if not init_spython_client:
+            return
 
         self._s = spython.main.Client
         self._s.quiet = True
