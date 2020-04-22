@@ -273,7 +273,8 @@ RUN apk update && apk add bash
 ADD README.md /
 ENTRYPOINT ["/bin/bash"]""")
 
-        singularity_file = SingularityRunner._get_recipe_file(build_ctx_path, 'sample.sif')
+        singularity_file = SingularityRunner._get_recipe_file(
+            build_ctx_path, 'sample.sif')
         self.assertEqual(
             singularity_file,
             os.path.join(
@@ -295,7 +296,7 @@ exec /bin/bash "$@"''')
 
         os.remove(os.path.join(build_ctx_path, 'Dockerfile'))
         self.assertRaises(SystemExit, SingularityRunner._get_recipe_file,
-                            build_ctx_path, 'sample.sif')
+                          build_ctx_path, 'sample.sif')
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'singularity',

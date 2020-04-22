@@ -175,7 +175,7 @@ class DockerRunner(StepRunner):
             img = f'{pu.sanitized_name(step["name"], "step")}'
             tag = f'{self._config.workspace_sha}'
             build_ctx_path = os.path.join(self._config.workspace_dir,
-                                         step['uses'])
+                                          step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
             img = f'{user}/{repo}'.lower()
@@ -340,14 +340,14 @@ class SingularityRunner(StepRunner):
 
         if ('docker://' in step['uses']
             or 'shub://' in step['uses']
-            or 'library://' in step['uses']):
+                or 'library://' in step['uses']):
             img = step['uses']
             build = False
 
         elif './' in step['uses']:
             img = f'{pu.sanitized_name(step["name"], "step")}'
             build_ctx_path = os.path.join(self._config.workspace_dir,
-                                         step['uses'])
+                                          step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
             img = f'{user}/{repo}'.lower()
