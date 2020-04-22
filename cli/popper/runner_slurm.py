@@ -116,9 +116,6 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cmd.append(self._create_cmd(step, f'{img}:{tag}', cid))
         cmd.append(f'docker start --attach {cid}')
 
-        if self._config.dry_run:
-            return 0
-
         self._spawned_containers.add(cid)
         ecode = self._submit_batch_job(cmd, step)
         self._spawned_containers.remove(cid)
@@ -185,9 +182,6 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
                     ['singularity', 'pull', self._container, img])
 
         cmd = [self._create_cmd(step, cid)]
-
-        if self._config.dry_run:
-            return 0
 
         self._spawned_containers.add(cid)
         ecode = self._submit_batch_job(cmd, step)
