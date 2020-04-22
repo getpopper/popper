@@ -450,7 +450,8 @@ exec /bin/bash "$@"''')
         #     self.assertEqual(sr._singularity_start(step, cid), 0)
 
         step = {
-            'uses': 'shub://vsoch/hello-world',
+            'uses': 'shub://divetea/debian:latest',
+            'runs': ['echo', 'hello'],
             'name': 'test_3'
         }
         cid = pu.sanitized_name(step['name'], conf.wid)
