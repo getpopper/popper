@@ -166,17 +166,17 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
         self._container = os.path.join(self._singularity_cache, cid)
 
-        build, img, build_context = self._get_build_info(step)
+        build, img, build_ctx_path = self._get_build_info(step)
 
         HostRunner._exec_cmd(['rm', '-rf', self._container])
 
         if not self._config.dry_run:
             if build:
                 recipefile = self._get_recipe_file(
-                    build_context, cid)
+                    build_ctx_path, cid)
                 HostRunner._exec_cmd(
                     ['singularity', 'build', '--fakeroot', self._container, recipefile],
-                    cwd=build_context)
+                    cwd=build_ctx_path)
             else:
                 HostRunner._exec_cmd(
                     ['singularity', 'pull', self._container, img])

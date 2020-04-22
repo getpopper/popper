@@ -264,20 +264,20 @@ class TestHostSingularityRunner(PopperTest):
         'ENGINE != singularity')
     def test_get_recipe_file(self):
         repo = self.mk_repo()
-        build_context = repo.working_dir
+        build_ctx_path = repo.working_dir
 
-        with open(os.path.join(build_context, 'Dockerfile'), 'w') as f:
+        with open(os.path.join(build_ctx_path, 'Dockerfile'), 'w') as f:
             f.write("""
 FROM alpine
 RUN apk update && apk add bash
 ADD README.md /
 ENTRYPOINT ["/bin/bash"]""")
 
-        singularity_file = SingularityRunner._get_recipe_file(build_context, 'sample.sif')
+        singularity_file = SingularityRunner._get_recipe_file(build_ctx_path, 'sample.sif')
         self.assertEqual(
             singularity_file,
             os.path.join(
-                build_context,
+                build_ctx_path,
                 'Singularity.sample'))
         self.assertEqual(os.path.exists(singularity_file), True)
         with open(singularity_file) as f:
@@ -293,9 +293,9 @@ exec /bin/bash "$@"
 %startscript
 exec /bin/bash "$@"''')
 
-        os.remove(os.path.join(build_context, 'Dockerfile'))
+        os.remove(os.path.join(build_ctx_path, 'Dockerfile'))
         self.assertRaises(SystemExit, SingularityRunner._get_recipe_file,
-                            build_context, 'sample.sif')
+                            build_ctx_path, 'sample.sif')
 
     @unittest.skipIf(
         os.environ['ENGINE'] != 'singularity',
