@@ -211,6 +211,3 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cmd.append(' '.join(commands))
 
         return ' '.join(cmd)
-
-    def stop_running_tasks(self):
-        pass

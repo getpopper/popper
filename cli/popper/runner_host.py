@@ -450,3 +450,6 @@ class SingularityRunner(StepRunner):
             ecode = ex.returncode
 
         return ecode
+
+    def stop_running_tasks(self):
+        pass
