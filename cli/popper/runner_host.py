@@ -1,14 +1,19 @@
 import os
 import signal
+import threading
 
 import docker
 
-from subprocess import Popen, STDOUT, PIPE, SubprocessError
+from subprocess import Popen, STDOUT, PIPE, SubprocessError, CalledProcessError
+
+import spython
+from spython.main.parse.parsers import DockerParser
+from spython.main.parse.writers import SingularityWriter
 
 from popper import utils as pu
 from popper import scm
 from popper.cli import log as log
-from popper.runner import StepRunner as StepRunner
+from popper.runner import StepRunner as StepRunner, WorkflowRunner
 
 
 class HostRunner(StepRunner):
@@ -115,7 +120,6 @@ class DockerRunner(StepRunner):
     def __exit__(self, exc_type, exc_value, exc_traceback):
         if self._d:
             self._d.close()
-        self._spawned_containers = set()
 
     def run(self, step):
         """Execute the given step in docker."""
@@ -158,7 +162,7 @@ class DockerRunner(StepRunner):
         """
         build = True
         img = None
-        build_source = None
+        build_ctx_path = None
 
         if 'docker://' in step['uses']:
             img = step['uses'].replace('docker://', '')
@@ -170,25 +174,24 @@ class DockerRunner(StepRunner):
         elif './' in step['uses']:
             img = f'{pu.sanitized_name(step["name"], "step")}'
             tag = f'{self._config.workspace_sha}'
-            build_source = os.path.join(self._config.workspace_dir,
-                                        step['uses'])
+            build_ctx_path = os.path.join(self._config.workspace_dir,
+                                          step['uses'])
         else:
             _, _, user, repo, _, version = scm.parse(step['uses'])
             img = f'{user}/{repo}'.lower()
             tag = version
-            build_source = os.path.join(step['repo_dir'], step['step_dir'])
+            build_ctx_path = os.path.join(step['repo_dir'], step['step_dir'])
 
-        return (build, img, tag, build_source)
+        return (build, img, tag, build_ctx_path)
 
     def _create_container(self, cid, step):
-        build, img, tag, dockerfile = self._get_build_info(step)
+        build, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
             log.info(
-                f'[{step["name"]}] docker build {img}:{tag} '
-                f'{os.path.dirname(dockerfile)}')
+                f'[{step["name"]}] docker build {img}:{tag} {build_ctx_path}')
             if not self._config.dry_run:
-                self._d.images.build(path=dockerfile, tag=f'{img}:{tag}',
+                self._d.images.build(path=build_ctx_path, tag=f'{img}:{tag}',
                                      rm=True, pull=True)
         elif not self._config.skip_pull and not step.get('skip_pull', False):
             log.info(f'[{step["name"]}] docker pull {img}:{tag}')
@@ -260,3 +263,196 @@ class DockerRunner(StepRunner):
         for k, v in update_with.items():
             if k not in container_args.keys():
                 container_args[k] = update_with[k]
+
+
+class SingularityRunner(StepRunner):
+    """Runs steps in singularity on the local machine."""
+    lock = threading.Lock()
+
+    def __init__(self, init_spython_client=True, **kw):
+        super(SingularityRunner, self).__init__(**kw)
+
+        self._spawned_containers = set()
+        self._s = None
+
+        if self._config.reuse:
+            log.fail('Reuse not supported for SingularityRunner.')
+
+        if not init_spython_client:
+            return
+
+        self._s = spython.main.Client
+        self._s.quiet = True
+
+    def run(self, step):
+        self._setup_singularity_cache()
+        cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
+        self._container = os.path.join(self._singularity_cache, cid)
+
+        exists = os.path.exists(self._container)
+        if exists and not self._config.dry_run and not self._config.skip_pull:
+            os.remove(self._container)
+
+        self._create_container(step, cid)
+        ecode = self._singularity_start(step, cid)
+        return ecode
+
+    @staticmethod
+    def _convert(dockerfile, singularityfile):
+        parser = DockerParser(dockerfile)
+        for p in parser.recipe.files:
+            p[0] = p[0].strip('\"')
+            p[1] = p[1].strip('\"')
+            if os.path.isdir(p[0]):
+                p[0] += '/.'
+
+        writer = SingularityWriter(parser.recipe)
+        recipe = writer.convert()
+        with open(singularityfile, 'w') as sf:
+            sf.write(recipe)
+        return singularityfile
+
+    @staticmethod
+    def _get_recipe_file(build_ctx_path, cid):
+        dockerfile = os.path.join(build_ctx_path, 'Dockerfile')
+        singularityfile = os.path.join(
+            build_ctx_path, 'Singularity.{}'.format(cid[:-4]))
+
+        if os.path.isfile(dockerfile):
+            return SingularityRunner._convert(dockerfile, singularityfile)
+        else:
+            log.fail('No Dockerfile was found.')
+
+    def _build_from_recipe(self, build_ctx_path, build_dest, cid):
+        SingularityRunner.lock.acquire()
+        pwd = os.getcwd()
+        os.chdir(build_ctx_path)
+        recipefile = SingularityRunner._get_recipe_file(build_ctx_path, cid)
+        self._s.build(
+            recipe=recipefile,
+            image=cid,
+            build_folder=build_dest,
+            force=True)
+        os.chdir(pwd)
+        SingularityRunner.lock.release()
+
+    def _get_build_info(self, step):
+        build = True
+        img = None
+        build_ctx_path = None
+
+        if ('docker://' in step['uses']
+            or 'shub://' in step['uses']
+                or 'library://' in step['uses']):
+            img = step['uses']
+            build = False
+
+        elif './' in step['uses']:
+            img = f'{pu.sanitized_name(step["name"], "step")}'
+            build_ctx_path = os.path.join(self._config.workspace_dir,
+                                          step['uses'])
+        else:
+            _, _, user, repo, _, version = scm.parse(step['uses'])
+            img = f'{user}/{repo}'.lower()
+            build_ctx_path = os.path.join(step['repo_dir'], step['step_dir'])
+
+        return (build, img, build_ctx_path)
+
+    def _setup_singularity_cache(self):
+        self._singularity_cache = os.path.join(
+            WorkflowRunner._setup_base_cache(),
+            'singularity',
+            self._config.wid)
+        if not os.path.exists(self._singularity_cache):
+            os.makedirs(self._singularity_cache, exist_ok=True)
+
+    def _update_with_engine_config(self, container_args):
+        update_with = self._config.engine_opts
+        if not update_with:
+            return
+
+        container_args["bind"] = [*container_args["bind"],
+                                  *update_with.get('bind', list())]
+
+        for k, v in update_with.items():
+            if k not in container_args.keys():
+                container_args[k] = update_with[k]
+
+    def _get_container_options(self):
+        container_args = {
+            'userns': True,
+            'pwd': '/workspace',
+            'bind': [f'{self._config.workspace_dir}:/workspace']
+        }
+
+        self._update_with_engine_config(container_args)
+
+        options = []
+        for k, v in container_args.items():
+            if isinstance(v, list):
+                for item in v:
+                    options.append(pu.key_value_to_flag(k, item))
+            else:
+                options.append(pu.key_value_to_flag(k, v))
+
+        options = ' '.join(options).split(' ')
+        log.debug(f'container options: {options}\n')
+
+        return options
+
+    def _create_container(self, step, cid):
+        build, image, build_ctx_path = self._get_build_info(step)
+
+        if build:
+            log.info(
+                f'[{step["name"]}] singularity build {cid} {build_ctx_path}')
+            if not self._config.dry_run:
+                self._build_from_recipe(
+                    build_ctx_path, self._singularity_cache, cid)
+        elif not self._config.skip_pull and not step.get('skip_pull', False):
+            log.info(f'[{step["name"]}] singularity pull {cid} {image}')
+            if not self._config.dry_run:
+                self._s.pull(
+                    image=image,
+                    name=cid,
+                    pull_folder=self._singularity_cache)
+
+    def _singularity_start(self, step, cid):
+        env = StepRunner.prepare_environment(step)
+
+        # set the environment variables
+        for k, v in env.items():
+            os.environ[k] = v
+
+        args = step.get('args', None)
+        runs = step.get('runs', None)
+        ecode = None
+
+        if runs:
+            info = f'[{step["name"]}] singularity exec {cid} {runs}'
+            commands = runs
+            start_fn = self._s.execute
+        else:
+            info = f'[{step["name"]}] singularity run {cid} {args}'
+            commands = args
+            start_fn = self._s.run
+
+        log.info(info)
+
+        if self._config.dry_run:
+            return 0
+
+        options = self._get_container_options()
+        output = start_fn(self._container, commands,
+                          stream=True, options=options)
+        try:
+            for line in output:
+                log.step_info(line.strip('\n'))
+            ecode = 0
+        except CalledProcessError as ex:
+            ecode = ex.returncode
+
+        return ecode
+
+    def stop_running_tasks(self):
+        pass

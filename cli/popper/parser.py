@@ -102,6 +102,10 @@ class Workflow(object):
     @staticmethod
     def new(file, step=None, skipped_steps=[], substitutions=[],
             allow_loose=False, include_step_dependencies=False):
+
+        if not os.path.exists(file):
+            log.fail(f"File {file} was not found.")
+
         if file.endswith('.workflow'):
             wf = HCLWorkflow(file)
         elif file.endswith('.yml') or file.endswith('.yaml'):

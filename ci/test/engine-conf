@@ -20,9 +20,8 @@ EOF
 # config file called settings.yml in the project root.
 cat <<EOF > settings.yml
 engine:
-  name: docker
+  name: $ENGINE
   options:
-    image: abc/xyz
     hostname: xYz.local
 EOF
 
