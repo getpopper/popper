@@ -7,6 +7,7 @@ from popper import utils as pu
 from popper.cli import log as log
 from popper.runner_host import HostRunner
 from popper.runner_host import DockerRunner as HostDockerRunner
+from popper.runner_host import SingularityRunner as HostSingularityRunner
 
 
 class SlurmRunner(HostRunner):
@@ -115,9 +116,6 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cmd.append(self._create_cmd(step, f'{img}:{tag}', cid))
         cmd.append(f'docker start --attach {cid}')
 
-        if self._config.dry_run:
-            return 0
-
         self._spawned_containers.add(cid)
         ecode = self._submit_batch_job(cmd, step)
         self._spawned_containers.remove(cid)
@@ -149,5 +147,67 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
         # append the image and the commands
         cmd.append(f'{image} {command}')
+
+        return ' '.join(cmd)
+
+
+class SingularityRunner(SlurmRunner, HostSingularityRunner):
+
+    def __init__(self, **kw):
+        super(SingularityRunner, self).__init__(init_spython_client=False, **kw)
+        if self._config.reuse:
+            log.fail('Reuse not supported for SingularityRunner.')
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        pass
+
+    def run(self, step):
+        self._setup_singularity_cache()
+        cid = pu.sanitized_name(step['name'], self._config.wid) + '.sif'
+        self._container = os.path.join(self._singularity_cache, cid)
+
+        build, img, build_ctx_path = self._get_build_info(step)
+
+        HostRunner._exec_cmd(['rm', '-rf', self._container])
+
+        if not self._config.dry_run:
+            if build:
+                recipefile = self._get_recipe_file(
+                    build_ctx_path, cid)
+                HostRunner._exec_cmd(
+                    ['singularity', 'build', '--fakeroot', self._container, recipefile],
+                    cwd=build_ctx_path)
+            else:
+                HostRunner._exec_cmd(
+                    ['singularity', 'pull', self._container, img])
+
+        cmd = [self._create_cmd(step, cid)]
+
+        self._spawned_containers.add(cid)
+        ecode = self._submit_batch_job(cmd, step)
+        self._spawned_containers.remove(cid)
+        return ecode
+
+    def _create_cmd(self, step, cid):
+        env = SlurmRunner.prepare_environment(step)
+        for k, v in env.items():
+            os.environ[k] = v
+
+        args = step.get('args', '')
+        runs = step.get('runs', '')
+        ecode = None
+
+        if runs:
+            commands = runs
+            cmd = ['singularity exec']
+        else:
+            commands = args
+            cmd = ['singularity run']
+
+        options = self._get_container_options()
+
+        cmd.append(' '.join(options))
+        cmd.append(self._container)
+        cmd.append(' '.join(commands))
 
         return ' '.join(cmd)

@@ -6,19 +6,17 @@ from subprocess import Popen
 
 import docker
 
-import popper.utils as pu
-
 from testfixtures import LogCapture
+
+import popper.utils as pu
 
 from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
-from popper.runner_host import HostRunner, DockerRunner
-
+from popper.runner_host import HostRunner, DockerRunner, SingularityRunner
+from popper.cli import log as log
 
 from test_common import PopperTest
-
-from popper.cli import log as log
 
 
 class TestHostHostRunner(PopperTest):
@@ -253,5 +251,260 @@ class TestHostDockerRunner(PopperTest):
             """)
             wf.parse()
             self.assertRaises(Exception, r.run, wf)
+
+        repo.close()
+
+
+class TestHostSingularityRunner(PopperTest):
+    def setUp(self):
+        log.setLevel('CRITICAL')
+
+    @unittest.skipIf(
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
+    def test_get_recipe_file(self):
+        repo = self.mk_repo()
+        build_ctx_path = repo.working_dir
+
+        with open(os.path.join(build_ctx_path, 'Dockerfile'), 'w') as f:
+            f.write("""
+FROM alpine
+RUN apk update && apk add bash
+ADD README.md /
+ENTRYPOINT ["/bin/bash"]""")
+
+        singularity_file = SingularityRunner._get_recipe_file(
+            build_ctx_path, 'sample.sif')
+        self.assertEqual(
+            singularity_file,
+            os.path.join(
+                build_ctx_path,
+                'Singularity.sample'))
+        self.assertEqual(os.path.exists(singularity_file), True)
+        with open(singularity_file) as f:
+            self.assertEqual(f.read(), '''Bootstrap: docker
+From: alpine
+%files
+README.md /
+%post
+
+apk update && apk add bash
+%runscript
+exec /bin/bash "$@"
+%startscript
+exec /bin/bash "$@"''')
+
+        os.remove(os.path.join(build_ctx_path, 'Dockerfile'))
+        self.assertRaises(SystemExit, SingularityRunner._get_recipe_file,
+                          build_ctx_path, 'sample.sif')
+
+    @unittest.skipIf(
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
+    def test_create_container(self):
+        config = PopperConfig()
+        config.wid = "abcd"
+        step_one = {
+            'uses': 'docker://alpine:3.9',
+            'runs': ['echo hello'],
+            'name': 'kontainer_one'
+        }
+
+        step_two = {
+            'uses': 'popperized/bin/sh@master',
+            'args': ['ls'],
+            'name': 'kontainer_two',
+            'repo_dir': f'{os.environ["HOME"]}/.cache/popper/abcd/github.com/popperized/bin',
+            'step_dir': 'sh'}
+
+        cid_one = pu.sanitized_name(step_one['name'], config.wid)
+        cid_two = pu.sanitized_name(step_two['name'], config.wid)
+
+        with SingularityRunner(config=config) as sr:
+            sr._setup_singularity_cache()
+            c_one = sr._create_container(step_one, cid_one)
+            self.assertEqual(
+                os.path.exists(
+                    os.path.join(
+                        sr._singularity_cache,
+                        cid_one)),
+                True)
+            os.remove(os.path.join(sr._singularity_cache, cid_one))
+
+        with SingularityRunner(config=config) as sr:
+            sr._setup_singularity_cache()
+            c_two = sr._create_container(step_one, cid_two)
+            self.assertEqual(
+                os.path.exists(
+                    os.path.join(
+                        sr._singularity_cache,
+                        cid_two)),
+                True)
+            os.remove(os.path.join(sr._singularity_cache, cid_two))
+
+    @unittest.skipIf(
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
+    def test_setup_singularity_cache(self):
+        config = PopperConfig()
+        config.wid = "abcd"
+        with SingularityRunner(config=config) as sr:
+            sr._setup_singularity_cache()
+            self.assertEqual(
+                f'{os.environ["HOME"]}/.cache/popper/singularity/abcd',
+                sr._singularity_cache)
+
+    @unittest.skipIf(
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
+    def test_get_container_options(self):
+        config_dict = {
+            'engine': {
+                'name': 'singularity',
+                'options': {
+                    'hostname': 'popper.local',
+                    'ipc': True,
+                    'bind': ['/path/in/host:/path/in/container']
+                }
+            }
+        }
+
+        config = PopperConfig(config_file=config_dict)
+        config.wid = "abcd"
+        with SingularityRunner(config=config) as sr:
+            sr._setup_singularity_cache()
+            options = sr._get_container_options()
+            self.assertEqual(options, [
+                '--userns',
+                '--pwd',
+                '/workspace',
+                '--bind',
+                f'{os.getcwd()}:/workspace',
+                '--bind',
+                '/path/in/host:/path/in/container',
+                '--hostname',
+                'popper.local',
+                '--ipc'])
+
+    @unittest.skipIf(
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
+    def test_get_build_info(self):
+        step = {
+            'uses': 'popperized/bin/sh@master',
+            'args': ['ls'],
+            'name': 'one',
+            'repo_dir': '/path/to/repo/dir',
+            'step_dir': 'sh'}
+        with SingularityRunner() as sr:
+            build, img, build_sources = sr._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, 'popperized/bin')
+            self.assertEqual(
+                build_sources,
+                '/path/to/repo/dir/sh')
+
+            step = {
+                'uses': 'docker://alpine:3.9',
+                'runs': ['sh', '-c', 'echo $FOO > hello.txt ; pwd'],
+                'env': {'FOO': 'bar'},
+                'name': '1'
+            }
+
+        with SingularityRunner() as sr:
+            build, img, build_sources = sr._get_build_info(step)
+            self.assertEqual(build, False)
+            self.assertEqual(img, 'docker://alpine:3.9')
+            self.assertEqual(build_sources, None)
+
+    @unittest.skipIf(
+        os.environ['ENGINE'] != 'singularity',
+        'ENGINE != singularity')
+    def test_singularity_start(self):
+        repo = self.mk_repo()
+        conf = PopperConfig(
+            engine_name='singularity',
+            workspace_dir=repo.working_dir)
+
+        step = {
+            'uses': 'docker://alpine:3.9',
+            'runs': ['echo', 'hello'],
+            'name': 'test_1'
+        }
+        cid = pu.sanitized_name(step['name'], conf.wid)
+        with SingularityRunner(config=conf) as sr:
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(sr._singularity_cache, cid)
+            sr._create_container(step, cid)
+            self.assertEqual(sr._singularity_start(step, cid), 0)
+
+        # step = {
+        #     'uses': 'library://library/default/alpine:3.7',
+        #     'runs': ['echo', 'hello'],
+        #     'name': 'test_2'
+        # }
+        # cid = pu.sanitized_name(step['name'], conf.wid)
+        # with SingularityRunner(config=conf) as sr:
+        #     sr._setup_singularity_cache()
+        #     sr._container = os.path.join(sr._singularity_cache, cid)
+        #     sr._create_container(step, cid)
+        #     self.assertEqual(sr._singularity_start(step, cid), 0)
+
+        # step = {
+        #     'uses': 'shub://divetea/debian:latest',
+        #     'runs': ['echo', 'hello'],
+        #     'name': 'test_3'
+        # }
+        # cid = pu.sanitized_name(step['name'], conf.wid)
+        # with SingularityRunner(config=conf) as sr:
+        #     sr._setup_singularity_cache()
+        #     sr._container = os.path.join(sr._singularity_cache, cid)
+        #     sr._create_container(step, cid)
+        #     self.assertEqual(sr._singularity_start(step, cid), 0)
+
+        step = {
+            'uses': 'docker://alpine:3.9',
+            'runs': ['ecdhoo', 'hello'],
+            'name': 'test_4'
+        }
+        cid = pu.sanitized_name(step['name'], conf.wid)
+        with SingularityRunner(config=conf) as sr:
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(sr._singularity_cache, cid)
+            sr._create_container(step, cid)
+            self.assertNotEqual(sr._singularity_start(step, cid), 0)
+
+        with WorkflowRunner(conf) as r:
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'popperized/bin/sh@master'
+              args: 'ls'
+            """)
+            wf.parse()
+            r.run(wf)
+
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'docker://alpine:3.9'
+              runs: ['sh', '-c', 'echo $FOO > hello.txt ; pwd']
+              env: {
+                  FOO: bar
+              }
+            """)
+            wf.parse()
+            r.run(wf)
+            with open(os.path.join(repo.working_dir, 'hello.txt'), 'r') as f:
+                self.assertEqual(f.read(), 'bar\n')
+
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'docker://alpine:3.9'
+              runs: 'nocommandisnamedlikethis'
+            """)
+            wf.parse()
+            self.assertRaises(SystemExit, r.run, wf)
 
         repo.close()

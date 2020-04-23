@@ -5,7 +5,7 @@ import tempfile
 from popper.config import PopperConfig
 from popper.runner import WorkflowRunner
 from popper.parser import YMLWorkflow
-from popper.runner_slurm import SlurmRunner, DockerRunner
+from popper.runner_slurm import SlurmRunner, DockerRunner, SingularityRunner
 from popper.cli import log as log
 
 from test_common import PopperTest
@@ -283,3 +283,114 @@ docker rm -f popper_1_123abc || true
 docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/123abc/github.com/popperized/bin/sh
 docker create --name popper_1_123abc --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
 docker start --attach popper_1_123abc""")
+
+
+class TestSlurmSingularityRunner(unittest.TestCase):
+    def setUp(self):
+        log.setLevel('CRITICAL')
+        self.Popen = MockPopen()
+        replacer = Replacer()
+        replacer.replace('popper.runner_host.Popen', self.Popen)
+        self.addCleanup(replacer.restore)
+
+    def tearDown(self):
+        log.setLevel('NOTSET')
+
+    def test_create_cmd(self):
+        config = PopperConfig(workspace_dir='/w')
+        config.wid = "abcd"
+        with SingularityRunner(config=config) as sr:
+            step = {'args': ['-two', '-flags']}
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(
+                sr._singularity_cache, 'c1.sif')
+            cmd = sr._create_cmd(step, 'c1.sif')
+
+            expected = (
+                'singularity run'
+                ' --userns --pwd /workspace'
+                ' --bind /w:/workspace'
+                f' {os.environ["HOME"]}/.cache/popper/singularity/abcd/c1.sif'
+                ' -two -flags')
+
+            self.assertEqual(expected, cmd)
+
+        config_dict = {
+            'engine': {
+                'name': 'singularity',
+                'options': {
+                    'hostname': 'popper.local',
+                    'ipc': True,
+                    'bind': ['/path/in/host:/path/in/container']
+                }
+            },
+            'resource_manager': {
+                'name': 'slurm'
+            }
+        }
+
+        config = PopperConfig(workspace_dir='/w', config_file=config_dict)
+        config.wid = "abcd"
+
+        with SingularityRunner(config=config) as sr:
+            step = {'args': ['-two', '-flags']}
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(
+                sr._singularity_cache, 'c2.sif')
+            cmd = sr._create_cmd(step, 'c2.sif')
+
+            expected = (
+                'singularity run --userns --pwd /workspace'
+                ' --bind /w:/workspace'
+                ' --bind /path/in/host:/path/in/container'
+                ' --hostname popper.local'
+                ' --ipc'
+                f' {os.environ["HOME"]}/.cache/popper/singularity/abcd/c2.sif'
+                ' -two -flags')
+
+            self.assertEqual(expected, cmd)
+
+    @replace('popper.runner_slurm.os.kill', mock_kill)
+    def test_run(self, mock_kill):
+        self.Popen.set_command(
+            'sbatch --wait --job-name popper_1_123abc '
+            '--output /tmp/popper/slurm/popper_1_123abc.out '
+            '/tmp/popper/slurm/popper_1_123abc.sh', returncode=0)
+
+        self.Popen.set_command(
+            'tail -f /tmp/popper/slurm/popper_1_123abc.out',
+            returncode=0)
+
+        config_dict = {
+            'engine': {
+                'name': 'singularity',
+                'options': {
+                    'hostname': 'popper.local',
+                    'bind': ['/path/in/host:/path/in/container']
+                }
+            },
+            'resource_manager': {
+                'name': 'slurm'
+            }
+        }
+
+        config = PopperConfig(
+            workspace_dir='/w',
+            config_file=config_dict)
+        config.wid = "123abc"
+
+        with WorkflowRunner(config) as r:
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'popperized/bin/sh@master'
+              runs: ls
+            """)
+            wf.parse()
+            r.run(wf)
+
+        with open('/tmp/popper/slurm/popper_1_123abc.sh', 'r') as f:
+            content = f.read()
+            self.assertEqual(content,
+                             f"""#!/bin/bash
+singularity exec --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/123abc/popper_1_123abc.sif ls""")

@@ -2,18 +2,9 @@
 set -ex
 
 if [ "$ENGINE" == "singularity" ]; then
+    sudo add-apt-repository 'deb http://ftp.de.debian.org/debian bullseye main'
     sudo apt-get update
-    sudo apt-get install -y build-essential libssl-dev uuid-dev libgpgme11-dev libseccomp-dev pkg-config squashfs-tools
-    mkdir -p ${GOPATH}/src/github.com/sylabs
-    cd ${GOPATH}/src/github.com/sylabs
-    git clone https://github.com/sylabs/singularity.git
-    cd singularity
-    git checkout v3.2.0
-    cd ${GOPATH}/src/github.com/sylabs/singularity
-    ./mconfig
-    cd ./builddir
-    make
-    sudo make install
+    wget http://ftp.us.debian.org/debian/pool/main/s/singularity-container/singularity-container_3.5.2+ds1-1_amd64.deb
+    sudo apt-get -f --allow-unauthenticated -y install ./singularity-container_3.5.2+ds1-1_amd64.deb
     singularity version
-    cd $TRAVIS_BUILD_DIR
 fi
