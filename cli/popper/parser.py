@@ -407,7 +407,7 @@ class Workflow(object):
                 wf_block['env'] = temp_dict
 
         if not allow_loose and len(substitution_dict) != len(used):
-            log.fail("Not all given substitutions are used in"
+            log.fail("Not all given substitutions are used in "
                      "the workflow file")
 
     @staticmethod
