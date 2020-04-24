@@ -18,6 +18,7 @@ VALID_STEP_ATTRS = [
     "args",
     "needs",
     "runs",
+    "skip_pull",
     "secrets",
     "env",
     "name",
