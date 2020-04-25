@@ -14,13 +14,14 @@ setup(
     packages=['popper', 'popper.commands'],
     include_package_data=True,
     install_requires=[
-        'python-vagrant',
-        'GitPython',
-        'spython',
         'click',
+        'docker',
+        'GitPython',
+        'kubernetes',
         'pyhcl==0.4.0',
         'pyyaml',
-        'docker'
+        'python-vagrant',
+        'spython',
     ],
     extras_require={
         'dev': ['testfixtures']
