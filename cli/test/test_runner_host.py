@@ -508,3 +508,39 @@ exec /bin/bash "$@"''')
             self.assertRaises(SystemExit, r.run, wf)
 
         repo.close()
+
+
+class TestRunMethod(PopperTest):
+
+    def test_substitution(self):
+
+        os.environ['TESTING'] = 'TEST'
+        os.environ['$_VAR5'] = 'TEST'
+
+        repo = self.mk_repo()
+        conf = PopperConfig(workspace_dir=repo.working_dir)
+        with WorkflowRunner(conf) as r:
+
+            wf = YMLWorkflow("""
+                version: '1'
+                steps:
+                - id: 'a'
+                  uses: '$_VAR1'
+                  args: '$_VAR2'
+                  runs: '$_VAR4'
+
+                - id: 'b'
+                  needs: 'a'
+                  uses: '$_VAR1'
+                  args: '$_VAR2'
+                  runs: '$_VAR4'
+                  secrets: ['$_VAR5']
+                  env:
+                    '$_VAR6': '$_VAR7'
+                """)
+
+            wf.parse()
+            self.assertRaises(SystemExit, r.run, wf)
+
+            wf.parse(substitutions = ['_VAR1=sh','_VAR2=ls', '_VAR4=pwd', '_VAR5=TESTING', '_VAR6=TESTER', '_VAR7=TEST'])
+            r.run(wf)
