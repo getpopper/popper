@@ -422,7 +422,7 @@ class SingularityRunner(StepRunner):
 
         # set the environment variables
         for k, v in env.items():
-            os.environ[k] = v
+            os.environ[k] = str(v)
 
         args = step.get('args', None)
         runs = step.get('runs', None)
