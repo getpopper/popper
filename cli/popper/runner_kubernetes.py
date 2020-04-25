@@ -12,38 +12,38 @@ from popper.runner_host import DockerRunner as HostDockerRunner
 
 class KubernetesRunner(StepRunner):
     """Base class for all kubernetes step runners"""
-    def __init__(self, conf):
-        super(KubernetesRunner, self).__init__(conf)
+    def __init__(self, **kw):
+        super(KubernetesRunner, self).__init__(**kw)
 
         config.load_kube_config()
 
         c = Configuration()
         c.assert_hostname = False
         Configuration.set_default(c)
-        self.kclient = core_v1_api.CoreV1Api()
+        self._kclient = core_v1_api.CoreV1Api()
 
         _, active_context = config.list_kube_config_contexts()
-        self.namespace = active_context['name']
+        self._namespace = active_context['name']
 
-        self.pod_name = pu.sanitized_name('pod', self.config.wid)
-        self.pod_name = self.pod_name.replace('_', '-')
+        self._pod_name = pu.sanitized_name('pod', self._config.wid)
+        self._pod_name = self._pod_name.replace('_', '-')
 
-        self.vol_name = f'{self.pod_name}-pv'
-        self.vol_size = self.config.resman_options.get('volume_size', '10Gi')
-        self.vol_created = False
+        self._vol_name = f'{self._pod_name}-pv'
+        self._vol_size = self._config.resman_opts.get('volume_size', '10Gi')
+        self._vol_created = False
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
-        self.kclient.close()
+        super(KubernetesRunner, self).__exit__(exc_type, exc_value, exc_traceback)
         return True
 
     def run(self, step):
         """Execute a step in a kubernetes cluster."""
-        self._build_and_push_image(step, push=True)
+        self._build_and_push_image(step)
 
-        m = f'[{step["name"]}] kubernetes run {self.namespace}.{self.pod_name}'
+        m = f'[{step["name"]}] kubernetes run {self._namespace}.{self._pod_name}'
         log.info(m)
 
-        if self.config.dry_run:
+        if self._config.dry_run:
             return 1
 
         ecode = 1
@@ -66,40 +66,40 @@ class KubernetesRunner(StepRunner):
         self._pod_delete()
 
     def _vol_create(self, vol_conf):
-        if self.vol_created:
+        if self._vol_created:
             return
 
         vol_conf = self._vol_conf()
 
-        self.kclient.create_namespaced_persistent_volume_claim(
-            namespace=self.namespace, body=vol_conf)
+        self._kclient.create_namespaced_persistent_volume_claim(
+            namespace=self._namespace, body=vol_conf)
 
         counter = 1
         while True:
-            resp = self.kclient.read_namespaced_volume_claim(
-                self.vol_name, namespace=self.namespace)
+            resp = self._kclient.read_namespaced_volume_claim(
+                self._vol_name, namespace=self._namespace)
 
             if resp.status.phase != 'Pending':
                 break
 
-            log.debug(f'Volume {self.vol_name} not created yet')
+            log.debug(f'Volume {self._vol_name} not created yet')
 
             if counter == 10:
-                self._delete_volume(self.vol_name)
+                self._delete_volume(self._vol_name)
                 raise Exception('Timed out waiting for volume creation')
 
             time.sleep(1)
 
-        self.vol_created = True
+        self._vol_created = True
 
     def _vol_conf(self):
         vol_conf = {
             'apiVersion': 'v1',
             'kind': 'PersistentVolumeClaim',
-            'metadata': {'name': self.vol_name},
+            'metadata': {'name': self._vol_name},
             'spec': {
                 'accessModes': 'ReadWrite',
-                'resources': {'request': self.vol_size},
+                'resources': {'request': self._vol_size},
             }
         }
         log.debug(f'Volume spec: {vol_conf}')
@@ -108,17 +108,17 @@ class KubernetesRunner(StepRunner):
     def _pod_create(self, step):
         pod_conf = self._pod_conf(step)
 
-        self.kclient.create_namespaced_pod(body=pod_conf,
-                                           namespace=self.namespace)
+        self._kclient.create_namespaced_pod(body=pod_conf,
+                                           namespace=self._namespace)
 
         counter = 1
         while True:
-            resp = self.kclient.read_namespaced_pod(self.pod_name,
-                                                    namespace=self.namespace)
+            resp = self._kclient.read_namespaced_pod(self._pod_name,
+                                                    namespace=self._namespace)
             if resp.status.phase != 'Pending':
                 break
 
-            log.debug(f'Pod {self.pod_name} not started yet')
+            log.debug(f'Pod {self._pod_name} not started yet')
 
             if counter == 10:
                 raise Exception('Timed out waiting for pod to start')
@@ -126,11 +126,11 @@ class KubernetesRunner(StepRunner):
             time.sleep(1)
 
     def _pod_conf(self, step):
-        ws_vol_mount = f'{self.podname}-ws'
+        ws_vol_mount = f'{self._podname}-ws'
         pod_conf = {
             'apiVersion': 'v1',
             'kind': 'Pod',
-            'metadata': {'name': self.pod_name},
+            'metadata': {'name': self._pod_name},
             'spec': {
                 'restartPolicy': 'Never',
                 'containers': [{
@@ -145,7 +145,7 @@ class KubernetesRunner(StepRunner):
                 }],
                 'volumes': [{
                     'name': ws_vol_mount,
-                    'persistentVolumeClaim': {'claimName': self.vol_name},
+                    'persistentVolumeClaim': {'claimName': self._vol_name},
                 }]
             }
         }
@@ -155,8 +155,8 @@ class KubernetesRunner(StepRunner):
 
     def _pod_read_log(self):
         log.debug(f'Reading logs')
-        resp = self.kclient.read_namespaced_pod_log(name=self.pod_name,
-                                                    namespace=self.namespace,
+        resp = self._kclient.read_namespaced_pod_log(name=self._pod_name,
+                                                    namespace=self._namespace,
                                                     follow=True,
                                                     tail_lines=10,
                                                     _preload_content=False)
@@ -164,39 +164,39 @@ class KubernetesRunner(StepRunner):
             log.step_info(line)
 
     def _pod_exit_code(self):
-        resp = self.kclient.read_namespaced_pod(name=self.pod_name,
-                                                namespace=self.namespace)
+        resp = self._kclient.read_namespaced_pod(name=self._pod_name,
+                                                namespace=self._namespace)
         log.debug(f'Got status {resp.status.phase}')
         if resp.status.phase != 'Succeeded':
             return 1
         return 0
 
     def _vol_delete(self):
-        log.debug(f'deleting volume {self.vol_name}')
-        self.kclient.delete_namespaced_pod(self.vol_name,
-                                           namespace=self.namespace,
+        log.debug(f'deleting volume {self._vol_name}')
+        self._kclient.delete_namespaced_pod(self._vol_name,
+                                           namespace=self._namespace,
                                            body=V1DeleteOptions())
 
     def _pod_delete(self):
-        log.debug(f'deleting pod {self.pod_name}')
-        self.kclient.delete_namespaced_pod(self.pod_name,
-                                           namespace=self.namespace,
+        log.debug(f'deleting pod {self._pod_name}')
+        self._kclient.delete_namespaced_pod(self._pod_name,
+                                           namespace=self._namespace,
                                            body=V1DeleteOptions())
 
 
-class DockerRunner(StepRunner, HostDockerRunner):
+class DockerRunner(KubernetesRunner, HostDockerRunner):
     """Runs steps on kubernetes; builds images locally using docker.
     """
-    def __init__(self, conf):
-        super(DockerRunner, self).__init__(conf)
+    def __init__(self, **kw):
+        super(DockerRunner, self).__init__(**kw)
 
-    def build_and_push_image(self, step):
+    def _build_and_push_image(self, step):
         needs_build, img, tag, dockerfile = self._get_build_info(step)
         if not needs_build:
             return
-        if not self.config.registry:
+        if not self._config.registry:
             raise Exception("Expecting 'registry' option in configuration.")
-        img = f'{self.config.registry}/{img}'
-        self.d.images.build(path=path, tag=f'{img}:{tag}', rm=True, pull=True)
-        for l in self.d.push(img, tag=tag, stream=True, decode=True):
+        img = f'{self._config.registry}/{img}'
+        self._d.images.build(path=path, tag=f'{img}:{tag}', rm=True, pull=True)
+        for l in self._d.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
