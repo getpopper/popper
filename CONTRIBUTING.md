@@ -78,10 +78,9 @@ the above approach you have both (1) popper installed in your machine
 and (2) an environment where you can modify popper and test the 
 results of such modifications.
 
-## Running the unittests locally
+## Running tests
 
-To run the unittests on your local machine, we suggest the following
-approach:
+To run tests on your machine:
 
 ```bash
 cd popper/
@@ -89,8 +88,11 @@ cd popper/
 # activate the virtualenv
 source $HOME/venvs/popper/bin/activate
 
-# run the tests
-ENGINE=docker python -X tracemalloc -m unittest discover -f cli/test/
+# run all tests
+python -X tracemalloc -m unittest -f cli/test/test_*
+
+# run only one
+python -X tracemalloc -m unittest -f cli/test/test_runner.py
 ```
 
 ## How to contribute changes

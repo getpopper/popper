@@ -1,8 +1,9 @@
 from click.testing import CliRunner
-import popper.commands.cmd_version as version
-import unittest
-from test_common import PopperTest
-from popper import __version__ as version_value
+
+from popper import __version__
+from popper.commands import cmd_version
+
+from .test_common import PopperTest
 
 
 class TestCommandVersion(PopperTest):
@@ -11,7 +12,7 @@ class TestCommandVersion(PopperTest):
 
         with self.assertLogs('popper') as test:
             runner = CliRunner()
-            result = runner.invoke(version.cli)
+            result = runner.invoke(cmd_version.cli)
             self.assertEqual(result.exit_code, 0)
 
-        self.assertTrue(version_value in test.output[0])
+        self.assertTrue(__version__ in test.output[0])
