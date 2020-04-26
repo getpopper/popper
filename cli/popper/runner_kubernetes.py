@@ -191,12 +191,12 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         super(DockerRunner, self).__init__(**kw)
 
     def _build_and_push_image(self, step):
-        needs_build, img, tag, dockerfile = self._get_build_info(step)
+        needs_build, img, tag, build_ctx_path = self._get_build_info(step)
         if not needs_build:
             return
         if not self._config.registry:
             raise Exception("Expecting 'registry' option in configuration.")
         img = f'{self._config.registry}/{img}'
-        self._d.images.build(path=path, tag=f'{img}:{tag}', rm=True, pull=True)
-        for l in self._d.push(img, tag=tag, stream=True, decode=True):
+        self._d.images.build(path=build_ctx_path, tag=f'{img}:{tag}', rm=True, pull=True)
+        for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
