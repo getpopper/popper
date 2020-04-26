@@ -1,14 +1,11 @@
+import tempfile
+import git
+
 from click.testing import CliRunner
 
 import popper.commands.cmd_dot as dot
-import popper.commands.cmd_run as run
-from test_common import PopperTest
-from popper.parser import Workflow, YMLWorkflow, HCLWorkflow
 
-import unittest
-import os
-import tempfile
-import git
+from .test_common import PopperTest
 
 
 class TestDot(PopperTest):

@@ -2,16 +2,17 @@ import os
 import unittest
 import tempfile
 
+from testfixtures import Replacer, replace
+from testfixtures.popen import MockPopen
+from testfixtures.mock import call
+
 from popper.config import PopperConfig
 from popper.runner import WorkflowRunner
 from popper.parser import YMLWorkflow
 from popper.runner_slurm import SlurmRunner, DockerRunner, SingularityRunner
 from popper.cli import log as log
 
-from test_common import PopperTest
-from testfixtures import Replacer, replace, compare
-from testfixtures.popen import MockPopen
-from testfixtures.mock import call
+from .test_common import PopperTest
 
 
 def mock_kill(pid, sig):

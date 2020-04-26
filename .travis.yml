@@ -6,8 +6,9 @@ python:
 - "3.7"
 - "3.8"
 env:
-- ENGINE=docker WITH_K8S=1
+- ENGINE=docker
 - ENGINE=singularity
+- ENGINE=docker WITH_K8S=1
 services: docker
 before_install:
 - ci/scripts/install-test-deps.sh
@@ -15,7 +16,7 @@ before_install:
 install:
 - pip install cli/[dev]
 script:
-- coverage run -m unittest discover --start-directory cli/test
+- coverage run -m unittest cli/test_*
 - ci/run_tests.sh
 after_success:
 - bash <(curl -s https://codecov.io/bash)

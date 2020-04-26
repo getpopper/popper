@@ -16,7 +16,7 @@ from popper.runner import WorkflowRunner
 from popper.runner_host import HostRunner, DockerRunner, SingularityRunner
 from popper.cli import log as log
 
-from test_common import PopperTest
+from .test_common import PopperTest
 
 
 class TestHostHostRunner(PopperTest):
