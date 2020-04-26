@@ -18,7 +18,7 @@ if [[ -n $WITH_K8S ]]; then
 
   ./kind-travis-ci/kind/k8s-create.sh
 
-  mkdir $HOME/.kube
+  mkdir -p $HOME/.kube
 
   cp $(kind get kubeconfig-path --name="kind") $HOME/.kube/config  
 fi
