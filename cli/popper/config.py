@@ -32,7 +32,15 @@ class PopperConfig(object):
         self.resman_name = from_file['resman_name']
         self.engine_opts = from_file['engine_opts']
         self.resman_opts = from_file['resman_opts']
-        self.registry = from_file.get('registry', 'docker.io')
+
+        # for kubernetes runners, we need to know where to push images to
+        if self.resman_name == 'kubernetes':
+            self.registry_url = from_file.get('registry_url', 'docker.io')
+
+            self.registry_user = from_file.get('registry_user', None)
+
+            if not self.registry_user:
+                raise Exception("Expecting 'registry_user' option.")
 
     def _load_config_from_file(self, config_file, engine_name, resman_name):
         from_file = PopperConfig.__load_config_file(config_file)
@@ -48,7 +56,7 @@ class PopperConfig(object):
         if from_file and resman_section and not resman_from_file:
             log.fail('No resource manager name given.')
 
-        # set name in precedence order (or assigne default values)
+        # set name in precedence order (or assign default values)
         if engine_name:
             loaded_conf['engine_name'] = engine_name
         elif eng_from_file:
