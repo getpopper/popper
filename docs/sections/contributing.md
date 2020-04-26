@@ -57,6 +57,7 @@ cd popper/
 # activate the virtualenv
 source $HOME/venvs/popper/bin/activate
 
+<<<<<<< HEAD
 # run all tests
 python -X tracemalloc -m unittest -f cli/test/test_*
 
@@ -73,6 +74,10 @@ To apply black to your code, run black from the root Popper directory:
 ```bash
 cd popper
 black .
+=======
+# run the tests
+python -X tracemalloc -m unittest discover -f cli/test/
+>>>>>>> Makes docker tests the default
 ```
 
 ## Contributing CLI features
