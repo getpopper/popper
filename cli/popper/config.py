@@ -80,7 +80,7 @@ class ConfigLoader(object):
         if from_file and resman_section and not resman_from_file:
             log.fail("No resource manager name given.")
 
-        # set name in precedence order (or assigne default values)
+        # set name in precedence order (or assign default values)
         if engine_name:
             loaded_conf["engine_name"] = engine_name
         elif eng_from_file:
