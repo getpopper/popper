@@ -103,7 +103,9 @@ class TestHostDockerRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
-    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    @unittest.skipIf(
+        os.environ.get('ENGINE', 'docker') != 'docker',
+        'ENGINE != docker')
     def test_create_container(self):
         config = PopperConfig()
         step = {
@@ -117,7 +119,9 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(c.status, 'created')
             c.remove()
 
-    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    @unittest.skipIf(
+        os.environ.get('ENGINE', 'docker') != 'docker',
+        'ENGINE != docker')
     def test_stop_running_tasks(self):
         with DockerRunner() as dr:
             dclient = docker.from_env()
@@ -132,7 +136,9 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(c2.status, 'created')
             dclient.close()
 
-    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    @unittest.skipIf(
+        os.environ.get('ENGINE', 'docker') != 'docker',
+        'ENGINE != docker')
     def test_get_container_kwargs(self):
         step = {
             'uses': 'popperized/bin/sh@master',
@@ -181,7 +187,9 @@ class TestHostDockerRunner(PopperTest):
                 'hostname': 'popper.local',
                 'domainname': 'www.example.org'})
 
-    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    @unittest.skipIf(
+        os.environ.get('ENGINE', 'docker') != 'docker',
+        'ENGINE != docker')
     def test_get_build_info(self):
         step = {
             'uses': 'popperized/bin/sh@master',
@@ -212,7 +220,9 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(tag, '3.9')
             self.assertEqual(build_sources, None)
 
-    @unittest.skipIf(os.environ['ENGINE'] != 'docker', 'ENGINE != docker')
+    @unittest.skipIf(
+        os.environ.get('ENGINE', 'docker') != 'docker',
+        'ENGINE != docker')
     def test_docker_basic_run(self):
 
         repo = self.mk_repo()
@@ -260,7 +270,7 @@ class TestHostSingularityRunner(PopperTest):
         log.setLevel('CRITICAL')
 
     @unittest.skipIf(
-        os.environ['ENGINE'] != 'singularity',
+        os.environ.get('ENGINE', 'docker') != 'singularity',
         'ENGINE != singularity')
     def test_get_recipe_file(self):
         repo = self.mk_repo()
@@ -299,7 +309,7 @@ exec /bin/bash "$@"''')
                           build_ctx_path, 'sample.sif')
 
     @unittest.skipIf(
-        os.environ['ENGINE'] != 'singularity',
+        os.environ.get('ENGINE', 'docker') != 'singularity',
         'ENGINE != singularity')
     def test_create_container(self):
         config = PopperConfig()
@@ -343,7 +353,7 @@ exec /bin/bash "$@"''')
             os.remove(os.path.join(sr._singularity_cache, cid_two))
 
     @unittest.skipIf(
-        os.environ['ENGINE'] != 'singularity',
+        os.environ.get('ENGINE', 'docker') != 'singularity',
         'ENGINE != singularity')
     def test_setup_singularity_cache(self):
         config = PopperConfig()
@@ -355,7 +365,7 @@ exec /bin/bash "$@"''')
                 sr._singularity_cache)
 
     @unittest.skipIf(
-        os.environ['ENGINE'] != 'singularity',
+        os.environ.get('ENGINE', 'docker') != 'singularity',
         'ENGINE != singularity')
     def test_get_container_options(self):
         config_dict = {
@@ -387,7 +397,7 @@ exec /bin/bash "$@"''')
                 '--ipc'])
 
     @unittest.skipIf(
-        os.environ['ENGINE'] != 'singularity',
+        os.environ.get('ENGINE', 'docker') != 'singularity',
         'ENGINE != singularity')
     def test_get_build_info(self):
         step = {
@@ -418,7 +428,7 @@ exec /bin/bash "$@"''')
             self.assertEqual(build_sources, None)
 
     @unittest.skipIf(
-        os.environ['ENGINE'] != 'singularity',
+        os.environ.get('ENGINE', 'docker') != 'singularity',
         'ENGINE != singularity')
     def test_singularity_start(self):
         repo = self.mk_repo()

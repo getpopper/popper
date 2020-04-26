@@ -59,7 +59,7 @@ cd popper/
 source $HOME/venvs/popper/bin/activate
 
 # run the tests
-ENGINE=docker python -X tracemalloc -m unittest discover -f cli/test/
+python -X tracemalloc -m unittest discover -f cli/test/
 ```
 
 ## Contributing CLI features
