@@ -1,16 +1,18 @@
-from click.testing import CliRunner
-
-import popper.commands.cmd_scaffold as scaffold
-import popper.commands.cmd_run as run
-from test_common import PopperTest
-from popper.parser import Workflow, YMLWorkflow, HCLWorkflow
-
-import unittest
 import os
 import tempfile
 
+from click.testing import CliRunner
+
+from popper.cli import log
+from popper.commands import cmd_scaffold, cmd_run
+from popper.parser import Workflow
+
+from .test_common import PopperTest
+
 
 class TestScaffold(PopperTest):
+    def setUp(self):
+        log.setLevel('CRITICAL')
 
     def test_scaffold(self):
 
@@ -18,7 +20,7 @@ class TestScaffold(PopperTest):
         runner = CliRunner()
         file_loc = f'{wf_dir}/wf.yml'
 
-        result = runner.invoke(scaffold.cli, ['-f', file_loc])
+        result = runner.invoke(cmd_scaffold.cli, ['-f', file_loc])
 
         self.assertEqual(result.exit_code, 0)
         self.assertTrue(os.path.isfile(file_loc))
@@ -38,7 +40,7 @@ class TestScaffold(PopperTest):
 
         with self.assertLogs('popper') as test_logger:
 
-            result = runner.invoke(run.cli, ['-f', file_loc])
+            result = runner.invoke(cmd_run.cli, ['-f', file_loc])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(len(test_logger.output))
             self.assertTrue(

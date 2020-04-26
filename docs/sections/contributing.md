@@ -47,10 +47,9 @@ results of such modifications.
 > every time you open a new terminal window (`source` commmand), 
 > otherwise the `popper` command will not be found by your shell.
 
-## Running unittests locally
+## Running tests
 
-To run the unittests on your local machine, we suggest the following
-approach:
+To run tests on your machine:
 
 ```bash
 cd popper/
@@ -58,8 +57,11 @@ cd popper/
 # activate the virtualenv
 source $HOME/venvs/popper/bin/activate
 
-# run the tests
-ENGINE=docker python -X tracemalloc -m unittest discover -f cli/test/
+# run all tests
+python -X tracemalloc -m unittest -f cli/test/test_*
+
+# run only one
+python -X tracemalloc -m unittest -f cli/test/test_runner.py
 ```
 
 ## Contributing CLI features
