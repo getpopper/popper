@@ -352,7 +352,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
             self.assertEqual(expected, cmd)
 
     @replace('popper.runner_slurm.os.kill', mock_kill)
-    def test_run(self, mock_kill):
+    def test_slurm_singularity_run(self, mock_kill):
         self.Popen.set_command(
             'sbatch --wait --job-name popper_1_123abc '
             '--output /tmp/popper/slurm/popper_1_123abc.out '
