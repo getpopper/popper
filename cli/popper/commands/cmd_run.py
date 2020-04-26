@@ -170,10 +170,9 @@ def cli(ctx, step, wfile, debug, dry_run, log_file, quiet, reuse,
                           skip_pull=skip_pull, skip_clone=skip_clone,
                           workspace_dir=workspace)
 
-    runner = WorkflowRunner(config)
-
-    try:
-        runner.run(wf)
-    except Exception as e:
-        log.debug(traceback.format_exc())
-        log.fail(e)
+    with WorkflowRunner(config) as runner:
+        try:
+            runner.run(wf)
+        except Exception as e:
+            log.debug(traceback.format_exc())
+            log.fail(e)
