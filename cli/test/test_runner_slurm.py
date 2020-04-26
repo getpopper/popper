@@ -284,6 +284,25 @@ docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/123abc/
 docker create --name popper_1_123abc --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
 docker start --attach popper_1_123abc""")
 
+        with WorkflowRunner(config) as r:
+            wf = YMLWorkflow("""
+            version: '1'
+            steps:
+            - uses: 'popperized/bin/sh@master'
+              runs: [ls]
+            """)
+            wf.parse()
+            r.run(wf)
+
+        with open('/tmp/popper/slurm/popper_1_123abc.sh', 'r') as f:
+            content = f.read()
+            self.assertEqual(content,
+                             f"""#!/bin/bash
+docker rm -f popper_1_123abc || true
+docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/123abc/github.com/popperized/bin/sh
+docker create --name popper_1_123abc --workdir /workspace --entrypoint ls -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master
+docker start --attach popper_1_123abc""")
+
 
 class TestSlurmSingularityRunner(unittest.TestCase):
     def setUp(self):
