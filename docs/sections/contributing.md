@@ -58,11 +58,15 @@ cd popper/
 source $HOME/venvs/popper/bin/activate
 
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> Fixes imports to enable single-test execution
 # run all tests
 python -X tracemalloc -m unittest -f cli/test/test_*
 
 # run only one
 python -X tracemalloc -m unittest -f cli/test/test_runner.py
+<<<<<<< HEAD
 ```
 
 ## Codestyle
@@ -78,6 +82,8 @@ black .
 # run the tests
 python -X tracemalloc -m unittest discover -f cli/test/
 >>>>>>> Makes docker tests the default
+=======
+>>>>>>> Fixes imports to enable single-test execution
 ```
 
 ## Contributing CLI features

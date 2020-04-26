@@ -6,8 +6,9 @@ python:
 - "3.7"
 - "3.8"
 env:
-- ENGINE=docker WITH_K8S=1
+- ENGINE=docker
 - ENGINE=singularity
+- ENGINE=docker WITH_K8S=1
 services: docker
 before_install:
 - ci/scripts/install-test-deps.sh
