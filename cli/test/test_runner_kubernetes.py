@@ -5,6 +5,7 @@ from popper.cli import log as log
 from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner
+from popper.runner_kubernetes import KubernetesRunner, DockerRunner
 
 from .test_common import PopperTest
 
@@ -70,5 +71,8 @@ class TestKubernetesDockerRunner(PopperTest):
 
             # TODO: use kubernetes client to assert that the file was
             #       created in the volume associated to the pod
+
+            with open(os.path.join(repo.working_dir, 'hello.txt'), 'r') as f:
+                self.assertEqual(f.read(), 'bar\n')
 
         repo.close()
