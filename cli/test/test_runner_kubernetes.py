@@ -52,8 +52,11 @@ class TestKubernetesDockerRunner(PopperTest):
         'WITH_K8S not defined or ENGINE != docker')
     def test_docker_write_to_volume(self):
         repo = self.mk_repo()
+        config_opts = {
+            'registry_user': 'edeediong',
+        }
         conf = PopperConfig(workspace_dir=repo.working_dir,
-                            resman_name='kubernetes')
+                            resman_name='kubernetes', config_file=config_opts)
 
         with WorkflowRunner(conf) as r:
 
