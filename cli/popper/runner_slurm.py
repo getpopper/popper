@@ -104,12 +104,12 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cid = pu.sanitized_name(step['name'], self._config.wid)
         cmd = []
 
-        build, img, tag, dockerfile = self._get_build_info(step)
+        build, img, tag, build_ctx_path = self._get_build_info(step)
 
         cmd.append(f'docker rm -f {cid} || true')
 
         if build:
-            cmd.append(f'docker build -t {img}:{tag} {dockerfile}')
+            cmd.append(f'docker build -t {img}:{tag} {build_ctx_path}')
         elif not self._config.skip_pull and not step.get('skip_pull', False):
             cmd.append(f'docker pull {img}:{tag}')
 
@@ -138,7 +138,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         for env_key, env_val in container_args.pop('environment').items():
             cmd.append(f'-e {env_key}={env_val}')
 
-        command = ' '.join(container_args.pop('command', []))
+        command = container_args.pop('command')
         image = container_args.pop('image')
 
         # anything else is treated as a flag
@@ -146,7 +146,10 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             cmd.append(pu.key_value_to_flag(k, v))
 
         # append the image and the commands
-        cmd.append(f'{image} {command}')
+        cmd.append(image)
+
+        if command:
+            cmd.append(' '.join(command))
 
         return ' '.join(cmd)
 
