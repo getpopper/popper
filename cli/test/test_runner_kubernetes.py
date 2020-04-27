@@ -24,7 +24,7 @@ class TestKubernetesDockerRunner(PopperTest):
         #       to the popperized repository, then you need to change this
         #       with the your docker.io username so that the test can pass.
         config_opts = {
-            'registry_user': 'popperized',
+            'registry_user': 'edeediong',
         }
         conf = PopperConfig(workspace_dir=repo.working_dir,
                             resman_name='kubernetes',
