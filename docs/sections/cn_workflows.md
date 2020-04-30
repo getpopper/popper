@@ -369,3 +369,10 @@ popper run -f sample.yml
 
 The above assumes `docker` as the container engine and `host` as the resource manager to be
 used.
+
+### KUBERNETES
+
+Popper can be run on a cluster of multiple containers using Kubernetes as the fundamental resource manager to orchestrate the execution of a step to several nodes. 
+You can get started with running Popper workflows through K8s(another way to represent Kubernetes) by following the example below.
+
+Let's consider a workflow `sample.yml` like the one shown below.
