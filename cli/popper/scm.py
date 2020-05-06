@@ -16,7 +16,7 @@ def new_repo(gitrepo_dir=None):
     Returns:
         git.Repo: repo object or None if '.git/' not found in any parent folder
     """
-    if not gitrepo_dir:
+    if not gitrepo_dir or not os.path.isdir(gitrepo_dir):
         return None
     try:
         return git.Repo(gitrepo_dir, search_parent_directories=True)

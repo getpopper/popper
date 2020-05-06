@@ -35,7 +35,8 @@ class WorkflowRunner(object):
 
     def __exit__(self, exc_type, exc, traceback):
         """calls __exit__ on all instantiated step runners"""
-        self._config.repo.close()
+        if self._config.repo:
+            self._config.repo.close()
         for _, r in WorkflowRunner.__runners.items():
             r.__exit__(exc_type, exc, traceback)
         WorkflowRunner.__runners = {}
@@ -211,8 +212,11 @@ class WorkflowRunner(object):
 class StepRunner(object):
     """Base class for step runners, assumed to be singletons."""
 
-    def __init__(self, config=PopperConfig()):
-        self._config = config
+    def __init__(self, config=None):
+        if not config:
+            self._config = PopperConfig()
+        else:
+            self._config = config
 
     def __enter__(self):
         return self
@@ -220,8 +224,7 @@ class StepRunner(object):
     def __exit__(self, exc_type, exc, traceback):
         pass
 
-    @staticmethod
-    def prepare_environment(step, env={}):
+    def _prepare_environment(self, step, env={}):
         """Prepare environment variables for a step, which includes those in
         the 'env' and 'secrets' attributes.
 
@@ -236,6 +239,14 @@ class StepRunner(object):
         for s in step.get('secrets', []):
             step_env.update({s: os.environ[s]})
         step_env.update(env)
+
+        # define GIT_* variables
+        if self._config.repo:
+            step_env.update({
+                'GIT_COMMIT': self._config.git_commit,
+                'GIT_BRANCH': self._config.git_branch,
+                'GIT_SHA_SHORT': self._config.git_sha_short,
+            })
         return step_env
 
     def stop_running_tasks(self):
