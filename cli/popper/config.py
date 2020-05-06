@@ -14,13 +14,17 @@ class PopperConfig(object):
                  skip_clone=False):
 
         self.workspace_dir = os.path.realpath(workspace_dir)
+
         self.reuse = reuse
         self.dry_run = dry_run
         self.quiet = quiet
         self.skip_pull = skip_pull
         self.skip_clone = skip_clone
-        self.repo = scm.new_repo()
-        self.workspace_sha = scm.get_sha(self.repo)
+
+        if os.path.isdir(self.workspace_dir):
+            self.repo = scm.new_repo(self.workspace_dir)
+        else:
+            self.repo = None
 
         wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
         self.wid = wid

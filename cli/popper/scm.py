@@ -6,71 +6,24 @@ import git
 from popper.cli import log
 
 
-def new_repo():
-    """Function to initialize a git.Repo object assumed to be in os.getcwd() or
-    any parent directory.
+def new_repo(gitrepo_dir=None):
+    """Function to initialize a git.Repo object for a repository that is
+    assumed to be in gitrepo_dir, or any parent directory.
 
     Args:
-        None
+        gitrepo_dir(str): path to a folder within a git repository folder
 
     Returns:
         git.Repo: repo object or None if '.git/' not found in any parent folder
     """
+    if not gitrepo_dir:
+        return None
     try:
-        return git.Repo(search_parent_directories=True)
+        return git.Repo(gitrepo_dir, search_parent_directories=True)
     except git.exc.InvalidGitRepositoryError:
-        # Optimistically assume that this is due to .git/ folder not being
-        # found, in which case all the methods in this module assume
-        # os.getcwd() as the root of a project.
+        # Optimistically assume that this is due to .git/ folder not existing
         pass
     return None
-
-
-def get_project_root_folder(repo=None):
-    """Function to find the project root folder.
-
-    If the project is a git repository, the project root is the folder
-    containing the `.git` folder, else the $PWD is assumed to be the
-    project root.
-
-    Args:
-      None
-
-    Returns:
-      str: The path to the root of the project.
-
-    """
-    if repo:
-        root_folder_path = repo.working_tree_dir
-    else:
-        root_folder_path = os.getcwd()
-
-    return root_folder_path
-
-
-def get_sha(repo):
-    """Runs git rev-parse --short HEAD and returns result.
-
-    This function returns 'unknown' if the project folder
-    is not a git repo. It fails, when the project folder is a
-    git repo but doesn't have any commit.
-
-    Args:
-        None
-
-    Returns:
-      str: The sha of the head commit or 'unknown'.
-
-    """
-    if repo:
-        try:
-            return repo.git.rev_parse(repo.head.object.hexsha, short=True)
-        except ValueError as e:
-            log.debug(e)
-            log.fail(
-                f'Could not obtain revision of repository located at {get_project_root_folder(repo)}')
-    else:
-        return 'na'
 
 
 def get_remote_url(repo=None):
