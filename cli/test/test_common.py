@@ -18,10 +18,17 @@ class PopperTest(unittest.TestCase):
         """
         tempdir = tempfile.mkdtemp()
         repo = git.Repo.init(tempdir)
+
+        # touch README file
         readme = os.path.join(tempdir, 'README.md')
         open(readme, 'w').close()
+
         repo.index.add([readme])
         repo.index.commit('first commit')
+
+        # create a remote
+        repo.create_remote('origin', url='https://github.com/my/repo')
+
         return repo
 
 
