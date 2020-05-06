@@ -383,13 +383,18 @@ use the `--resource-manager` or `-r` option of the `popper run` subcommand to sp
 ```bash
 popper run -f sample.yml -r kubernetes
 ```
-When this command is run, what happens underneath is the following:
 
-`step[id] kubernetes run namespace pod_name`
+When this command is run, what happens underneath is the following: `stepname kubernetes run namespace podname`
+
+Things to note:
+
+* stepname : is the step id of the workflow
+* kubernetes run: command to run kubernetes
+* namespace: Namespaces are a way to divide cluster resources between multiple users (via resource quota).
+* podname: Group of containers
 
 You can also have more control over the steps in the kubernetes resource manager.
 To do that we create a config file `config.yml` with the specifications as shown below.
-
 
 ```yaml
 engine:
