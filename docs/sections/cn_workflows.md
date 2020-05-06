@@ -377,17 +377,19 @@ steps:
   args: ls -l
 ```
 
-To run all the steps of the workflow through slurm resource manager,
+To run all the steps of the workflow through kubernetes,
 use the `--resource-manager` or `-r` option of the `popper run` subcommand to specify the resource manager.
 
 ```bash
 popper run -f sample.yml -r kubernetes
 ```
+When this command is run, what happens underneath is the following:
 
-To have more finer control on which steps to run through slurm resource manager,
-the specifications can be provided through the config file as shown below.
+`step[id] kubernetes run namespace pod_name`
 
-We create a config file called `config.yml` with the following contents.
+You can also have more control over the steps in the kubernetes resource manager.
+To do that we create a config file `config.yml` with the specifications as shown below.
+
 
 ```yaml
 engine:
