@@ -1,12 +1,12 @@
 # Workflow Syntax and Execution Runtime
 
-This section introduces the YAML syntax used by Popper, describes the 
-workflow execution runtime and shows how to execute workflows in 
+This section introduces the YAML syntax used by Popper, describes the
+workflow execution runtime and shows how to execute workflows in
 alternative container engines.
 
-> _**NOTE**: Popper also supports the [now-deprecated HCL 
-> syntax][drophcl] that was introduced in the alpha version of [Github 
-> Action Workflows][parser]. We strongly recommend the use of Popper's 
+> _**NOTE**: Popper also supports the [now-deprecated HCL
+> syntax][drophcl] that was introduced in the alpha version of [Github
+> Action Workflows][parser]. We strongly recommend the use of Popper's
 > own YAML syntax._
 
 [parser]: https://github.blog/2019-02-07-an-open-source-parser-for-github-actions/
@@ -23,14 +23,14 @@ steps:
   args: ["ls", "-la"]
 ```
 
-A workflow specification contains one or more steps in the form of a 
-YAML list named `steps`. Each item in the list is a dictionary 
-containing at least a `uses` attribute, which determines the docker 
+A workflow specification contains one or more steps in the form of a
+YAML list named `steps`. Each item in the list is a dictionary
+containing at least a `uses` attribute, which determines the docker
 image being used for that step.
 
 ### Workflow steps
 
-The following table describes the attributes that can be used for a 
+The following table describes the attributes that can be used for a
 step. All attributes are optional with the exception of the `uses` attribute.
 
 | Attribute  | Description |
@@ -45,12 +45,12 @@ step. All attributes are optional with the exception of the `uses` attribute.
 
 ### Referencing images in a step
 
-A step in a workflow can reference a container image defined in a 
-`Dockerfile` that is part of the same repository where the workflow 
-file resides. In addition, it can also reference a `Dockerfile` 
-contained in public Git repository. A third option is to directly 
-reference an image published a in a container registry such as 
-[DockerHub][dh]. Here are some examples of how you can refer to an 
+A step in a workflow can reference a container image defined in a
+`Dockerfile` that is part of the same repository where the workflow
+file resides. In addition, it can also reference a `Dockerfile`
+contained in public Git repository. A third option is to directly
+reference an image published a in a container registry such as
+[DockerHub][dh]. Here are some examples of how you can refer to an
 image on a public Git repository or Docker container registry:
 
 | Template                           | Description |
@@ -61,34 +61,34 @@ image on a public Git repository or Docker container registry:
 | `docker://{image}:{tag}`           | A Docker image published on [Docker Hub](https://hub.docker.com/).<br>**Example:** `docker://alpine:3.8`. |
 | `docker://{host}/{image}:{tag}`    | A Docker image in a public registry other than DockerHub. Note<br>that the container engine needs to have properly configured to<br>access the referenced registry in order to download from it.<br>**Example:** `docker://gcr.io/cloud-builders/gradle`.|
 
-It's strongly recommended to include the version of the image you are 
-using by specifying a SHA or Docker tag. If you don't specify a 
-version and the image owner publishes an update, it may break your 
+It's strongly recommended to include the version of the image you are
+using by specifying a SHA or Docker tag. If you don't specify a
+version and the image owner publishes an update, it may break your
 workflows or have unexpected behavior.
 
-In general, any Docker image can be used in a Popper workflow, but 
+In general, any Docker image can be used in a Popper workflow, but
 keep in mind the following:
 
-  * When the `runs` attribute for a step is used, the `ENTRYPOINT` of 
+  * When the `runs` attribute for a step is used, the `ENTRYPOINT` of
     the image is overridden.
-  * The `WORKDIR` is overridden and `/workspace` is used instead (see 
+  * The `WORKDIR` is overridden and `/workspace` is used instead (see
     [The workspace](#the-workspace) section below).
-  * The `ARG` instruction is not supported, thus building an image 
+  * The `ARG` instruction is not supported, thus building an image
     from a `Dockerfile` (public or local) only uses its default value.
-  * While it is possible to run containers that specify `USER` other 
+  * While it is possible to run containers that specify `USER` other
     than root, doing so might cause unexpected behavior.
 
 [dh]: https://hub.docker.com
 
 ### Referencing private Github repositories
 
-You can reference Dockerfiles located in private Github 
-repositories by defining a `GITHUB_API_TOKEN` environment variable 
-that the `popper run` command reads and uses to clone private 
-repositories. The repository referenced in the `uses` attribute is 
-assumed to be private and, to access it, an API token from Github is 
-needed (see instructions [here](https://github.com/settings/tokens)). 
-The token needs to have permissions to read the private repository in 
+You can reference Dockerfiles located in private Github
+repositories by defining a `GITHUB_API_TOKEN` environment variable
+that the `popper run` command reads and uses to clone private
+repositories. The repository referenced in the `uses` attribute is
+assumed to be private and, to access it, an API token from Github is
+needed (see instructions [here](https://github.com/settings/tokens)).
+The token needs to have permissions to read the private repository in
 question. To run a workflow that references private repositories:
 
 ```bash
@@ -96,24 +96,24 @@ export GITHUB_API_TOKEN=access_token_here
 popper run -f wf.yml
 ```
 
-If the access token doesn't have permissions to access private 
+If the access token doesn't have permissions to access private
 repositories, the `popper run` command will fail.
 
 ## Execution Runtime
 
-This section describes the runtime environment where a workflow 
+This section describes the runtime environment where a workflow
 executes.
 
 ### The workspace
 
-When a step is executed, a folder in your machine is bind-mounted 
-(shared) to the `/workspace` folder inside the associated container. 
-By default, the folder being bind-mounted is `$PWD`, that is, the 
-working directory from where `popper run` is being invoked from. If 
-the `-w` (or `--workspace`) flag is given, then the value for this 
+When a step is executed, a folder in your machine is bind-mounted
+(shared) to the `/workspace` folder inside the associated container.
+By default, the folder being bind-mounted is `$PWD`, that is, the
+working directory from where `popper run` is being invoked from. If
+the `-w` (or `--workspace`) flag is given, then the value for this
 flag is used instead.
 
-For example, let's look at a workflow that writes to a `myfile` in the 
+For example, let's look at a workflow that writes to a `myfile` in the
 workspace:
 
 ```yaml
@@ -123,7 +123,7 @@ steps:
   args: [touch, ./myfile]
 ```
 
-Assuming the above is stored in a `wf.yml` file, the following writes 
+Assuming the above is stored in a `wf.yml` file, the following writes
 to the current working directory:
 
 ```bash
@@ -131,8 +131,8 @@ cd /tmp
 popper run -f /path/to/wf.yml
 ```
 
-In the above, `/tmp/myfile` is created. If we provide a value for 
-`-w`, the workspace path changes and thus the file is written to that 
+In the above, `/tmp/myfile` is created. If we provide a value for
+`-w`, the workspace path changes and thus the file is written to that
 location:
 
 ```bash
@@ -140,7 +140,7 @@ cd /tmp
 popper run -f /path/to/wf.yml -w /path/to
 ```
 
-The above writes the `/path/to/myfile`. And, for completeness, the 
+The above writes the `/path/to/myfile`. And, for completeness, the
 above is equivalent to:
 
 ```bash
@@ -150,16 +150,16 @@ popper run -f wf.yml
 
 ### Filesystem namespaces and persistence
 
-As mentioned previously, for every step Popper bind-mounts (shares) a 
-folder from the host (the workspace) into the `/workspace` folder in 
-the container. Anything written to this folder persists. Conversely, 
-anything that is NOT written in this folder will not persist after the 
+As mentioned previously, for every step Popper bind-mounts (shares) a
+folder from the host (the workspace) into the `/workspace` folder in
+the container. Anything written to this folder persists. Conversely,
+anything that is NOT written in this folder will not persist after the
 workflow finishes, and the associated containers get destroyed.
 
 ### Environment variables
 
-A step can define, read, and modify environment variables. A step 
-defines environment variables using the `env` attribute. For example, 
+A step can define, read, and modify environment variables. A step
+defines environment variables using the `env` attribute. For example,
 you could set the variables `FIRST`, `MIDDLE`, and `LAST` using this:
 
 ```yaml
@@ -173,22 +173,22 @@ steps:
     LAST: "Doe"
 ```
 
-When the above step executes, Popper makes these variables available 
+When the above step executes, Popper makes these variables available
 to the container and thus the above prints to the terminal:
 
 ```
 my name is: Jane Charlotte Doe
 ```
 
-Note that these variables are only visible to the step defining them 
-and any modifications made by the code executed within the step are 
-not persisted between steps (i.e. other steps do not see these 
+Note that these variables are only visible to the step defining them
+and any modifications made by the code executed within the step are
+not persisted between steps (i.e. other steps do not see these
 modifications).
 
 ### Exit codes and statuses
 
-Exit codes are used to communicate about a step\'s status. Popper uses 
-the exit code to set the workflow execution status, which can be 
+Exit codes are used to communicate about a step\'s status. Popper uses
+the exit code to set the workflow execution status, which can be
 `success`, `neutral`, or `failure`:
 
 | Exit code | Status    | Description |
@@ -199,27 +199,27 @@ the exit code to set the workflow execution status, which can be
 
 ## Container Engines
 
-By default, Popper workflows run in Docker on the machine where 
-`popper run` is being executed (i.e. the host machine). This section 
-describes how to execute in other container engines. See [next 
-section](#resource-managers) for information on how to run workflows 
+By default, Popper workflows run in Docker on the machine where
+`popper run` is being executed (i.e. the host machine). This section
+describes how to execute in other container engines. See [next
+section](#resource-managers) for information on how to run workflows
 on resource managers  such as SLURM and Kubernetes.
 
-To run workflows on other container engines, an `--engine <engine>` 
-flag for the `popper run` command can be given, where `<engine>` is 
-one of the supported ones. When no value for this flag is given, 
-Popper executes workflows in Docker. Below we briefly describe each 
-container engine supported, and lastly describe how to pass 
+To run workflows on other container engines, an `--engine <engine>`
+flag for the `popper run` command can be given, where `<engine>` is
+one of the supported ones. When no value for this flag is given,
+Popper executes workflows in Docker. Below we briefly describe each
+container engine supported, and lastly describe how to pass
 engine-specific configuration options via the `--conf` flag.
 
 ### Docker
 
-Docker is the default engine used by the `popper run`. All the 
+Docker is the default engine used by the `popper run`. All the
 container configuration for the docker engine is supported by Popper.
 
 ### Singularity
 
-Popper can execute a workflow in systems where Singularity 3.2+ is 
+Popper can execute a workflow in systems where Singularity 3.2+ is
 available. To execute a workflow in Singularity containers:
 
 ```bash
@@ -233,11 +233,11 @@ popper run --engine singularity
 
 ### Vagrant
 
-While technically not a container engine, executing workflows inside a 
-VM allows users to run workflows in machines where a container engine 
-is not available. In this scenario, Popper uses [Vagrant][vagrant] to 
-spawn a VM provisioned with Docker. It then executes workflows by 
-communicating with the Docker daemon that runs inside the VM. To 
+While technically not a container engine, executing workflows inside a
+VM allows users to run workflows in machines where a container engine
+is not available. In this scenario, Popper uses [Vagrant][vagrant] to
+spawn a VM provisioned with Docker. It then executes workflows by
+communicating with the Docker daemon that runs inside the VM. To
 execute a workflow in Vagrant:
 
 ```bash
@@ -248,17 +248,17 @@ popper run --engine vagrant
 
 #### Limitations
 
-Only one workflow can be executed at the time in Vagrant runtime, 
-since popper assumes that there is only one VM running at any given 
+Only one workflow can be executed at the time in Vagrant runtime,
+since popper assumes that there is only one VM running at any given
 point in time.
 
 ### Host
 
-There are situations where a container runtime is not available and 
-cannot be installed. In these cases, a step can be executed directly 
-on the host, that is, on the same environment where the `popper` 
-command is running. This is done by making use of the special `sh` 
-value for the `uses` attribute. This value instructs Popper to execute 
+There are situations where a container runtime is not available and
+cannot be installed. In these cases, a step can be executed directly
+on the host, that is, on the same environment where the `popper`
+command is running. This is done by making use of the special `sh`
+value for the `uses` attribute. This value instructs Popper to execute
 the command or script given in the `runs` attribute. For example:
 
 ```yaml
@@ -272,10 +272,10 @@ steps:
   args: ["some", "args", "to", "the", "script"]
 ```
 
-In the first step above, the `ls -la` command is executed on the 
-workspace folder (see ["The workspace"](#the-workspace) section). The 
-second one shows how to execute a script. Note that the command or 
-script specified in the `runs` attribute are NOT executed in a shell. 
+In the first step above, the `ls -la` command is executed on the
+workspace folder (see ["The workspace"](#the-workspace) section). The
+second one shows how to execute a script. Note that the command or
+script specified in the `runs` attribute are NOT executed in a shell.
 If you need a shell, you have to explicitly invoke one, for example:
 
 ```yaml
@@ -285,15 +285,15 @@ steps:
   runs: [bash, -c, 'sleep 10 && true && exit 0']
 ```
 
-The obvious downside of running a step on the host is that, depending 
+The obvious downside of running a step on the host is that, depending
 on the command being executed, the workflow might not be portable.
 
 ### Custom engine configuration
 
-Other than bind-mounting the `/workspace` folder, Popper runs 
-containers with any default configuration provided by the underlying 
-engine. However, a `--conf` flag is provided by the `popper run` 
-command to specify custom options for the underlying engine in 
+Other than bind-mounting the `/workspace` folder, Popper runs
+containers with any default configuration provided by the underlying
+engine. However, a `--conf` flag is provided by the `popper run`
+command to specify custom options for the underlying engine in
 question (see [here][engconf] for more).
 
 [engconf]: /cli_features#customizing-container-engine-behavior
@@ -301,14 +301,14 @@ question (see [here][engconf] for more).
 ## Resource Managers
 
 Popper can execute steps in a workflow through other resource managers
-like SLURM besides the host machine. The resource manager can be specified 
+like SLURM besides the host machine. The resource manager can be specified
 either through the `--resource-manager/-r` option or through the config file.
-If neither of them are provided, the steps are run in the host machine 
-by default. 
+If neither of them are provided, the steps are run in the host machine
+by default.
 
 ### SLURM
 
-Popper workflows can run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments) 
+Popper workflows can run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments)
 using [Slurm](https://slurm.schedmd.com/overview.html) as the underlying resource manager to distribute the execution of a step to
 several nodes. You can get started with running Popper workflows through Slurm by following the example below.
 
@@ -359,6 +359,58 @@ popper run -f sample.yml -c config.yml
 
 This runs the step `one` locally in the host and step `two` through slurm on 2 nodes.
 
+### Kubernetes
+
+Popper can be run on a cluster of multiple containers using Kubernetes as the fundamental resource manager to orchestrate the execution of a step to several nodes.
+You can get started with running Popper workflows through K8s(another way to represent Kubernetes) by following the example below.
+
+Let's consider a workflow `sample.yml` like the one shown below.
+```yaml
+version: '1'
+steps:
+- id: one
+  uses: docker://alpine:3.9
+  args: echo hello-world
+
+- id: two
+  uses: popperized/bin/sh@master
+  args: ls -l
+```
+
+To run all the steps of the workflow through slurm resource manager,
+use the `--resource-manager` or `-r` option of the `popper run` subcommand to specify the resource manager.
+
+```bash
+popper run -f sample.yml -r kubernetes
+```
+
+To have more finer control on which steps to run through slurm resource manager,
+the specifications can be provided through the config file as shown below.
+
+We create a config file called `config.yml` with the following contents.
+
+```yaml
+engine:
+  name: docker
+  options:
+    privileged: True
+    hostname: example.local
+
+resource_manager:
+  name: kubernetes
+  options:
+    two:
+      nodes: 2
+```
+
+Now, we execute `popper run` with this config file as follows:
+
+```bash
+popper run -f sample.yml -c config.yml
+```
+
+This runs the step `one` locally in the host and step `two` through kubernetes on 2 nodes.
+
 #### Host
 
 Popper executes the workflows by default using the `host` machine as the resource manager. So, when no resource manager is provided like the example below, the workflow runs on the local machine.
@@ -369,10 +421,3 @@ popper run -f sample.yml
 
 The above assumes `docker` as the container engine and `host` as the resource manager to be
 used.
-
-### KUBERNETES
-
-Popper can be run on a cluster of multiple containers using Kubernetes as the fundamental resource manager to orchestrate the execution of a step to several nodes. 
-You can get started with running Popper workflows through K8s(another way to represent Kubernetes) by following the example below.
-
-Let's consider a workflow `sample.yml` like the one shown below.
