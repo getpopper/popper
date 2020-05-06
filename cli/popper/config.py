@@ -21,10 +21,21 @@ class PopperConfig(object):
         self.skip_pull = skip_pull
         self.skip_clone = skip_clone
 
-        if os.path.isdir(self.workspace_dir):
-            self.repo = scm.new_repo(self.workspace_dir)
+        # attempt to create a git.Repo. If folder doesn't exist, we get None
+        self.repo = scm.new_repo(self.workspace_dir)
+
+        if self.repo:
+            sha = self.repo.head.object.hexsha
+            self.git_commit = self.repo.git.rev_parse(sha)
+            self.git_sha_short = self.repo.git.rev_parse(sha, short=7)
+            if self.repo.head.is_detached:
+                self.git_branch = self.git_sha_short
+            else:
+                self.git_branch = self.repo.active_branch.name
         else:
-            self.repo = None
+            self.git_commit = 'na'
+            self.git_sha_short = 'na'
+            self.git_branch = 'na'
 
         wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
         self.wid = wid

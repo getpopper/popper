@@ -3,11 +3,13 @@ import unittest
 import shutil
 
 from unittest.mock import patch
+
+from popper.cli import log
 from popper.config import PopperConfig
 from popper.parser import YMLWorkflow
 from popper.runner import WorkflowRunner, StepRunner
 
-from popper.cli import log
+from .test_common import PopperTest
 
 
 class TestWorkflowRunner(unittest.TestCase):
@@ -85,35 +87,54 @@ class TestWorkflowRunner(unittest.TestCase):
 
     def test_steprunner_factory(self):
         with WorkflowRunner(PopperConfig()) as r:
-            self.assertEqual(r._step_runner('host', None).__class__.__name__,
-                             'HostRunner')
-            self.assertEqual(r._step_runner('docker', None).__class__.__name__,
-                             'DockerRunner')
+            self.assertEqual('HostRunner',
+                             r._step_runner('host', None).__class__.__name__)
+            self.assertEqual('DockerRunner',
+                             r._step_runner('docker', None).__class__.__name__)
 
     def test_setup_base_cache(self):
         cache_dir = WorkflowRunner._setup_base_cache()
         try:
-            self.assertEqual(cache_dir, os.environ['XDG_CACHE_HOME'])
+            self.assertEqual(os.environ['XDG_CACHE_HOME'], cache_dir)
         except KeyError:
             self.assertEqual(
-                cache_dir,
                 os.path.join(
                     os.environ['HOME'],
-                    '.cache/popper'))
+                    '.cache/popper'),
+                cache_dir)
 
         os.environ['POPPER_CACHE_DIR'] = '/tmp/popper'
         cache_dir = WorkflowRunner._setup_base_cache()
-        self.assertEqual(cache_dir, '/tmp/popper')
+        self.assertEqual('/tmp/popper', cache_dir)
         os.environ.pop('POPPER_CACHE_DIR')
 
 
-class TestStepRunner(unittest.TestCase):
+class TestStepRunner(PopperTest):
     def setUp(self):
         log.setLevel('CRITICAL')
 
-    def test_prepare_environment(self):
-        step = {'name': 'a', 'env': {'FOO': 'BAR'}, 'secrets': ['A']}
-        os.environ['A'] = 'BC'
-        env = StepRunner.prepare_environment(step, {'another': 'b'})
-        self.assertDictEqual(env, {'FOO': 'BAR', 'A': 'BC', 'another': 'b'})
-        os.environ.pop('A')
+    def test_prepare_environment_without_git(self):
+        with StepRunner(PopperConfig(workspace_dir='/tmp/foo')) as r:
+            step = {'name': 'a', 'env': {'FOO': 'BAR'}, 'secrets': ['A']}
+            os.environ['A'] = 'BC'
+            env = r._prepare_environment(step, {'other': 'b'})
+            self.assertDictEqual({'FOO': 'BAR', 'A': 'BC', 'other': 'b'}, env)
+            os.environ.pop('A')
+
+    def test_prepare_environment_with_git(self):
+        repo = self.mk_repo()
+        conf = PopperConfig(workspace_dir=repo.working_dir)
+        with StepRunner(conf) as r:
+            step = {'name': 'a', 'env': {'FOO': 'BAR'}, 'secrets': ['A']}
+            os.environ['A'] = 'BC'
+            env = r._prepare_environment(step, {'other': 'b'})
+            expected = {
+                'FOO': 'BAR',
+                'A': 'BC',
+                'other': 'b',
+                'GIT_COMMIT': conf.git_commit,
+                'GIT_BRANCH': conf.git_branch,
+                'GIT_SHA_SHORT': conf.git_sha_short,
+            }
+            self.assertDictEqual(expected, env)
+            os.environ.pop('A')

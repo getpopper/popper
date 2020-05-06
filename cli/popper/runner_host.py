@@ -34,7 +34,7 @@ class HostRunner(StepRunner):
         pass
 
     def run(self, step):
-        step_env = StepRunner.prepare_environment(step, os.environ)
+        step_env = self._prepare_environment(step, os.environ)
 
         cmd = step.get('runs', [])
         if not cmd:
@@ -173,7 +173,7 @@ class DockerRunner(StepRunner):
             build = False
         elif './' in step['uses']:
             img = f'{pu.sanitized_name(step["name"], "step")}'
-            tag = f'{self._config.workspace_sha}'
+            tag = f'{self._config.git_sha_short}'
             build_ctx_path = os.path.join(self._config.workspace_dir,
                                           step['uses'])
         else:
@@ -225,7 +225,7 @@ class DockerRunner(StepRunner):
                 '/var/run/docker.sock:/var/run/docker.sock'
             ],
             "working_dir": '/workspace',
-            "environment": StepRunner.prepare_environment(step),
+            "environment": self._prepare_environment(step),
             "entrypoint": step.get('runs', None),
             "detach": True
         }
@@ -418,7 +418,7 @@ class SingularityRunner(StepRunner):
                     pull_folder=self._singularity_cache)
 
     def _singularity_start(self, step, cid):
-        env = StepRunner.prepare_environment(step)
+        env = self._prepare_environment(step)
 
         # set the environment variables
         for k, v in env.items():

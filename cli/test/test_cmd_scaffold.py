@@ -39,8 +39,7 @@ class TestScaffold(PopperTest):
                         'needs': ['1']}})
 
         with self.assertLogs('popper') as test_logger:
-
-            result = runner.invoke(cmd_run.cli, ['-f', file_loc])
+            result = runner.invoke(cmd_run.cli, ['-f', file_loc, '-w', wf_dir])
             self.assertEqual(result.exit_code, 0)
             self.assertTrue(len(test_logger.output))
             self.assertTrue(

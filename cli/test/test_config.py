@@ -1,11 +1,12 @@
-import unittest
 import os
 
 from popper.config import PopperConfig
 from popper.cli import log
 
+from .test_common import PopperTest
 
-class TestPopperConfig(unittest.TestCase):
+
+class TestPopperConfig(PopperTest):
     default_args = {
         'skip_clone': False,
         'engine_name': 'docker',
@@ -49,6 +50,20 @@ class TestPopperConfig(unittest.TestCase):
 
         self.assertEqual(expected,
                          TestPopperConfig.extract_dict(expected, actual))
+
+    def test_config_without_git_repo(self):
+        conf = PopperConfig(workspace_dir='/tmp/foo')
+        self.assertEqual('na', conf.git_commit)
+        self.assertEqual('na', conf.git_branch)
+        self.assertEqual('na', conf.git_sha_short)
+
+    def test_config_with_git_repo(self):
+        r = self.mk_repo()
+        conf = PopperConfig(workspace_dir=r.working_dir)
+        sha = r.head.object.hexsha
+        self.assertEqual(r.git.rev_parse(sha), conf.git_commit)
+        self.assertEqual(r.git.rev_parse(sha, short=7), conf.git_sha_short)
+        self.assertEqual(r.active_branch.name, conf.git_branch)
 
     def test_config_from_file(self):
         config = {
