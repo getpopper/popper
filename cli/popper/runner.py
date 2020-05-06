@@ -22,11 +22,10 @@ class WorkflowRunner(object):
 
     def _load_resman_module(self):
         """dynamically load resource manager module"""
-        resman_mod_name = f'popper.runner_{self._config.resman_name}'
+        resman_mod_name = f"popper.runner_{self._config.resman_name}"
         resman_spec = importlib.util.find_spec(resman_mod_name)
         if not resman_spec:
-            raise ValueError(
-                f'Invalid resource manager: {self._config.resman_name}')
+            raise ValueError(f"Invalid resource manager: {self._config.resman_name}")
         self._resman_mod = importlib.import_module(resman_mod_name)
         self._is_resman_module_loaded = True
 
@@ -52,7 +51,7 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        log.info(f'Got {sig} signal. Stopping running steps.')
+        log.info(f"Got {sig} signal. Stopping running steps.")
         for _, runner in WorkflowRunner.__runners.items():
             runner.stop_running_tasks()
         sys.exit(0)
@@ -76,13 +75,12 @@ class WorkflowRunner(object):
             return
 
         for _, a in wf.steps.items():
-            for s in a.get('secrets', []):
+            for s in a.get("secrets", []):
                 if s not in os.environ:
-                    if os.environ.get('CI', '') == 'true':
-                        log.fail(f'Secret {s} not defined')
+                    if os.environ.get("CI", "") == "true":
+                        log.fail(f"Secret {s} not defined")
                     else:
-                        val = getpass.getpass(
-                            f'Enter the value for {s} : ')
+                        val = getpass.getpass(f"Enter the value for {s} : ")
                         os.environ[s] = val
 
     @staticmethod
@@ -92,12 +90,12 @@ class WorkflowRunner(object):
         Returns:
           str: The path to the base cache directory.
         """
-        if os.environ.get('POPPER_CACHE_DIR', None):
-            base_cache = os.environ['POPPER_CACHE_DIR']
+        if os.environ.get("POPPER_CACHE_DIR", None):
+            base_cache = os.environ["POPPER_CACHE_DIR"]
         else:
-            cache_dir_default = os.path.join(os.environ['HOME'], '.cache')
-            cache_dir = os.environ.get('XDG_CACHE_HOME', cache_dir_default)
-            base_cache = os.path.join(cache_dir, 'popper')
+            cache_dir_default = os.path.join(os.environ["HOME"], ".cache")
+            cache_dir = os.environ.get("XDG_CACHE_HOME", cache_dir_default)
+            base_cache = os.path.join(cache_dir, "popper")
 
         os.makedirs(base_cache, exist_ok=True)
 
@@ -115,28 +113,28 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        repo_cache = os.path.join(WorkflowRunner._setup_base_cache(),
-                                  self._config.wid)
+        repo_cache = os.path.join(WorkflowRunner._setup_base_cache(), self._config.wid)
 
         cloned = set()
         infoed = False
 
         for _, a in wf.steps.items():
-            uses = a['uses']
-            if ('docker://' in uses
-                or 'shub://' in uses
-                or 'library://' in uses
-                or './' in uses
-                    or uses == 'sh'):
+            uses = a["uses"]
+            if (
+                "docker://" in uses
+                or "shub://" in uses
+                or "library://" in uses
+                or "./" in uses
+                or uses == "sh"
+            ):
                 continue
 
-            url, service, user, repo, step_dir, version = scm.parse(
-                a['uses'])
+            url, service, user, repo, step_dir, version = scm.parse(a["uses"])
 
             repo_dir = os.path.join(repo_cache, service, user, repo)
 
-            a['repo_dir'] = repo_dir
-            a['step_dir'] = step_dir
+            a["repo_dir"] = repo_dir
+            a["step_dir"] = step_dir
 
             if self._config.dry_run:
                 continue
@@ -147,15 +145,15 @@ class WorkflowRunner(object):
                 continue
 
             if not infoed:
-                log.info('[popper] Cloning step repositories')
+                log.info("[popper] Cloning step repositories")
                 infoed = True
 
-            if f'{user}/{repo}' in cloned:
+            if f"{user}/{repo}" in cloned:
                 continue
 
-            log.info(f'[popper] - {url}/{user}/{repo}@{version}')
+            log.info(f"[popper] - {url}/{user}/{repo}@{version}")
             scm.clone(url, user, repo, repo_dir, version)
-            cloned.add(f'{user}/{repo}')
+            cloned.add(f"{user}/{repo}")
 
     def run(self, wf):
         """Run the given workflow.
@@ -170,9 +168,9 @@ class WorkflowRunner(object):
         self._clone_repos(wf)
 
         for _, step in wf.steps.items():
-            log.debug(f'Executing step:\n{pu.prettystr(step)}')
-            if step['uses'] == 'sh':
-                e = self._step_runner('host', step).run(step)
+            log.debug(f"Executing step:\n{pu.prettystr(step)}")
+            if step["uses"] == "sh":
+                e = self._step_runner("host", step).run(step)
             else:
                 e = self._step_runner(self._config.engine_name, step).run(step)
 
@@ -194,10 +192,10 @@ class WorkflowRunner(object):
         runner = WorkflowRunner.__runners.get(engine_name, None)
 
         if not runner:
-            engine_cls_name = f'{engine_name.capitalize()}Runner'
+            engine_cls_name = f"{engine_name.capitalize()}Runner"
             engine_cls = getattr(self._resman_mod, engine_cls_name, None)
             if not engine_cls:
-                raise ValueError(f'Cannot find class for {engine_name}')
+                raise ValueError(f"Cannot find class for {engine_name}")
             runner = engine_cls(config=self._config)
             WorkflowRunner.__runners[engine_name] = runner
 
@@ -232,8 +230,8 @@ class StepRunner(object):
         Returns:
           dict: key-value map of environment variables.
         """
-        step_env = step.get('env', {}).copy()
-        for s in step.get('secrets', []):
+        step_env = step.get("env", {}).copy()
+        for s in step.get("secrets", []):
             step_env.update({s: os.environ[s]})
         step_env.update(env)
         return step_env

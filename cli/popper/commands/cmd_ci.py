@@ -4,11 +4,9 @@ import os
 from popper.cli import pass_context, log
 
 ci_files = {
-
     # ##########################################################3
-
-    'travis': {
-        './.travis.yml': """
+    "travis": {
+        "./.travis.yml": """
 ---
 dist: xenial
 language: python
@@ -21,11 +19,9 @@ install:
 script: popper run -f {}
 """
     },
-
     # ##########################################################3
-
-    'circle': {
-        './.circleci/config.yml': """
+    "circle": {
+        "./.circleci/config.yml": """
 ---
 version: 2
 jobs:
@@ -41,11 +37,9 @@ jobs:
         popper run -f {}
 """
     },
-
     # ##########################################################3
-
-    'jenkins': {
-        './Jenkinsfile': """
+    "jenkins": {
+        "./Jenkinsfile": """
 ---
 stage ('Popper') {{ node {{
   sh "git clone https://github.com/systemslab/popper /tmp/popper"
@@ -55,11 +49,9 @@ stage ('Popper') {{ node {{
 }}}}
 """
     },
-
     # ##########################################################3
-
-    'gitlab': {
-        '.gitlab-ci.yml': """
+    "gitlab": {
+        ".gitlab-ci.yml": """
 ---
 image: docker:stable
 
@@ -81,11 +73,9 @@ popper:
   script: popper run -f {}
 """
     },
-
     # ##########################################################3
-
-    'brigade': {
-        'brigade.js': """
+    "brigade": {
+        "brigade.js": """
 const { events, Job } = require("brigadier")
 events.on("push", () => {
     var popper = new Job("popper", "python:3.7-slim-stretch")
@@ -100,33 +90,32 @@ events.on("push", () => {
     popper.run()
 })
 """
-    }
+    },
 }
 
 
-@click.command('ci', short_help='Generate CI service configuration files.')
+@click.command("ci", short_help="Generate CI service configuration files.")
 @click.argument(
-    'service',
-    type=click.Choice(['travis', 'circle', 'jenkins', 'gitlab', 'brigade']),
-    required=True
+    "service",
+    type=click.Choice(["travis", "circle", "jenkins", "gitlab", "brigade"]),
+    required=True,
 )
-@click.option(
-    '-f', '--wfile', help='Specify workflow to run in CI.', required=True
-)
+@click.option("-f", "--wfile", help="Specify workflow to run in CI.", required=True)
 @pass_context
 def cli(ctx, service, wfile):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
-    if not os.path.exists('.git'):
+    if not os.path.exists(".git"):
         log.fail(
-            'This command needs to be executed on the root of your '
-            'Git project folder (where the .git/ folder is located).')
+            "This command needs to be executed on the root of your "
+            "Git project folder (where the .git/ folder is located)."
+        )
 
     for ci_file, ci_file_content in ci_files[service].items():
         ci_file = os.path.join(os.getcwd(), ci_file)
         os.makedirs(os.path.dirname(ci_file), exist_ok=True)
-        with open(ci_file, 'w') as f:
+        with open(ci_file, "w") as f:
             f.write(ci_file_content.format(wfile))
 
-    log.info(f'Wrote {service} configuration successfully.')
+    log.info(f"Wrote {service} configuration successfully.")

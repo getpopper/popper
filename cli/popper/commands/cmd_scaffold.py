@@ -5,13 +5,13 @@ import click
 from popper.cli import pass_context, log
 
 
-@click.command('scaffold', short_help='Generate a minimal workflow.')
+@click.command("scaffold", short_help="Generate a minimal workflow.")
 @click.option(
-    '-f',
-    '--wfile',
-    help='Name of file where to write the generated workflow.',
+    "-f",
+    "--wfile",
+    help="Name of file where to write the generated workflow.",
     required=False,
-    default='wf.yml'
+    default="wf.yml",
 )
 @pass_context
 def cli(ctx, wfile):
@@ -26,9 +26,9 @@ def cli(ctx, wfile):
 """
 
     if os.path.exists(wfile):
-        log.fail(f'File {wfile} already exists')
+        log.fail(f"File {wfile} already exists")
 
-    with open(wfile, 'w') as f:
+    with open(wfile, "w") as f:
         f.write(main_workflow_content)
 
-    log.info('Successfully generated a workflow scaffold.')
+    log.info("Successfully generated a workflow scaffold.")
