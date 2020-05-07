@@ -156,3 +156,45 @@ def parse(url):
     log.debug(f"  version: {version}")
 
     return service_url, service, user, repo, step_dir, version
+
+
+def get_sha(repo, short=None):
+    """Returns the commit id for the currently checked out version on the
+    given repository object. If short is given, it is interpreted as the number
+    of characters from the SHA that get returned. E.g. short=7 returns the
+    first 7 characters, otherwise it returns the entire SHA1 string.
+    """
+    if not repo:
+        return None
+
+    if short:
+        return repo.git.rev_parse(repo.head.object.hexsha, short=short)
+
+    return repo.git.rev_parse(repo.head.object.hexsha)
+
+
+def get_branch(repo):
+    """Get name of branch. If the repo is in detached head state, it looks for
+    for environment variables commonly used in CI services: TRAVIS_BRANCH,
+    GIT_BRANCH (Jenkins), CIRCLE_BRANCH and CI_COMMIT_REF_NAME (Gitlab)
+    """
+    if not repo:
+        return None
+
+    if not repo.head.is_detached:
+        return repo.active_branch.name
+
+    branch = os.environ.get('TRAVIS_BRANCH')
+    if branch:
+        return branch
+    branch = os.environ.get('GIT_BRANCH')
+    if branch:
+        return branch
+    branch = os.environ.get('CIRCLE_BRANCH')
+    if branch:
+        return branch
+    branch = os.environ.get('CI_COMMIT_REF_NAME')
+    if branch:
+        return branch
+
+    return get_sha(repo)
