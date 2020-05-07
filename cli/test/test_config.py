@@ -53,9 +53,9 @@ class TestPopperConfig(PopperTest):
 
     def test_config_without_git_repo(self):
         conf = PopperConfig(workspace_dir='/tmp/foo')
-        self.assertEqual('na', conf.git_commit)
-        self.assertEqual('na', conf.git_branch)
-        self.assertEqual('na', conf.git_sha_short)
+        self.assertIsNone(conf.git_commit)
+        self.assertIsNone(conf.git_branch)
+        self.assertIsNone(conf.git_sha_short)
 
     def test_config_with_git_repo(self):
         r = self.mk_repo()
