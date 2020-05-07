@@ -22,7 +22,7 @@ setup(
         "python-vagrant==0.5.15",
         "spython==0.0.79",
     ],
-    extras_require={"dev": ["testfixtures==6.14.0","black==19.10b0",]},
+    extras_require={"dev": ["testfixtures==6.14.0", "black==19.10b0",]},
     entry_points="""
         [console_scripts]
         popper=popper.cli:cli
