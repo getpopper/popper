@@ -21,22 +21,16 @@ class PopperConfig(object):
         self.skip_pull = skip_pull
         self.skip_clone = skip_clone
 
-        # attempt to create a git.Repo. If folder doesn't exist, we get None
+        # if no git repository exists in workspace_dir or its parents, the repo
+        # variable is None and all git_* variables are assigned to 'na'
         self.repo = scm.new_repo(self.workspace_dir)
+        self.git_commit = scm.get_sha(self.repo)
+        self.git_sha_short = scm.get_sha(self.repo, short=7)
+        self.git_branch = scm.get_branch(self.repo)
 
-        if self.repo:
-            sha = self.repo.head.object.hexsha
-            self.git_commit = self.repo.git.rev_parse(sha)
-            self.git_sha_short = self.repo.git.rev_parse(sha, short=7)
-            if self.repo.head.is_detached:
-                self.git_branch = self.git_sha_short
-            else:
-                self.git_branch = self.repo.active_branch.name
-        else:
-            self.git_commit = 'na'
-            self.git_sha_short = 'na'
-            self.git_branch = 'na'
-
+        # wid is used to associate a unique id to this workspace. This is then
+        # used by runners to name resources in a way that there is no name
+        # clash between concurrent workflows being executed
         wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
         self.wid = wid
 
