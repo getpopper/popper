@@ -164,7 +164,7 @@ def get_sha(repo, short=None):
     first 7 characters, otherwise it returns the entire SHA1 string.
     """
     if not repo:
-        return 'na'
+        return None
 
     if short:
         return repo.git.rev_parse(repo.head.object.hexsha, short=short)
@@ -178,7 +178,7 @@ def get_branch(repo):
     GIT_BRANCH (Jenkins), CIRCLE_BRANCH and CI_COMMIT_REF_NAME (Gitlab)
     """
     if not repo:
-        return 'na'
+        return None
 
     if not repo.head.is_detached:
         return repo.active_branch.name
@@ -195,3 +195,5 @@ def get_branch(repo):
     branch = os.environ.get('CI_COMMIT_REF_NAME')
     if branch:
         return branch
+
+    return get_sha(repo)

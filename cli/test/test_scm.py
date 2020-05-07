@@ -27,6 +27,7 @@ class TestScm(PopperTest):
 
     def test_get_branch_in_detached_head_state(self):
         repo = self.mk_repo()
+
         repo.git.checkout('HEAD~1')
 
         os.environ['TRAVIS_BRANCH'] = 'travis'
@@ -44,6 +45,13 @@ class TestScm(PopperTest):
         os.environ['CI_COMMIT_REF_NAME'] = 'gitlab'
         self.assertEqual('gitlab', scm.get_branch(repo))
         os.environ.pop('CI_COMMIT_REF_NAME')
+
+        self.assertEqual(scm.get_sha(repo), scm.get_branch(repo))
+
+        # None given as arg
+        self.assertIsNone(scm.get_sha(None))
+        self.assertIsNone(scm.get_sha(None, short=8))
+        self.assertIsNone(scm.get_branch(None))
 
     def test_clone(self):
         tempdir = tempfile.mkdtemp()
