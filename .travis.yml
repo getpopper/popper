@@ -14,7 +14,7 @@ before_install:
 - pip install coverage
 install:
 - pip install cli/[dev]
-- black --check .
+- pytest --black
 script:
 - coverage run -m unittest cli/test/test_*
 - ci/run_tests.sh
