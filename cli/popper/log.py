@@ -3,7 +3,7 @@ import sys
 import os
 
 STEP_INFO = 15
-logging.addLevelName(STEP_INFO, 'STEP_INFO')
+logging.addLevelName(STEP_INFO, "STEP_INFO")
 
 msg_prefix = ""
 
@@ -27,32 +27,33 @@ class PopperFormatter(logging.Formatter):
     In order of Level. The format of the logs is given in log_format dict.
     The log colors used are based on ANSI Escape Codes
     """
+
     # Log Colors
-    BOLD_CYAN = '[01;36m'
-    RESET = '[0m'
-    BOLD_YELLOW = '[01;33m'
-    BOLD_RED = '[01;31m'
+    BOLD_CYAN = "[01;36m"
+    RESET = "[0m"
+    BOLD_YELLOW = "[01;33m"
+    BOLD_RED = "[01;31m"
 
     log_format = {
-        'DEBUG': f'{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}',
-        'STEP_INFO': '%(msg)s',
-        'INFO': '%(msg)s',
-        'WARNING': f'{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}',
-        'ERROR': f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}',
-        'CRITICAL': f'{BOLD_RED}%(levelname)s: %(msg)s{RESET}'
+        "DEBUG": f"{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}",
+        "STEP_INFO": "%(msg)s",
+        "INFO": "%(msg)s",
+        "WARNING": f"{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}",
+        "ERROR": f"{BOLD_RED}%(levelname)s: %(msg)s{RESET}",
+        "CRITICAL": f"{BOLD_RED}%(levelname)s: %(msg)s{RESET}",
     }
 
     log_format_no_colors = {
-        'DEBUG': '%(levelname)s: %(msg)s ',
-        'STEP_INFO': '%(msg)s',
-        'INFO': '%(msg)s',
-        'WARNING': '%(levelname)s: %(msg)s',
-        'ERROR': '%(levelname)s: %(msg)s',
-        'CRITICAL': '%(levelname)s: %(msg)s'
+        "DEBUG": "%(levelname)s: %(msg)s ",
+        "STEP_INFO": "%(msg)s",
+        "INFO": "%(msg)s",
+        "WARNING": "%(levelname)s: %(msg)s",
+        "ERROR": "%(levelname)s: %(msg)s",
+        "CRITICAL": "%(levelname)s: %(msg)s",
     }
 
     def __init__(self, colors=True):
-        super(PopperFormatter, self).__init__(fmt='%(levelname)s: %(msg)s')
+        super(PopperFormatter, self).__init__(fmt="%(levelname)s: %(msg)s")
         self.log_fmt = self.log_format if colors else self.log_format_no_colors
 
     def format(self, record):
@@ -71,14 +72,14 @@ class PopperFormatter(logging.Formatter):
             self._fmt = fmt
         else:
             self._style._fmt = fmt
-        result = f'{msg_prefix}{logging.Formatter.format(self, record)}'
+        result = f"{msg_prefix}{logging.Formatter.format(self, record)}"
         return result
 
 
 class PopperLogger(logging.Logger):
     """A Logger so that we can add popper fail and step_info log methods."""
 
-    def fail(self, msg='', *args, **kwargs):
+    def fail(self, msg="", *args, **kwargs):
         """Log a message with severity 'ERROR', and then exits.
 
         Args:
@@ -92,7 +93,7 @@ class PopperLogger(logging.Logger):
         super(PopperLogger, self).error(msg, *args, **kwargs)
         sys.exit(1)
 
-    def step_info(self, msg='', *args, **kwargs):
+    def step_info(self, msg="", *args, **kwargs):
         """Log a message with severity 'STEP_INFO'.
 
         Args:
@@ -122,11 +123,10 @@ class PopperLogger(logging.Logger):
         Returns:
           None
         """
-        super(PopperLogger, self).\
-            warning('error() has been replaced with fail()')
+        super(PopperLogger, self).warning("error() has been replaced with fail()")
         pass
 
-    def info(self, msg='', *args, **kwargs):
+    def info(self, msg="", *args, **kwargs):
         """Logs a message with severity 'INFO'.
 
         Args:
@@ -139,7 +139,7 @@ class PopperLogger(logging.Logger):
         """
         super(PopperLogger, self).info(msg, *args, **kwargs)
 
-    def debug(self, msg='', *args, **kwargs):
+    def debug(self, msg="", *args, **kwargs):
         """Logs a message with severity 'DEBUG'.
 
         Args:
@@ -152,7 +152,7 @@ class PopperLogger(logging.Logger):
         """
         super(PopperLogger, self).debug(msg, *args, **kwargs)
 
-    def warning(self, msg='', *args, **kwargs):
+    def warning(self, msg="", *args, **kwargs):
         """Logs a message with severity 'WARNING'.
 
         Args:
@@ -184,12 +184,12 @@ class LevelFilter(logging.Filter):
                 of the record.
         """
         if self.reject:
-            return (record.levelno not in self.passlevels)
+            return record.levelno not in self.passlevels
         else:
-            return (record.levelno in self.passlevels)
+            return record.levelno in self.passlevels
 
 
-def setup_logging(level='STEP_INFO'):
+def setup_logging(level="STEP_INFO"):
     """Setups logging facilities with custom Logger and Formatter.
 
     Args:
@@ -200,7 +200,7 @@ def setup_logging(level='STEP_INFO'):
       popper.log.PopperLogger: Custom log for that particular level.
     """
     logging.setLoggerClass(PopperLogger)
-    log = logging.getLogger('popper')
+    log = logging.getLogger("popper")
 
     formatter = PopperFormatter()
 
@@ -232,7 +232,7 @@ def add_log(log, logfile):
       None
     """
     dir = os.path.dirname(logfile)
-    if not os.path.exists(dir) and dir != '':
+    if not os.path.exists(dir) and dir != "":
         os.makedirs(dir)
     handler = logging.FileHandler(logfile)
     formatter = PopperFormatter(colors=False)
