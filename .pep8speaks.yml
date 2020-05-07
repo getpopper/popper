@@ -1,6 +1,6 @@
 scanner:
     diff_only: True
-    linter: black
+    linter: flake8
 
 black:
     max-line-length: 88  # Default is 79 in PEP 8
