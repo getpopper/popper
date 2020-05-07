@@ -308,11 +308,16 @@ class TestSlurmDockerRunner(unittest.TestCase):
             content = f.read()
             self.assertEqual(
                 content,
-                f"""#!/bin/bash
-docker rm -f popper_1_123abc || true
-docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/123abc/github.com/popperized/bin/sh
-docker create --name popper_1_123abc --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
-docker start --attach popper_1_123abc""",
+                f"#!/bin/bash"
+                f"\ndocker rm -f popper_1_123abc || true"
+                f"\ndocker build -t popperized/bin:master {os.environ['HOME']}/.cache/"
+                f"popper/123abc/github.com/popperized/bin/sh"
+                f"\ndocker create --name popper_1_123abc --workdir /workspace "
+                f"--entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var"
+                f"/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar "
+                f"--privileged --hostname popper.local --domainname www.example.org "
+                f"popperized/bin:master README.md"
+                f"\ndocker start --attach popper_1_123abc",
             )
 
         with WorkflowRunner(config) as r:
@@ -338,8 +343,8 @@ docker start --attach popper_1_123abc""",
                 f"\ndocker create --name popper_1_123abc --workdir /workspace "
                 f"--entrypoint ls -v /w:/workspace -v /var/run/docker.sock:/var"
                 f"/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar "
-                f"--privileged --hostname "
-                f"popper.local --domainname www.example.org popperized/bin:master"
+                f"--privileged --hostname popper.local --domainname www.example.org "
+                f"popperized/bin:master"
                 f"\ndocker start --attach popper_1_123abc",
             )
 
