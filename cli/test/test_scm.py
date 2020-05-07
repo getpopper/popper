@@ -25,6 +25,26 @@ class TestScm(PopperTest):
 
         self.assertEqual(scm.get_remote_url(None), '')
 
+    def test_get_branch_in_detached_head_state(self):
+        repo = self.mk_repo()
+        repo.git.checkout('HEAD~1')
+
+        os.environ['TRAVIS_BRANCH'] = 'travis'
+        self.assertEqual('travis', scm.get_branch(repo))
+        os.environ.pop('TRAVIS_BRANCH')
+
+        os.environ['GIT_BRANCH'] = 'jenkins'
+        self.assertEqual('jenkins', scm.get_branch(repo))
+        os.environ.pop('GIT_BRANCH')
+
+        os.environ['CIRCLE_BRANCH'] = 'circle'
+        self.assertEqual('circle', scm.get_branch(repo))
+        os.environ.pop('CIRCLE_BRANCH')
+
+        os.environ['CI_COMMIT_REF_NAME'] = 'gitlab'
+        self.assertEqual('gitlab', scm.get_branch(repo))
+        os.environ.pop('CI_COMMIT_REF_NAME')
+
     def test_clone(self):
         tempdir = tempfile.mkdtemp()
         tdir = os.path.join(tempdir, 'test_clone')

@@ -23,8 +23,15 @@ class PopperTest(unittest.TestCase):
         readme = os.path.join(tempdir, 'README.md')
         open(readme, 'w').close()
 
+        # create first commit
         repo.index.add([readme])
         repo.index.commit('first commit')
+
+        # create second commit
+        with open(readme, 'w') as f:
+            f.write('README content\n')
+        repo.index.add([readme])
+        repo.index.commit('second commit')
 
         # create a remote
         repo.create_remote('origin', url='https://github.com/my/repo')
