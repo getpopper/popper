@@ -456,7 +456,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
             self.assertEqual(
                 content,
                 f"#!/bin/bash"
-                f"singularity exec --userns --pwd /workspace --bind /w:/workspace "
+                f"\nsingularity exec --userns --pwd /workspace --bind /w:/workspace "
                 f"--bind /path/in/host:/path/in/container --hostname popper.local "
                 f"{os.environ['HOME']}/.cache/popper/singularity/123abc/"
                 f"popper_1_123abc.sif ls",
