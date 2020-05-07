@@ -21,7 +21,7 @@ setup(
         "pyyaml==5.3.1",
         "python-vagrant==0.5.15",
         "spython==0.0.79",
-        "black==19.10b0"
+        "black==19.10b0",
     ],
     extras_require={"dev": ["testfixtures"]},
     entry_points="""
