@@ -184,16 +184,16 @@ def get_branch(repo):
     if not repo.head.is_detached:
         return repo.active_branch.name
 
-    branch = os.environ.get('TRAVIS_BRANCH')
+    branch = os.environ.get("TRAVIS_BRANCH")
     if branch:
         return branch
-    branch = os.environ.get('GIT_BRANCH')
+    branch = os.environ.get("GIT_BRANCH")
     if branch:
         return branch
-    branch = os.environ.get('CIRCLE_BRANCH')
+    branch = os.environ.get("CIRCLE_BRANCH")
     if branch:
         return branch
-    branch = os.environ.get('CI_COMMIT_REF_NAME')
+    branch = os.environ.get("CI_COMMIT_REF_NAME")
     if branch:
         return branch
 

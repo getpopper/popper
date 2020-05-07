@@ -27,10 +27,10 @@ class PopperTest(unittest.TestCase):
         repo.index.commit("first commit")
 
         # create second commit
-        with open(readme, 'w') as f:
-            f.write('README content\n')
+        with open(readme, "w") as f:
+            f.write("README content\n")
         repo.index.add([readme])
-        repo.index.commit('second commit')
+        repo.index.commit("second commit")
 
         # create a remote
         repo.create_remote("origin", url="https://github.com/my/repo")

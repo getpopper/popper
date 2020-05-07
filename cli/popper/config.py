@@ -39,7 +39,7 @@ class PopperConfig(object):
         # wid is used to associate a unique id to this workspace. This is then
         # used by runners to name resources in a way that there is no name
         # clash between concurrent workflows being executed
-        wid = shake_256(self.workspace_dir.encode('utf-8')).hexdigest(4)
+        wid = shake_256(self.workspace_dir.encode("utf-8")).hexdigest(4)
         self.wid = wid
 
         from_file = self._load_config_from_file(config_file, engine_name, resman_name)

@@ -50,7 +50,7 @@ class TestPopperConfig(PopperTest):
         self.assertEqual(expected, TestPopperConfig.extract_dict(expected, actual))
 
     def test_config_without_git_repo(self):
-        conf = PopperConfig(workspace_dir='/tmp/foo')
+        conf = PopperConfig(workspace_dir="/tmp/foo")
         self.assertIsNone(conf.git_commit)
         self.assertIsNone(conf.git_branch)
         self.assertIsNone(conf.git_sha_short)
