@@ -565,7 +565,7 @@ class YMLWorkflow(Workflow):
 
                 if not dict_from_yaml:
                     log.fail(f'Workflow file {wfile} is empty.')
-           
+
             with open(wfile) as fp:
                 self.wf_list = yaml.safe_load(fp)['steps']
                 if not self.wf_list:
