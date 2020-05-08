@@ -12,14 +12,14 @@ from popper import __version__
 
 log = logging.setup_logging()
 popper_version = __version__
-cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__),
-                                          'commands'))
+cmd_folder = os.path.abspath(os.path.join(os.path.dirname(__file__), "commands"))
 
 
 class Context(object):
     """Context Class.For more details refer
     https://click.palletsprojects.com/en/7.x/commands/#custom-multi-commands .
     """
+
     pass
 
 
@@ -41,7 +41,7 @@ class PopperCLI(click.MultiCommand):
         """
         rv = []
         for filename in os.listdir(cmd_folder):
-            if filename.endswith('.py') and filename.startswith('cmd_'):
+            if filename.endswith(".py") and filename.startswith("cmd_"):
                 rv.append(filename[4:-3])
         rv.sort()
         return rv
@@ -60,21 +60,19 @@ class PopperCLI(click.MultiCommand):
         """
         try:
             if sys.version_info[0] == 2:
-                name = name.encode('ascii', 'replace')
-            mod = __import__('popper.commands.cmd_' + name,
-                             None, None, ['cli'])
+                name = name.encode("ascii", "replace")
+            mod = __import__("popper.commands.cmd_" + name, None, None, ["cli"])
         except ImportError as e:
             commands = self.list_commands(ctx)
             most_similar_commands = ", ".join(
-                difflib.get_close_matches(
-                    name, commands, 3, 0.3))
+                difflib.get_close_matches(name, commands, 3, 0.3)
+            )
             message = ""
             if len(most_similar_commands) != 0:
-                message = "\n\nThe most similar commands are: " \
-                    + most_similar_commands
+                message = "\n\nThe most similar commands are: " + most_similar_commands
             raise ClickException(
                 "Command '" + name + "' doesn't exist.\n"
-                "Type 'popper --help' for more.\n" + message + '\n' + str(e)
+                "Type 'popper --help' for more.\n" + message + "\n" + str(e)
             )
         return mod.cli
 
@@ -84,5 +82,6 @@ class PopperCLI(click.MultiCommand):
 def cli(ctx):
     """Popper command line interface."""
     from popper.runner import WorkflowRunner
+
     signal.signal(signal.SIGINT, WorkflowRunner.signal_handler)
     signal.signal(signal.SIGUSR1, WorkflowRunner.signal_handler)

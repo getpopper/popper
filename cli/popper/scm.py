@@ -40,10 +40,10 @@ def get_remote_url(repo=None):
         if len(repo.remotes) > 0:
             url = repo.remotes.origin.url
         # cleanup the URL so we get in in https form and without '.git' ending
-        if url.endswith('.git'):
+        if url.endswith(".git"):
             url = url[:-4]
-        if 'git@' in url:
-            url = 'https://' + url[4:].replace(':', '/')
+        if "git@" in url:
+            url = "https://" + url[4:].replace(":", "/")
 
     return url
 
@@ -64,6 +64,7 @@ def clone(url, org, repo, repo_dir, version=None):
         None
 
     """
+
     def get_default_branch(r):
         """
         Used to find default branch of the repository.
@@ -76,27 +77,27 @@ def clone(url, org, repo, repo_dir, version=None):
         """
         if version:
             return version
-        return r.remotes.origin.refs['HEAD'].ref.remote_head
+        return r.remotes.origin.refs["HEAD"].ref.remote_head
 
     if os.path.exists(repo_dir):
         cloned_repo = git.Repo(repo_dir)
         cloned_repo.remotes.origin.pull(get_default_branch(cloned_repo))
     else:
-        if '@' in url:
-            url += ':'
+        if "@" in url:
+            url += ":"
         else:
-            url += '/'
+            url += "/"
 
         # To obtain the authentication token if set as environment variable.
-        auth_token = os.getenv('GITHUB_API_TOKEN')
+        auth_token = os.getenv("GITHUB_API_TOKEN")
 
-        if(auth_token is not None and 'github' in url and '@' not in url):
+        if auth_token is not None and "github" in url and "@" not in url:
             # To verify the link of github for private repo support.
             # The authentication token has to be added after protocol
             # The length of protocol is 8 in case of https://
-            url = url[:8] + auth_token + '@' + url[8:]
+            url = url[:8] + auth_token + "@" + url[8:]
 
-        repo_url = f'{url}{org}/{repo}'
+        repo_url = f"{url}{org}/{repo}"
         cloned_repo = git.Repo.clone_from(repo_url, repo_dir)
 
     cloned_repo.git.checkout(get_default_branch(cloned_repo))
@@ -114,45 +115,45 @@ def parse(url):
 
     """
 
-    if url.startswith('ssh://'):
-        log.fail('The ssh protocol is not supported yet.')
+    if url.startswith("ssh://"):
+        log.fail("The ssh protocol is not supported yet.")
 
-    if url.endswith('.git'):
+    if url.endswith(".git"):
         url = url[:-4]
 
     pattern = re.compile(
-        r'^(http://|https://|git@)?(?:(\w+\.\w+)(?:\/|\:))?'
-        r'([\w\-]+)(?:\/([^\@^\/]+)\/?([^\@]+)?(?:\@([\w\W]+))?)$')
+        r"^(http://|https://|git@)?(?:(\w+\.\w+)(?:\/|\:))?"
+        r"([\w\-]+)(?:\/([^\@^\/]+)\/?([^\@]+)?(?:\@([\w\W]+))?)$"
+    )
 
     try:
-        protocol, service, user, repo, step_dir, version = pattern.search(
-            url).groups()
+        protocol, service, user, repo, step_dir, version = pattern.search(url).groups()
     except AttributeError:
         log.fail(
-            'Invalid url. The url should be in any of the 3 forms: \n'
-            '1) https://github.com/user/repo/path/to/step@version \n'
-            '2) gitlab.com/user/repo/path/to/step@version \n'
-            '3) user/repo/path/to/step@version'
+            "Invalid url. The url should be in any of the 3 forms: \n"
+            "1) https://github.com/user/repo/path/to/step@version \n"
+            "2) gitlab.com/user/repo/path/to/step@version \n"
+            "3) user/repo/path/to/step@version"
         )
 
     if not service:
-        service = 'github.com'
+        service = "github.com"
 
     if not protocol:
-        protocol = 'https://'
+        protocol = "https://"
 
     if not step_dir:
-        step_dir = ''
+        step_dir = ""
 
     service_url = protocol + service
 
     log.debug(f'parse("{url}"):')
-    log.debug(f'  service_url: {service_url}')
-    log.debug(f'  service: {service}')
-    log.debug(f'  user: {user}')
-    log.debug(f'  repo: {repo}')
-    log.debug(f'  step_dir: {step_dir}')
-    log.debug(f'  version: {version}')
+    log.debug(f"  service_url: {service_url}")
+    log.debug(f"  service: {service}")
+    log.debug(f"  user: {user}")
+    log.debug(f"  repo: {repo}")
+    log.debug(f"  step_dir: {step_dir}")
+    log.debug(f"  version: {version}")
 
     return service_url, service, user, repo, step_dir, version
 
@@ -183,16 +184,16 @@ def get_branch(repo):
     if not repo.head.is_detached:
         return repo.active_branch.name
 
-    branch = os.environ.get('TRAVIS_BRANCH')
+    branch = os.environ.get("TRAVIS_BRANCH")
     if branch:
         return branch
-    branch = os.environ.get('GIT_BRANCH')
+    branch = os.environ.get("GIT_BRANCH")
     if branch:
         return branch
-    branch = os.environ.get('CIRCLE_BRANCH')
+    branch = os.environ.get("CIRCLE_BRANCH")
     if branch:
         return branch
-    branch = os.environ.get('CI_COMMIT_REF_NAME')
+    branch = os.environ.get("CI_COMMIT_REF_NAME")
     if branch:
         return branch
 

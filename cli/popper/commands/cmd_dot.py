@@ -5,25 +5,22 @@ from popper.parser import Workflow
 
 
 @click.option(
-    '-f',
-    '--wfile',
-    help='File containing the definition of the workflow.',
-    required=True
+    "-f",
+    "--wfile",
+    help="File containing the definition of the workflow.",
+    required=True,
 )
 @click.option(
-    '--skip',
-    help=('Skip the list of steps specified.'),
+    "--skip",
+    help=("Skip the list of steps specified."),
     required=False,
     default=list(),
-    multiple=True
+    multiple=True,
 )
 @click.option(
-    '--colors',
-    help='Use colors in the graph.',
-    required=False,
-    is_flag=True,
+    "--colors", help="Use colors in the graph.", required=False, is_flag=True,
 )
-@click.command('dot', short_help='Generate a graph in the .dot format.')
+@click.command("dot", short_help="Generate a graph in the .dot format.")
 @pass_context
 def cli(ctx, wfile, skip, colors):
     """Creates a graph in the .dot format representing the workflow.
@@ -65,9 +62,8 @@ def cli(ctx, wfile, skip, colors):
 
             stage_edges.add(edge)
 
-            for M in wf.steps[n].get('next', []):
-                dot_str = add_to_graph(dot_str, wf, n, [M],
-                                       node_attrs, stage_edges)
+            for M in wf.steps[n].get("next", []):
+                dot_str = add_to_graph(dot_str, wf, n, [M], node_attrs, stage_edges)
         return dot_str
 
     wf = Workflow.new(wfile)
@@ -75,13 +71,9 @@ def cli(ctx, wfile, skip, colors):
     wf = Workflow.skip_steps(wf, skip)
     wf.check_for_unreachable_steps()
 
-    node_attrs = (
-        'shape=box, style="filled{}", fillcolor=transparent{}'
-    )
-    wf_attr = node_attrs.format(',rounded', ',color=red' if colors else '')
-    act_attr = node_attrs.format('', ',color=cyan' if colors else '')
+    node_attrs = 'shape=box, style="filled{}", fillcolor=transparent{}'
+    wf_attr = node_attrs.format(",rounded", ",color=red" if colors else "")
+    act_attr = node_attrs.format("", ",color=cyan" if colors else "")
     dot_str = add_to_graph("", wf, wf.name, wf.root, act_attr, set())
     dot_str += f'  "{wf.name}" [{wf_attr}];\n'
-    log.info(
-        "digraph G { graph [bgcolor=transparent];\n" + dot_str + "}\n"
-    )
+    log.info("digraph G { graph [bgcolor=transparent];\n" + dot_str + "}\n")

@@ -64,6 +64,17 @@ python -X tracemalloc -m unittest -f cli/test/test_*
 python -X tracemalloc -m unittest -f cli/test/test_runner.py
 ```
 
+## Codestyle
+
+Popper's code is formatted using the [black](https://github.com/psf/black) style. If code does not conform to this style, merges are prevented to the master and this is checked as a CI step.
+
+To apply black to your code, run black from the root Popper directory:
+
+```bash
+cd popper
+black .
+```
+
 ## Contributing CLI features
 
 To contribute new CLI features:
