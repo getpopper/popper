@@ -7,7 +7,7 @@ from distutils.spawn import find_executable
 from popper.cli import log
 
 
-def sanitized_name(name, wid=''):
+def sanitized_name(name, wid=""):
     """Clean a step name and change it to proper format. It replaces all the
     unwanted characters with `_`.
 
@@ -36,15 +36,15 @@ def of_type(param, valid_types):
       the passed param matches with any of the valid types.
     """
     for t in valid_types:
-        if t == 'str':
+        if t == "str":
             if isinstance(param, str):
                 return True
 
-        if t == 'dict':
+        if t == "dict":
             if isinstance(param, dict):
                 return True
 
-        if t == 'los':
+        if t == "los":
             if isinstance(param, list):
                 res = list(map(lambda a: isinstance(a, str), param))
                 return False not in res
@@ -63,22 +63,22 @@ def prettystr(a):
     if isinstance(a, os._Environ):
         a = dict(a)
     if isinstance(a, dict):
-        return f'{yaml.dump(a, default_flow_style=False)}'
+        return f"{yaml.dump(a, default_flow_style=False)}"
 
 
 def key_value_to_flag(k, v, equals_symbol=False):
     is_bool = isinstance(v, bool)
 
     if is_bool and not v and not equals_symbol:
-        return ''
+        return ""
 
-    flag = '-' if len(k) == 1 else '--'
+    flag = "-" if len(k) == 1 else "--"
 
     if equals_symbol:
-        flag += f'{k}={str(v).lower() if is_bool else v}'
+        flag += f"{k}={str(v).lower() if is_bool else v}"
     else:
         if isinstance(v, bool):
-            flag += f'{k}'
+            flag += f"{k}"
         else:
-            flag += f'{k} {v}'
+            flag += f"{k} {v}"
     return flag

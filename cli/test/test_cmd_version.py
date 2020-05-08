@@ -7,10 +7,9 @@ from .test_common import PopperTest
 
 
 class TestCommandVersion(PopperTest):
-
     def test_version(self):
 
-        with self.assertLogs('popper') as test:
+        with self.assertLogs("popper") as test:
             runner = CliRunner()
             result = runner.invoke(cmd_version.cli)
             self.assertEqual(result.exit_code, 0)
