@@ -552,23 +552,34 @@ class YMLWorkflow(Workflow):
         self.wf_fmt = "yml"
 
         if not os.path.exists(wfile):
+            dict_from_yaml = yaml.safe_load(wfile)
+
+            if not dict_from_yaml:
+                log.fail(f'Workflow string is empty.')
+            
             # try to load string
-            self.wf_list = yaml.safe_load(wfile)["steps"]
+            self.wf_list = yaml.safe_load(wfile)['steps']
         else:
             with open(wfile) as fp:
-                self.wf_list = yaml.safe_load(fp)["steps"]
+                dict_from_yaml = yaml.safe_load(fp)
+
+                if not dict_from_yaml:
+                    log.fail(f'Workflow file {wfile} is empty.')
+                    
+            with open(wfile) as fp:
+                self.wf_list = yaml.safe_load(fp)['steps']
                 if not self.wf_list:
                     return
 
-        self.wf_dict = {"steps": dict()}
+        self.wf_dict = {'steps': dict()}
         self.id_map = dict()
 
         for idx, step in enumerate(self.wf_list):
             # If no id attribute present, make one
-            _id = str(step.get("id", idx + 1))
-            self.wf_dict["steps"][_id] = step
+            _id = str(step.get('id', idx + 1))
+            self.wf_dict['steps'][_id] = step
             self.id_map[idx + 1] = _id
-            step.pop("id", None)
+            step.pop('id', None)
 
         self.name = os.path.basename(wfile)[:-4]
 
