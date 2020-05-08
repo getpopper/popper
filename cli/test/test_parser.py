@@ -506,7 +506,7 @@ class TestYMLWorkflow(unittest.TestCase):
 
     def tearDown(self):
         log.setLevel("NOTSET")
-        
+
     def test_empty_string(self):
         try:
             YMLWorkflow('')
@@ -514,8 +514,8 @@ class TestYMLWorkflow(unittest.TestCase):
         except SystemExit:
             self.assertTrue(True)
         else:
-             self.assertTrue(False, 'Empty Workflow file does not raise a SystemExit.')
-            
+            self.assertTrue(False, 'Empty Workflow file does not raise a SystemExit.')
+
     def test_empty_file(self):
         try:
             f = open("test.yml", "a")
@@ -525,7 +525,7 @@ class TestYMLWorkflow(unittest.TestCase):
         except SystemExit:
             self.assertTrue(True)
         else:
-             self.assertTrue(False, 'Empty Workflow file does not raise a SystemExit.')
+            self.assertTrue(False, 'Empty Workflow file does not raise a SystemExit.')
 
     def test_load_file(self):
         wf = YMLWorkflow(
