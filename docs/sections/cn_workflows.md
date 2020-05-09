@@ -385,7 +385,22 @@ use the `--resource-manager` or `-r` option of the `popper run` subcommand to sp
 popper run -f sample.yml -r kubernetes
 ```
 
-For a workflow we build an image and create a volume in the namespace defined in the kubefig. This volume is the with a ReadWrite access.
+For a workflow we build an image and create a volume in the namespace defined in the [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/). 
+A sample kubeconfig looks like this:
+
+```Kubernetes
+apiVersion: v1
+kind: Config
+preferences: {}
+contexts:
+- context:
+    cluster: development
+    namespace: sample
+    user: developer
+  name: dev
+```
+
+The volume created is configured with a ReadWrite access.
 Then for each step in the workflow, we create a pod in the namespace using information from the step and pass commands args defined in the step.
 The pod is mounted to `/workspace` and it's logs are read.
 Finally, the pods are exited and deleted.
