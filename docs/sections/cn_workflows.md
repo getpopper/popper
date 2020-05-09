@@ -359,6 +359,40 @@ popper run -f sample.yml -c config.yml
 
 This runs the step `one` locally in the host and step `two` through slurm on 2 nodes.
 
+## Kubernetes
+
+Popper can be run [Kubernetes cluster](https://kubernetes.io/docs/setup/) as the resource manager to orchestrate the execution of a step to one a single node.
+You can get started with running Popper workflows through Kubernetes by following the example below.
+
+Let's consider a workflow `sample.yml` like the one shown below.
+
+```yaml
+version: '1'
+steps:
+- id: one
+  uses: docker://alpine:3.9
+  args: echo hello-world
+
+- id: two
+  uses: popperized/bin/sh@master
+  args: ls -l
+```
+
+To run all the steps of the workflow through kubernetes,
+use the `--resource-manager` or `-r` option of the `popper run` subcommand to specify the resource manager.
+
+```bash
+popper run -f sample.yml -r kubernetes
+```
+
+For a workflow we build an image and create a volume in the namespace defined in the kubefig. This volume is the with a ReadWrite access.
+Then for each step in the workflow, we create a pod in the namespace using information from the step and pass commands args defined in the step.
+The pod is mounted to `/workspace` and it's logs are read.
+Finally, the pods are exited and deleted.
+The next step if available follows a similar pattern: create pod, run and destroy.
+
+If the step is referencing a Dockerfile (instead of an image), we build it locally, push it to a registry so that kubernetes can pull it from the registry and then.
+
 #### Host
 
 Popper executes the workflows by default using the `host` machine as the resource manager. So, when no resource manager is provided like the example below, the workflow runs on the local machine.
