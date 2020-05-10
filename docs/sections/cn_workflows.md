@@ -361,8 +361,9 @@ This runs the step `one` locally in the host and step `two` through slurm on 2 n
 
 ## Kubernetes
 
-Popper can be run [Kubernetes cluster](https://kubernetes.io/docs/setup/) as the resource manager to orchestrate the execution of a step to one a single node.
-You can get started with running Popper workflows through Kubernetes by following the example below.
+Popper can execute a workflow using a [Kubernetes cluster](https://kubernetes.io/docs/setup/) as the underlying resource manager.
+
+You can get started with running Popper workflows on Kubernetes by following the example below.
 
 Let's consider a workflow `sample.yml` like the one shown below.
 
@@ -385,28 +386,23 @@ use the `--resource-manager` or `-r` option of the `popper run` subcommand to sp
 popper run -f sample.yml -r kubernetes
 ```
 
-For a workflow we build an image and create a volume in the namespace defined in the [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/). 
-A sample kubeconfig looks like this:
+Given a workflow such as the one shown above, Popper's kubernetes runner makes use of the same authentication mechanism of `kubectl` and this authentication can be found in a [kubeconfig](https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/) file.
 
-```Kubernetes
-apiVersion: v1
-kind: Config
-preferences: {}
-contexts:
-- context:
-    cluster: development
-    namespace: sample
-    user: developer
-  name: dev
-```
-
-The volume created is configured with a ReadWrite access.
+Then, Popper builds an image and creates a volume in the namespace defined in the kubeconfig
+The volume created is configured with ReadWrite access.
 Then for each step in the workflow, we create a pod in the namespace using information from the step and pass commands args defined in the step.
-The pod is mounted to `/workspace` and it's logs are read.
-Finally, the pods are exited and deleted.
+
+The pod mounts the volume for the workflow in the `/workspace` folder and uses this folder as the working directory, similarly to how it is done when the workflow runs locally.
+The output of the step being executed is streamed to the machine where `popper run` is executed.
+After the execution of the step is finished, the pod is destroyed.
 The next step if available follows a similar pattern: create pod, run and destroy.
 
-If the step is referencing a Dockerfile (instead of an image), we build it locally, push it to a registry so that kubernetes can pull it from the registry and then.
+>**NOTE**: The volume that gets created is persisted throughout the execution of the workflow
+
+If the step is referencing a Dockerfile instead of an image (as shown in step `two` of the example), Popper builds it locally, pushes it to a registry so that kubernetes can pull it from the registry and then execute.
+
+>**NOTE**: The volume that is createddoes not get destroyed. 
+The decision to destroy a volume is in the hands of the user and more information can be found [here]()
 
 #### Host
 
