@@ -393,16 +393,15 @@ The volume created is configured with ReadWrite access.
 Then for each step in the workflow, we create a pod in the namespace using information from the step and pass commands args defined in the step.
 
 The pod mounts the volume for the workflow in the `/workspace` folder and uses this folder as the working directory, similarly to how it is done when the workflow runs locally.
+This mounted volume is persisted throughout the execution of the workflow.
 The output of the step being executed is streamed to the machine where `popper run` is executed.
 After the execution of the step is finished, the pod is destroyed.
 The next step if available follows a similar pattern: create pod, run and destroy.
 
->**NOTE**: The volume that gets created is persisted throughout the execution of the workflow
-
 If the step is referencing a Dockerfile instead of an image (as shown in step `two` of the example), Popper builds it locally, pushes it to a registry so that kubernetes can pull it from the registry and then execute.
 
->**NOTE**: The volume that is createddoes not get destroyed. 
-The decision to destroy a volume is in the hands of the user and more information can be found [here]()
+>**NOTE**: The volume that is created does not get destroyed. 
+The decision to use the volume is in the hands of the user and more information can be found about this[here](https://kubernetes.io/docs/concepts/storage/persistent-volumes/)
 
 #### Host
 
