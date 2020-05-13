@@ -22,7 +22,10 @@ setup(
         "pyyaml==5.3.1",
         "spython==0.0.79",
     ],
-    extras_require={"dev": ["testfixtures==6.14.0", "black==19.10b0"]},
+
+    extras_require={
+        "dev": ["testfixtures==6.14.0", "black==19.10b0", "dunamai==1.1.0"]
+    },
     entry_points="""
         [console_scripts]
         popper=popper.cli:cli

@@ -78,6 +78,7 @@ class PopperCLI(click.MultiCommand):
 
 
 @click.command(cls=PopperCLI)
+@click.version_option(__version__, message=f"Popper version {popper_version}")
 @pass_context
 def cli(ctx):
     """Popper command line interface."""
