@@ -38,6 +38,17 @@ class WorkflowParser(object):
                     }
                 ],
             },
+            "options": {
+                "type": "map",
+                "mapping": {
+                    "secrets": {"type": "seq", "sequence": [{"type": "str"}]},
+                    "env": {
+                        "type": "map",
+                        "matching-rule": "any",
+                        "mapping": {"regex;(.+)": {"type": "str"}},
+                    },
+                },
+            },
         },
     }
 
@@ -50,8 +61,8 @@ class WorkflowParser(object):
         substitutions=[],
         allow_loose=False,
     ):
-        """Returns an immutable workflow structure (a frozen Box) with 'steps'. See
-        WorkflowParser._wf_schema above for their structure.
+        """Returns an immutable workflow structure (a frozen Box) with 'steps' and
+        'options' properties. See WorkflowParser._wf_schema above for their structure.
         """
 
         if not file and not wf_data:
@@ -85,6 +96,7 @@ class WorkflowParser(object):
         logging.disable(logging.NOTSET)
 
         WorkflowParser.__add_missing_ids(_wf_data)
+        WorkflowParser.__propagate_options_to_steps(_wf_data)
         WorkflowParser.__apply_substitutions(
             _wf_data, substitutions=substitutions, allow_loose=allow_loose
         )
@@ -127,6 +139,25 @@ class WorkflowParser(object):
             step["id"] = step.get("id", f"{i+1}")
 
     @staticmethod
+    def __propagate_options_to_steps(wf_data):
+        """Copies env and secrets attributes from 'options' to each step. Step
+        attributes have precedence over workflow-wide ones
+        """
+        # we create dict/list with env/secrets from 'options'
+        wf_env = wf_data.get("options", {}).get("env", {})
+        wf_secrets = wf_data.get("options", {}).get("secrets", [])
+
+        # for each step, create a copy of the above, and update with info from step in
+        # order to make step have higher precedence over workflow-wide options
+        for i, step in enumerate(wf_data["steps"]):
+            step_env = dict(wf_env)
+            step_env.update(step.get("env", {}))
+            step["env"] = step_env
+
+            step_secrets = wf_secrets + step.get("secrets", [])
+            step["secrets"] = step_secrets
+
+    @staticmethod
     def __apply_substitutions(wf_data, substitutions=None, allow_loose=False):
         if not substitutions:
             return
@@ -146,6 +177,9 @@ class WorkflowParser(object):
             for step in wf_data["steps"]:
                 for _, step_attr in step.items():
                     Workflow._apply_substitution(step_attr, k, v, used)
+
+            for _, options_attr in wf_data.get("options", {}).items():
+                Workflow._apply_substitution(options_attr, k, v, used)
 
         if not allow_loose and len(substitutions) != len(used):
             log.fail("Not all given substitutions are used in " "the workflow file")
