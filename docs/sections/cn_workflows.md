@@ -18,15 +18,26 @@ A Popper workflow file looks like the following:
 
 ```yaml
 version: '1'
+
 steps:
 - uses: docker://alpine:3.9
   args: ["ls", "-la"]
+
+- uses: docker://alpine:3.11
+  args: ["echo", "second step"]
+
+options:
+  env:
+    FOO: BAR
+  secrets:
+  - TOP_SECRET
 ```
 
 A workflow specification contains one or more steps in the form of a 
 YAML list named `steps`. Each item in the list is a dictionary 
 containing at least a `uses` attribute, which determines the docker 
-image being used for that step.
+image being used for that step. An `options` dictionary specifies 
+options that are applied to the workflow.
 
 ### Workflow steps
 
@@ -98,6 +109,35 @@ popper run -f wf.yml
 
 If the access token doesn't have permissions to access private 
 repositories, the `popper run` command will fail.
+
+### Workflow options
+
+The `options` attribute can be used to specify `env` and `secrets` 
+that are available to all the steps in the workflow. For example:
+
+```yaml
+options:
+  env:
+    FOO: var1
+    BAR: var2
+  secrets: [SECRET1, SECRET2]
+
+steps:
+- uses: docker://alpine:3.11
+  runs: sh
+  args: "-c 'echo $FOO $SECRET1'"
+
+- uses: docker://alpine:3.11
+  runs: sh
+  args: "-c 'echo $ONLY_FOR'"
+  env:
+    ONLY_FOR: this step
+```
+
+The above shows environment variables that are available to all steps 
+that get defined in the `options` dictionary; it also shows an example 
+of a variable that is available only to a single step (second step). 
+This attribute is optional.
 
 ## Execution Runtime
 
