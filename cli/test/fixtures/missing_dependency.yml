@@ -1,7 +1,0 @@
-version: '1'
-steps:
-- id: 'a'
-  uses: 'sh'
-- id: 'b'
-  needs: 'a1'
-  uses: 'sh'

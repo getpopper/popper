@@ -1,4 +1,0 @@
-- uses: "popperized/bin/sh@master"
-  args: "ls"
-- uses: "popperized/bin/sh@master"
-  args: ["ls -ltr"]
