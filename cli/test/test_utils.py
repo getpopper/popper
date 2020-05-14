@@ -28,16 +28,6 @@ class TestUtils(unittest.TestCase):
         pu.assert_executable_exists("ls")
         self.assertRaises(SystemExit, pu.assert_executable_exists, "abcd")
 
-    def test_of_type(self):
-        param = [u"hello", u"world"]
-        self.assertEqual(pu.of_type(param, ["los"]), True)
-
-        param = u"hello world"
-        self.assertEqual(pu.of_type(param, ["los"]), False)
-
-        param = {"org": "systemslab", "project": "popper"}
-        self.assertEqual(pu.of_type(param, ["str", "dict"]), True)
-
     def test_kv_to_flag(self):
         self.assertEqual(pu.key_value_to_flag("x", "a"), "-x a")
         self.assertEqual(pu.key_value_to_flag("y", True), "-y")

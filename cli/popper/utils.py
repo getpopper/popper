@@ -21,37 +21,6 @@ def sanitized_name(name, wid=""):
     return f"popper_{re.sub('[^a-zA-Z0-9_.-]', '_', name)}_{wid}"
 
 
-def of_type(param, valid_types):
-    """Function to check the type of a parameter.
-
-    It tries to match the type of the parameter with the
-    types passed through `valid_types` list.
-
-    Args:
-      param: A value of any type.
-      valid_types(list): A list of acceptable types.
-
-    Returns:
-      bool: True/False, depending upon whether the type of
-      the passed param matches with any of the valid types.
-    """
-    for t in valid_types:
-        if t == "str":
-            if isinstance(param, str):
-                return True
-
-        if t == "dict":
-            if isinstance(param, dict):
-                return True
-
-        if t == "los":
-            if isinstance(param, list):
-                res = list(map(lambda a: isinstance(a, str), param))
-                return False not in res
-
-    return False
-
-
 def assert_executable_exists(command):
     """Check if the given command can be invoked; fails if not."""
     if not find_executable(command):
