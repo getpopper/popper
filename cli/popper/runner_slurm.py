@@ -30,19 +30,21 @@ class SlurmRunner(HostRunner):
             target=self._tail_output, args=(out_file,)
         )
         self._out_stream_thread.start()
-        time.sleep(2)
+        # give time so that _exec_cmd puts the pid inside the self._out_stream_pid set
+        time.sleep(1)
 
     def _stop_out_stream(self):
+        if len(self._out_stream_pid) != 1:
+            log.fail("Cannot find PID for tail process")
         _out_stream_pid = list(self._out_stream_pid)[0]
         try:
-            os.kill(_out_stream_pid, 0)
             os.kill(_out_stream_pid, signal.SIGKILL)
         except ProcessLookupError:
-            log.warning("Tail process was killed by some other process.")
+            log.warning("Tail process was stopped by some other process.")
         self._out_stream_thread.join()
 
     def _submit_batch_job(self, cmd, step):
-        job_name = pu.sanitized_name(step["name"], self._config.wid)
+        job_name = pu.sanitized_name(step.id, self._config.wid)
         temp_dir = "/tmp/popper/slurm/"
         os.makedirs(temp_dir, exist_ok=True)
 
@@ -60,12 +62,12 @@ class SlurmRunner(HostRunner):
         sbatch_cmd = f"sbatch --wait --job-name {job_name} --output {out_file}"
         sbatch_cmd = sbatch_cmd.split()
 
-        for k, v in self._config.resman_opts.get(step["name"], {}).items():
+        for k, v in self._config.resman_opts.get(step.id, {}).items():
             sbatch_cmd.append(pu.key_value_to_flag(k, v))
 
         sbatch_cmd.append(job_script)
 
-        log.info(f'[{step["name"]}] {" ".join(sbatch_cmd)}')
+        log.info(f'[{step.id}] {" ".join(sbatch_cmd)}')
 
         if self._config.dry_run:
             return 0
@@ -102,7 +104,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
     def run(self, step):
         """Execute the given step via slurm in the docker engine."""
-        cid = pu.sanitized_name(step["name"], self._config.wid)
+        cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
         build, img, tag, build_ctx_path = self._get_build_info(step)
@@ -111,7 +113,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
         if build:
             cmd.append(f"docker build -t {img}:{tag} {build_ctx_path}")
-        elif not self._config.skip_pull and not step.get("skip_pull", False):
+        elif not self._config.skip_pull and not step.skip_pull:
             cmd.append(f"docker pull {img}:{tag}")
 
         cmd.append(self._create_cmd(step, f"{img}:{tag}", cid))
@@ -166,7 +168,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
     def run(self, step):
         self._setup_singularity_cache()
-        cid = pu.sanitized_name(step["name"], self._config.wid) + ".sif"
+        cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
         self._container = os.path.join(self._singularity_cache, cid)
 
         build, img, build_ctx_path = self._get_build_info(step)
@@ -195,14 +197,11 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         for k, v in env.items():
             os.environ[k] = str(v)
 
-        args = step.get("args", "")
-        runs = step.get("runs", "")
-
-        if runs:
-            commands = runs
+        if step.runs:
+            commands = step.runs
             cmd = ["singularity exec"]
         else:
-            commands = args
+            commands = step.args
             cmd = ["singularity run"]
 
         options = self._get_container_options()

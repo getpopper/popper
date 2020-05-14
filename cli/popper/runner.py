@@ -6,7 +6,7 @@ import sys
 import popper.scm as scm
 import popper.utils as pu
 
-from popper.config import PopperConfig
+from popper.config import ConfigLoader
 from popper.cli import log
 
 
@@ -75,32 +75,14 @@ class WorkflowRunner(object):
         if self._config.dry_run or self._config.skip_clone:
             return
 
-        for _, a in wf.steps.items():
-            for s in a.get("secrets", []):
+        for step in wf.steps:
+            for s in step.secrets:
                 if s not in os.environ:
                     if os.environ.get("CI", "") == "true":
                         log.fail(f"Secret {s} not defined")
                     else:
                         val = getpass.getpass(f"Enter the value for {s} : ")
                         os.environ[s] = val
-
-    @staticmethod
-    def _setup_base_cache():
-        """Set up the base cache directory.
-
-        Returns:
-          str: The path to the base cache directory.
-        """
-        if os.environ.get("POPPER_CACHE_DIR", None):
-            base_cache = os.environ["POPPER_CACHE_DIR"]
-        else:
-            cache_dir_default = os.path.join(os.environ["HOME"], ".cache")
-            cache_dir = os.environ.get("XDG_CACHE_HOME", cache_dir_default)
-            base_cache = os.path.join(cache_dir, "popper")
-
-        os.makedirs(base_cache, exist_ok=True)
-
-        return base_cache
 
     def _clone_repos(self, wf):
         """Clone steps that reference a repository.
@@ -114,28 +96,26 @@ class WorkflowRunner(object):
         Returns:
             None
         """
-        repo_cache = os.path.join(WorkflowRunner._setup_base_cache(), self._config.wid)
+        # cache directory for this workspace
+        wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
+        os.makedirs(wf_cache_dir, exist_ok=True)
 
         cloned = set()
         infoed = False
 
-        for _, a in wf.steps.items():
-            uses = a["uses"]
+        for step in wf.steps:
             if (
-                "docker://" in uses
-                or "shub://" in uses
-                or "library://" in uses
-                or "./" in uses
-                or uses == "sh"
+                "docker://" in step.uses
+                or "shub://" in step.uses
+                or "library://" in step.uses
+                or "./" in step.uses
+                or step.uses == "sh"
             ):
                 continue
 
-            url, service, user, repo, step_dir, version = scm.parse(a["uses"])
+            url, service, user, repo, step_dir, version = scm.parse(step.uses)
 
-            repo_dir = os.path.join(repo_cache, service, user, repo)
-
-            a["repo_dir"] = repo_dir
-            a["step_dir"] = step_dir
+            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
 
             if self._config.dry_run:
                 continue
@@ -168,17 +148,17 @@ class WorkflowRunner(object):
         self._process_secrets(wf)
         self._clone_repos(wf)
 
-        for _, step in wf.steps.items():
+        for step in wf.steps:
             log.debug(f"Executing step:\n{pu.prettystr(step)}")
-            if step["uses"] == "sh":
+            if step.uses == "sh":
                 e = self._step_runner("host", step).run(step)
             else:
                 e = self._step_runner(self._config.engine_name, step).run(step)
 
             if e != 0 and e != 78:
-                log.fail(f"Step '{step['name']}' failed ('{e}') !")
+                log.fail(f"Step '{step.id}' failed ('{e}') !")
 
-            log.info(f"Step '{step['name']}' ran successfully !")
+            log.info(f"Step '{step.id}' ran successfully !")
 
             if e == 78:
                 break
@@ -212,7 +192,7 @@ class StepRunner(object):
 
     def __init__(self, config=None):
         if not config:
-            self._config = PopperConfig()
+            self._config = ConfigLoader.load()
         else:
             self._config = config
 
@@ -233,8 +213,8 @@ class StepRunner(object):
         Returns:
           dict: key-value map of environment variables.
         """
-        step_env = step.get("env", {}).copy()
-        for s in step.get("secrets", []):
+        step_env = step.env.to_dict()
+        for s in step.secrets:
             step_env.update({s: os.environ[s]})
         step_env.update(env)
 

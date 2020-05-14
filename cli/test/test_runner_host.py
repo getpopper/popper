@@ -1,72 +1,55 @@
 import os
+import shutil
 import time
 import unittest
 
-from subprocess import Popen
-
-import docker
-
 from testfixtures import LogCapture
+from subprocess import Popen
 
 import popper.utils as pu
 
-from popper.config import PopperConfig
-from popper.parser import YMLWorkflow
+from popper.config import ConfigLoader
+from popper.parser import WorkflowParser
 from popper.runner import WorkflowRunner
 from popper.runner_host import HostRunner, DockerRunner, SingularityRunner
 from popper.cli import log as log
-
 from .test_common import PopperTest
+
+import docker
+
+from box import Box
 
 
 class TestHostHostRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
 
-    def test_run(self):
+    def test_host_run(self):
 
         repo = self.mk_repo()
-        conf = PopperConfig(workspace_dir=repo.working_dir)
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
 
         with WorkflowRunner(conf) as r:
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: sh
-              runs: [cat]
-              args: README.md
-            """
-            )
-            wf.parse()
-            r.run(wf)
+            wf_data = {
+                "steps": [{"uses": "sh", "runs": ["cat"], "args": ["README.md"],}]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
 
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'sh'
-              runs: ['bash', '-c', 'echo $FOO > hello.txt ; pwd']
-              env: {
-                  FOO: bar
-              }
-            """
-            )
-            wf.parse()
-            r.run(wf)
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "sh",
+                        "runs": ["bash", "-c", "echo $FOO > hello.txt ; pwd"],
+                        "env": {"FOO": "bar"},
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
             with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
                 self.assertEqual(f.read(), "bar\n")
 
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'sh'
-              runs: 'nocommandisnamedlikethis'
-            """
-            )
-            wf.parse()
-            self.assertRaises(SystemExit, r.run, wf)
+            wf_data = {"steps": [{"uses": "sh", "runs": ["nocommandisnamedlikethis"]}]}
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
         repo.close()
 
@@ -77,12 +60,12 @@ class TestHostHostRunner(PopperTest):
         self.assertEqual(ecode, 0)
         self.assertEqual(output, "hello-world\n")
 
-        with LogCapture("popper") as log:
+        with LogCapture("popper") as logc:
             pid, ecode, output = HostRunner._exec_cmd(cmd)
             self.assertGreater(pid, 0)
             self.assertEqual(ecode, 0)
             self.assertEqual(output, "")
-            log.check_present(("popper", "STEP_INFO", "hello-world\n"))
+            logc.check_present(("popper", "STEP_INFO", "hello-world\n"))
 
         cmd = ["env"]
         pid, ecode, output = HostRunner._exec_cmd(
@@ -112,13 +95,16 @@ class TestHostDockerRunner(PopperTest):
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_create_container(self):
-        config = PopperConfig()
-        step = {
-            "uses": "docker://alpine:3.9",
-            "runs": ["echo hello"],
-            "name": "kontainer_one",
-        }
-        cid = pu.sanitized_name(step["name"], config.wid)
+        config = ConfigLoader.load()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
         with DockerRunner(init_docker_client=True, config=config) as dr:
             c = dr._create_container(cid, step)
             self.assertEqual(c.status, "created")
@@ -141,13 +127,10 @@ class TestHostDockerRunner(PopperTest):
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_get_container_kwargs(self):
-        step = {
-            "uses": "popperized/bin/sh@master",
-            "args": ["ls"],
-            "name": "one",
-            "repo_dir": "/path/to/repo/dir",
-            "step_dir": "sh",
-        }
+        step = Box(
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
+            default_box=True,
+        )
 
         config_dict = {
             "engine": {
@@ -163,7 +146,9 @@ class TestHostDockerRunner(PopperTest):
             "resource_manager": {"name": "slurm"},
         }
 
-        config = PopperConfig(config_file=config_dict, workspace_dir="/path/to/workdir")
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir"
+        )
 
         with DockerRunner(init_docker_client=False, config=config) as dr:
             args = dr._get_container_kwargs(step, "alpine:3.9", "container_a")
@@ -191,26 +176,27 @@ class TestHostDockerRunner(PopperTest):
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_get_build_info(self):
-        step = {
-            "uses": "popperized/bin/sh@master",
-            "args": ["ls"],
-            "name": "one",
-            "repo_dir": "/path/to/repo/dir",
-            "step_dir": "sh",
-        }
+        step = Box(
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
+            default_box=True,
+        )
         with DockerRunner(init_docker_client=False) as dr:
             build, img, tag, build_sources = dr._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popperized/bin")
             self.assertEqual(tag, "master")
-            self.assertEqual(build_sources, "/path/to/repo/dir/sh")
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
+            self.assertTrue("github.com/popperized/bin/sh" in build_sources)
 
-            step = {
-                "uses": "docker://alpine:3.9",
-                "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-                "env": {"FOO": "bar"},
-                "name": "1",
-            }
+            step = Box(
+                {
+                    "uses": "docker://alpine:3.9",
+                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                    "env": {"FOO": "bar"},
+                    "id": "1",
+                },
+                default_box=True,
+            )
 
         with DockerRunner(init_docker_client=False) as dr:
             build, img, tag, build_sources = dr._get_build_info(step)
@@ -221,51 +207,38 @@ class TestHostDockerRunner(PopperTest):
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_docker_basic_run(self):
-
         repo = self.mk_repo()
-        conf = PopperConfig(workspace_dir=repo.working_dir)
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
 
         with WorkflowRunner(conf) as r:
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'popperized/bin/sh@master'
-              runs: [cat]
-              args: README.md
-            """
-            )
-            wf.parse()
-            r.run(wf)
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            r.run(WorkflowParser.parse(wf_data=wf_data))
 
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'docker://alpine:3.9'
-              runs: ['sh', '-c', 'echo $FOO > hello.txt ; pwd']
-              env: {
-                  FOO: bar
-              }
-            """
-            )
-            wf.parse()
-            r.run(wf)
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                        "env": {"FOO": "bar"},
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
             with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
                 self.assertEqual(f.read(), "bar\n")
 
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'docker://alpine:3.9'
-              runs: 'nocommandisnamedlikethis'
-            """
-            )
-            wf.parse()
-            self.assertRaises(Exception, r.run, wf)
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["nocommandisnamedlikethis"],
+                    }
+                ]
+            }
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
         repo.close()
+        shutil.rmtree(repo.working_dir, ignore_errors=True)
 
 
 class TestHostSingularityRunner(PopperTest):
@@ -320,28 +293,31 @@ exec /bin/bash "$@"''',
         os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
     )
     def test_create_container(self):
-        config = PopperConfig()
-        config.wid = "abcd"
-        step_one = {
-            "uses": "docker://alpine:3.9",
-            "runs": ["echo hello"],
-            "name": "kontainer_one",
-        }
+        config = ConfigLoader.load()
+        step_one = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
 
-        step_two = {
-            "uses": "popperized/bin/sh@master",
-            "args": ["ls"],
-            "name": "kontainer_two",
-            "repo_dir": f'{os.environ["HOME"]}/.cache/popper/abcd/github.com/popperized/bin',
-            "step_dir": "sh",
-        }
+        step_two = Box(
+            {
+                "uses": "popperized/bin/sh@master",
+                "args": ["ls"],
+                "id": "kontainer_two",
+            },
+            default_box=True,
+        )
 
-        cid_one = pu.sanitized_name(step_one["name"], config.wid)
-        cid_two = pu.sanitized_name(step_two["name"], config.wid)
+        cid_one = pu.sanitized_name(step_one.id, config.wid)
+        cid_two = pu.sanitized_name(step_two.id, config.wid)
 
         with SingularityRunner(config=config) as sr:
             sr._setup_singularity_cache()
-            c_one = sr._create_container(step_one, cid_one)
+            sr._create_container(step_one, cid_one)
             self.assertEqual(
                 os.path.exists(os.path.join(sr._singularity_cache, cid_one)), True
             )
@@ -349,7 +325,7 @@ exec /bin/bash "$@"''',
 
         with SingularityRunner(config=config) as sr:
             sr._setup_singularity_cache()
-            c_two = sr._create_container(step_one, cid_two)
+            sr._create_container(step_one, cid_two)
             self.assertEqual(
                 os.path.exists(os.path.join(sr._singularity_cache, cid_two)), True
             )
@@ -359,12 +335,11 @@ exec /bin/bash "$@"''',
         os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
     )
     def test_setup_singularity_cache(self):
-        config = PopperConfig()
-        config.wid = "abcd"
+        config = ConfigLoader.load()
         with SingularityRunner(config=config) as sr:
             sr._setup_singularity_cache()
             self.assertEqual(
-                f'{os.environ["HOME"]}/.cache/popper/singularity/abcd',
+                f'{os.environ["HOME"]}/.cache/popper/singularity/{config.wid}',
                 sr._singularity_cache,
             )
 
@@ -383,8 +358,7 @@ exec /bin/bash "$@"''',
             }
         }
 
-        config = PopperConfig(config_file=config_dict)
-        config.wid = "abcd"
+        config = ConfigLoader.load(config_file=config_dict)
         with SingularityRunner(config=config) as sr:
             sr._setup_singularity_cache()
             options = sr._get_container_options()
@@ -408,25 +382,26 @@ exec /bin/bash "$@"''',
         os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
     )
     def test_get_build_info(self):
-        step = {
-            "uses": "popperized/bin/sh@master",
-            "args": ["ls"],
-            "name": "one",
-            "repo_dir": "/path/to/repo/dir",
-            "step_dir": "sh",
-        }
+        step = Box(
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "name": "one",},
+            default_box=True,
+        )
         with SingularityRunner() as sr:
             build, img, build_sources = sr._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popperized/bin")
-            self.assertEqual(build_sources, "/path/to/repo/dir/sh")
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
+            self.assertTrue(f"github.com/popperized/bin/sh" in build_sources)
 
-            step = {
-                "uses": "docker://alpine:3.9",
-                "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-                "env": {"FOO": "bar"},
-                "name": "1",
-            }
+            step = Box(
+                {
+                    "uses": "docker://alpine:3.9",
+                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                    "env": {"FOO": "bar"},
+                    "name": "1",
+                },
+                default_box=True,
+            )
 
         with SingularityRunner() as sr:
             build, img, build_sources = sr._get_build_info(step)
@@ -439,13 +414,18 @@ exec /bin/bash "$@"''',
     )
     def test_singularity_start(self):
         repo = self.mk_repo()
-        conf = PopperConfig(engine_name="singularity", workspace_dir=repo.working_dir)
+        conf = ConfigLoader.load(
+            engine_name="singularity", workspace_dir=repo.working_dir
+        )
 
-        step = {
-            "uses": "docker://alpine:3.9",
-            "runs": ["echo", "hello"],
-            "name": "test_1",
-        }
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo", "hello"],
+                "name": "test_1",
+            },
+            default_box=True,
+        )
         cid = pu.sanitized_name(step["name"], conf.wid)
         with SingularityRunner(config=conf) as sr:
             sr._setup_singularity_cache()
@@ -453,11 +433,11 @@ exec /bin/bash "$@"''',
             sr._create_container(step, cid)
             self.assertEqual(sr._singularity_start(step, cid), 0)
 
-        # step = {
+        # step = Box({
         #     'uses': 'library://library/default/alpine:3.7',
         #     'runs': ['echo', 'hello'],
         #     'name': 'test_2'
-        # }
+        # }, default_box=True)
         # cid = pu.sanitized_name(step['name'], conf.wid)
         # with SingularityRunner(config=conf) as sr:
         #     sr._setup_singularity_cache()
@@ -465,11 +445,11 @@ exec /bin/bash "$@"''',
         #     sr._create_container(step, cid)
         #     self.assertEqual(sr._singularity_start(step, cid), 0)
 
-        # step = {
+        # step = Box({
         #     'uses': 'shub://divetea/debian:latest',
         #     'runs': ['echo', 'hello'],
         #     'name': 'test_3'
-        # }
+        # }, default_box=True)
         # cid = pu.sanitized_name(step['name'], conf.wid)
         # with SingularityRunner(config=conf) as sr:
         #     sr._setup_singularity_cache()
@@ -477,11 +457,14 @@ exec /bin/bash "$@"''',
         #     sr._create_container(step, cid)
         #     self.assertEqual(sr._singularity_start(step, cid), 0)
 
-        step = {
-            "uses": "docker://alpine:3.9",
-            "runs": ["ecdhoo", "hello"],
-            "name": "test_4",
-        }
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["ecdhoo", "hello"],
+                "name": "test_4",
+            },
+            default_box=True,
+        )
         cid = pu.sanitized_name(step["name"], conf.wid)
         with SingularityRunner(config=conf) as sr:
             sr._setup_singularity_cache()
@@ -490,42 +473,30 @@ exec /bin/bash "$@"''',
             self.assertNotEqual(sr._singularity_start(step, cid), 0)
 
         with WorkflowRunner(conf) as r:
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'popperized/bin/sh@master'
-              args: 'ls'
-            """
-            )
-            wf.parse()
-            r.run(wf)
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            r.run(WorkflowParser.parse(wf_data=wf_data))
 
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'docker://alpine:3.9'
-              runs: ['sh', '-c', 'echo $FOO > hello.txt ; pwd']
-              env: {
-                  FOO: bar
-              }
-            """
-            )
-            wf.parse()
-            r.run(wf)
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                        "env": {"FOO": "bar"},
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
             with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
                 self.assertEqual(f.read(), "bar\n")
 
-            wf = YMLWorkflow(
-                """
-            version: '1'
-            steps:
-            - uses: 'docker://alpine:3.9'
-              runs: 'nocommandisnamedlikethis'
-            """
-            )
-            wf.parse()
-            self.assertRaises(SystemExit, r.run, wf)
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["nocommandisnamedlikethis"],
+                    }
+                ]
+            }
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
         repo.close()

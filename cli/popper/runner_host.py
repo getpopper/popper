@@ -13,7 +13,7 @@ from spython.main.parse.writers import SingularityWriter
 from popper import utils as pu
 from popper import scm
 from popper.cli import log as log
-from popper.runner import StepRunner as StepRunner, WorkflowRunner
+from popper.runner import StepRunner as StepRunner
 
 
 class HostRunner(StepRunner):
@@ -36,12 +36,11 @@ class HostRunner(StepRunner):
     def run(self, step):
         step_env = self._prepare_environment(step, os.environ)
 
-        cmd = step.get("runs", [])
-        if not cmd:
+        if not step.runs:
             raise AttributeError(f"Expecting 'runs' attribute in step.")
-        cmd.extend(step.get("args", []))
+        cmd = step.runs + tuple(step.args)
 
-        log.info(f'[{step["name"]}] {cmd}')
+        log.info(f"[{step.id}] {cmd}")
 
         if self._config.dry_run:
             return 0
@@ -129,7 +128,7 @@ class DockerRunner(StepRunner):
 
     def run(self, step):
         """Execute the given step in docker."""
-        cid = pu.sanitized_name(step["name"], self._config.wid)
+        cid = pu.sanitized_name(step.id, self._config.wid)
 
         container = self._find_container(cid)
         if container and not self._config.reuse and not self._config.dry_run:
@@ -137,19 +136,22 @@ class DockerRunner(StepRunner):
 
         container = self._create_container(cid, step)
 
-        log.info(f'[{step["name"]}] docker start')
+        log.info(f"[{step.id}] docker start")
 
         if self._config.dry_run:
             return 0
 
         self._spawned_containers.add(container)
 
-        container.start()
-        cout = container.logs(stream=True)
-        for line in cout:
-            log.step_info(line.decode().rstrip())
+        try:
+            container.start()
+            cout = container.logs(stream=True)
+            for line in cout:
+                log.step_info(line.decode().rstrip())
 
-        e = container.wait()["StatusCode"]
+            e = container.wait()["StatusCode"]
+        except Exception as exc:
+            log.fail(exc)
         return e
 
     def stop_running_tasks(self):
@@ -170,22 +172,24 @@ class DockerRunner(StepRunner):
         img = None
         build_ctx_path = None
 
-        if "docker://" in step["uses"]:
-            img = step["uses"].replace("docker://", "")
+        if "docker://" in step.uses:
+            img = step.uses.replace("docker://", "")
             if ":" in img:
                 (img, tag) = img.split(":")
             else:
                 tag = "latest"
             build = False
-        elif "./" in step["uses"]:
-            img = f'{pu.sanitized_name(step["name"], "step")}'
+        elif "./" in step.uses:
+            img = f'{pu.sanitized_name(step.id, "step")}'
             tag = f"{self._config.git_sha_short}"
-            build_ctx_path = os.path.join(self._config.workspace_dir, step["uses"])
+            build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
         else:
-            _, _, user, repo, _, version = scm.parse(step["uses"])
+            _, service, user, repo, step_dir, version = scm.parse(step.uses)
+            wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
+            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
             img = f"{user}/{repo}".lower()
             tag = version
-            build_ctx_path = os.path.join(step["repo_dir"], step["step_dir"])
+            build_ctx_path = os.path.join(repo_dir, step_dir)
 
         return (build, img, tag, build_ctx_path)
 
@@ -193,13 +197,13 @@ class DockerRunner(StepRunner):
         build, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
-            log.info(f'[{step["name"]}] docker build {img}:{tag} {build_ctx_path}')
+            log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
                 self._d.images.build(
                     path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
                 )
-        elif not self._config.skip_pull and not step.get("skip_pull", False):
-            log.info(f'[{step["name"]}] docker pull {img}:{tag}')
+        elif not self._config.skip_pull and not step.skip_pull:
+            log.info(f"[{step.id}] docker pull {img}:{tag}")
             if not self._config.dry_run:
                 self._d.images.pull(repository=f"{img}:{tag}")
 
@@ -208,7 +212,9 @@ class DockerRunner(StepRunner):
 
         container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
 
-        msg = f'[{step["name"]}] docker create name={cid}'
+        log.debug(f"Container args: {container_args}")
+
+        msg = f"[{step.id}] docker create name={cid}"
         msg += f' image={container_args["image"]}'
         if container_args["entrypoint"]:
             msg += f' entrypoint={container_args["entrypoint"]}'
@@ -223,7 +229,7 @@ class DockerRunner(StepRunner):
     def _get_container_kwargs(self, step, img, name):
         args = {
             "image": img,
-            "command": step.get("args", None),
+            "command": list(step.args),
             "name": name,
             "volumes": [
                 f"{self._config.workspace_dir}:/workspace",
@@ -231,7 +237,7 @@ class DockerRunner(StepRunner):
             ],
             "working_dir": "/workspace",
             "environment": self._prepare_environment(step),
-            "entrypoint": step.get("runs", None),
+            "entrypoint": step.runs if step.runs else None,
             "detach": True,
         }
 
@@ -254,7 +260,7 @@ class DockerRunner(StepRunner):
 
     def _update_with_engine_config(self, container_args):
         """Given container arguments, it extends it so it includes options
-        obtained from the PopperConfig.engine_opts property.
+        obtained from the popper.config.Config.engine_opts property.
         """
         update_with = self._config.engine_opts
         if not update_with:
@@ -294,7 +300,7 @@ class SingularityRunner(StepRunner):
 
     def run(self, step):
         self._setup_singularity_cache()
-        cid = pu.sanitized_name(step["name"], self._config.wid) + ".sif"
+        cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
         self._container = os.path.join(self._singularity_cache, cid)
 
         exists = os.path.exists(self._container)
@@ -347,29 +353,30 @@ class SingularityRunner(StepRunner):
         build_ctx_path = None
 
         if (
-            "docker://" in step["uses"]
-            or "shub://" in step["uses"]
-            or "library://" in step["uses"]
+            "docker://" in step.uses
+            or "shub://" in step.uses
+            or "library://" in step.uses
         ):
-            img = step["uses"]
+            img = step.uses
             build = False
 
-        elif "./" in step["uses"]:
-            img = f'{pu.sanitized_name(step["name"], "step")}'
-            build_ctx_path = os.path.join(self._config.workspace_dir, step["uses"])
+        elif "./" in step.uses:
+            img = f'{pu.sanitized_name(step.id, "step")}'
+            build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
         else:
-            _, _, user, repo, _, version = scm.parse(step["uses"])
+            _, service, user, repo, step_dir, version = scm.parse(step.uses)
+            wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
+            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
             img = f"{user}/{repo}".lower()
-            build_ctx_path = os.path.join(step["repo_dir"], step["step_dir"])
+            build_ctx_path = os.path.join(repo_dir, step_dir)
 
         return (build, img, build_ctx_path)
 
     def _setup_singularity_cache(self):
         self._singularity_cache = os.path.join(
-            WorkflowRunner._setup_base_cache(), "singularity", self._config.wid
+            self._config.cache_dir, "singularity", self._config.wid
         )
-        if not os.path.exists(self._singularity_cache):
-            os.makedirs(self._singularity_cache, exist_ok=True)
+        os.makedirs(self._singularity_cache, exist_ok=True)
 
     def _update_with_engine_config(self, container_args):
         update_with = self._config.engine_opts
@@ -411,11 +418,11 @@ class SingularityRunner(StepRunner):
         build, image, build_ctx_path = self._get_build_info(step)
 
         if build:
-            log.info(f'[{step["name"]}] singularity build {cid} {build_ctx_path}')
+            log.info(f"[{step.id}] singularity build {cid} {build_ctx_path}")
             if not self._config.dry_run:
                 self._build_from_recipe(build_ctx_path, self._singularity_cache, cid)
-        elif not self._config.skip_pull and not step.get("skip_pull", False):
-            log.info(f'[{step["name"]}] singularity pull {cid} {image}')
+        elif not self._config.skip_pull and not step.skip_pull:
+            log.info(f"[{step.id}] singularity pull {cid} {image}")
             if not self._config.dry_run:
                 self._s.pull(image=image, name=cid, pull_folder=self._singularity_cache)
 
@@ -426,16 +433,16 @@ class SingularityRunner(StepRunner):
         for k, v in env.items():
             os.environ[k] = str(v)
 
-        args = step.get("args", None)
-        runs = step.get("runs", None)
+        args = list(step.args)
+        runs = list(step.runs)
         ecode = None
 
         if runs:
-            info = f'[{step["name"]}] singularity exec {cid} {runs}'
+            info = f"[{step.id}] singularity exec {cid} {runs}"
             commands = runs
             start_fn = self._s.execute
         else:
-            info = f'[{step["name"]}] singularity run {cid} {args}'
+            info = f"[{step.id}] singularity run {cid} {args}"
             commands = args
             start_fn = self._s.run
 
