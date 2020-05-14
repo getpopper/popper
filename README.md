@@ -1,7 +1,6 @@
 # <img src="https://raw.githubusercontent.com/systemslab/popper/57f7a89bed6ff3e4d62ea2a5683ae28e3251931e/docs/figures/popper_logo_just_jug.png" width="64" valign="middle" alt="Popper"/> Popper
 
 [![Downloads](https://pepy.tech/badge/popper)](https://pepy.tech/project/popper)
-[![Downloads Per Week](https://pepy.tech/badge/popper/week)](https://pepy.tech/project/popper)
 [![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper)
 [![codecov](https://codecov.io/gh/systemslab/popper/branch/master/graph/badge.svg)](https://codecov.io/gh/systemslab/popper)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
@@ -21,7 +20,7 @@ steps:
   args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 
 - uses: docker://python:3.8.1-alpine
-  args: [scripts/get_mean_by_group.py, global.csv, '5']
+  args: [scripts/get_mean.py, global.csv, 'Per Capita']
 ```
 
 Assuming the above is stored in a `wf.yml` file, the workflow gets 
