@@ -19,7 +19,7 @@ def cli(ctx, wfile):
     main_workflow_content = """steps:
 
 - uses: "popperized/bin/sh@master"
-  args: "ls"
+  args: ["ls"]
 
 - uses: "docker://alpine:3.11"
   args: ["ls"]

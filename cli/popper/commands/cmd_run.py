@@ -4,8 +4,8 @@ import traceback
 
 from popper import log as logging
 from popper.cli import log, pass_context
-from popper.config import PopperConfig
-from popper.parser import Workflow
+from popper.config import ConfigLoader
+from popper.parser import WorkflowParser
 from popper.runner import WorkflowRunner
 
 
@@ -95,13 +95,6 @@ from popper.runner import WorkflowRunner
     is_flag=True,
 )
 @click.option(
-    "--with-dependencies",
-    help="When STEP is given, execute all its dependencies as well.",
-    required=False,
-    hidden=True,
-    is_flag=True,
-)
-@click.option(
     "-w",
     "--workspace",
     help="Path to workspace folder.",
@@ -129,7 +122,6 @@ def cli(
     skip_clone,
     substitution,
     allow_loose,
-    with_dependencies,
     workspace,
     conf,
 ):
@@ -162,24 +154,19 @@ def cli(
         logging.add_log(log, log_file)
 
     # check conflicting flags and fail if needed
-    if with_dependencies and not step:
-        log.fail(
-            "`--with-dependencies` can only be used when " "STEP argument is given."
-        )
     if skip and step:
         log.fail("`--skip` can not be used when STEP argument is passed.")
 
     # invoke wf factory; handles formats, validations, filtering
-    wf = Workflow.new(
+    wf = WorkflowParser.parse(
         wfile,
         step=step,
         skipped_steps=skip,
         substitutions=substitution,
         allow_loose=allow_loose,
-        include_step_dependencies=with_dependencies,
     )
 
-    config = PopperConfig(
+    config = ConfigLoader.load(
         engine_name=engine,
         resman_name=resource_manager,
         config_file=conf,
