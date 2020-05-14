@@ -17,6 +17,5 @@ install:
 - black --check --diff .
 script:
 - coverage run -m unittest cli/test/test_*
-- ci/run_tests.sh
 after_success:
 - bash <(curl -s https://codecov.io/bash)
