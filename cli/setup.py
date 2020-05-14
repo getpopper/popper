@@ -17,7 +17,7 @@ setup(
         "click==7.1.2",
         "docker==4.2.0",
         "GitPython==3.1.0",
-        "pyhcl==0.4.0",
+        "pykwalify==1.7.0",
         "python-box==4.2.3",
         "pyyaml==5.3.1",
         "spython==0.0.79",
