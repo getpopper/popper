@@ -1,24 +1,29 @@
 import os
 
-from popper.config import PopperConfig
+from popper.config import ConfigLoader
 from popper.cli import log
 
 from .test_common import PopperTest
 
+from box import Box
+
 
 class TestPopperConfig(PopperTest):
-    default_args = {
-        "skip_clone": False,
-        "engine_name": "docker",
-        "engine_opts": {},
-        "resman_name": "host",
-        "resman_opts": {},
-        "skip_pull": False,
-        "dry_run": False,
-        "workspace_dir": os.getcwd(),
-        "quiet": False,
-        "reuse": False,
-    }
+    default_args = Box(
+        {
+            "skip_clone": False,
+            "engine_name": "docker",
+            "engine_opts": {},
+            "resman_name": "host",
+            "resman_opts": {},
+            "skip_pull": False,
+            "dry_run": False,
+            "workspace_dir": os.getcwd(),
+            "quiet": False,
+            "reuse": False,
+        },
+        default_box=True,
+    )
 
     def setUp(self):
         log.setLevel("CRITICAL")
@@ -28,12 +33,10 @@ class TestPopperConfig(PopperTest):
         log.setLevel("NOTSET")
 
     def test_config_defaults(self):
-        conf = PopperConfig()
-        actual = conf.__dict__
-
+        conf = ConfigLoader.load()
         expected = TestPopperConfig.default_args
 
-        self.assertEqual(expected, TestPopperConfig.extract_dict(expected, actual))
+        self.assertEqual(expected, TestPopperConfig.extract_dict(expected, conf))
 
     def test_config_non_defaults(self):
         expected = {
@@ -44,20 +47,18 @@ class TestPopperConfig(PopperTest):
             "quiet": True,
             "reuse": True,
         }
-        conf = PopperConfig(**expected)
-        actual = conf.__dict__
-
-        self.assertEqual(expected, TestPopperConfig.extract_dict(expected, actual))
+        conf = ConfigLoader.load(**expected)
+        self.assertEqual(expected, TestPopperConfig.extract_dict(expected, conf))
 
     def test_config_without_git_repo(self):
-        conf = PopperConfig(workspace_dir="/tmp/foo")
-        self.assertIsNone(conf.git_commit)
-        self.assertIsNone(conf.git_branch)
-        self.assertIsNone(conf.git_sha_short)
+        conf = ConfigLoader.load(workspace_dir="/tmp/foo")
+        self.assertTrue(not conf.git_commit)
+        self.assertTrue(not conf.git_branch)
+        self.assertTrue(not conf.git_sha_short)
 
     def test_config_with_git_repo(self):
         r = self.mk_repo()
-        conf = PopperConfig(workspace_dir=r.working_dir)
+        conf = ConfigLoader.load(workspace_dir=r.working_dir)
         sha = r.head.object.hexsha
         self.assertEqual(r.git.rev_parse(sha), conf.git_commit)
         self.assertEqual(r.git.rev_parse(sha, short=7), conf.git_sha_short)
@@ -72,27 +73,27 @@ class TestPopperConfig(PopperTest):
 
         # engine name missing
         with self.assertLogs("popper", level="INFO") as cm:
-            self.assertRaises(SystemExit, PopperConfig, **kwargs)
+            self.assertRaises(SystemExit, ConfigLoader.load, **kwargs)
             self.assertEqual(len(cm.output), 1)
             self.assertTrue("No engine name given" in cm.output[0])
 
         # resman name missing
         config.update({"engine": {"name": "foo"}})
         with self.assertLogs("popper", level="INFO") as cm:
-            self.assertRaises(SystemExit, PopperConfig, **kwargs)
+            self.assertRaises(SystemExit, ConfigLoader.load, **kwargs)
             self.assertEqual(len(cm.output), 1)
             self.assertTrue("No resource manager name given" in cm.output[0])
 
         # now all OK
         config.update({"resource_manager": {"name": "bar"}})
-        conf = PopperConfig(**kwargs)
+        conf = ConfigLoader.load(**kwargs)
         self.assertEqual(conf.engine_name, "foo")
         self.assertEqual(conf.resman_name, "bar")
         self.assertEqual(conf.engine_opts, {})
         self.assertEqual(conf.resman_opts, {})
 
         config.update({"engine": {"name": "bar", "options": {"foo": "baz"}}})
-        conf = PopperConfig(**kwargs)
+        conf = ConfigLoader.load(**kwargs)
         self.assertEqual(conf.engine_opts, {"foo": "baz"})
 
     @staticmethod
