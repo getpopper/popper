@@ -18,11 +18,11 @@ setup(
         "docker==4.2.0",
         "GitPython==3.1.0",
         "pyhcl==0.4.0",
+        "python-box==4.2.3",
         "pyyaml==5.3.1",
-        "python-vagrant==0.5.15",
         "spython==0.0.79",
     ],
-    extras_require={"dev": ["testfixtures==6.14.0", "black==19.10b0",]},
+    extras_require={"dev": ["testfixtures==6.14.0", "black==19.10b0"]},
     entry_points="""
         [console_scripts]
         popper=popper.cli:cli

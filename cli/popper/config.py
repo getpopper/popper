@@ -6,10 +6,12 @@ import popper.scm as scm
 from hashlib import shake_256
 from popper.cli import log as log
 
+from box import Box
 
-class PopperConfig(object):
-    def __init__(
-        self,
+
+class ConfigLoader(object):
+    @staticmethod
+    def load(
         engine_name=None,
         resman_name=None,
         config_file=None,
@@ -20,37 +22,52 @@ class PopperConfig(object):
         skip_pull=False,
         skip_clone=False,
     ):
+        """Loads and creates a configuration, represented by a frozen Box
+        """
+        workspace_dir = os.path.realpath(workspace_dir)
+        repo = scm.new_repo(workspace_dir)
 
-        self.workspace_dir = os.path.realpath(workspace_dir)
+        # path to cache
+        if os.environ.get("POPPER_CACHE_DIR", None):
+            cache_dir = os.environ["POPPER_CACHE_DIR"]
+        else:
+            cache_dir_default = os.path.join(os.environ["HOME"], ".cache")
+            cache_dir = os.environ.get("XDG_CACHE_HOME", cache_dir_default)
+            cache_dir = os.path.join(cache_dir, "popper")
 
-        self.reuse = reuse
-        self.dry_run = dry_run
-        self.quiet = quiet
-        self.skip_pull = skip_pull
-        self.skip_clone = skip_clone
+        from_file = ConfigLoader.__load_config_from_file(
+            config_file, engine_name, resman_name
+        )
 
-        # if no git repository exists in workspace_dir or its parents, the repo
-        # variable is None and all git_* variables are assigned to 'na'
-        self.repo = scm.new_repo(self.workspace_dir)
-        self.git_commit = scm.get_sha(self.repo)
-        self.git_sha_short = scm.get_sha(self.repo, short=7)
-        self.git_branch = scm.get_branch(self.repo)
+        pp_config = {
+            "workspace_dir": workspace_dir,
+            "reuse": reuse,
+            "dry_run": dry_run,
+            "quiet": quiet,
+            "skip_pull": skip_pull,
+            "skip_clone": skip_clone,
+            # if no git repository exists in workspace_dir or its parents, the repo
+            # variable is None and all git_* variables are assigned to 'na'
+            "repo": repo,
+            "git_commit": scm.get_sha(repo),
+            "git_sha_short": scm.get_sha(repo, short=7),
+            "git_branch": scm.get_branch(repo),
+            # wid is used to associate a unique id to this workspace. This is then
+            # used by runners to name resources in a way that there is no name
+            # clash between concurrent workflows being executed
+            "wid": shake_256(workspace_dir.encode("utf-8")).hexdigest(4),
+            "cache_dir": cache_dir,
+            "engine_name": from_file["engine_name"],
+            "resman_name": from_file["resman_name"],
+            "engine_opts": from_file["engine_opts"],
+            "resman_opts": from_file["resman_opts"],
+        }
 
-        # wid is used to associate a unique id to this workspace. This is then
-        # used by runners to name resources in a way that there is no name
-        # clash between concurrent workflows being executed
-        wid = shake_256(self.workspace_dir.encode("utf-8")).hexdigest(4)
-        self.wid = wid
+        return Box(pp_config, default_box=True, frozen_box=True)
 
-        from_file = self._load_config_from_file(config_file, engine_name, resman_name)
-
-        self.engine_name = from_file["engine_name"]
-        self.resman_name = from_file["resman_name"]
-        self.engine_opts = from_file["engine_opts"]
-        self.resman_opts = from_file["resman_opts"]
-
-    def _load_config_from_file(self, config_file, engine_name, resman_name):
-        from_file = PopperConfig.__load_config_file(config_file)
+    @staticmethod
+    def __load_config_from_file(config_file, engine_name, resman_name):
+        from_file = ConfigLoader.__load_config_file(config_file)
         loaded_conf = {}
 
         eng_section = from_file.get("engine", None)
