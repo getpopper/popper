@@ -51,7 +51,20 @@ class TestHostHostRunner(PopperTest):
             wf_data = {"steps": [{"uses": "sh", "runs": ["nocommandisnamedlikethis"]}]}
             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
+            # check exit code 78
+            wf_data = {
+                "steps": [
+                    {"uses": "sh", "runs": ["touch", "one.txt"]},
+                    {"uses": "sh", "runs": ["bash", "-c", "exit 78"]},
+                    {"uses": "sh", "runs": ["touch", "two.txt"]},
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+            self.assertTrue(os.path.isfile(os.path.join(repo.working_dir, "one.txt")))
+            self.assertFalse(os.path.isfile(os.path.join(repo.working_dir, "two.txt")))
+
         repo.close()
+        shutil.rmtree(repo.working_dir, ignore_errors=True)
 
     def test_exec_cmd(self):
         cmd = ["echo", "hello-world"]

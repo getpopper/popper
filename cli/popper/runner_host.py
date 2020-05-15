@@ -34,7 +34,7 @@ class HostRunner(StepRunner):
         pass
 
     def run(self, step):
-        step_env = self._prepare_environment(step, os.environ)
+        step_env = self._prepare_environment(step, env=dict(os.environ))
 
         if not step.runs:
             raise AttributeError(f"Expecting 'runs' attribute in step.")
@@ -45,10 +45,10 @@ class HostRunner(StepRunner):
         if self._config.dry_run:
             return 0
 
-        log.debug(f"Environment:\n{pu.prettystr(os.environ)}")
+        log.debug(f"Environment:\n{pu.prettystr(step_env)}")
 
         pid, ecode, _ = HostRunner._exec_cmd(
-            cmd, step_env, self._config.workspace_dir, self._spawned_pids
+            cmd, env=step_env, cwd=self._config.workspace_dir, pids=self._spawned_pids
         )
         if pid != 0:
             self._spawned_pids.remove(pid)
