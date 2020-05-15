@@ -15,7 +15,7 @@ if dunamai_found:
         version_path = os.path.join("cli", "popper", "_version.py")
     else:
         version_path = os.path.join("popper", "_version.py")
-    with open(version_path,"w") as v:
+    with open(version_path, "w") as v:
         v.write(ver)
 else:
     from popper._version import __popper_version__ as __version__
