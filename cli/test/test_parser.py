@@ -14,6 +14,17 @@ class TestWorkflow(unittest.TestCase):
     def tearDown(self):
         log.setLevel("NOTSET")
 
+    def test_empty_file(self):
+        try:
+            f = open("test.yml", "a")
+            f.close()
+            WorkflowParser.parse(file="test.yml")
+            self.assertTrue(False, "Empty Workflow file does not raise an exception.")
+        except SystemExit:
+            self.assertTrue(True)
+        else:
+            self.assertTrue(False, "Empty Workflow file does not raise a SystemExit.")
+
     def test_new_workflow(self):
         wf_data = {}
         self.assertRaises(SystemExit, WorkflowParser.parse, **{"wf_data": wf_data})
