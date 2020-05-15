@@ -1,5 +1,5 @@
 import importlib
-from popper._version import __popper_version__ as __version__
+import os
 
 # check if dunamai is available
 dunamai_spec = importlib.util.find_spec("dunamai")
@@ -8,6 +8,14 @@ if dunamai_found:
     # if dunamai is found, then we use it to display the version
     import dunamai
 
-    __dev_version__ = dunamai.Version.from_any_vcs().serialize()
-    # overwrite the __popper_version__ variable with new value
-    __version__ = __dev_version__
+    __version__ = dunamai.Version.from_any_vcs().serialize()
+    ver = f"__popper_version__ = \"{__version__}\""
+    path = os.path.split(os.getcwd())
+    if path[1] == "popper":
+        version_path = os.path.join("cli", "popper", "_version.py")
+    else:
+        version_path = os.path.join("popper", "_version.py")
+    with open(version_path,"w") as v:
+        v.write(ver)
+else:
+    from popper._version import __popper_version__ as __version__
