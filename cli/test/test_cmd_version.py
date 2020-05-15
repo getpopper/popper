@@ -5,6 +5,7 @@ from popper._version import __popper_version__
 from popper.commands import cmd_version
 from .test_common import PopperTest
 
+
 class TestCommandVersion(PopperTest):
     def test_version(self):
 
@@ -14,4 +15,3 @@ class TestCommandVersion(PopperTest):
             self.assertEqual(result.exit_code, 0)
             self.assertEqual(__version__, __popper_version__)
         self.assertTrue(__version__ in test.output[0])
-        

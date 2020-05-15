@@ -9,7 +9,7 @@ if dunamai_found:
     import dunamai
 
     __version__ = dunamai.Version.from_any_vcs().serialize()
-    ver = f"__popper_version__ = \"{__version__}\""
+    ver = f'__popper_version__ = "{__version__}"'
     path = os.path.split(os.getcwd())
     if path[1] == "popper":
         version_path = os.path.join("cli", "popper", "_version.py")
