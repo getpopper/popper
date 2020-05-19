@@ -15,12 +15,8 @@ if dunamai_found:
 
     __version__ = dunamai.Version.from_any_vcs().serialize()
     ver = f'__popper_version__ = "{__version__}"'
-    path = os.path.split(os.getcwd())
-    if path[1] == "popper":
-        version_path = os.path.join("cli", "popper", "_version.py")
-    else:
-        version_path = os.path.join("popper", "_version.py")
-    with open(version_path, "w") as v:
+    _init_script_dir = pathlib.Path(__file__).parent.absolute()
+    with open(_init_script_dir, "w") as v:
         v.write(ver)
 else:
     from popper._version import __popper_version__ as __version__
