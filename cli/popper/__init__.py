@@ -1,5 +1,10 @@
 import importlib
+import pathlib
 import os
+import sys
+
+current_module = sys.modules[__name__]
+print(current_module)
 
 # check if dunamai is available
 dunamai_spec = importlib.util.find_spec("dunamai")
