@@ -173,6 +173,7 @@ class KubernetesRunner(StepRunner):
         while True:
             resp = self._kclient.read_namespaced_pod(self._pod_name,
                                                     namespace='default')
+            log.debug(resp.status)
             if resp.status.phase != 'Pending':
                 break
 
