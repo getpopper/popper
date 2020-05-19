@@ -80,6 +80,9 @@ class WorkflowParser(object):
 
             with open(file, "r") as f:
                 _wf_data = yaml.safe_load(f)
+
+                if not _wf_data:
+                    log.fail(f"File {file} is empty")
         else:
             _wf_data = wf_data
 
