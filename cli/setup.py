@@ -1,12 +1,12 @@
 from setuptools import setup
 
 version = {}
-with open("popper/__init__.py") as f:
+with open("popper/_version.py") as f:
     exec(f.read(), version)
 
 setup(
     name="popper",
-    version=version["__version__"],
+    version=version["__popper_version__"],
     author="The Popper Development Team",
     author_email="ivo@cs.ucsc.edu",
     url="http://falsifiable.us",
