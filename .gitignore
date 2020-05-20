@@ -16,3 +16,4 @@ popper_status
 popper_logs
 popper_status
 .pipeline_cache.yml
+cli/popper/_version.py
