@@ -1,0 +1,5 @@
+version: '1'
+steps:
+- uses: 'popperized/bin/sh@master'
+  args: ['ls']
+  env: {MESSAGE : 'message in a bottle'}

@@ -1,0 +1,4 @@
+Vagrant.configure("2") do |config|
+config.vm.box = "ailispaw/barge"
+config.vm.synced_folder "$HOME", "$HOME"
+config.vm.synced_folder "/tmp/mypaper", "/tmp/mypaper"
