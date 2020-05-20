@@ -1,12 +1,12 @@
 from setuptools import setup
 
 version = {}
-with open("popper/__init__.py") as f:
+with open("popper/_version.py") as f:
     exec(f.read(), version)
 
 setup(
     name="popper",
-    version=version["__version__"],
+    version=version["__popper_version__"],
     author="The Popper Development Team",
     author_email="ivo@cs.ucsc.edu",
     url="http://falsifiable.us",
@@ -22,7 +22,9 @@ setup(
         "pyyaml==5.3.1",
         "spython==0.0.79",
     ],
-    extras_require={"dev": ["testfixtures==6.14.0", "black==19.10b0"]},
+    extras_require={
+        "dev": ["testfixtures==6.14.0", "black==19.10b0", "dunamai==1.1.0"]
+    },
     entry_points="""
         [console_scripts]
         popper=popper.cli:cli
