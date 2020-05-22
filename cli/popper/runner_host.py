@@ -139,7 +139,7 @@ class DockerRunner(StepRunner):
 
         if container and not self._config.reuse and not self._config.dry_run:
             container.remove(force=True)
-            container = self._create_container(cid, step)
+            container = None
 
         if not container and not self._config.reuse:
             container = self._create_container(cid, step)
