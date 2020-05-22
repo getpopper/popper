@@ -132,10 +132,13 @@ class DockerRunner(StepRunner):
 
         container = self._find_container(cid)
 
-        if not self._config.reuse and not self._config.dry_run:
-            if container:
+        if not container and self._config.reuse:
+            log.fail(f"Cannot find an existing container for step '{step.id}' to be reused")
+
+        if container and not self._config.reuse and not self._config.dry_run:
                 container.remove(force=True)
 
+        if not container and not self.config.reuse:
             container = self._create_container(cid, step)
 
         log.info(f"[{step.id}] docker start")
