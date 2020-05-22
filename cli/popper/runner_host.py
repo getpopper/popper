@@ -131,10 +131,13 @@ class DockerRunner(StepRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
 
         container = self._find_container(cid)
-        if container and not self._config.reuse and not self._config.dry_run:
-            container.remove(force=True)
 
-        container = self._create_container(cid, step)
+        if not self._config.reuse and not self._config.dry_run:
+            if container:
+                container.remove(force=True)
+
+            container = self._create_container(cid, step)
+
 
         log.info(f"[{step.id}] docker start")
 

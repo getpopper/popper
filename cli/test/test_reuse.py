@@ -21,11 +21,6 @@ class TestReuse(PopperTest):
 
 	def test_reuse(self):
 
-		import os
-		import hashlib
-		identifier = str(os.getuid()) + "_main.yaml"
-		id_val = str(hashlib.md5(identifier.encode()).hexdigest())
-
 		repo = self.mk_repo()
 		conf = ConfigLoader.load(workspace_dir=repo.working_dir)
 
@@ -72,21 +67,79 @@ class TestReuse(PopperTest):
 
 		conf = ConfigLoader.load(workspace_dir=repo.working_dir)
 
+		with self.assertLogs('popper') as test_logs:
+			with WorkflowRunner(conf) as r:
+
+				wf_data = {
+					"steps": [
+						{
+							"uses": 'popperized/bin/sh@master',
+			              	"args": ['ls'],
+						}
+					]
+				}
+
+				r.run(WorkflowParser.parse(wf_data=wf_data))
+
+				client = docker.from_env()
+				container_list = client.containers.list(all=True)
+				req_containers = [x for x in container_list if re.search('popper_1', x.name)]
+
+				self.assertGreater(len(req_containers),0)
+
+				req_container = req_containers[0]
+				print(repo.working_dir)
+
+				return_code = os.system('docker cp '+ req_container.name +':/reuse.yaml '+repo.working_dir+'reuse.yaml')
+				self.assertGreater(return_code, 0)
+				
+
+		conf = ConfigLoader.load(workspace_dir=repo.working_dir, reuse=True)
+
+		with WorkflowRunner(conf) as r:
+
+			r.run(WorkflowParser.parse(wf_data=wf_data))
+
+
+	@unittest.skipIf(os.environ['ENGINE'] == 'singularity', 'ENGINE == singularity')
+	def test_non_singularity(self):
+
+		repo = self.mk_repo()
+		conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+
+		with self.assertLogs('popper', level = 15) as test_logs:
+			with WorkflowRunner(conf) as r:
+
+				wf_data = {
+					"steps": [
+						{
+							"uses": 'popperized/bin/sh@master',
+				            "args": ['ls'],
+				            "env" : {"MESSAGE" : "message in a bottle"}
+						}
+					]
+				}
+
+				r.run(WorkflowParser.parse(wf_data=wf_data))
+
+			self.assertTrue('STEP_INFO:popper:README.md' in test_logs.output)
+			self.assertTrue("STEP_INFO:popper:Successfully ran 'ls'" in test_logs.output)
+			
+
+		conf = ConfigLoader.load(workspace_dir=repo.working_dir, reuse = True)
 		with WorkflowRunner(conf) as r:
 
 			wf_data = {
 				"steps": [
 					{
 						"uses": 'popperized/bin/sh@master',
-		              	"args": ['ls', '-a'],
+			            "runs": ["cat"],
+			            "args": ["README.md"],
 					}
 				]
 			}
 
 			r.run(WorkflowParser.parse(wf_data=wf_data))
-
-
-
 
 
 	# 	with WorkflowRunner(conf) as r:
