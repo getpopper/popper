@@ -54,9 +54,10 @@ class KubernetesRunner(StepRunner):
 
         ecode = 1
         try:
-            if not self._is_vol_claim_created():
-                # self._vol_create()
-                self._vol_claim_create()
+            if self._is_vol_claim_created():
+                self._vol_delete()
+
+            self._vol_claim_create()
             self._pod_create(step)
             self._pod_read_log()
             ecode = self._pod_exit_code()
