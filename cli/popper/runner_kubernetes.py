@@ -32,7 +32,7 @@ class KubernetesRunner(StepRunner):
         # volume and vol claim properties
         self._vol_name = f'{self._pod_name}-pv'
         self._vol_claim_name = f'{self._pod_name}-pvc'
-        self._vol_size = self._config.resman_opts.get('volume_size', '10Gi') # same for vol claim
+        self._vol_size = self._config.resman_opts.get('volume_size', '5Gi') # same for vol claim
 
         # keep track of volume or volume claim are created or not
         self._vol_created = False
@@ -55,7 +55,7 @@ class KubernetesRunner(StepRunner):
         ecode = 1
         try:
             if not self._is_vol_claim_created():
-                self._vol_create()
+                # self._vol_create()
                 self._vol_claim_create()
             self._pod_create(step)
             self._pod_read_log()
@@ -117,7 +117,7 @@ class KubernetesRunner(StepRunner):
                 raise Exception('Timed out waiting for volume creation')
 
             time.sleep(1)
-            counter += 1
+            # counter += 1
 
         self._vol_claim_created  = True
 
@@ -128,7 +128,7 @@ class KubernetesRunner(StepRunner):
             'kind': 'PersistentVolume',
             'metadata': {'name': self._vol_name},
             'spec': {
-                'storageClassName': 'manual',
+                # 'storageClassName': 'manual',
                 'accessModes': ['ReadWriteOnce'],
                 'hostPath': {
                     'path': os.getcwd()
@@ -150,8 +150,8 @@ class KubernetesRunner(StepRunner):
                 'name': self._vol_claim_name
             },
             'spec': {
-                'storageClassName': 'manual',
-                'accessModes': ['ReadWriteOnce'],
+                # 'storageClassName': 'manual',
+                'accessModes': ['ReadWriteMany'],
                 'resources': {
                     'requests': {
                         'storage': self._vol_size
@@ -183,7 +183,7 @@ class KubernetesRunner(StepRunner):
                 raise Exception('Timed out waiting for pod to start')
 
             time.sleep(1)
-            counter += 1
+            # counter += 1
 
     # supply pod conf
     def _pod_conf(self, step):
