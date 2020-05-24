@@ -57,16 +57,11 @@ cd popper/
 # activate the virtualenv
 source $HOME/venvs/popper/bin/activate
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> Fixes imports to enable single-test execution
 # run all tests
 python -X tracemalloc -m unittest -f cli/test/test_*
 
 # run only one
 python -X tracemalloc -m unittest -f cli/test/test_runner.py
-<<<<<<< HEAD
 ```
 
 ## Codestyle
@@ -78,12 +73,6 @@ To apply black to your code, run black from the root Popper directory:
 ```bash
 cd popper
 black .
-=======
-# run the tests
-python -X tracemalloc -m unittest discover -f cli/test/
->>>>>>> Makes docker tests the default
-=======
->>>>>>> Fixes imports to enable single-test execution
 ```
 
 ## Contributing CLI features
