@@ -21,9 +21,7 @@ setup(
         "python-box==4.2.3",
         "pyyaml==5.3.1",
         "spython==0.0.79",
-        'kubernetes',
-        'pyhcl==0.4.0',
-        'python-vagrant',
+        "kubernetes==11.0.0",
     ],
     extras_require={
         "dev": ["testfixtures==6.14.0", "black==19.10b0", "dunamai==1.1.0"]
