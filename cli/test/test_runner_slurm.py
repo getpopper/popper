@@ -17,6 +17,9 @@ from .test_common import PopperTest
 from box import Box
 
 
+slurm_cache_dir = os.environ["HOME"] + "/.cache/popper/slurm"
+
+
 def mock_kill(pid, sig):
     return 0
 

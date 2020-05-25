@@ -45,7 +45,7 @@ class SlurmRunner(HostRunner):
 
     def _submit_batch_job(self, cmd, step):
         job_name = pu.sanitized_name(step.id, self._config.wid)
-        temp_dir = "/tmp/popper/slurm/"
+        temp_dir = f"{self._config.cache_dir}/slurm/{self._config.wid}"
         os.makedirs(temp_dir, exist_ok=True)
 
         job_script = os.path.join(temp_dir, f"{job_name}.sh")
