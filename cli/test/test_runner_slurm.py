@@ -17,7 +17,7 @@ from .test_common import PopperTest
 from box import Box
 
 
-config=ConfigLoader.load(workspace_dir="/w")
+config = ConfigLoader.load(workspace_dir="/w")
 slurm_cache_dir = f"{os.environ['HOME']}/.cache/popper/slurm/{config.wid}"
 
 
