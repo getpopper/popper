@@ -17,6 +17,10 @@ from .test_common import PopperTest
 from box import Box
 
 
+config = ConfigLoader.load(workspace_dir="/w")
+slurm_cache_dir = f"{os.environ['HOME']}/.cache/popper/slurm/{config.wid}"
+
+
 def mock_kill(pid, sig):
     return 0
 
@@ -62,17 +66,17 @@ class TestSlurmSlurmRunner(PopperTest):
         self.Popen.set_command(
             "sbatch --wait "
             f"--job-name popper_sample_{config.wid} "
-            f"--output /tmp/popper/slurm/popper_sample_{config.wid}.out "
-            f"/tmp/popper/slurm/popper_sample_{config.wid}.sh",
+            f"--output {slurm_cache_dir}/popper_sample_{config.wid}.out "
+            f"{slurm_cache_dir}/popper_sample_{config.wid}.sh",
             returncode=0,
         )
         self.Popen.set_command(
-            f"tail -f /tmp/popper/slurm/popper_sample_{config.wid}.out", returncode=0
+            f"tail -f {slurm_cache_dir}/popper_sample_{config.wid}.out", returncode=0
         )
         step = Box({"id": "sample"}, default_box=True)
         with SlurmRunner(config=config) as sr:
             sr._submit_batch_job(["ls -la"], step)
-            with open(f"/tmp/popper/slurm/popper_sample_{config.wid}.sh", "r") as f:
+            with open(f"{slurm_cache_dir}/popper_sample_{config.wid}.sh", "r") as f:
                 content = f.read()
 
             self.assertEqual(content, "#!/bin/bash\nls -la")
@@ -80,7 +84,7 @@ class TestSlurmSlurmRunner(PopperTest):
             self.assertEqual(sr._out_stream_thread.is_alive(), False)
 
         call_tail = call.Popen(
-            ["tail", "-f", f"/tmp/popper/slurm/popper_sample_{config.wid}.out"],
+            ["tail", "-f", f"{slurm_cache_dir}/popper_sample_{config.wid}.out"],
             cwd=os.getcwd(),
             env=None,
             preexec_fn=os.setsid,
@@ -96,8 +100,8 @@ class TestSlurmSlurmRunner(PopperTest):
                 "--job-name",
                 f"popper_sample_{config.wid}",
                 "--output",
-                f"/tmp/popper/slurm/popper_sample_{config.wid}.out",
-                f"/tmp/popper/slurm/popper_sample_{config.wid}.sh",
+                f"{slurm_cache_dir}/popper_sample_{config.wid}.out",
+                f"{slurm_cache_dir}/popper_sample_{config.wid}.sh",
             ],
             cwd=os.getcwd(),
             env=None,
@@ -121,13 +125,13 @@ class TestSlurmSlurmRunner(PopperTest):
 
         self.Popen.set_command(
             f"sbatch --wait --job-name popper_1_{config.wid} "
-            f"--output /tmp/popper/slurm/popper_1_{config.wid}.out "
-            f"/tmp/popper/slurm/popper_1_{config.wid}.sh",
+            f"--output {slurm_cache_dir}/popper_1_{config.wid}.out "
+            f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
             returncode=12,
         )
 
         self.Popen.set_command(
-            f"tail -f /tmp/popper/slurm/popper_1_{config.wid}.out", returncode=0
+            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
         )
 
         with WorkflowRunner(config) as r:
@@ -143,7 +147,7 @@ class TestSlurmSlurmRunner(PopperTest):
             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
             call_tail = call.Popen(
-                ["tail", "-f", f"/tmp/popper/slurm/popper_1_{config.wid}.out"],
+                ["tail", "-f", f"{slurm_cache_dir}/popper_1_{config.wid}.out"],
                 cwd=os.getcwd(),
                 env=None,
                 preexec_fn=os.setsid,
@@ -159,8 +163,8 @@ class TestSlurmSlurmRunner(PopperTest):
                     "--job-name",
                     f"popper_1_{config.wid}",
                     "--output",
-                    f"/tmp/popper/slurm/popper_1_{config.wid}.out",
-                    f"/tmp/popper/slurm/popper_1_{config.wid}.sh",
+                    f"{slurm_cache_dir}/popper_1_{config.wid}.out",
+                    f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
                 ],
                 cwd=os.getcwd(),
                 env=None,
@@ -273,13 +277,13 @@ class TestSlurmDockerRunner(unittest.TestCase):
 
         self.Popen.set_command(
             f"sbatch --wait --job-name popper_1_{config.wid} "
-            f"--output /tmp/popper/slurm/popper_1_{config.wid}.out "
-            f"/tmp/popper/slurm/popper_1_{config.wid}.sh",
+            f"--output {slurm_cache_dir}/popper_1_{config.wid}.out "
+            f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"tail -f /tmp/popper/slurm/popper_1_{config.wid}.out", returncode=0
+            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
         )
 
         with WorkflowRunner(config) as r:
@@ -294,7 +298,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
             }
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
-        with open(f"/tmp/popper/slurm/popper_1_{config.wid}.sh", "r") as f:
+        with open(f"{slurm_cache_dir}/popper_1_{config.wid}.sh", "r") as f:
             # fmt: off
             expected = f"""#!/bin/bash
 docker rm -f popper_1_{config.wid} || true
@@ -378,20 +382,20 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 
         # fmt: off
         self.Popen.set_command(
-            f"sbatch --wait --job-name popper_1_{config.wid} --output /tmp/popper/slurm/popper_1_{config.wid}.out /tmp/popper/slurm/popper_1_{config.wid}.sh",
+            f"sbatch --wait --job-name popper_1_{config.wid} --output {slurm_cache_dir}/popper_1_{config.wid}.out {slurm_cache_dir}/popper_1_{config.wid}.sh",
             returncode=0,
         )
         # fmt: on
 
         self.Popen.set_command(
-            f"tail -f /tmp/popper/slurm/popper_1_{config.wid}.out", returncode=0
+            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
         )
 
         with WorkflowRunner(config) as r:
             wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
-        with open(f"/tmp/popper/slurm/popper_1_{config.wid}.sh", "r") as f:
+        with open(f"{slurm_cache_dir}/popper_1_{config.wid}.sh", "r") as f:
             # fmt: off
             expected = f"""#!/bin/bash
 singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/popper_1_{config.wid}.sif ls"""
