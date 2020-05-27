@@ -179,10 +179,10 @@ class WorkflowParser(object):
             # replace in steps
             for step in wf_data["steps"]:
                 for _, step_attr in step.items():
-                    Workflow._apply_substitution(step_attr, k, v, used)
+                    WorkflowParser.__apply_substitution(step_attr, k, v, used)
 
             for _, options_attr in wf_data.get("options", {}).items():
-                Workflow._apply_substitution(options_attr, k, v, used)
+                WorkflowParser.__apply_substitution(options_attr, k, v, used)
 
         if not allow_loose and len(substitutions) != len(used):
             log.fail("Not all given substitutions are used in " "the workflow file")
