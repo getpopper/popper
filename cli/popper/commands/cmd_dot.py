@@ -6,7 +6,7 @@ from popper.parser import WorkflowParser
 
 @click.option(
     "-f",
-    "--wfile",
+    "--file",
     help="File containing the definition of the workflow.",
     required=True,
 )
@@ -22,9 +22,9 @@ from popper.parser import WorkflowParser
 )
 @click.command("dot", short_help="Generate a graph in the .dot format.")
 @pass_context
-def cli(ctx, wfile, skip, colors):
+def cli(ctx, file, skip, colors):
     """Creates a graph in the .dot format representing the workflow."""
-    wf = WorkflowParser.parse(file=wfile)
+    wf = WorkflowParser.parse(file=file)
 
     node_attrs = 'shape=box, style="filled{}", fillcolor=transparent{}'
     wf_attr = node_attrs.format(",rounded", ",color=red" if colors else "")
