@@ -130,7 +130,7 @@ container is instantiated. For a more detailed description of how
 Popper processes a workflow, take a look at the ["Workflow Language 
 and Runtime"](cn_workflows.md) section. To learn more on how to modify 
 this workflow in order to fit your needs, take a look at [this 
-tutorial][ghatut] or take a look at [some examples][ex].
+tutorial][poppertut] or take a look at [some examples][ex].
 
 Before we go ahead and test this workflow, we first commit the files 
 to the Git repository:
@@ -226,14 +226,13 @@ Go to the TravisCI website to see your experiments being executed.
 For a detailed description of how Popper processes workflows, take a 
 look at the ["Workflow Language and Runtime"](cn_workflows.md) 
 section. To learn more on how to modify workflows to fit your needs, 
-take a look at [this tutorial][ghatut] or at [some examples][ex].
+take a look at [this tutorial][poppertut] or at [some examples][ex].
 
 [docker-install]: https://docs.docker.com/install/
 [wfeng]: https://en.wikipedia.org/wiki/Workflow_engine
 [cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
 [pip]: https://pip.pypa.io/en/stable/
-[wfdocs]: gha_workflows.md
-[ghatut]: https://popperized.github.io/swc-lesson/
+[poppertut]: https://popperized.github.io/swc-lesson/
 [ex]: https://github.com/popperized/popper-examples
 [gh-create]: https://help.github.com/articles/create-a-repo/
 [cisetup]: https://docs.travis-ci.com/user/getting-started/#Prerequisites

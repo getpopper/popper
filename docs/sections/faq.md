@@ -48,5 +48,6 @@ examples.
 
 ### How to apply the Popper protocol for applications that take large quantities of computer time?
 
-The `popper run` takes an optional `action` argument that can be used 
-to execute a workflow up to a certain step. Run `popper run --help` for more.
+The `popper run` takes an optional `STEP` argument that can be used to 
+execute a workflow up to a certain step. Run `popper run --help` for 
+more.

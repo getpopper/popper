@@ -106,10 +106,14 @@ following workflow:
   args: [env]
 ```
 
-To define new variables, the `env` keyword can be used (see [ 
-Attributes][act-attr] for more).
+To define new variables, the `env` keyword can be used (see [Step 
+Attributes section][act-attr] for more).
 
-[act-attr]: gha_workflows.html#action-attributes
+[act-attr]: cn_workflows.html#workflow-step
+
+## Reusing existing container images
+
+**TODO**
 
 ## Reusing existing workflows
 
@@ -117,10 +121,8 @@ Many times, when starting an experiment, it is useful to be able to use
 an existing workflow as a scaffold for the one we wish to write. The 
 [`popper-examples` 
 repository](https://github.com/popperized/popper-examples) contains a 
-list of example workflows and actions for the purpose of both learning 
-and to use them as a starting point. Another examples can be found on 
-Github's [official `actions` 
-organization](https://github.com/actions).
+list of example workflows for the purpose of both learning and to use 
+them as a starting point.
 
 Once you have found a workflow you're interested in importing, you can 
 use the `popper add` command to obtain a workflow. For example:
@@ -135,47 +137,6 @@ Workflow docker-data-science has been added successfully.
 
 This will download the contents of the workflow and all its 
 dependencies to your project tree.
-
-
-## Searching for actions
-
-The popper CLI is capable of searching for premade actions that
-you can use in your workflows.
-
-You can use the `popper search` command to search for actions
-based on a search keyword. For example, to search for npm based actions,
-you can simply run:
-
-```bash
-$ popper search npm
-Matched actions :
-
-> popperized/npm
-```
-
-Additionally, when searching for an action, you may choose to include
-the contents of the readme in your search by using the `--include-readme`
-flag.
-
-Once `popper search` runs, it caches all the metadata related to the 
-search. So, to get the latest releases of the actions, you might want 
-to update the cache using the `--update-cache` flag.
-
-By default, popper searches for actions from a list present 
-[here](https://github.com/systemslab/popper/blob/master/cli/resources/search_sources.yml). 
-To help the list keep growing, you can add Github organization names 
-or repository names(org/repo) and send a pull request to the upstream 
-repository.
-
-
-To get the details of a searched action, use the `popper info` 
-command. For example:
-
-```bash
-popper info popperized/cmake
-An action for building CMake projects.
-```
-
 
 ## Continuously validating a workflow
 
@@ -319,3 +280,7 @@ The above generates a `wf.png` file depicting the workflow.
 Alternatively you can use the <http://www.webgraphviz.com/> website to 
 generate a graph by copy-pasting the output of the `popper dot` 
 command.
+
+## Executing a step interactively
+
+**TODO**
