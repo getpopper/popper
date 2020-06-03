@@ -13,14 +13,16 @@ workflows in Docker, as well as [other container engines][engines].
 With Popper, you define a workflow in a YAML file, and then execute it 
 with a single command. A workflow file looks like this:
 
-```yaml
-version: '1'
-steps:
 - uses: docker://byrnedo/alpine-curl:0.1.8
+```yaml
+steps:
+- id: download CSV file with data on global CO2 emissions
+  uses: docker://byrnedo/alpine-curl:0.1.8
   args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 
-- uses: docker://python:3.8.1-alpine
-  args: [scripts/get_mean.py, global.csv, 'Per Capita']
+- id: obtain the transpose of this table
+  uses: docker://getpopper/csvtool:2.4
+  args: [transpose, global.csv, -o, global_transposed.csv]
 ```
 
 Assuming the above is stored in a `wf.yml` file, the workflow gets 
@@ -31,8 +33,7 @@ popper run -f wf.yml
 ```
 
 Keep reading down to find [installation instructions](#installation). 
-The full example above can be found [here][minimalpython]. For more 
-information on the YAML syntax, see [here][cnwf].
+For more information on the YAML syntax, see [here][cnwf].
 
 The high-level goals of this project are to provide:
 
