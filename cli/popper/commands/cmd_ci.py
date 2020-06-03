@@ -100,9 +100,9 @@ events.on("push", () => {
     type=click.Choice(["travis", "circle", "jenkins", "gitlab", "brigade"]),
     required=True,
 )
-@click.option("-f", "--wfile", help="Specify workflow to run in CI.", required=True)
+@click.option("-f", "--file", help="Specify workflow to run in CI.", required=True)
 @pass_context
-def cli(ctx, service, wfile):
+def cli(ctx, service, file):
     """Generates configuration files for distinct CI services. This command
     needs to be executed on the root of your Git repository folder.
     """
@@ -116,6 +116,6 @@ def cli(ctx, service, wfile):
         ci_file = os.path.join(os.getcwd(), ci_file)
         os.makedirs(os.path.dirname(ci_file), exist_ok=True)
         with open(ci_file, "w") as f:
-            f.write(ci_file_content.format(wfile))
+            f.write(ci_file_content.format(file))
 
     log.info(f"Wrote {service} configuration successfully.")

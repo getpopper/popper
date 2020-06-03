@@ -13,9 +13,10 @@ from popper.runner import WorkflowRunner
 @click.argument("step", required=False)
 @click.option(
     "-f",
-    "--wfile",
+    "--file",
     help="File containing the definition of the workflow.",
-    required=True,
+    required=False,
+    default=".popper.yml",
 )
 @click.option(
     "-d",
@@ -109,7 +110,7 @@ from popper.runner import WorkflowRunner
 def cli(
     ctx,
     step,
-    wfile,
+    file,
     debug,
     dry_run,
     log_file,
@@ -159,7 +160,7 @@ def cli(
 
     # invoke wf factory; handles formats, validations, filtering
     wf = WorkflowParser.parse(
-        wfile,
+        file,
         step=step,
         skipped_steps=skip,
         substitutions=substitution,

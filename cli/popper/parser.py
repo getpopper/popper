@@ -84,9 +84,9 @@ class WorkflowParser(object):
                 if not _wf_data:
                     log.fail(f"File {file} is empty")
         else:
-            _wf_data = wf_data
+            _wf_data = dict(wf_data)
 
-        # hack to silence warnings about error to fail change
+        # disable logging in order to silence warnings about "error() to fail()" change
         logging.disable(logging.CRITICAL)
 
         v = YMLValidator(source_data=_wf_data, schema_data=WorkflowParser._wf_schema)
@@ -94,6 +94,8 @@ class WorkflowParser(object):
         try:
             v.validate()
         except SchemaError as e:
+            # reenable logging
+            logging.disable(logging.NOTSET)
             log.fail(f"{e.msg}")
 
         logging.disable(logging.NOTSET)
@@ -117,24 +119,29 @@ class WorkflowParser(object):
     def __apply_substitution(wf_element, k, v, used_registry):
         if isinstance(wf_element, str):
             if k in wf_element:
-                wf_element.replace(k, v)
+                log.debug(f"Applying substitution to string {k}")
+                wf_element = wf_element.replace(k, v)
                 used_registry[k] = 1
 
         elif isinstance(wf_element, list):
             # we assume list of strings
             for i, e in enumerate(wf_element):
                 if k in e:
-                    wf_element[i].replace(k, v)
+                    log.debug(f"Applying substitution to item {i}: {e}")
+                    wf_element[i] = wf_element[i].replace(k, v)
                     used_registry[k] = 1
 
         elif isinstance(wf_element, dict):
-            # we assume list of strings
+            # we assume map of strings
             for ek in wf_element:
                 if k in ek:
-                    log.fail("Substitutions only allowed on keys of dictionaries")
+                    log.fail("Substitutions not allowed on dictionary keys")
                 if k in wf_element[ek]:
-                    wf_element[ek].replace(k, v)
+                    log.debug(f"Applying substitution to value associated to key {k}")
+                    wf_element[ek] = wf_element[ek].replace(k, v)
                     used_registry[k] = 1
+
+        return wf_element
 
     @staticmethod
     def __add_missing_ids(wf_data):
@@ -171,21 +178,28 @@ class WorkflowParser(object):
             if len(item) < 2:
                 raise Exception("Excepting '=' as seperator")
 
-            k, v = ("$" + item[0], item[1])
+            k, v = (item[0], item[1])
 
-            if not re.match(r"\$_[A-Z0-9]+", k):
-                log.fail(f"Expecting substitution key as $_[A-Z0-9] but got '{k}'.")
+            if not re.match(r"_[A-Z0-9]+", k):
+                log.fail(f"Expecting substitution key in _[A-Z0-9] format; got '{k}'.")
+
+            # add dollar sign
+            k = "$" + k
 
             # replace in steps
             for step in wf_data["steps"]:
-                for _, step_attr in step.items():
-                    WorkflowParser.__apply_substitution(step_attr, k, v, used)
-
-            for _, options_attr in wf_data.get("options", {}).items():
-                WorkflowParser.__apply_substitution(options_attr, k, v, used)
+                for attr in step:
+                    step[attr] = WorkflowParser.__apply_substitution(
+                        step[attr], k, v, used
+                    )
+            opts = wf_data.get("options", {})
+            for attr in opts:
+                opts[attr] = WorkflowParser.__apply_substitution(opts[attr], k, v, used)
 
         if not allow_loose and len(substitutions) != len(used):
-            log.fail("Not all given substitutions are used in " "the workflow file")
+            log.fail("Not all given substitutions are used in the workflow file")
+
+        log.debug(f"Workflow after applying substitutions: {wf_data}")
 
     @staticmethod
     def __skip_steps(wf_data, skip_list=[]):
@@ -201,7 +215,7 @@ class WorkflowParser(object):
         wf_data["steps"] = filtered_list
 
         if len(used) != len(skip_list):
-            log.fail(f"Not all skipped steps exist in the workflow.")
+            log.fail("Not all skipped steps exist in the workflow.")
 
     @staticmethod
     def __filter_step(wf_data, filtered_step=None):
@@ -210,4 +224,6 @@ class WorkflowParser(object):
             return
         for step in wf_data["steps"]:
             if step["id"] == filtered_step:
-                return step
+                wf_data["steps"] = [step]
+                return
+        log.fail(f"Step {filtered_step} not in workflow")
