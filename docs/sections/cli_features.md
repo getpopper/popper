@@ -103,7 +103,7 @@ following workflow:
 
 ```hcl
 - uses: popperized/bin/sh@master
-  args: env
+  args: [env]
 ```
 
 To define new variables, the `env` keyword can be used (see [ 

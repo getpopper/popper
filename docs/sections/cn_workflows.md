@@ -48,7 +48,7 @@ step. All attributes are optional with the exception of the `uses` attribute.
 | :--------- | :-------------------- |
 | `uses`     | The Docker image that will be executed for that step. For example,<br>`uses: docker://node:10`. See **"Referencing images in a step"** section below for more examples. |
 | `runs`     | Specifies the command to run in the docker image. If `runs` is omitted, the<br>command specified in the `Dockerfile`'s `ENTRYPOINT` instruction will execute.<br>Use the `runs` attribute when the `Dockerfile` does not specify an `ENTRYPOINT`<br>or you want to override the `ENTRYPOINT` command. The `runs` attribute does not<br>invoke a shell by default. Using `runs: "echo $VAR"` will not print the value<br>stored in `$VAR`, but will instead print `\"\$VAR.\"`. To use environment<br>variables with the `runs` instruction, you must include a shell to expand<br>the variables, for example: `runs: ["sh", "-c", "echo $VAR"]`.  If the value of `runs`<br>refers to a local script, the path is relative to the workspace folder (see [The workspace](#the-workspace) section below)|
-| `args`     | The arguments to pass to the command. This can be a string or array. If you<br>provide `args` in a string, the string is split around whitespace. For example,<br> `args: "--flag --arg value"` or `args: ["--flag", "--arg", "value"]`. If the value of `args`<br>refers to a local script, the path is relative to the workspace folder (see [The workspace](#the-workspace) section below). |
+| `args`     | The arguments to pass to the command. This is an array of strings. For example,<br> `args: ["--flag", "--arg", "value"]`. If the value of `args`<br>refers to a local script, the path is relative to the workspace folder (see [The workspace](#the-workspace) section below). |
 | `env`      | The environment variables to set inside the container's runtime environment. If<br>you need to pass environment variables into a step, make sure it runs a command<br>shell to perform variable substitution. For example, if your `runs` attribute is<br>set to `["sh", "-c"]`, the value of `args` will be passed to `sh -c` and<br>executed in a command shell. Alternatively, if your `Dockerfile` uses an<br>`ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a<br>command shell as well. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
 | `secrets`  | Specifies the names of the secret variables to set in the runtime environment<br>which the container can access as an environment variable. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
 | `id`       | Assigns an identifier to the step. By default, steps are asigned a numerid id<br>corresponding to the order of the step in the list, with `1` identifying<br>the first step. |
@@ -125,11 +125,11 @@ options:
 steps:
 - uses: docker://alpine:3.11
   runs: sh
-  args: "-c 'echo $FOO $SECRET1'"
+  args: ["-c", "echo $FOO $SECRET1"]
 
 - uses: docker://alpine:3.11
   runs: sh
-  args: "-c 'echo $ONLY_FOR'"
+  args: ["-c", "echo $ONLY_FOR"]
   env:
     ONLY_FOR: this step
 ```
@@ -358,11 +358,11 @@ version: '1'
 steps:
 - id: one
   uses: docker://alpine:3.9
-  args: echo hello-world
+  args: ["echo", "hello-world"]
 
 - id: two
   uses: popperized/bin/sh@master
-  args: ls -l
+  args: ["ls", "-l"]
 ```
 
 To run all the steps of the workflow through slurm resource manager,
