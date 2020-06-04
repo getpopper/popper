@@ -76,6 +76,12 @@ class TestWorkflow(unittest.TestCase):
             SystemExit, WorkflowParser.parse, **{"wf_data": wf_data, "step": "four"}
         )
 
+        # without id
+        wf_data = {"steps": [{"uses": "foo"}, {"uses": "bar"}, {"uses": "baz"},]}
+        wf = WorkflowParser.parse(wf_data=wf_data, step="2")
+        self.assertEqual(1, len(wf.steps))
+        self.assertEqual("2", wf.steps[0].id)
+
     def test_skip_steps(self):
         wf_data = {
             "steps": [
@@ -101,6 +107,18 @@ class TestWorkflow(unittest.TestCase):
             WorkflowParser.parse,
             **{"wf_data": wf_data, "skipped_steps": ["four"]}
         )
+
+        # skip one step
+        wf = WorkflowParser.parse(wf_data=wf_data, skipped_steps=["two"])
+        self.assertEqual(2, len(wf.steps))
+        self.assertEqual("one", wf.steps[0].id)
+        self.assertEqual("three", wf.steps[1].id)
+
+        # without id
+        wf_data = {"steps": [{"uses": "foo"}, {"uses": "bar"}, {"uses": "baz"},]}
+        wf = WorkflowParser.parse(wf_data=wf_data, skipped_steps=["1", "3"])
+        self.assertEqual(1, len(wf.steps))
+        self.assertEqual("2", wf.steps[0].id)
 
     def test_add_missing_ids(self):
         wf_data = {"steps": [{"uses": "foo"}, {"uses": "bar"}]}
