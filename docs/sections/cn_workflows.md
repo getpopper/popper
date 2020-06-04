@@ -225,6 +225,12 @@ and any modifications made by the code executed within the step are
 not persisted between steps (i.e. other steps do not see these 
 modifications).
 
+#### Git Variables
+
+When Popper executes insides a git repository, it obtains information 
+related to Git. These variables are prefixed with `GIT_` (e.g. to
+`GIT_COMMIT` or `GIT_BRANCH`).
+
 ### Exit codes and statuses
 
 Exit codes are used to communicate about a step\'s status. Popper uses 

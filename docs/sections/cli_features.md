@@ -27,7 +27,7 @@ Initialize a workflow
 popper scaffold
 ```
 
-Show what this did:
+Show what this did (a `wf.yml` should have been created):
 
 ```bash
 ls -l
@@ -45,14 +45,43 @@ git commit -m 'adding my first workflow'
 To run the workflow:
 
 ```bash
-popper run
+popper run -f wf.yml
 ```
 
-or to execute all the workflows in a project:
+where `wf.yml` is a file containing a workflow.
+
+## Executing a step interactively
+
+To open a shell in a step defined in the workflow:
 
 ```bash
-popper run --recursive
+popper sh step
 ```
+
+Where `step` is the name of a step contained in the workflow. For 
+given the following workflow:
+
+```yaml
+steps:
+- id: mystep
+  uses: docker://ubuntu:18.04
+  runs: ["ls", "-l"]
+  env:
+    MYENVVAR: "foo"
+```
+
+if we want to open a shell that puts us inside the `mystep` above, we 
+run:
+
+```bash
+popper sh mystep
+```
+
+And this opens an interactive shell inside that step, where the 
+environment variable `MYENVVAR` is available. Note that the `runs` and 
+`args` attributes are overridden by Popper. By default, `/bin/bash` is 
+used to start the shell, but this can be modified with the 
+`--entrypoint` flag.
 
 ## Customizing container engine behavior
 
@@ -80,7 +109,7 @@ Assuming the above is stored in a file called `settings.py`, we pass
 it to Popper by running:
 
 ```
-popper run --conf settings.py
+popper run -f wf.yml --conf settings.py
 ```
 
 > **NOTE**:
@@ -92,59 +121,13 @@ popper run --conf settings.py
 
 [privmode]: https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
 
-## Environment Variables
-
-Popper defines a set of environment variables (see [Environment 
-Variables][envvars] section) that are available for all steps in a 
-workflow. To see the values assigned to these variables, run the 
-following workflow:
-
-[envvars]: cn_workflows.html#environment-variables
-
-```hcl
-- uses: popperized/bin/sh@master
-  args: [env]
-```
-
-To define new variables, the `env` keyword can be used (see [Step 
-Attributes section][act-attr] for more).
-
-[act-attr]: cn_workflows.html#workflow-step
-
-## Reusing existing container images
-
-**TODO**
-
-## Reusing existing workflows
-
-Many times, when starting an experiment, it is useful to be able to use
-an existing workflow as a scaffold for the one we wish to write. The 
-[`popper-examples` 
-repository](https://github.com/popperized/popper-examples) contains a 
-list of example workflows for the purpose of both learning and to use 
-them as a starting point.
-
-Once you have found a workflow you're interested in importing, you can 
-use the `popper add` command to obtain a workflow. For example:
-
-```bash
-cd myproject/
-mkdir myworkflow
-popper add https://github.com/popperized/popper-examples/workflows/cloudlab-iperf-test
-Downloading workflow data-science as data-science...
-Workflow docker-data-science has been added successfully.
-```
-
-This will download the contents of the workflow and all its 
-dependencies to your project tree.
-
 ## Continuously validating a workflow
 
 The `ci` subcommand generates configuration files for multiple CI 
 systems. The syntax of this command is the following:
 
 ```bash
-popper ci <service-name>
+popper ci --file wf.yml <service-name>
 ```
 
 Where `<name>` is the name of CI system (see `popper ci --help` to get 
@@ -174,7 +157,7 @@ Once the project is registered on Travis, we proceed to generate a
 
 ```bash
 cd my-popper-repo/
-popper ci travis
+popper ci --file wf.yml travis
 ```
 
 And commit the file:
@@ -211,7 +194,7 @@ what we do for TravisCI (see above):
 
     ```bash
     cd my-popper-repo/
-    popper ci circle
+    popper ci --file wf.yml circle
     git add .circleci
     git commit -m 'Adds CircleCI config files'
     git push
@@ -225,7 +208,7 @@ above), i.e. generate config files and add them to the repo:
 
 ```bash
 cd my-popper-repo/
-popper ci gitlab
+popper ci --file wf.yml gitlab
 git add .gitlab-ci.yml
 git commit -m 'Adds GitLab-CI config file'
 git push
@@ -241,7 +224,7 @@ done in a similar way:
 
 ```bash
 cd my-popper-repo/
-popper ci jenkins
+popper ci --file wf.yml jenkins
 git add Jenkinsfile
 git commit -m 'Adds Jenkinsfile'
 git push
@@ -265,7 +248,7 @@ Popper provides the option of generating a graph for a workflow. To
 generate a graph for a pipeline, execute the following:
 
 ```bash
-popper dot
+popper dot -f wf.yml
 ```
 
 The above generates a graph in `.dot` format. To visualize it, you can 
@@ -273,14 +256,10 @@ install the [`graphviz`](https://graphviz.gitlab.io/) package and
 execute:
 
 ```bash
-popper dot | dot -T png -o wf.png
+popper dot -f wf.yml | dot -T png -o wf.png
 ```
 
 The above generates a `wf.png` file depicting the workflow. 
 Alternatively you can use the <http://www.webgraphviz.com/> website to 
 generate a graph by copy-pasting the output of the `popper dot` 
 command.
-
-## Executing a step interactively
-
-**TODO**
