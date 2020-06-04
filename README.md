@@ -13,7 +13,6 @@ workflows in Docker, as well as [other container engines][engines].
 With Popper, you define a workflow in a YAML file, and then execute it 
 with a single command. A workflow file looks like this:
 
-- uses: docker://byrnedo/alpine-curl:0.1.8
 ```yaml
 steps:
 - id: download CSV file with data on global CO2 emissions
