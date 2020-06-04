@@ -1,0 +1,30 @@
+steps:
+- id: dev-init
+  uses: docker://conanio/gcc72:1.25.2
+  runs: [bash]
+  args:
+  - -c
+  - |
+    rm -rf build
+    mkdir -p build
+    cd build
+    conan install ../ --build=missing
+    cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+
+- id: build
+  uses: docker://conanio/gcc72:1.25.2
+  runs: [bash]
+  args:
+  - -c
+  - |
+    cd build/
+    cmake --build .
+
+- id: test
+  uses: docker://conanio/gcc72:1.25.2
+  runs: [bash]
+  args:
+  - -c
+  - |
+    cd build/
+    make test

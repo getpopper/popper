@@ -1,0 +1,12 @@
+steps:
+- id: get deps
+  uses: docker://golang:1.14.4-alpine3.11
+  args: [go, get, -v, -t, -d, ./...]
+
+- name: build
+  uses: docker://golang:1.14.4-alpine3.11
+  args: [go, build, -v, .]
+
+- name: test
+  uses: docker://golang:1.14.4-alpine3.11
+  args: [go, test, -v, .]
