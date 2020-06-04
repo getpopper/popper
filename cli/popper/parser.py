@@ -60,9 +60,12 @@ class WorkflowParser(object):
         skipped_steps=[],
         substitutions=[],
         allow_loose=False,
+        immutable=True,
     ):
         """Returns an immutable workflow structure (a frozen Box) with 'steps' and
         'options' properties. See WorkflowParser._wf_schema above for their structure.
+        If immutable=False is given, the returned object representing the workflow
+        can be modified (an "unfrozen" ``box.Box``).
         """
 
         if not file and not wf_data:
@@ -109,7 +112,7 @@ class WorkflowParser(object):
         WorkflowParser.__filter_step(_wf_data, step)
 
         # create and frozen a box
-        wf_box = Box(_wf_data, frozen_box=True, default_box=True)
+        wf_box = Box(_wf_data, frozen_box=(immutable is True), default_box=True)
 
         log.debug(f"Parsed workflow:\n{wf_box}")
 
