@@ -181,6 +181,8 @@ class TestHostDockerRunner(PopperTest):
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
                     "detach": True,
+                    "stdin_open": False,
+                    "tty": False,
                     "privileged": True,
                     "hostname": "popper.local",
                     "domainname": "www.example.org",

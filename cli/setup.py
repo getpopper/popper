@@ -16,6 +16,7 @@ setup(
     install_requires=[
         "click==7.1.2",
         "docker==4.2.0",
+        "dockerpty==0.4.1",
         "GitPython==3.1.0",
         "pykwalify==1.7.0",
         "python-box==4.2.3",

@@ -3,6 +3,7 @@ import signal
 import threading
 
 import docker
+import dockerpty
 
 from subprocess import Popen, STDOUT, PIPE, SubprocessError, CalledProcessError
 
@@ -37,7 +38,7 @@ class HostRunner(StepRunner):
         step_env = self._prepare_environment(step, env=dict(os.environ))
 
         if not step.runs:
-            raise AttributeError(f"Expecting 'runs' attribute in step.")
+            raise AttributeError("Expecting 'runs' attribute in step.")
         cmd = step.runs + tuple(step.args)
 
         log.info(f"[{step.id}] {cmd}")
@@ -118,7 +119,7 @@ class DockerRunner(StepRunner):
             self._d.version()
         except Exception as e:
             log.debug(f"Docker error: {e}")
-            log.fail(f"Unable to connect to the docker daemon.")
+            log.fail("Unable to connect to the docker daemon.")
 
         log.debug(f"Docker info: {pu.prettystr(self._d.info())}")
 
@@ -153,9 +154,13 @@ class DockerRunner(StepRunner):
 
         try:
             container.start()
-            cout = container.logs(stream=True)
-            for line in cout:
-                log.step_info(line.decode().rstrip())
+
+            if self._config.pty:
+                dockerpty.start(self._d.api, container.id)
+            else:
+                cout = container.logs(stream=True)
+                for line in cout:
+                    log.step_info(line.decode().rstrip())
 
             e = container.wait()["StatusCode"]
         except Exception as exc:
@@ -247,6 +252,8 @@ class DockerRunner(StepRunner):
             "environment": self._prepare_environment(step),
             "entrypoint": step.runs if step.runs else None,
             "detach": True,
+            "tty": self._config.pty,
+            "stdin_open": self._config.pty,
         }
 
         self._update_with_engine_config(args)

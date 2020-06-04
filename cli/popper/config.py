@@ -21,6 +21,7 @@ class ConfigLoader(object):
         quiet=False,
         skip_pull=False,
         skip_clone=False,
+        pty=False,
     ):
         """Loads and creates a configuration, represented by a frozen Box
         """
@@ -46,6 +47,7 @@ class ConfigLoader(object):
             "quiet": quiet,
             "skip_pull": skip_pull,
             "skip_clone": skip_clone,
+            "pty": pty,
             # if no git repository exists in workspace_dir or its parents, the repo
             # variable is None and all git_* variables are assigned to 'na'
             "repo": repo,

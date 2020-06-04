@@ -209,6 +209,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
         log.setLevel("NOTSET")
 
     def test_create_cmd(self):
+        self.maxDiff = None
         config = {"workspace_dir": "/w"}
         with DockerRunner(config=ConfigLoader.load(**config)) as drunner:
             step = Box({"args": ["-two", "-flags"]}, default_box=True)
@@ -220,7 +221,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
                 " --workdir /workspace"
                 " -v /w:/workspace"
                 " -v /var/run/docker.sock:/var/run/docker.sock"
-                " foo:1.9 -two -flags"
+                "   foo:1.9 -two -flags"
             )
 
             self.assertEqual(expected, cmd)
@@ -250,9 +251,9 @@ class TestSlurmDockerRunner(unittest.TestCase):
                 "-v /w:/workspace "
                 "-v /var/run/docker.sock:/var/run/docker.sock "
                 "-v /path/in/host:/path/in/container "
-                "-e FOO=bar --privileged --hostname popper.local "
-                "--domainname www.example.org "
-                "foo:1.9 -two -flags"
+                "-e FOO=bar   --privileged --hostname popper.local "
+                "--domainname www.example.org"
+                " foo:1.9 -two -flags"
             )
 
             self.assertEqual(expected, cmd)
@@ -303,7 +304,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
             expected = f"""#!/bin/bash
 docker rm -f popper_1_{config.wid} || true
 docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/{config.wid}/github.com/popperized/bin/sh
-docker create --name popper_1_{config.wid} --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
+docker create --name popper_1_{config.wid} --workdir /workspace --entrypoint cat -v /w:/workspace -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar   --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
 docker start --attach popper_1_{config.wid}"""
             # fmt: on
             actual = f.read()

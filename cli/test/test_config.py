@@ -21,6 +21,7 @@ class TestPopperConfig(PopperTest):
             "workspace_dir": os.getcwd(),
             "quiet": False,
             "reuse": False,
+            "pty": False,
         },
         default_box=True,
     )
