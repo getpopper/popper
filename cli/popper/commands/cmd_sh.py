@@ -47,7 +47,7 @@ def cli(ctx, file, step, entrypoint):
     step.runs = entrypoint
 
     # configure runner so containers execute in attached mode and create a tty
-    config = ConfigLoader.load(engine_name="docker", detach=False, tty=True)
+    config = ConfigLoader.load(engine_name="docker", pty=True)
 
     with WorkflowRunner(config) as runner:
         try:
