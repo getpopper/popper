@@ -1,7 +1,7 @@
 # <img src="https://raw.githubusercontent.com/getpopper/website/bcba4c8/assets/images/popper_logo_just_jug.png" width="64" valign="middle" alt="Popper"/> Popper
 
 [![Downloads](https://pepy.tech/badge/popper)](https://pepy.tech/project/popper)
-[![Build Status](https://travis-ci.org/systemslab/popper.svg?branch=master)](https://travis-ci.org/systemslab/popper)
+[![Build Status](https://travis-ci.org/getpopper/popper.svg?branch=master)](https://travis-ci.org/getpopper/popper)
 [![codecov](https://codecov.io/gh/systemslab/popper/branch/master/graph/badge.svg)](https://codecov.io/gh/systemslab/popper)
 [![black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![PyPI version](https://badge.fury.io/py/popper.svg)](https://badge.fury.io/py/popper)
