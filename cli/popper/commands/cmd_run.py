@@ -66,7 +66,6 @@ from popper.runner import WorkflowRunner
     help=("Skip the given step (can be given multiple times)."),
     required=False,
     default=list(),
-    hidden=True,
     multiple=True,
 )
 @click.option(
