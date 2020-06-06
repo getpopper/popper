@@ -277,27 +277,6 @@ popper run --engine singularity
   * The use of `ARG` in `Dockerfile`s is not supported by Singularity.
   * The `--reuse` flag of the `popper run` command is not supported.
 
-### Vagrant
-
-While technically not a container engine, executing workflows inside a 
-VM allows users to run workflows in machines where a container engine 
-is not available. In this scenario, Popper uses [Vagrant][vagrant] to 
-spawn a VM provisioned with Docker. It then executes workflows by 
-communicating with the Docker daemon that runs inside the VM. To 
-execute a workflow in Vagrant:
-
-```bash
-popper run --engine vagrant
-```
-
-[vagrant]: https://vagrantup.com/
-
-#### Limitations
-
-Only one workflow can be executed at the time in Vagrant runtime, 
-since popper assumes that there is only one VM running at any given 
-point in time.
-
 ### Host
 
 There are situations where a container runtime is not available and 
