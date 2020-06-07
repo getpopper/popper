@@ -251,7 +251,7 @@ class DockerRunner(StepRunner):
             "working_dir": "/workspace",
             "environment": self._prepare_environment(step),
             "entrypoint": step.runs if step.runs else None,
-            "detach": True,
+            "detach": not self._config.pty,
             "tty": self._config.pty,
             "stdin_open": self._config.pty,
         }
