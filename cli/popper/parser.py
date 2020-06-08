@@ -28,6 +28,7 @@ class WorkflowParser(object):
                             "args": {"type": "seq", "sequence": [{"type": "str"}]},
                             "runs": {"type": "seq", "sequence": [{"type": "str"}]},
                             "secrets": {"type": "seq", "sequence": [{"type": "str"}]},
+                            "dir": {"type": "str"},
                             "skip_pull": {"type": "bool"},
                             "env": {
                                 "type": "map",
