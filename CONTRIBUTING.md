@@ -26,19 +26,17 @@ The title of each open issue is prefixed with a keyword that denotes the
 following:
 
   * `cli`. An issue that involves modifying code of the 
-    [`CLI`](https://github.com/systemslab/popper/tree/master/cli) tool.
+    [`CLI`](https://github.com/systemslab/popper/tree/master/src) 
+    tool.
 
   * `doc`. An issue that involves modifying the 
     [documentation](https://github.com/systemslab/popper/tree/master/docs).
 
-  * `actions`. An issue that involves the creation, modification or maintenance 
-    of an action. This might be hosted in an external repo, such as the repos 
-    that are pare of the [`popperized`](https://github.com/popperized) 
-    organization.
-
   * `example`. An issue that involves the creation of an example 
     Workflow that showcases available features of the CLI tool, as 
     well as the catalog of pre-defined actions.
+
+  * `q`. A question regarding the use of the tool.
 
 ## Branches
 
@@ -68,7 +66,7 @@ git clone git@github.com:systemslab/popper
 cd popper
 
 # install popper from source
-pip install -e cli/[dev]
+pip install -e src/[dev]
 ```
 
 the `-e` flag passed to `pip` tells it to install the package from the 
@@ -89,10 +87,10 @@ cd popper/
 source $HOME/venvs/popper/bin/activate
 
 # run all tests
-python -X tracemalloc -m unittest -f cli/test/test_*
+python -X tracemalloc -m unittest -f src/test/test_*
 
 # run only one
-python -X tracemalloc -m unittest -f cli/test/test_runner.py
+python -X tracemalloc -m unittest -f src/test/test_runner.py
 ```
 
 ## Codestyle

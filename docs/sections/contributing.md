@@ -33,7 +33,7 @@ git clone git@github.com:systemslab/popper
 cd popper
 
 # install popper from source
-pip install -e cli/[dev]
+pip install -e src/[dev]
 ```
 
 The `-e` flag passed to `pip` tells it to install the package from the 
@@ -58,10 +58,10 @@ cd popper/
 source $HOME/venvs/popper/bin/activate
 
 # run all tests
-python -X tracemalloc -m unittest -f cli/test/test_*
+python -X tracemalloc -m unittest -f src/test/test_*
 
 # run only one
-python -X tracemalloc -m unittest -f cli/test/test_runner.py
+python -X tracemalloc -m unittest -f src/test/test_runner.py
 ```
 
 ## Codestyle

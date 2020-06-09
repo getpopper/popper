@@ -64,11 +64,12 @@ The high-level goals of this project are to provide:
 
 This repository contains:
 
-  * [`cli/`](cli/). The codebase of the command-line tool.
   * [`docs/`](docs/). General [documentation][docs] containing guides, 
     CLI documentation and pointers to other resources.
-  * [`gh-pages`][gh-pages] branch. Contents of our [landing 
-    page](http://falsifiable.us).
+  * [`examples/`](examples/). Workflow examples that can be used as 
+    starting points. More complex examples are available on [this 
+    repository](https://github.com/getpopper/popper-examples).
+  * [`src/`](src/). The codebase of the command-line tool.
 
 ## Installation
 
