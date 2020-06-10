@@ -66,6 +66,7 @@ steps:
 - id: mystep
   uses: docker://ubuntu:18.04
   runs: ["ls", "-l"]
+  dir: /tmp/
   env:
     MYENVVAR: "foo"
 ```
