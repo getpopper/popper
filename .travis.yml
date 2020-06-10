@@ -10,7 +10,7 @@ env:
 - ENGINE=singularity
 services: docker
 before_install:
-- src/extras/install_singularity.sh
+- src/scripts/install_singularity.sh
 - pip install coverage
 install:
 - pip install src/[dev]
