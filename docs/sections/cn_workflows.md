@@ -53,6 +53,7 @@ step. All attributes are optional with the exception of the `uses` attribute.
 | `secrets`  | Specifies the names of the secret variables to set in the runtime environment<br>which the container can access as an environment variable. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
 | `id`       | Assigns an identifier to the step. By default, steps are asigned a numerid id<br>corresponding to the order of the step in the list, with `1` identifying<br>the first step. |
 | `needs`    | Identifies steps that must complete successfully before this step will be<br>invoked. It can be a string or an array of strings. |
+| `dir`      | Specifies the working directory where that step it should run. By default, the<br>directory is always `/default` if another one is defined. |
 
 ### Referencing images in a step
 
@@ -151,7 +152,8 @@ When a step is executed, a folder in your machine is bind-mounted
 By default, the folder being bind-mounted is `$PWD`, that is, the 
 working directory from where `popper run` is being invoked from. If 
 the `-w` (or `--workspace`) flag is given, then the value for this 
-flag is used instead.
+flag is used instead. It can also be defined a working directory in
+a workflow for a step with the attribute `dir`.
 
 For example, let's look at a workflow that writes to a `myfile` in the 
 workspace:
@@ -187,6 +189,21 @@ above is equivalent to:
 cd /path/to
 popper run -f wf.yml
 ```
+
+To specify a workspace directory for a step you can adding `dir` in the
+attributes of a workflow. Rewriting `wf.yml` to add it will looks like
+the following:
+
+```yaml
+version: '1'
+steps:
+- uses: docker://alpine:3.9
+  args: [touch, ./myfile]
+  dir: /path/to/
+```
+
+The above will bind-mount that single step into `/path/to`. If `dir` is not
+used then the default directory will be `/workspace`
 
 ### Filesystem namespaces and persistence
 

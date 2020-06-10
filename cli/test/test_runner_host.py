@@ -141,7 +141,12 @@ class TestHostDockerRunner(PopperTest):
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_get_container_kwargs(self):
         step = Box(
-            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
+            {
+                "uses": "popperized/bin/sh@master",
+                "args": ["ls"],
+                "id": "one",
+                "dir": "/path/to",
+            },
             default_box=True,
         )
 
@@ -173,11 +178,11 @@ class TestHostDockerRunner(PopperTest):
                     "command": ["ls"],
                     "name": "container_a",
                     "volumes": [
-                        "/path/to/workdir:/workspace",
+                        "/path/to/workdir:/path/to",
                         "/var/run/docker.sock:/var/run/docker.sock",
                         "/path/in/host:/path/in/container",
                     ],
-                    "working_dir": "/workspace",
+                    "working_dir": "/path/to",
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
                     "detach": True,
