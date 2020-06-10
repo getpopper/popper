@@ -292,6 +292,38 @@ class DockerRunner(StepRunner):
             if k not in container_args.keys():
                 container_args[k] = update_with[k]
 
+class PodmanRunner(StepRunner):
+    """Runs steps in podman on the local machine."""
+    def __init__(self, init_podman_client=True, **kw):
+        super(PodmanRunner, self).__init__(**kw)
+
+        self._spawned_containers = set()
+        self._p_info = HostRunner._exec_cmd(["podman", "info"], stdout=PIPE, bufsize=1, universal_newlines=True)
+
+        if not init_podman_client:
+            return
+
+        try:
+            self._p_version = HostRunner._exec_cmd(["podman", "version"])
+        except Exception as e:
+            log.debug(f"Podman error: {e}")
+            log.fail(f"Unable to connect to podman, is it installed?")
+
+        log.debug(f"Podman info: {pu.prettystr(self._p_info)}")
+
+    def stop_running_tasks(self):
+        """Stop containers started by Popper."""
+        for c in self._spawned_containers:
+            log.info(f"Stopping container {c}")
+            _, ecode, _ = HostRunner._exec_cmd(["podman", "stop", c])
+            if ecode != 0:
+                log.warning(f"Failed to stop the {c} container")
+
+    def _find_container(self, cid):
+        """Checks whether the container exists."""
+        cmd = ["podman", "container", "ls", "--filter", f'name={cid}']
+        containers = HostRunner._exec_cmd(cmd)
+        _,output = ""
 
 class SingularityRunner(StepRunner):
     """Runs steps in singularity on the local machine."""
