@@ -321,9 +321,12 @@ class PodmanRunner(StepRunner):
 
     def _find_container(self, cid):
         """Checks whether the container exists."""
-        cmd = ["podman", "container", "ls", "--filter", f'name={cid}']
-        containers = HostRunner._exec_cmd(cmd)
-        _,output = ""
+        cmd = ["podman", "container", "ls", "--filter", str(f'name={cid}')]
+        _, containers = HostRunner._exec_cmd(cmd)
+        filtered_containers = [c for c in containers]
+
+        if len(filtered_containers):
+            return filtered_containers[0]
 
 class SingularityRunner(StepRunner):
     """Runs steps in singularity on the local machine."""
