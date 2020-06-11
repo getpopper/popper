@@ -8,57 +8,65 @@
 [![Join the chat at https://gitter.im/systemslab/popper](https://badges.gitter.im/systemslab/popper.svg)](https://gitter.im/falsifiable-us/popper?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![slack](https://img.shields.io/badge/chat-on_slack-C03C20.svg?logo=slack)](https://join.slack.com/t/getpopper/shared_invite/zt-dtn0se2s-c50myMHNpeoikQXDeNbPew)
 
-Popper is a tool for defining and executing [container-native][cn] 
-workflows in Docker, as well as [other container engines][engines]. 
-With Popper, you define a workflow in a YAML file, and then execute it 
-with a single command. A workflow file looks like this:
+Popper is a tool for defining and executing container-native workflows in 
+Docker, as well as other container engines. With Popper, you define a workflow 
+in a YAML file, and then execute it with a single command. A workflow file looks 
+like this:
 
 ```yaml
 steps:
-- id: download CSV file with data on global CO2 emissions
+# download CSV file with data on global CO2 emissions
+- id: download
   uses: docker://byrnedo/alpine-curl:0.1.8
   args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 
-- id: obtain the transpose of this table
+# obtain the transpose of the global CO2 emissions table
+- id: get-transpose
   uses: docker://getpopper/csvtool:2.4
   args: [transpose, global.csv, -o, global_transposed.csv]
 ```
 
-Assuming the above is stored in a `wf.yml` file, the workflow gets 
-executed by running:
+Assuming the above is stored in a `wf.yml` file, the workflow gets executed by 
+running:
 
 ```bash
 popper run -f wf.yml
 ```
 
-Keep reading down to find [installation instructions](#installation). 
-For more information on the YAML syntax, see [here][cnwf].
+Or run a single single step by doing:
 
-The high-level goals of this project are to provide:
+```bash
+popper run -f wf.yml get-transpose
+```
 
-  * **Lightweight workflow definition syntax.** Defining a workflow is 
-    as simple as writing file in a [lightweight YAML syntax][cnwf] and 
-    invoking `popper run` (see demo above). If you're familiar with 
-    [Docker Compose][compose], you can think of Popper as Compose but 
-    for workflows instead of services.
+Keep reading down to find [installation instructions](#installation). For more 
+information on the YAML syntax, [see here][cnwf].
+
+The high-level goals of this project are:
+
+  * **Lightweight workflow and task automation syntax.** Defining a list of 
+    steps is as simple as writing file in a [lightweight YAML syntax][cnwf] and 
+    invoking `popper run` (see demo above). If you're familiar with [Docker 
+    Compose][compose], you can think of Popper as Compose but for workflows 
+    instead of services.
   * **An abstraction over container runtimes**. In addition to Docker, 
     Popper can seamlessly execute workflows in other runtimes by 
     interacting with distinct container engines. Popper currently 
     supports [Singularity][sylabs] and we are working on adding 
     [Podman][podman].
-  * **Run on resource managers**. Popper can also execute workflows on 
-    a variety of resource managers and schedulers such as Kubernetes 
-    and SLURM, without requiring any modifications to a workflow YAML 
-    file. We currently support SLURM and are working on adding support 
-    for Kubernetes.
+  * **Run on distinct resource managers**. Popper can also execute workflows on 
+    a variety of resource managers and schedulers such as Kubernetes and SLURM, 
+    without requiring any modifications to a workflow YAML file. We currently 
+    support SLURM and are working on adding support for Kubernetes.
   * **Continuous integration**. Generate configuration files for 
-    distinct CI services, allowing users to run the exact same 
-    workflows they run locally on Travis, Jenkins, Gitlab, Circle and 
-    others.
-  * **Workflow development**. Aid in the implementation and debugging 
-    of [workflows][scaffold], and provide with an extensive list of 
-    [example workflows](https://github.com/popperized) that can serve 
-    as a starting point.
+    distinct CI services, allowing users to run the exact same workflows they 
+    run locally on Travis, Jenkins, Gitlab, Circle and others. See the 
+    [`examples/`](./examples/ci/) folder for examples on how to automate CI 
+    tasks for multiple projects (Go, C++, Node, etc.).
+  * **Workflow development**. Aid in the implementation and [debugging][pp-sh] 
+    of workflows, and provide with an extensive list of [example 
+    workflows](https://github.com/popperized) that can serve as a starting 
+    point.
 
 -----
 
@@ -70,28 +78,53 @@ This repository contains:
     starting points. More complex examples are available on [this 
     repository](https://github.com/getpopper/popper-examples).
   * [`src/`](src/). The codebase of the command-line tool.
+  * [`install.sh`](./install.sh). The Popper installer.
+
+## What Problem Does Popper Solve?
+
+Popper is a [container-native][cn] workflow execution and task automation 
+[engine][wfeng]. In practice, when we work following the container-native 
+paradigm, we end up executing a bunch of `docker pull|build|run` commands in 
+order to get stuff done. Keeping track of which `docker` commands we have 
+executed, in which order, and which flags were passed to each, can quickly 
+become unmanageable, difficult to document (think of outdated README 
+instructions) and error prone.
+
+The goal of Popper is to streamline this process by providing a framework for 
+clearly and explicitly defining container-native tasks, including the order in 
+which these tasks are supposed to be executed. You can think of this as a 
+lightweight, machine-readable wrapper (YAML) around what would otherwise be 
+manually executed docker commands.
+
+While this seems simple at first, it has great implications: Popper allows to 
+unify development, testing, and deployment workflows, resulting in:
+
+  * Communication improvements.
+  * Time savings. Reduced amount of time it takes for contributors to get 
+  onboard.
+  * Reduced tooling, one single automation tool for development and CI.
 
 ## Installation
 
-To run workflows, you need to have Python 3.6+, Git and a container 
-engine installed ([Docker][docker] and [Singularity][singularity] are 
-currently supported). To install Popper you can use 
-[`pip`](https://pypi.python.org/pypi). We recommend to install in a 
-virtual environment (see [here][venv] for more on `virtualenv`). To 
-install:
+To install or upgrade Popper, run the following in your terminal:
 
 ```bash
-pip install popper
+curl -sSfL https://raw.githubusercontent.com/getpopper/popper/master/install.sh | sh
 ```
 
-Once installed, you can get an overview and list of available 
-commands:
+[Docker][docker] is required to run Popper and the installer will abort if the 
+`docker` command cannot be invoked from your shell. The installer script informs 
+of what is about to do and asks for permission before proceeding. Once 
+installed, you can get an overview and list of available commands:
 
 ```bash
 popper --help
 ```
 
-For a Quickstart guide on how to use Popper, look [here][getting_started].
+Read the [Quickstart Guide][getting_started] to learn the basics of how to use 
+Popper. For other installation options, including installing for use with 
+Singularity or for setting up a developing environment for Popper, [see 
+here][installation].
 
 ## Contributing
 
@@ -103,9 +136,8 @@ our [list of good first issues][gfi].
 
 Popper adheres to the code of conduct [posted in this 
 repository](CODE_OF_CONDUCT.md). By participating or contributing to 
-Popper, you're expected to uphold this code. If you encounter 
-unacceptable behavior, please immediately [email 
-us](mailto:ivo@cs.ucsc.edu).
+Popper, you're expected to uphold this code. If you encounter unacceptable 
+behavior, please immediately [email us](mailto:ivotron@ucsc.edu).
 
 ## How to Cite Popper
 
@@ -118,7 +150,6 @@ https://doi.org/10.1109/IPDPSW.2017.157.
 
 For BibTeX, click [here](https://falsifiable.us/pubs/bibtex/popper.bib).
 
-
 [minimalpy]: https://github.com/popperized/popper-examples/tree/master/workflows/minimal-python
 [gfi]: https://github.com/systemslab/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen
 [singularity]: https://github.com/sylabs/singularity
@@ -128,7 +159,6 @@ For BibTeX, click [here](https://falsifiable.us/pubs/bibtex/popper.bib).
 [popper2]: https://github.com/systemslab/popper/projects/12
 [docs]: https://popper.readthedocs.io/en/latest/
 [gh-pages]: https://github.com/systemslab/popper/tree/gh-pages
-[scaffold]: https://popper.readthedocs.io/en/latest/sections/getting_started.html#create-a-workflow
 [cnwf]: docs/sections/cn_workflows.md
 [engines]: docs/sections/cn_workflows.md#container-engines
 [sylabs]: https://sylabs.io/
@@ -136,3 +166,5 @@ For BibTeX, click [here](https://falsifiable.us/pubs/bibtex/popper.bib).
 [compose]: https://docs.docker.com/compose/
 [podman]: https://podman.io
 [minimalpython]: https://github.com/popperized/popper-examples/tree/master/workflows/minimal-python
+[pp-sh]: docs/sections/cli_features.md#executing-a-step-interactively
+[installation]: docs/installation.md

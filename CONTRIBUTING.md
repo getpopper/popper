@@ -17,8 +17,11 @@ Popper adheres to our code of conduct, [posted in this repository](CODE_OF_CONDU
 
 ## What to work on
 
-Take a look at the issues in our [list of 
-projects](https://github.com/systemslab/popper/projects) to get started!
+Take a look at the [list of 
+projects](https://github.com/uccross/uccross.github.io/blob/master/projects.md#popper) 
+to get started. We also welcome any new ideas! In addition, a list of 
+specific [issues tagged with `good first 
+issue`](https://github.com/getpopper/popper/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22).
 
 ## Keywords in Issue Titles
 
@@ -49,32 +52,10 @@ There are two main branches of the codebase:
   * [`master`](./). This tracks the latest 2.x series, which adopted 
     Github actions workflows as the main supported format.
 
-## Install Popper from Source
+## Development Environment Setup
 
-To install Popper in "development mode", we suggest the following 
-approach:
-
-```bash
-cd $HOME/
-
-# create virtualenv
-virtualenv $HOME/venvs/popper
-source $HOME/venvs/popper/bin/activate
-
-# clone popper
-git clone git@github.com:systemslab/popper
-cd popper
-
-# install popper from source
-pip install -e src/[dev]
-```
-
-the `-e` flag passed to `pip` tells it to install the package from the 
-source folder, and if you modify the logic in the popper source code 
-you will see the effects when you invoke the `popper` command. So with 
-the above approach you have both (1) popper installed in your machine 
-and (2) an environment where you can modify popper and test the 
-results of such modifications.
+See the [Development Setup](installation.html#development-setup) 
+section.
 
 ## Running tests
 
