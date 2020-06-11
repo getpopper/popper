@@ -52,14 +52,16 @@ where `wf.yml` is a file containing a workflow.
 
 ## Executing a step interactively
 
-To open a shell in a step defined in the workflow:
+For debugging a workflow, it is sometimes useful to open a shell 
+inside a container associated to a step of a workflow. To accomplish 
+this, run:
 
 ```bash
-popper sh step
+popper sh <STEP>
 ```
 
-Where `step` is the name of a step contained in the workflow. For 
-given the following workflow:
+where `<STEP>` is the name of a step contained in the workflow. For 
+example, given the following workflow:
 
 ```yaml
 steps:
@@ -71,8 +73,8 @@ steps:
     MYENVVAR: "foo"
 ```
 
-if we want to open a shell that puts us inside the `mystep` above, we 
-run:
+if we want to open a shell that puts us inside the `mystep` above 
+(inside an container instance of the `ubuntu:18.04` image), we run:
 
 ```bash
 popper sh mystep
