@@ -5,9 +5,9 @@ wiki
 .ropeproject/
 .sass-cache/
 docs/_build
-cli/popper.egg-info/
-cli/build
-cli/dist
+src/popper.egg-info/
+src/build
+src/dist
 .idea/
 .cache
 popper_logs
@@ -16,4 +16,4 @@ popper_status
 popper_logs
 popper_status
 .pipeline_cache.yml
-cli/popper/_version.py
+src/popper/_version.py

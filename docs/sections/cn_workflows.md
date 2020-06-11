@@ -38,8 +38,8 @@ step. All attributes are optional with the exception of the `uses` attribute.
 | :---------  | :-------------------- |
 | `uses`      | **required** The Docker image that will be executed for that step. For example,<br>`uses: docker://node:10`. See **"Referencing images in a step"** section below for<br>more examples. |
 | `id`        | **optional** Assigns an identifier to the step. By default, steps are asigned a numerid id<br>corresponding to the order of the step in the list, with `1` identifying<br>the first step. |
-| `runs`      | **optional** Specifies the command to run in the docker image. If `runs` is omitted, the<br>command specified in the `Dockerfile`'s `ENTRYPOINT` instruction will execute.<br>Use the `runs` attribute when the `Dockerfile` does not specify an `ENTRYPOINT`<br>or you want to override the `ENTRYPOINT` command. The `runs` attribute does not<br>invoke a shell by default. Using `runs: "echo $VAR"` will not print the value<br>stored in `$VAR`, but will instead print `\"\$VAR.\"`. To use environment<br>variables with the `runs` instruction, you must include a shell to expand<br>the variables, for example: `runs: ["sh", "-c", "echo $VAR"]`.  If the value of `runs`<br>refers to a local script, the path is relative to the workspace folder (see [The workspace](#the-workspace) section below)|
-| `args`      | **optional** The arguments to pass to the command. This is an array of strings. For example,<br> `args: ["--flag", "--arg", "value"]`. If the value of `args`<br>refers to a local script, the path is relative to the workspace folder (see [The workspace](#the-workspace) section below). Similarly to the `runs` attribute, if an envrionment<br>variable is being referenced, in order for this reference to be valid, a shell must be<br>be invoked (in the `runs` attribute) in order to expand the value of the variable. |
+| `runs`      | **optional** Specifies the command to run in the docker image. If `runs` is omitted, the<br>command specified in the `Dockerfile`'s `ENTRYPOINT` instruction will execute.<br>Use the `runs` attribute when the `Dockerfile` does not specify an `ENTRYPOINT`<br>or you want to override the `ENTRYPOINT` command. The `runs` attribute does not<br>invoke a shell by default. Using `runs: "echo $VAR"` will not print the value<br>stored in `$VAR`, but will instead print `\"\$VAR.\"`. To use environment<br>variables with the `runs` instruction, you must include a shell to expand<br>the variables, for example: `runs: ["sh", "-c", "echo $VAR"]`.  If the value of `runs`<br>refers to a local script, the path is relative to the workspace folder (see<br>[The Workspace](#the-workspace) section below)|
+| `args`      | **optional** The arguments to pass to the command. This is an array of strings. For example,<br> `args: ["--flag", "--arg", "value"]`. If the value of `args`<br>refers to a local script, the path is relative to the workspace folder (see<br>[The Workspace](#the-workspace) section below). Similarly to the `runs` attribute, if an envrionment variable is being<br>referenced, in order for this reference to be valid, a shell must be invoked (in the `runs` attribute)<br>in order to expand the value of the variable. |
 | `env`       | **optional** The environment variables to set inside the container's runtime environment. If<br>you need to pass environment variables into a step, make sure it runs a command<br>shell to perform variable substitution. For example, if your `runs` attribute is<br>set to `["sh", "-c"]`, the value of `args` will be passed to `sh -c` and<br>executed in a command shell. Alternatively, if your `Dockerfile` uses an<br>`ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a<br>command shell as well. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
 | `secrets`   | **optional** Specifies the names of the secret variables to set in the runtime environment<br>which the container can access as an environment variable. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
 | `skip_pull` | **optional** Assume that the given container image already exist and skip pulling it. |
@@ -56,7 +56,7 @@ image on a public Git repository or Docker container registry:
 
 | Template                           | Description |
 | :--------------------------------- | :--------------------------------- |
-| `./path/to/dir`                    | The path to the directory that contains the `Dockerfile`. This is a relative<br>path with respect to the workspace directory (see [The workspace](#the-workspace) section below).<br>**Example:** `./path/to/myimg/`. |
+| `./path/to/dir`                    | The path to the directory that contains the `Dockerfile`. This is a relative<br>path with respect to the workspace directory (see<br>[The Workspace](#the-workspace) section below). **Example:** `./path/to/myimg/`. |
 | `{url}/{user}/{repo}@{ref}`        | A specific branch, ref, or SHA in a public Git repository. If `url`<br>is ommited, `github.com` is used by default.<br>**Example:** `https://bitbucket.com/popperized/ansible@master`. |
 | `{url}/{user}/{repo}/{path}@{ref}` | A subdirectory in a public Git repository at a specific branch, ref,<br>or SHA.<br>**Example:** `git@gitlab.com:popperized/geni/build-context@v2.0`. |
 | `docker://{image}:{tag}`           | A Docker image published on [Docker Hub](https://hub.docker.com/).<br>**Example:** `docker://alpine:3.8`. |
@@ -73,7 +73,7 @@ keep in mind the following:
   * When the `runs` attribute for a step is used, the `ENTRYPOINT` of 
     the image is overridden.
   * The `WORKDIR` is overridden and `/workspace` is used instead (see 
-    [The workspace](#the-workspace) section below).
+    [The Workspace](#the-workspace) section below).
   * The `ARG` instruction is not supported, thus building an image 
     from a `Dockerfile` (public or local) only uses its default value.
   * While it is possible to run containers that specify `USER` other 
@@ -134,49 +134,84 @@ This attribute is optional.
 This section describes the runtime environment where a workflow 
 executes.
 
-### The workspace
+### The Workspace
 
 When a step is executed, a folder in your machine is bind-mounted 
 (shared) to the `/workspace` folder inside the associated container. 
 By default, the folder being bind-mounted is `$PWD`, that is, the 
 working directory from where `popper run` is being invoked from. If 
 the `-w` (or `--workspace`) flag is given, then the value for this 
-flag is used instead. It can also be defined a working directory in
-a workflow for a step with the attribute `dir`.
+flag is used instead. See the [official Docker documentation][voldoc] 
+for more information about how volumes work with containers.
 
-For example, let's look at a workflow that writes to a `myfile` in the 
+[voldoc]: https://docs.docker.com/storage/volumes/
+
+The following diagram illustrates this relationship between the 
+filesystems of the host (machine where `popper run` is invoked) and 
+the filesystem namespace within container:
+
+```
+                                Container
+                                +----------------------+
+                                |  /bin                |
+                                |  /etc                |
+Host                            |  /lib                |
++-------------------+           |  /root               |
+|                   | bindmount |  /sys                |
+| /home/user/proj <-------+     |  /tmp                |
+| ├─ wf.yml         |     |     |  /var                |
+| └─ README.md      |     +------> /workspace          |
+|                   |           |  ├── wf.yml          |
+|                   |           |  └── README.md       |
+|                   |           |                      |
++-------------------+           +----------------------+
+```
+
+For example, let's look at a workflow that creates files in the 
 workspace:
 
 ```yaml
 steps:
-- uses: docker://alpine:3.9
+- uses: docker://alpine:3.12
   args: [touch, ./myfile]
 ```
 
-Assuming the above is stored in a `wf.yml` file, the following writes 
-to the current working directory:
+The above workflow has only one single step that creates the `myfile` 
+file in the workspace directory if it doesn't exist, or updates its 
+metadata if it already exists, using the [`touch` command][touch_cmd]. 
+Assuming the above workflow is stored in a `wf.yml` file in 
+`/home/user/proj/`, we can run it by first changing the current 
+working directory to this folder:
 
 ```bash
-cd /tmp
-popper run -f /path/to/wf.yml
-```
-
-In the above, `/tmp/myfile` is created. If we provide a value for 
-`-w`, the workspace path changes and thus the file is written to that 
-location:
-
-```bash
-cd /tmp
-popper run -f /path/to/wf.yml -w /path/to
-```
-
-The above writes the `/path/to/myfile`. And, for completeness, the 
-above is equivalent to:
-
-```bash
-cd /path/to
+cd /home/user/proj/
 popper run -f wf.yml
 ```
+
+[touch_cmd]: https://en.wikipedia.org/wiki/Touch_(command)
+
+And this will result in having a new file in `/home/user/proj/myfile`. 
+However, if we invoke the workflow from a different folder, the folder 
+being bind-mounted inside the container is a different one. For 
+example:
+
+```bash
+cd /tmp
+popper run -f /home/user/proj/wf.yml
+```
+
+In the above, the file will be written to `/tmp/myfile`. If we provide 
+a value for `-w`, the workspace path then changes and thus the file is 
+written to this given location. For example
+
+```bash
+cd /tmp
+popper run -f /home/user/proj/wf.yml -w /home/user/proj/
+```
+
+The above writes the `/home/user/proj/myfile` even though Popper is 
+being invoked from `/tmp`, since the `-w` flag is being passed to 
+`popper run`.
 
 ### Changing the working directory
 
@@ -305,7 +340,7 @@ steps:
 ```
 
 In the first step above, the `ls -la` command is executed on the 
-workspace folder (see ["The workspace"](#the-workspace) section). The 
+workspace folder (see ["The Workspace"](#the-workspace) section). The 
 second one shows how to execute a script. Note that the command or 
 script specified in the `runs` attribute are NOT executed in a shell. 
 If you need a shell, you have to explicitly invoke one, for example:

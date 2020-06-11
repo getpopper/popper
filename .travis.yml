@@ -10,12 +10,12 @@ env:
 - ENGINE=singularity
 services: docker
 before_install:
-- ci/scripts/install_scripts.sh
+- src/scripts/install_singularity.sh
 - pip install coverage
 install:
-- pip install cli/[dev]
+- pip install src/[dev]
 - black --check --diff .
 script:
-- coverage run -m unittest cli/test/test_*
+- coverage run -m unittest src/test/test_*
 after_success:
 - bash <(curl -s https://codecov.io/bash)
