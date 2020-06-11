@@ -31,7 +31,13 @@ class TestWorkflow(unittest.TestCase):
 
         wf_data = {
             "steps": [
-                {"uses": "foo", "id": "step", "env": {"EN": "EE"}, "secrets": ["S"]},
+                {
+                    "uses": "foo",
+                    "id": "step",
+                    "env": {"EN": "EE"},
+                    "secrets": ["S"],
+                    "dir": "/path/to/",
+                },
                 {"uses": "bar", "runs": ["a", "b"], "args": ["c"], "skip_pull": True},
             ],
             "options": {"env": {"FOO": "bar"}, "secrets": ["Z"]},
@@ -43,6 +49,7 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual("foo", step.uses)
         self.assertEqual(("Z", "S"), step.secrets)
         self.assertEqual({"EN": "EE", "FOO": "bar"}, step.env)
+        self.assertEqual("/path/to/", step.dir)
         self.assertTrue(not step.runs)
         self.assertTrue(not step.args)
         self.assertFalse(step.skip_pull)
@@ -52,9 +59,9 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(("a", "b"), step.runs)
         self.assertEqual(("c",), step.args)
         self.assertTrue(step.skip_pull)
+        self.assertTrue(not step.dir)
         self.assertEqual({"FOO": "bar"}, step.env)
         self.assertEqual(("Z",), step.secrets)
-
         self.assertEqual({"FOO": "bar"}, wf.options.env)
         self.assertEqual(("Z",), wf.options.secrets)
 

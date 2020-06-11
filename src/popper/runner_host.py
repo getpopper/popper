@@ -248,7 +248,7 @@ class DockerRunner(StepRunner):
                 f"{self._config.workspace_dir}:/workspace",
                 "/var/run/docker.sock:/var/run/docker.sock",
             ],
-            "working_dir": "/workspace",
+            "working_dir": step.dir if step.dir else "/workspace",
             "environment": self._prepare_environment(step),
             "entrypoint": step.runs if step.runs else None,
             "detach": not self._config.pty,
