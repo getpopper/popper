@@ -216,10 +216,10 @@ being invoked from `/tmp`, since the `-w` flag is being passed to
 ### Changing the working directory
 
 To specify a working directory for a step you can use the `dir` attribute
-in the workflow. This will only going to change where the specified
+in the workflow. This going to change where the specified
 command is executed.
 
-For example, adding `dir` to a workflow would looks like the following:
+For example, adding `dir` to a workflow results in the following:
 
 ```yaml
 version: '1'
@@ -229,8 +229,9 @@ steps:
   dir: /path/to/dir/
 ```
 
-It is worth mentioning that if the directory specified is outside the workspace,
-then anything that gets written to it won't persist.
+It is worth mentioning that if the directory is specified outside the
+`/workspace` folder, then anything that gets written to it won't persist
+(see below for more).
 
 ### Filesystem namespaces and persistence
 
