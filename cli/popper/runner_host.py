@@ -245,13 +245,13 @@ class DockerRunner(StepRunner):
             "command": list(step.args),
             "name": name,
             "volumes": [
-                f"{self._config.workspace_dir}:{step.dir if step.dir else '/workspace'}",
+                f"{self._config.workspace_dir}:/workspace",
                 "/var/run/docker.sock:/var/run/docker.sock",
             ],
             "working_dir": step.dir if step.dir else "/workspace",
             "environment": self._prepare_environment(step),
             "entrypoint": step.runs if step.runs else None,
-            "detach": True,
+            "detach": not self._config.pty,
             "tty": self._config.pty,
             "stdin_open": self._config.pty,
         }

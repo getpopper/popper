@@ -145,7 +145,7 @@ class TestHostDockerRunner(PopperTest):
                 "uses": "popperized/bin/sh@master",
                 "args": ["ls"],
                 "id": "one",
-                "dir": "/path/to",
+                "dir": "/tmp/",
             },
             default_box=True,
         )
@@ -161,7 +161,6 @@ class TestHostDockerRunner(PopperTest):
                     "environment": {"FOO": "bar"},
                 },
             },
-            "resource_manager": {"name": "slurm"},
         }
 
         config = ConfigLoader.load(
@@ -178,16 +177,47 @@ class TestHostDockerRunner(PopperTest):
                     "command": ["ls"],
                     "name": "container_a",
                     "volumes": [
-                        "/path/to/workdir:/path/to",
+                        "/path/to/workdir:/workspace",
                         "/var/run/docker.sock:/var/run/docker.sock",
                         "/path/in/host:/path/in/container",
                     ],
-                    "working_dir": "/path/to",
+                    "working_dir": "/tmp/",
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
                     "detach": True,
                     "stdin_open": False,
                     "tty": False,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                },
+            )
+
+        # check container kwargs when pty is enabled
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
+        )
+
+        with DockerRunner(init_docker_client=False, config=config) as dr:
+            args = dr._get_container_kwargs(step, "alpine:3.9", "container_a")
+
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                        "/var/run/docker.sock:/var/run/docker.sock",
+                        "/path/in/host:/path/in/container",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": False,
+                    "stdin_open": True,
+                    "tty": True,
                     "privileged": True,
                     "hostname": "popper.local",
                     "domainname": "www.example.org",
