@@ -292,13 +292,17 @@ class DockerRunner(StepRunner):
             if k not in container_args.keys():
                 container_args[k] = update_with[k]
 
+
 class PodmanRunner(StepRunner):
     """Runs steps in podman on the local machine."""
+
     def __init__(self, init_podman_client=True, **kw):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
-        self._p_info = HostRunner._exec_cmd(["podman", "info"], stdout=PIPE, bufsize=1, universal_newlines=True)
+        self._p_info = HostRunner._exec_cmd(
+            ["podman", "info"], stdout=PIPE, bufsize=1, universal_newlines=True
+        )
 
         if not init_podman_client:
             return
@@ -362,6 +366,7 @@ class PodmanRunner(StepRunner):
             build_ctx_path = os.path.join(repo_dir, step_dir)
 
         return (build, img, tag, build_ctx_path)
+
 
 class SingularityRunner(StepRunner):
     """Runs steps in singularity on the local machine."""

@@ -294,19 +294,38 @@ class TestHostPodmanRunner(PopperTest):
     def test_stop_running_tasks(self):
         with PodmanRunner() as pr:
             cmd = ["podman", "run", "-d"]
-            _, _, c1 = HostRunner._exec_cmd(cmd + ["debian:buster-slim", "sleep", "20000", "-q"], logging=False)
-            _, _, c2 = HostRunner._exec_cmd(cmd + ["alpine:3.9", "sleep", "10000", "-q"], logging=False)
+            _, _, c1 = HostRunner._exec_cmd(
+                cmd + ["debian:buster-slim", "sleep", "20000", "-q"], logging=False
+            )
+            _, _, c2 = HostRunner._exec_cmd(
+                cmd + ["alpine:3.9", "sleep", "10000", "-q"], logging=False
+            )
             c1 = c1.rstrip()
             c2 = c2.rstrip()
             pr._spawned_containers.add(c1)
             pr._spawned_containers.add(c2)
             pr.stop_running_tasks()
-            c1_status_cmd = ["podman", "container", "inspect", "-f", str('{{.State.Status}}'), c1]
+            c1_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c1,
+            ]
             __, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
-            c2_status_cmd = ["podman", "container", "inspect", "-f", str('{{.State.Status}}'), c2]
+            c2_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c2,
+            ]
             __, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
+
 
 class TestHostSingularityRunner(PopperTest):
     def setUp(self):
