@@ -315,18 +315,53 @@ class PodmanRunner(StepRunner):
         """Stop containers started by Popper."""
         for c in self._spawned_containers:
             log.info(f"Stopping container {c}")
-            _, ecode, _ = HostRunner._exec_cmd(["podman", "stop", c])
+            _, ecode, _ = HostRunner._exec_cmd(["podman", "stop", c], logging=False)
             if ecode != 0:
                 log.warning(f"Failed to stop the {c} container")
 
     def _find_container(self, cid):
         """Checks whether the container exists."""
-        cmd = ["podman", "container", "ls", "--filter", str(f'name={cid}')]
-        _, containers = HostRunner._exec_cmd(cmd)
-        filtered_containers = [c for c in containers]
+        cmd = ["podman", "container", "ls", "--filter", f"id={cid}", "-q"]
+        _, _, containers = HostRunner._exec_cmd(cmd, logging=False)
+        filtered_containers = [c for c in containers if c == cid]
 
         if len(filtered_containers):
             return filtered_containers[0]
+
+        return None
+
+    def _get_build_info(self, step):
+        """Parses the `uses` attribute and returns build information needed.
+
+        Args:
+            step(dict): dict with step data
+
+        Returns:
+            (str, str, str, str): bool (build), image, tag, Dockerfile
+        """
+        build = True
+        img = None
+        build_ctx_path = None
+        if "docker://" in step.uses:
+            img = step.uses.replace("docker://", "")
+            if ":" in img:
+                (img, tag) = img.split(":")
+            else:
+                tag = "latest"
+            build = False
+        elif "./" in step.uses:
+            img = f'{pu.sanitized_name(step.id, "step")}'
+            tag = f"{self._config.git_sha_short}"
+            build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
+        else:
+            _, service, user, repo, step_dir, version = scm.parse(step.uses)
+            wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
+            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
+            img = f"{user}/{repo}".lower()
+            tag = version
+            build_ctx_path = os.path.join(repo_dir, step_dir)
+
+        return (build, img, tag, build_ctx_path)
 
 class SingularityRunner(StepRunner):
     """Runs steps in singularity on the local machine."""
