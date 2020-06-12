@@ -147,23 +147,23 @@ for more information about how volumes work with containers.
 [voldoc]: https://docs.docker.com/storage/volumes/
 
 The following diagram illustrates this relationship between the 
-filesystems of the host (machine where `popper run` is invoked) and 
-the filesystem namespace within container:
+filesystem namespace of the host (the machine where `popper run` is 
+executing) and the filesystem namespace within container:
 
 ```
-                                Container
+                                 Container
                                 +----------------------+
                                 |  /bin                |
                                 |  /etc                |
-Host                            |  /lib                |
-+-------------------+           |  /root               |
-|                   | bindmount |  /sys                |
-| /home/user/proj <-------+     |  /tmp                |
+                                |  /lib                |
+ Host                           |  /root               |
++-------------------+   bind    |  /sys                |
+|                   |   mount   |  /tmp                |
+| /home/me/my/proj <------+     |  /usr                |
 | ├─ wf.yml         |     |     |  /var                |
 | └─ README.md      |     +------> /workspace          |
 |                   |           |  ├── wf.yml          |
 |                   |           |  └── README.md       |
-|                   |           |                      |
 +-------------------+           +----------------------+
 ```
 
@@ -180,58 +180,90 @@ The above workflow has only one single step that creates the `myfile`
 file in the workspace directory if it doesn't exist, or updates its 
 metadata if it already exists, using the [`touch` command][touch_cmd]. 
 Assuming the above workflow is stored in a `wf.yml` file in 
-`/home/user/proj/`, we can run it by first changing the current 
+`/home/me/my/proj/`, we can run it by first changing the current 
 working directory to this folder:
 
 ```bash
-cd /home/user/proj/
+cd /home/me/my/proj/
 popper run -f wf.yml
 ```
 
 [touch_cmd]: https://en.wikipedia.org/wiki/Touch_(command)
 
-And this will result in having a new file in `/home/user/proj/myfile`. 
+And this will result in having a new file in `/home/me/my/proj/myfile`. 
 However, if we invoke the workflow from a different folder, the folder 
 being bind-mounted inside the container is a different one. For 
 example:
 
 ```bash
-cd /tmp
-popper run -f /home/user/proj/wf.yml
+cd /home/me/
+popper run -f /home/me/my/proj/wf.yml
 ```
 
-In the above, the file will be written to `/tmp/myfile`. If we provide 
-a value for `-w`, the workspace path then changes and thus the file is 
-written to this given location. For example
+In the above, the file will be written to `/home/me/myfile`, because 
+we are invoking the command from `/home/me/`, and this path is treated 
+as the workspace folder. If we provide a value for the `--workspace` 
+flag (or its short version `-w`), the workspace path then changes and 
+thus the file is written to this given location. For example:
 
 ```bash
-cd /tmp
-popper run -f /home/user/proj/wf.yml -w /home/user/proj/
+cd /
+popper run -f /home/me/my/proj/wf.yml -w /home/me/my/proj/
 ```
 
-The above writes the `/home/user/proj/myfile` even though Popper is 
-being invoked from `/tmp`, since the `-w` flag is being passed to 
-`popper run`.
+The above writes the `/home/me/my/proj/myfile` even though Popper is 
+being invoked from `/`. Note that the above is equivalent to the first 
+example of this subsection, where we first changed the directory to 
+`/home/me/my/proj` and ran `popper run -f wf.yml`.
 
 ### Changing the working directory
 
-To specify a working directory for a step you can use the `dir` attribute
-in the workflow. This going to change where the specified
-command is executed.
-
-For example, adding `dir` to a workflow results in the following:
+To specify a working directory for a step, you can use the `dir` 
+attribute in the workflow. This changes where the specified command is 
+executed. For example, adding `dir` as follows:
 
 ```yaml
-version: '1'
 steps:
 - uses: docker://alpine:3.9
   args: [touch, ./myfile]
-  dir: /path/to/dir/
+  dir: /tmp/
 ```
 
-It is worth mentioning that if the directory is specified outside the
-`/workspace` folder, then anything that gets written to it won't persist
-(see below for more).
+And assuming that it is stored in `/home/me/my/proj/wf.yml`, invoking 
+the workflow as:
+
+```bash
+cd /home/me
+popper run -f wf.yml -w /home/me/my/proj
+```
+
+Would result in writing `myfile` in the `/tmp` folder that is 
+**inside** the container filesystem namespace, as opposed to writing 
+it to `/home/me/my/projc/` (the value given for the `--workspace` 
+flag). As it is evident in this example, if the directory specified in 
+the `dir` attribute resides outside the `/workspace` folder, then 
+anything that gets written to it won't persist after the step ends its 
+execution (see "Filesystem namespaces and persistence" below for 
+more).
+
+For completeness, we show an example of using `dir` to specify a 
+folder within the workspace:
+
+```yaml
+steps:
+- uses: docker://alpine:3.9
+  args: [touch, ./myfile]
+  dir: /workspace/my/proj/
+```
+
+And executing:
+
+```bash
+cd /home/me
+popper run -f wf.yml
+```
+
+would result in having a file in `/home/me/my/proj/myfile`.
 
 ### Filesystem namespaces and persistence
 
