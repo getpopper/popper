@@ -1,4 +1,16 @@
 steps:
+- id: skip if not in master branch, docker, and python3.7
+  uses: docker://docker:19.03.3
+  runs: [sh]
+  secrets: [ENGINE, TRAVIS_PYTHON_VERSION]
+  args:
+  - -ec
+  - |
+    # only push from master
+    if [ "$GIT_BRANCH" != "master" ] || [ "$ENGINE" != "docker" ] || [ "$TRAVIS_PYTHON_VERSION" != "3.7" ] ; then
+      exit 78
+    fi
+
 - id: build docker image
   uses: docker://docker:19.03
   runs: [sh]
@@ -8,21 +20,16 @@ steps:
     docker build -t getpopper/popper:latest src/
 
     if [ -n "$GIT_TAG" ]; then
-      docker tag getpopper/popper:$GIT_SHA_SHORT getpopper/popper:$GIT_TAG
+      docker tag getpopper/popper:latest getpopper/popper:$GIT_TAG
     fi
 
-- id: push-img
+- id: push image
   uses: docker://docker:19.03.3
   secrets: [DOCKER_USERNAME, DOCKER_PASSWORD]
   runs: [sh]
   args:
   - -ec
   - |
-    # only push from master
-    if [ "$GIT_BRANCH" != "master" ]; then
-      exit 78
-    fi
-
     docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
     docker push getpopper/popper:latest
 
