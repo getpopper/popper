@@ -23,13 +23,6 @@ from popper.runner import WorkflowRunner
     required=False,
     default="/bin/bash",
 )
-@click.option(
-    "-f",
-    "--file",
-    help="File containing the definition of the workflow.",
-    required=False,
-    default=".popper.yml",
-)
 @pass_context
 def cli(ctx, file, step, entrypoint):
     """Opens an interactive shell using all the attributes defined in the workflow file
