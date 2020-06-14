@@ -6,9 +6,6 @@
 Popper
 ======
 
-Popper is a container-native workflow engine for seamlessly running workflows 
-locally and on CI services.
-
 .. toctree::
    :maxdepth: 2
 
@@ -18,6 +15,11 @@ locally and on CI services.
    :maxdepth: 2
 
    sections/cli_features.md
+
+.. toctree::
+   :maxdepth: 2
+
+   sections/concepts.md
 
 .. toctree::
    :maxdepth: 2
