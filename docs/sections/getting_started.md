@@ -1,144 +1,58 @@
 # Getting Started
 
-Popper is a [container-native][cn] [workflow execution engine][wfeng]. 
-A container-native workflow is one where all steps contained in it are 
-executed in containers. Before going through this guide, you need to 
-have the Docker engine installed on your machine (see [installations 
-instructions here][docker-install]), as well as a Python 3.6+ 
-installation capable of adding packages via [Pip][pip] or 
-[Virtualenv][venv].
+Before going through this guide, you need to have the Docker engine 
+installed on your machine. See [installations instructions 
+here](https://docs.docker.com/install/). In addition, this guide 
+assumes familiarity with Linux containers and the container-native 
+paradigm to software development. You can read a high-level 
+introduction to these concepts in [this page](./concepts.md), where 
+you can also find references to external resources that explain them 
+in depth.
 
 ## Installation
 
-We provide a [`pip`][pip] package for Popper. To install simply run:
+To install or upgrade Popper, run the following in your terminal:
 
 ```bash
-pip install popper
+curl -sSfL https://raw.githubusercontent.com/getpopper/popper/master/install.sh | sh
 ```
 
-Depending on your Python distribution or specific environment
-configuration, using [Pip][pip] might not be possible (e.g. you need
-administrator privileges) or using `pip` directly might incorrectly
-install Popper. We **highly recommend** to install Popper in a Python
-virtual environment using [virtualenv][venv]. The following
-installation instructions assume that `virtualenv` is installed in
-your environment (see [here for more][venv-install]). Once
-`virtualenv` is available in your machine, we proceed to create a
-folder where we will place the Popper virtual environment:
+## Create Your First Workflow
 
-```bash
-# create a folder for storing virtual environments
-mkdir $HOME/virtualenvs
+Assume that as part of our work we want to carryout two tasks: 
+
+ 1. Download a dataset (CSV) that we know is available at 
+    <https://github.com/datasets/co2-fossil-global/raw/master/global.csv>
+ 2. Run a routine for this data, specifically we want to get [the 
+    transpose](https://en.wikipedia.org/wiki/Transpose) of the this 
+    CSV table.
+
+For the first task we can use [`curl`](https://curl.haxx.se/), while 
+for the second we can use 
+[`csvtool`](https://github.com/Chris00/ocaml-csv).
+
+When we work under the container-native paradigm, instead of going 
+ahead and installing these on our computer, we first look for 
+available images on a container registry, for example 
+<https://hub.docker.com>, to see if the software we need is available.
+
+In this case we find two images that do what we need and proceed to 
+write our workflow:
+
+```yaml
+steps:
+# download CSV file with data on global CO2 emissions
+- id: download
+  uses: docker://byrnedo/alpine-curl:0.1.8
+  args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
+
+# obtain the transpose of the global CO2 emissions table
+- id: get-transpose
+  uses: docker://getpopper/csvtool:2.4
+  args: [transpose, global.csv, -o, global_transposed.csv]
 ```
 
-We then create a `virtualenv` for Popper. This will depend on the 
-method with which `virtualenv` was installed:
-
-```bash
-# 1) if virtualenv was installed via package, e.g.:
-# - apt install virtualenv (debian/ubuntu)
-# - yum install virtualenv (centos/redhat)
-# - conda install virtualenv (conda)
-# - pip install virtualenv (pip)
-virtualenv $HOME/virtualenvs/popper
-
-# OR
-#
-# 2) if virtualenv installed via Python 3.6+ module
-python -m venv $HOME/virtualenvs/popper
-```
-
-> **NOTE**: in the case of `conda`, we recommend the creation of a new
-> environment before `virtualenv` is installed in order to avoid
-> issues with packages that might have been installed previously.
-
-We then load the environment we just created above:
-
-```bash
-source $HOME/virtualenvs/popper/bin/activate
-```
-
-Finally, we install Popper in this environment using `pip`:
-
-```bash
-pip install popper
-```
-
-To test all is working as it should, we can show the version we
-installed:
-
-```bash
-popper version
-```
-
-And to get a list of available commands:
-
-```bash
-popper --help
-```
-
-> **NOTE**: given that we are using `virtualenv`, once the shell 
-session ends (when we close the terminal window or tab), the 
-environment gets unloaded and newer sessions (new window or tab) will 
-not have the `popper` command available in the `PATH` variable. In 
-order to have the environment loaded again we need to execute the 
-`source` command (see above). In the case of `conda` we need to load 
-the Conda environment (`conda activate` command).
-
-## Create a Git repository
-
-Create a project repository (if you are not familiar with Git, look
-[here](https://www.learnenough.com/git-tutorial)):
-
-```bash
-mkdir myproject
-cd myproject
-git init
-echo '# myproject' > README.md
-git add .
-git commit -m 'first commit'
-```
-
-> **NOTE**: if you run on MacOS, make sure the `myproject/` folder is 
-> in a folder that is shared with the Docker engine. By default, 
-> Docker For Mac shares the `/Users` folder, so putting the 
-> `myproject/` folder in any subfolder of `/Users/<USERNAME>/` should 
-> suffice. Otherwise, if you want to put it on an folder other than 
-> `/Users`, you will need to modify the Docker For Mac settings so 
-> that this other folder is also shared with the underlying Linux VM.
-
-## Create a workflow
-
-We create a small, pre-defined workflow by running:
-
-```bash
-popper scaffold
-```
-
-The above generates an example workflow that you can use as the 
-starting point of your project. This minimal example illustrates two 
-distinct ways in which a `Dockerfile` image can be used in a workflow 
-(by pulling an image from a registry, or by referencing one stored in 
-a public repository). To show the content of the workflow:
-
-```bash
-cat wf.yml
-```
-
-For each step in the workflow, an image is created (or pulled) and a 
-container is instantiated. For a more detailed description of how 
-Popper processes a workflow, take a look at the ["Workflow Language 
-and Runtime"](cn_workflows.md) section. To learn more on how to modify 
-this workflow in order to fit your needs, take a look at [this 
-tutorial][poppertut] or take a look at [some examples][ex].
-
-Before we go ahead and test this workflow, we first commit the files 
-to the Git repository:
-
-```bash
-git add .
-git commit -m 'Adding example workflow.'
-```
+We place the workflow in a file called `wf.yml`.
 
 ## Run your workflow
 
@@ -147,12 +61,6 @@ To execute the workflow you just created:
 ```bash
 popper run -f wf.yml
 ```
-
-You should see the output printed to the terminal that informs of the 
-three main tasks that Popper executes for each step in a workflow: 
-build (or pull) a container image, instantiate a container, and 
-execute the step by invoking the specified command within the 
-container.
 
 > **TIP:** Type `popper run --help` to learn more about other options 
 > available and a high-level description of what this command does.
@@ -167,75 +75,76 @@ docker ps -a
 ```
 
 You should see the two containers from the example workflow being 
-listed.
-
-To obtain more detailed information of what this command does, you can pass the `--help` flag to it:
+listed. To obtain more detailed information of what this command does, 
+you can pass the `--help` flag to it:
 
 ```bash
 popper run --help
 ```
 
-> **NOTE**: All Popper subcommands allow you to pass `--help` flag to it to get more information about what the command does.
+> **TIP**: All popper subcommands allow you to pass `--help` flag to 
+> it to get more information about what the command does.
 
-## Link to GitHub repository
+## Debug your workflow
 
-Create a repository [on Github][gh-create]. Once your Github
-repository has been created, register it as a remote repository on
-your local repository:
-
-```bash
-git remote add origin git@github.com:<user>/<repo>
-```
-
-where `<user>` is your username and `<repo>` is the name of the
-repository you have created. Then, push your local commits:
+A step might not be quite doing what we need it to. In this cases, we 
+can open an interactive shell instead of having to update the YAML 
+file and invoke `popper run` again. In those cases, the `popper sh` 
+comes handy. For example, if we would like to explore what other 
+things can be done inside the container for the second step:
 
 ```bash
-git push -u origin master
+popper sh -f wf.yml get-transpose
 ```
 
-## Continuously Run Your Workflow on Travis
-
-For this, we need to [login to Travis CI][cisetup] using our Github
-credentials. Once this is done, we [activate the project][ciactivate]
-so it is continuously validated.
-
-Generate `.travis.yml` file:
+And the above opens a shell inside a container instantiated from the 
+`docker.io/getpopper/csvtool:2.4` image. In this shell we can, for 
+example, obtain information about what else can the `csvtool` do:
 
 ```bash
-popper ci travis
+csvtool --help
 ```
 
-And commit the file:
+Based on this exploration, we can see that we can pass a `-u TAB` flag 
+to the `csvtool` in order to generate a tab-separated output file 
+instead of a comma-separated one. Assuming this is what we wanted to 
+achieve in our case, we then quit the container by running
 
 ```bash
-git add .travis.yml
-git commit -m 'Adds TravisCI config file'
+exit
 ```
 
-Trigger an execution by pushing to github:
+which puts us back on our host machine context (that is, we are not 
+running inside the container anymore). We then can update the second 
+step by updating the YAML file:
+
+```yamls
+- id: get-transpose
+  uses: docker://getpopper/csvtool:2.4
+  args: [transpose, global.csv, -u, TAB, -o, global_transposed.csv]
+```
+
+And test that what we changed worked by running in non-interactive 
+mode again:
 
 ```bash
-git push
+popper sh -f wf.yml get-transpose
 ```
-
-Go to the TravisCI website to see your experiments being executed.
 
 ## Next Steps
 
-For a detailed description of how Popper processes workflows, take a 
-look at the ["Workflow Language and Runtime"](cn_workflows.md) 
-section. To learn more on how to modify workflows to fit your needs, 
-take a look at [this tutorial][poppertut] or at [some examples][ex].
+  * Learn more about all the [CLI features](./cli_features.md).
 
-[docker-install]: https://docs.docker.com/install/
-[wfeng]: https://en.wikipedia.org/wiki/Workflow_engine
-[cn]: https://cloudblogs.microsoft.com/opensource/2018/04/23/5-reasons-you-should-be-doing-container-native-development/
-[pip]: https://pip.pypa.io/en/stable/
-[poppertut]: https://popperized.github.io/swc-lesson/
-[ex]: https://github.com/popperized/popper-examples
-[gh-create]: https://help.github.com/articles/create-a-repo/
-[cisetup]: https://docs.travis-ci.com/user/getting-started/#Prerequisites
-[ciactivate]: https://docs.travis-ci.com/user/getting-started/#To-get-started-with-Travis-CI
-[venv]: https://virtualenv.pypa.io/en/latest/
-[venv-install]: https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv
+  * Take a look at the ["Workflow Language"](./cn_workflows.md#syntax) 
+    for the details on what else can you specify as part of a Step's 
+    attributes.
+
+  * Read the ["Popper Execution 
+    Runtime"](./cn_workflows.md#execution-runtime) section.
+
+  * Browse existing workflow 
+    [examples](https://github.com/getpopper/popper-examples).
+
+  * Take a [self-paced 
+    tutorial](https://popperized.github.io/swc-lesson/) to learn how 
+    to use other features of Popper.
