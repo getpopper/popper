@@ -12,10 +12,14 @@ command -v docker >/dev/null 2>&1 || { echo >&2 "docker command not found. Abort
 
 cat > ./popper << "EOF"
 #!/usr/bin/env sh
+
+printenv > /tmp/.envfile
+
 docker run --rm -ti \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume $PWD:$PWD \
   --workdir $PWD \
+  --env-file /tmp/.envfile \
   getpopper/popper:v2.6.0 $@
 EOF
 
