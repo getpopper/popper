@@ -1,8 +1,8 @@
 # Getting Started
 
 Before going through this guide, you need to have the Docker engine 
-installed on your machine. See [installations instructions 
-here](https://docs.docker.com/install/). In addition, this guide 
+installed on your machine (see [installations instructions 
+here](https://docs.docker.com/install/)). In addition, this guide 
 assumes familiarity with Linux containers and the container-native 
 paradigm to software development. You can read a high-level 
 introduction to these concepts in [this page](./concepts.md), where 
@@ -23,7 +23,7 @@ Assume that as part of our work we want to carryout two tasks:
 
  1. Download a dataset (CSV) that we know is available at 
     <https://github.com/datasets/co2-fossil-global/raw/master/global.csv>
- 2. Run a routine for this data, specifically we want to get [the 
+ 2. Modify the dataset, specifically we want to get [the 
     transpose](https://en.wikipedia.org/wiki/Transpose) of the this 
     CSV table.
 
@@ -37,7 +37,7 @@ available images on a container registry, for example
 <https://hub.docker.com>, to see if the software we need is available.
 
 In this case we find two images that do what we need and proceed to 
-write our workflow:
+write this workflow in a `wf.yml` file using your favorite editor:
 
 ```yaml
 steps:
@@ -52,8 +52,6 @@ steps:
   args: [transpose, global.csv, -o, global_transposed.csv]
 ```
 
-We place the workflow in a file called `wf.yml`.
-
 ## Run your workflow
 
 To execute the workflow you just created:
@@ -61,9 +59,6 @@ To execute the workflow you just created:
 ```bash
 popper run -f wf.yml
 ```
-
-> **TIP:** Type `popper run --help` to learn more about other options 
-> available and a high-level description of what this command does.
 
 Since this workflow consists of two steps, there were two 
 corresponding containers that were executed by the underlying 
@@ -75,8 +70,10 @@ docker ps -a
 ```
 
 You should see the two containers from the example workflow being 
-listed. To obtain more detailed information of what this command does, 
-you can pass the `--help` flag to it:
+listed along with other containers. The name of the containers created 
+by popper are prefixed with `popper_`. To obtain more detailed 
+information of what the `popper run` command does, you can pass the 
+`--help` flag to it:
 
 ```bash
 popper run --help
@@ -87,11 +84,12 @@ popper run --help
 
 ## Debug your workflow
 
-A step might not be quite doing what we need it to. In this cases, we 
-can open an interactive shell instead of having to update the YAML 
-file and invoke `popper run` again. In those cases, the `popper sh` 
-comes handy. For example, if we would like to explore what other 
-things can be done inside the container for the second step:
+From time to time, we find ourselves with a step that does not quite 
+do what we want it to. In these cases, we can open an interactive 
+shell instead of having to update the YAML file and invoke `popper 
+run` again. In those cases, the `popper sh` comes handy. For example, 
+if we would like to explore what other things can be done inside the 
+container for the second step:
 
 ```bash
 popper sh -f wf.yml get-transpose
@@ -108,17 +106,13 @@ csvtool --help
 Based on this exploration, we can see that we can pass a `-u TAB` flag 
 to the `csvtool` in order to generate a tab-separated output file 
 instead of a comma-separated one. Assuming this is what we wanted to 
-achieve in our case, we then quit the container by running
+achieve in our case, we then quit the container by running `exit`.
 
-```bash
-exit
-```
+Back on our host machine context, that is, not running inside the 
+container anymore, we can update the second step by editing the YAML 
+file to look like the following:
 
-which puts us back on our host machine context (that is, we are not 
-running inside the container anymore). We then can update the second 
-step by updating the YAML file:
-
-```yamls
+```yaml
 - id: get-transpose
   uses: docker://getpopper/csvtool:2.4
   args: [transpose, global.csv, -u, TAB, -o, global_transposed.csv]
@@ -128,22 +122,25 @@ And test that what we changed worked by running in non-interactive
 mode again:
 
 ```bash
-popper sh -f wf.yml get-transpose
+popper run -f wf.yml get-transpose
 ```
 
 ## Next Steps
 
-  * Learn more about all the [CLI features](./cli_features.md).
+  * Learn more about all the [CLI features](./cli_features.md) that 
+    Popper provides.
 
   * Take a look at the ["Workflow Language"](./cn_workflows.md#syntax) 
     for the details on what else can you specify as part of a Step's 
     attributes.
 
   * Read the ["Popper Execution 
-    Runtime"](./cn_workflows.md#execution-runtime) section.
+    Runtime"](./cn_workflows.md#execution-runtime) section to learn 
+    more about what other execution environments Popper supports, as 
+    well as how to customize the behavior of the underlying execution.
 
-  * Browse existing workflow 
-    [examples](https://github.com/getpopper/popper-examples).
+  * Browse existing [workflow 
+    examples](https://github.com/getpopper/popper-examples).
 
   * Take a [self-paced 
     tutorial](https://popperized.github.io/swc-lesson/) to learn how 
