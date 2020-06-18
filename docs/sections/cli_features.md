@@ -95,34 +95,44 @@ engine-specific options. These options allow you to specify
 fine-grained capabilities, bind-mounting additional folders, etc. In 
 order to do this, you can provide a configuration file to modify the 
 underlying container engine configuration used to spawn containers. 
-This file is a python script that defines an `ENGINE` dictionary with 
+This is a YAML file that defines an `engine` dictionary with 
 custom options and is passed to the `popper run` command via the 
-`--conf` flag.
+`--conf` (or `-c`) flag.
 
 For example, to make Popper spawn Docker containers in
-[privileged mode][privmode], we can write the following options:
+[privileged mode][privmode], we can write the following option:
 
-```python
-ENGINE = {
-  'privileged': True
-}
+```yaml
+engine:
+    name: docker
+    options:
+       privileged: True
+```
+Similarly, to bind-mount additional folders, we can use the `volumes` option to list the directories to mount:
+
+```yaml
+engine:
+    name: docker
+    options:
+       privileged: True
+       volumes:
+       - myvol1:/folder
+       - myvol2:/app
 ```
 
-Assuming the above is stored in a file called `settings.py`, we pass 
+Assuming the above is stored in a file called `config.yml`, we pass 
 it to Popper by running:
 
 ```
-popper run -f wf.yml --conf settings.py
+popper run -f wf.yml -c config.yml
 ```
 
 > **NOTE**:
 >
-> 1. Currently, the `--conf` option is only supported for the `docker` 
->    engine.
-> 2. The `settings.py` file must contain a `dict` type variable with 
->    the name `ENGINE` as shown above.
+> Currently, the `--conf` option is only supported for the `docker`engine.
 
 [privmode]: https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
+
 
 ## Continuously validating a workflow
 
