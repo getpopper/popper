@@ -54,7 +54,7 @@ There are two main branches of the codebase:
 
 ## Development Environment Setup
 
-See the [Development Setup](installation.html#development-setup) 
+See the [Development Setup](docs/installation.md#development-setup) 
 section.
 
 ## Running tests
