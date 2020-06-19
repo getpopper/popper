@@ -225,7 +225,7 @@ class StepRunner(object):
                     "GIT_COMMIT": self._config.git_commit,
                     "GIT_BRANCH": self._config.git_branch,
                     "GIT_SHA_SHORT": self._config.git_sha_short,
-                    "GIT_REMOTE_ORIGIN_URL": scm.get_remote_url(self._config.repo),
+                    "GIT_REMOTE_ORIGIN_URL": self._config.git_remote_origin_url,
                 }
             )
         return step_env

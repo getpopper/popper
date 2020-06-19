@@ -1,7 +1,6 @@
 import os
 import unittest
 import shutil
-import popper.scm as scm
 
 from unittest.mock import patch
 
@@ -126,7 +125,7 @@ class TestStepRunner(PopperTest):
                 "GIT_COMMIT": conf.git_commit,
                 "GIT_BRANCH": conf.git_branch,
                 "GIT_SHA_SHORT": conf.git_sha_short,
-                "GIT_REMOTE_ORIGIN_URL": scm.get_remote_url(repo),
+                "GIT_REMOTE_ORIGIN_URL": conf.git_remote_origin_url,
             }
             self.assertDictEqual(expected, env)
             os.environ.pop("A")
