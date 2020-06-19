@@ -395,7 +395,7 @@ engine. However, a `--conf` flag is provided by the `popper run`
 command to specify custom options for the underlying engine in 
 question (see [here][engconf] for more).
 
-[engconf]: /cli_features#customizing-container-engine-behavior
+[engconf]: ./cli_features#customizing-container-engine-behavior
 
 ## Resource Managers
 
