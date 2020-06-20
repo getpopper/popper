@@ -139,14 +139,15 @@ behavior, please immediately [email us](mailto:ivotron@ucsc.edu).
 
 ## How to Cite Popper
 
-Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
-Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
-Arpaci-Dusseau. _The Popper Convention: Making Reproducible Systems 
-Evaluation Practical_. In 2017 IEEE International Parallel and 
-Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017. 
-https://doi.org/10.1109/IPDPSW.2017.157.
+> Ivo Jimenez, Michael Sevilla, Noah Watkins, Carlos Maltzahn, Jay 
+> Lofstead, Kathryn Mohror, Andrea Arpaci-Dusseau and Remzi 
+> Arpaci-Dusseau. _The Popper Convention: Making Reproducible Systems 
+> Evaluation Practical_. In 2017 IEEE International Parallel and 
+> Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017. 
+> (https://doi.org/10.1109/IPDPSW.2017.157)
 
-For BibTeX, click [here](https://falsifiable.us/pubs/bibtex/popper.bib).
+PDF for a pre-print version [available here](https://github.com/systemslab/popper-paper/raw/master/paper/paper.pdf). 
+For BibTeX, [click here](https://raw.githubusercontent.com/systemslab/popper-paper/master/popper.bib).
 
 [gfi]: https://github.com/systemslab/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen
 [docker]: https://docs.docker.com/get-docker/
