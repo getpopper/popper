@@ -377,6 +377,7 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
 
+
 class TestHostSingularityRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")

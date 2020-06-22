@@ -308,8 +308,7 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
-        self._p_info = HostRunner._exec_cmd(
-            ["podman", "info"], logging=False)
+        _, _self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
 
         if not init_podman_client:
             return
@@ -379,9 +378,7 @@ class PodmanRunner(StepRunner):
             "image": img,
             "command": list(step.args),
             "name": name,
-            "volumes": [
-                f"{self._config.workspace_dir}:/workspace",
-            ],
+            "volumes": [f"{self._config.workspace_dir}:/workspace",],
             "working_dir": step.dir if step.dir else "/workspace",
             "environment": self._prepare_environment(step),
             "entrypoint": step.runs if step.runs else None,
