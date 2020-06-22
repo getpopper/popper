@@ -374,6 +374,105 @@ class PodmanRunner(StepRunner):
 
         return (build, img, tag, build_ctx_path)
 
+    def _get_container_kwargs(self, step, img, name):
+        args = {
+            "image": img,
+            "command": list(step.args),
+            "name": name,
+            "volumes": [
+                f"{self._config.workspace_dir}:/workspace",
+            ],
+            "working_dir": step.dir if step.dir else "/workspace",
+            "environment": self._prepare_environment(step),
+            "entrypoint": step.runs if step.runs else None,
+            "detach": not self._config.pty,
+            "tty": self._config.pty,
+            "stdin_open": self._config.pty,
+        }
+
+        self._update_with_engine_config(args)
+
+        log.debug(f"container args: {pu.prettystr(args)}\n")
+
+        return args
+
+    def _update_with_engine_config(self, container_args):
+        """Given container arguments, it extends it so it includes options
+        obtained from the popper.config.Config.engine_opts property.
+        """
+        update_with = self._config.engine_opts
+        if not update_with:
+            return
+
+        container_args["volumes"] = [
+            *container_args["volumes"],
+            *update_with.get("volumes", list()),
+        ]
+        for k, v in update_with.get("environment", dict()).items():
+            container_args["environment"].update({k: v})
+
+        for k, v in update_with.items():
+            if k not in container_args.keys():
+                container_args[k] = update_with[k]
+
+    def _create_container(self, cid, step):
+        build, img, tag, build_ctx_path = self._get_build_info(step)
+
+        if build:
+            log.info(f"[{step.id}] podman build {img}:{tag} {build_ctx_path}")
+            if not self._config.dry_run:
+                pass
+        elif not self._config.skip_pull and not step.skip_pull:
+            log.info(f"[{step.id}] podman build {img}:{tag}")
+            if not self._config.dry_run:
+                cmd = ["podman", "pull", f"{img}:{tag}"]
+                HostRunner._exec_cmd(cmd, logging=False)
+
+        if self._config.dry_run:
+            return
+
+        container_args = self._get_container_kwargs(step, f"{img}:{tag}")
+
+        log.debug(f"Container args: {container_args}")
+
+        msg = f"[{step.id}] podman create name={cid}"
+        msg += f' image={container_args["image"]}'
+        if container_args["entrypoint"]:
+            msg += f' entrypoint={container_args["entrypoint"]}'
+        if container_args["command"]:
+            msg += f' command={container_args["command"]}'
+        log.info(msg)
+
+        cmd = ["podman", "create"]
+        if container_args["image"]:
+            cmd.append(container_args["image"])
+        if container_args["command"]:
+            cmd.append(container_args["command"])
+        if container_args["name"]:
+            cmd.extend(["--name", container_args["name"]])
+        if container_args["volumes"]:
+            cmd.extend(["--volume", container_args["volumes"]])
+        if container_args["environment"]:
+            cmd.extend(["--env"], container_args["environment"])
+        if container_args["entrypoint"]:
+            cmd.extend(["--entrypoint"], container_args["entrypoint"])
+        if container_args["detach"]:
+            cmd.append("-d")
+        if container_args["working_dir"]:
+            cmd.extend(["-w", container_args["working_dir"]])
+        if container_args["hostname"]:
+            cmd.extend(["-h", container_args["hostname"]])
+        if container_args["tty"]:
+            cmd.extend(["-t", container_args["tty"]])
+        if container_args["domainname"]:
+            cmd.extend(["--domainname", container_args["domainname"]])
+
+        _, _, container = HostRunner._exec_cmd(cmd, logging=False)
+        container = container.rsplit()
+
+        return container
+
+
 class SingularityRunner(StepRunner):
     """Runs steps in singularity on the local machine."""
 
