@@ -2,6 +2,9 @@ import click
 import os
 
 from popper.cli import pass_context, log
+from popper import __version__ as version
+
+popper_version = f"v{version}"
 
 ci_files = {
     # ##########################################################3
@@ -13,7 +16,7 @@ language: python
 python: 3.7
 services: docker
 install:
-- git clone https://github.com/systemslab/popper /tmp/popper
+- git clone --branch {popper_version}  --depth=1 https://github.com/systemslab/popper /tmp/popper
 - export PYTHONUNBUFFERED=1
 - pip install /tmp/popper/cli
 script: popper run -f {}
@@ -31,7 +34,7 @@ jobs:
     - checkout
     - run:
         command: |
-        git clone https://github.com/systemslab/popper /tmp/popper
+        git clone --branch {popper_version}  --depth=1 https://github.com/systemslab/popper /tmp/popper
         export PYTHONUNBUFFERED=1
         pip install /tmp/popper/cli
         popper run -f {}
@@ -42,7 +45,7 @@ jobs:
         "./Jenkinsfile": """
 ---
 stage ('Popper') {{ node {{
-  sh "git clone https://github.com/systemslab/popper /tmp/popper"
+  sh "git clone --branch {popper_version}  --depth=1 https://github.com/systemslab/popper /tmp/popper"
   sh "export PYTHONUNBUFFERED=1"
   sh "pip install /tmp/popper/cli"
   sh "popper run -f {}"
@@ -67,7 +70,7 @@ before_script:
 - apk upgrade
 - apk add python python-dev py-pip build-base git bash
 - pip install virtualenv
-- git clone https://github.com/systemslab/popper /tmp/popper
+- git clone --branch {popper_version}  --depth=1 https://github.com/systemslab/popper /tmp/popper
 - pip install /tmp/popper/cli
 popper:
   script: popper run -f {}
@@ -82,7 +85,7 @@ events.on("push", () => {
     popper.tasks = [
         "apt-get update",
         "apt-get install -y git",
-        "git clone https://github.com/systemslab/popper /tmp/popper",
+        "git clone --branch {popper_version}  --depth=1 https://github.com/systemslab/popper /tmp/popper",
         "export PYTHONUNBUFFERED=1",
         "pip install /tmp/popper/cli",
         "popper run -f {}"
