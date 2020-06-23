@@ -176,3 +176,7 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual("some other TWO", step.id)
         self.assertEqual("env_THREE", step.env["FOO"])
         self.assertEqual(("secret_4",), step.secrets)
+
+    def test_id_regex(self):
+        wf_data = {"steps": [{"uses": "foo", "id": "This_is_not_valid"},]}
+        self.assertRaises(SystemExit, WorkflowParser.parse, **{"wf_data": wf_data})

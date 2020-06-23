@@ -24,7 +24,7 @@ class WorkflowParser(object):
                         "type": "map",
                         "mapping": {
                             "uses": {"type": "str", "required": True},
-                            "id": {"type": "str"},
+                            "id": {"type": "str", "pattern": "^[a-z0-9]+"},
                             "args": {"type": "seq", "sequence": [{"type": "str"}]},
                             "runs": {"type": "seq", "sequence": [{"type": "str"}]},
                             "secrets": {"type": "seq", "sequence": [{"type": "str"}]},
