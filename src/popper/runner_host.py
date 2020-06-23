@@ -308,7 +308,7 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
-        _, _self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
+        _, _, self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
 
         if not init_podman_client:
             return
@@ -428,7 +428,7 @@ class PodmanRunner(StepRunner):
         if self._config.dry_run:
             return
 
-        container_args = self._get_container_kwargs(step, f"{img}:{tag}")
+        container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
 
         log.debug(f"Container args: {container_args}")
 
@@ -441,33 +441,34 @@ class PodmanRunner(StepRunner):
         log.info(msg)
 
         cmd = ["podman", "create"]
-        if container_args["image"]:
+        if "image" in container_args and container_args["image"]:
             cmd.append(container_args["image"])
-        if container_args["command"]:
+        if "command" in container_args and container_args["command"]:
             cmd.append(container_args["command"])
-        if container_args["name"]:
+        if "name" in container_args and container_args["name"]:
             cmd.extend(["--name", container_args["name"]])
-        if container_args["volumes"]:
-            cmd.extend(["--volume", container_args["volumes"]])
-        if container_args["environment"]:
-            cmd.extend(["--env"], container_args["environment"])
-        if container_args["entrypoint"]:
-            cmd.extend(["--entrypoint"], container_args["entrypoint"])
-        if container_args["detach"]:
+        if "volumes" in container_args and container_args["volumes"]:
+            cmd.extend(["--volume", container_args["volumes"][0]])
+        if "environment" in container_args and container_args["environment"]:
+            for i,j in container_args["environment"].items():
+                cmd.extend(["--env", f"{i}={j}"])
+        if "entrypoint" in container_args and container_args["entrypoint"]:
+            cmd.extend(["--entrypoint", container_args["entrypoint"][0]])
+        if "detach" in container_args and container_args["detach"] == True:
             cmd.append("-d")
-        if container_args["working_dir"]:
+        if "working_dir" in container_args and  container_args["working_dir"]:
             cmd.extend(["-w", container_args["working_dir"]])
-        if container_args["hostname"]:
+        if "hostname" in container_args and container_args["hostname"]:
             cmd.extend(["-h", container_args["hostname"]])
-        if container_args["tty"]:
+        if "tty" in container_args and container_args["tty"]:
             cmd.extend(["-t", container_args["tty"]])
-        if container_args["domainname"]:
+        if "domainname" in container_args and container_args["domainname"]:
             cmd.extend(["--domainname", container_args["domainname"]])
 
         _, _, container = HostRunner._exec_cmd(cmd, logging=False)
         container = container.rsplit()
 
-        return container
+        return container[0]
 
 
 class SingularityRunner(StepRunner):

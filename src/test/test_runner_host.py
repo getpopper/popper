@@ -377,6 +377,32 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
 
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
+    def test_create_container(self):
+        config = ConfigLoader.load()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._create_container(cid, step)
+            c_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c,
+            ]
+            __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
+            self.assertEqual(c_status, "created\n")
+            cmd = ["podman", "container", "rm", c]
+            HostRunner._exec_cmd(cmd, logging=False)
 
 class TestHostSingularityRunner(PopperTest):
     def setUp(self):
