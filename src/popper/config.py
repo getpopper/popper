@@ -55,6 +55,7 @@ class ConfigLoader(object):
             "git_sha_short": scm.get_sha(repo, short=7),
             "git_branch": scm.get_branch(repo),
             "git_remote_origin_url": scm.get_remote_url(repo),
+            "git_tag": scm.get_tag(repo),
             # wid is used to associate a unique id to this workspace. This is then
             # used by runners to name resources in a way that there is no name
             # clash between concurrent workflows being executed

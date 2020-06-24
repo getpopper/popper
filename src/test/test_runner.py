@@ -126,6 +126,7 @@ class TestStepRunner(PopperTest):
                 "GIT_BRANCH": conf.git_branch,
                 "GIT_SHA_SHORT": conf.git_sha_short,
                 "GIT_REMOTE_ORIGIN_URL": conf.git_remote_origin_url,
+                "GIT_TAG": conf.git_tag,
             }
             self.assertDictEqual(expected, env)
             os.environ.pop("A")

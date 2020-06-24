@@ -198,3 +198,11 @@ def get_branch(repo):
         return branch
 
     return get_sha(repo)
+
+
+def get_tag(repo=None):
+    """Obtains the git tag fot the currently checked our version on the given repository object
+        if possible, otherwise returns ""
+    """
+    if repo:
+        return repo.describe('--tags', '--dirty','--broken', '--long')
