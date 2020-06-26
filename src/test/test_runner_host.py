@@ -377,7 +377,7 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
+    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
     def test_create_container(self):
         config = ConfigLoader.load()
         step = Box(
@@ -400,9 +400,122 @@ class TestHostPodmanRunner(PopperTest):
                 c,
             ]
             __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
-            self.assertEqual(c_status, "created\n")
+            self.assertEqual(c_status, "configured\n")
             cmd = ["podman", "container", "rm", c]
             HostRunner._exec_cmd(cmd, logging=False)
+
+    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
+    def test_get_build_info(self):
+        step = Box(
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
+            default_box=True,
+        )
+        with PodmanRunner(init_podman_client=False) as pr:
+            build, img, tag, build_sources = pr._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popperized/bin")
+            self.assertEqual(tag, "master")
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
+            self.assertTrue("github.com/popperized/bin/sh" in build_sources)
+
+            step = Box(
+                {
+                    "uses": "docker://alpine:3.9",
+                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                    "env": {"FOO": "bar"},
+                    "id": "1",
+                },
+                default_box=True,
+            )
+
+        with PodmanRunner(init_podman_client=False) as pr:
+            build, img, tag, build_sources = pr._get_build_info(step)
+            self.assertEqual(build, False)
+            self.assertEqual(img, "alpine")
+            self.assertEqual(tag, "3.9")
+            self.assertEqual(build_sources, None)
+
+    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
+    def test_get_container_kwargs(self):
+        step = Box(
+            {
+                "uses": "popperized/bin/sh@master",
+                "args": ["ls"],
+                "id": "one",
+                "dir": "/tmp/",
+            },
+            default_box=True,
+        )
+
+        config_dict = {
+            "engine": {
+                "name": "docker",
+                "options": {
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "volumes": ["/path/in/host:/path/in/container"],
+                    "environment": {"FOO": "bar"},
+                },
+            },
+        }
+
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir"
+        )
+
+        with PodmanRunner(init_podman_client=False, config=config) as pr:
+            args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
+
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": True,
+                    "stdin_open": False,
+                    "tty": False,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                },
+            )
+
+        # check container kwargs when pty is enabled
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
+        )
+
+        with PodmanRunner(init_docker_client=False, config=config) as pr:
+            args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
+
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": False,
+                    "stdin_open": True,
+                    "tty": True,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                },
+            )
 
 class TestHostSingularityRunner(PopperTest):
     def setUp(self):

@@ -441,8 +441,6 @@ class PodmanRunner(StepRunner):
         log.info(msg)
 
         cmd = ["podman", "create"]
-        if "image" in container_args and container_args["image"]:
-            cmd.append(container_args["image"])
         if "command" in container_args and container_args["command"]:
             cmd.append(container_args["command"])
         if "name" in container_args and container_args["name"]:
@@ -464,10 +462,12 @@ class PodmanRunner(StepRunner):
             cmd.extend(["-t", container_args["tty"]])
         if "domainname" in container_args and container_args["domainname"]:
             cmd.extend(["--domainname", container_args["domainname"]])
+        if "image" in container_args and container_args["image"]:
+            cmd.append(container_args["image"])
 
         _, _, container = HostRunner._exec_cmd(cmd, logging=False)
         container = container.rsplit()
-
+        
         return container[0]
 
 
