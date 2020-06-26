@@ -448,13 +448,13 @@ class PodmanRunner(StepRunner):
         if "volumes" in container_args and container_args["volumes"]:
             cmd.extend(["--volume", container_args["volumes"][0]])
         if "environment" in container_args and container_args["environment"]:
-            for i,j in container_args["environment"].items():
+            for i, j in container_args["environment"].items():
                 cmd.extend(["--env", f"{i}={j}"])
         if "entrypoint" in container_args and container_args["entrypoint"]:
             cmd.extend(["--entrypoint", container_args["entrypoint"][0]])
         if "detach" in container_args and container_args["detach"] == True:
             cmd.append("-d")
-        if "working_dir" in container_args and  container_args["working_dir"]:
+        if "working_dir" in container_args and container_args["working_dir"]:
             cmd.extend(["-w", container_args["working_dir"]])
         if "hostname" in container_args and container_args["hostname"]:
             cmd.extend(["-h", container_args["hostname"]])
@@ -467,7 +467,7 @@ class PodmanRunner(StepRunner):
 
         _, _, container = HostRunner._exec_cmd(cmd, logging=False)
         container = container.rsplit()
-        
+
         return container[0]
 
 

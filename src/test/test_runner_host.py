@@ -473,9 +473,7 @@ class TestHostPodmanRunner(PopperTest):
                     "image": "alpine:3.9",
                     "command": ["ls"],
                     "name": "container_a",
-                    "volumes": [
-                        "/path/to/workdir:/workspace",
-                    ],
+                    "volumes": ["/path/to/workdir:/workspace",],
                     "working_dir": "/tmp/",
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
@@ -502,9 +500,7 @@ class TestHostPodmanRunner(PopperTest):
                     "image": "alpine:3.9",
                     "command": ["ls"],
                     "name": "container_a",
-                    "volumes": [
-                        "/path/to/workdir:/workspace",
-                    ],
+                    "volumes": ["/path/to/workdir:/workspace",],
                     "working_dir": "/tmp/",
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
@@ -516,6 +512,7 @@ class TestHostPodmanRunner(PopperTest):
                     "domainname": "www.example.org",
                 },
             )
+
 
 class TestHostSingularityRunner(PopperTest):
     def setUp(self):
