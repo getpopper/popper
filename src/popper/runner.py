@@ -78,11 +78,11 @@ class WorkflowRunner(object):
         for step in wf.steps:
             for s in step.secrets:
                 if s not in os.environ:
-                    if os.environ.get("CI", "") == "true":
-                        log.fail(f"Secret {s} not defined")
-                    else:
+                    if not os.environ.get("CI", None):
                         val = getpass.getpass(f"Enter the value for {s} : ")
                         os.environ[s] = val
+                    elif not self._config.allow_undefined_secrets_in_ci:
+                        log.fail(f"Secret {s} not defined")
 
     def _clone_repos(self, wf):
         """Clone steps that reference a repository.
@@ -163,7 +163,7 @@ class WorkflowRunner(object):
             if e == 78:
                 break
 
-        log.info(f"Workflow finished successfully.")
+        log.info("Workflow finished successfully.")
 
     def _step_runner(self, engine_name, step):
         """Factory of singleton runners"""
@@ -215,7 +215,7 @@ class StepRunner(object):
         """
         step_env = step.env.to_dict()
         for s in step.secrets:
-            step_env.update({s: os.environ[s]})
+            step_env.update({s: os.environ.get(s, "")})
         step_env.update(env)
 
         # define GIT_* variables

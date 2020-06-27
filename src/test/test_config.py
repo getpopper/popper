@@ -9,23 +9,6 @@ from box import Box
 
 
 class TestPopperConfig(PopperTest):
-    default_args = Box(
-        {
-            "skip_clone": False,
-            "engine_name": "docker",
-            "engine_opts": {},
-            "resman_name": "host",
-            "resman_opts": {},
-            "skip_pull": False,
-            "dry_run": False,
-            "workspace_dir": os.getcwd(),
-            "quiet": False,
-            "reuse": False,
-            "pty": False,
-        },
-        default_box=True,
-    )
-
     def setUp(self):
         log.setLevel("CRITICAL")
         self.maxDiff = None
@@ -35,7 +18,23 @@ class TestPopperConfig(PopperTest):
 
     def test_config_defaults(self):
         conf = ConfigLoader.load()
-        expected = TestPopperConfig.default_args
+        expected = Box(
+            {
+                "skip_clone": False,
+                "engine_name": "docker",
+                "engine_opts": {},
+                "resman_name": "host",
+                "resman_opts": {},
+                "skip_pull": False,
+                "dry_run": False,
+                "workspace_dir": os.getcwd(),
+                "quiet": False,
+                "reuse": False,
+                "pty": False,
+                "allow_undefined_secrets_in_ci": False,
+            },
+            default_box=True,
+        )
 
         self.assertEqual(expected, TestPopperConfig.extract_dict(expected, conf))
 
@@ -47,6 +46,8 @@ class TestPopperConfig(PopperTest):
             "workspace_dir": os.path.realpath("/tmp/foo"),
             "quiet": True,
             "reuse": True,
+            "pty": True,
+            "allow_undefined_secrets_in_ci": True,
         }
         conf = ConfigLoader.load(**expected)
         self.assertEqual(expected, TestPopperConfig.extract_dict(expected, conf))

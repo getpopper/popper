@@ -28,7 +28,7 @@ script:
 # generate versioning file (src/popper/_version.py)
 - popper version
 # run docker image pipeline
-- popper run
+- popper run --allow-undefined-secrets-in-ci
 
 after_success:
 - bash <(curl -s https://codecov.io/bash)

@@ -21,7 +21,7 @@ from popper.runner import WorkflowRunner
 @click.option(
     "-d",
     "--debug",
-    help=("Generate detailed messages of what popper does (overrides --quiet)"),
+    help="Generate detailed messages of what popper does (overrides --quiet)",
     required=False,
     is_flag=True,
 )
@@ -63,7 +63,7 @@ from popper.runner import WorkflowRunner
 )
 @click.option(
     "--skip",
-    help=("Skip the given step (can be given multiple times)."),
+    help="Skip the given step (can be given multiple times).",
     required=False,
     default=list(),
     multiple=True,
@@ -82,15 +82,26 @@ from popper.runner import WorkflowRunner
 )
 @click.option(
     "--substitution",
-    help=("A key-value pair defining a substitution. " "Can be given multiple times."),
+    help="A key-value pair defining a substitution. " "Can be given multiple times.",
     required=False,
     default=list(),
     multiple=True,
 )
 @click.option(
     "--allow-loose",
-    help="Do not throw an error if a substitution variable passed as an "
-    "argument is unused in the workflow definition.",
+    help=(
+        "Do not throw an error if a substitution variable passed as an "
+        "argument is unused in the workflow definition."
+    ),
+    required=False,
+    is_flag=True,
+)
+@click.option(
+    "--allow-undefined-secrets-in-ci",
+    help=(
+        "Do not throw an error if a secret is undefined and the CI environment"
+        "variable is defined."
+    ),
     required=False,
     is_flag=True,
 )
@@ -122,6 +133,7 @@ def cli(
     skip_clone,
     substitution,
     allow_loose,
+    allow_undefined_secrets_in_ci,
     workspace,
     conf,
 ):
@@ -175,6 +187,7 @@ def cli(
         skip_pull=skip_pull,
         skip_clone=skip_clone,
         workspace_dir=workspace,
+        allow_undefined_secrets_in_ci=allow_undefined_secrets_in_ci,
     )
 
     with WorkflowRunner(config) as runner:

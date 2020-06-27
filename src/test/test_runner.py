@@ -41,10 +41,15 @@ class TestWorkflowRunner(unittest.TestCase):
         os.environ["CI"] = "true"
         self.assertRaises(SystemExit, runner._process_secrets, wf)
 
+        # but it should be fine if we allow undefined secrets
+        runner = WorkflowRunner(ConfigLoader.load(allow_undefined_secrets_in_ci=True))
+        runner._process_secrets(wf)
+
         # add one secret
         os.environ["SECRET_ONE"] = "1234"
 
-        # it should fail again, as we're missing one
+        # it should fail, as we're missing one
+        runner = WorkflowRunner(ConfigLoader.load())
         self.assertRaises(SystemExit, runner._process_secrets, wf)
 
         os.environ.pop("CI")
@@ -100,14 +105,19 @@ class TestStepRunner(PopperTest):
         log.setLevel("CRITICAL")
 
     def test_prepare_environment_without_git(self):
+        step = Box(
+            {"name": "a", "env": {"FOO": "BAR"}, "secrets": ["A"]}, default_box=True
+        )
+        os.environ["A"] = "BC"
+
         with StepRunner(ConfigLoader.load(workspace_dir="/tmp/foo")) as r:
-            step = Box(
-                {"name": "a", "env": {"FOO": "BAR"}, "secrets": ["A"]}, default_box=True
-            )
-            os.environ["A"] = "BC"
             env = r._prepare_environment(step, {"other": "b"})
             self.assertDictEqual({"FOO": "BAR", "A": "BC", "other": "b"}, env)
             os.environ.pop("A")
+
+            # secret undefined should return an empty variable
+            env = r._prepare_environment(step, {"other": "b"})
+            self.assertDictEqual({"FOO": "BAR", "A": "", "other": "b"}, env)
 
     def test_prepare_environment_with_git(self):
         repo = self.mk_repo()
