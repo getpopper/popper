@@ -18,7 +18,6 @@ setup(
         "docker==4.2.0",
         "dockerpty==0.4.1",
         "GitPython==3.1.0",
-        "paramiko==2.7.1",
         "pykwalify==1.7.0",
         "python-box==4.2.3",
         "pyyaml==5.3.1",
