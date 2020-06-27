@@ -338,7 +338,25 @@ engine-specific configuration options via the `--conf` flag.
 ### Docker
 
 Docker is the default engine used by the `popper run`. All the 
-container configuration for the docker engine is supported by Popper.
+container configuration for the docker engine is supported by Popper. 
+Popper also supports running workflows on remote docker daemons by use 
+of the `DOCKER_HOST`, `DOCKER_TLS_VERIFY` and `DOCKER_CERT_PATH` 
+variables, as explained in [the official 
+documentation][docker-remote]. For example:
+
+```bash
+export DOCKER_HOST="ssh://myuser@hostname"
+popper run -f wf.yml
+```
+
+The above runs the workflow on the `hostname` machine instead of 
+locally. It assumes the following:
+
+ 1. `myuser` has passwordless access to `hostname`, otherwise the 
+    password to the machine is requested.
+ 2. The `myuser` account can run `docker` on the remote machine.
+
+[docker-remote]: https://docs.docker.com/engine/reference/commandline/dockerd
 
 ### Singularity
 
