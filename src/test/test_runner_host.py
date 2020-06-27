@@ -122,6 +122,19 @@ class TestHostDockerRunner(PopperTest):
             c = dr._create_container(cid, step)
             self.assertEqual(c.status, "created")
             c.remove()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo", "hello_world"],
+                "id": "KoNtAiNeR tWo",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with DockerRunner(init_docker_client=True, config=config) as dr:
+            c = dr._create_container(cid, step)
+            self.assertEqual(c.status, "created")
+            c.remove()
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_stop_running_tasks(self):

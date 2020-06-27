@@ -193,7 +193,7 @@ class DockerRunner(StepRunner):
                 tag = "latest"
             build = False
         elif "./" in step.uses:
-            img = f'{pu.sanitized_name(step.id, "step")}'
+            img = f'{pu.sanitized_name(step.id, "step")}'.lower()
             tag = f"{self._config.git_sha_short}"
             build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
         else:
