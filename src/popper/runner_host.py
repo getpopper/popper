@@ -349,8 +349,6 @@ class PodmanRunner(StepRunner):
         try:
             cmd = ["podman", "start", container]
             HostRunner._exec_cmd(cmd, logging=False)
-            # TODO: implement starting container with pty
-            # TODO: implement docker logs
 
             cmd = ["podman", "wait", container]
             _, _, e = HostRunner._exec_cmd(cmd, logging=False)
