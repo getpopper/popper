@@ -321,6 +321,44 @@ class PodmanRunner(StepRunner):
 
         log.debug(f"Podman info: {pu.prettystr(self._p_info)}")
 
+    def run(self, step):
+        """Executes the given step in podman."""
+        cid = pu.sanitized_name(step.id, self._config.wid)
+        container = self._find_container(cid)
+
+        if not container and self._config.reuse:
+            log.fail(
+                f"Cannot find an existing container for step '{step.id}' to be reused"
+            )
+
+        if container and not self._config.reuse and not self._config.dry_run:
+            cmd = ["podman", "rm", "-f", container]
+            HostRunner._exec_cmd(cmd, logging=False)
+            container = None
+
+        if not container and not self._config.reuse:
+            container = self._create_container(cid, step)
+
+        log.info(f"[{step.id}] podman start")
+
+        if self._config.dry_run:
+            return 0
+
+        self._spawned_containers.add(container)
+
+        try:
+            cmd = ["podman", "start", container]
+            HostRunner._exec_cmd(cmd, logging=False)
+            # TODO: implement starting container with pty
+            # TODO: implement docker logs
+
+            cmd = ["podman", "wait", container]
+            _, _, e = HostRunner._exec_cmd(cmd, logging=False)
+            e = e.rsplit()
+        except Exception as exc:
+            log.fail(exc)
+        return e
+
     def stop_running_tasks(self):
         """Stop containers started by Popper."""
         for c in self._spawned_containers:
