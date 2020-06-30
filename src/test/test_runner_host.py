@@ -341,7 +341,7 @@ class TestHostPodmanRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
 
-    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_stop_running_tasks(self):
         with PodmanRunner() as pr:
             cmd = ["podman", "run", "-d"]
@@ -377,7 +377,7 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
 
-    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_create_container(self):
         config = ConfigLoader.load()
         step = Box(
@@ -403,8 +403,31 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(c_status, "configured\n")
             cmd = ["podman", "container", "rm", c]
             HostRunner._exec_cmd(cmd, logging=False)
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo", "hello_world"],
+                "id": "KoNtAiNeR tWo",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._create_container(cid, step)
+            c_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c,
+            ]
+            __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
+            self.assertEqual(c_status, "configured\n")
+            cmd = ["podman", "container", "rm", c]
+            HostRunner._exec_cmd(cmd, logging=False)
 
-    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_get_build_info(self):
         step = Box(
             {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
@@ -435,7 +458,7 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(tag, "3.9")
             self.assertEqual(build_sources, None)
 
-    @unittest.skipIf(os.environ.get("ENGINE", "podman") != "podman", "ENGINE != podman")
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_get_container_kwargs(self):
         step = Box(
             {
@@ -449,7 +472,8 @@ class TestHostPodmanRunner(PopperTest):
 
         config_dict = {
             "engine": {
-                "name": "docker",
+                # TODO: check why engine is not podman
+                "name": "podman",
                 "options": {
                     "privileged": True,
                     "hostname": "popper.local",
@@ -473,7 +497,10 @@ class TestHostPodmanRunner(PopperTest):
                     "image": "alpine:3.9",
                     "command": ["ls"],
                     "name": "container_a",
-                    "volumes": ["/path/to/workdir:/workspace",],
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                        "/path/in/host:/path/in/container",
+                    ],
                     "working_dir": "/tmp/",
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
@@ -491,7 +518,7 @@ class TestHostPodmanRunner(PopperTest):
             config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
         )
 
-        with PodmanRunner(init_docker_client=False, config=config) as pr:
+        with PodmanRunner(init_podman_client=False, config=config) as pr:
             args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
 
             self.assertEqual(
@@ -500,7 +527,10 @@ class TestHostPodmanRunner(PopperTest):
                     "image": "alpine:3.9",
                     "command": ["ls"],
                     "name": "container_a",
-                    "volumes": ["/path/to/workdir:/workspace",],
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                        "/path/in/host:/path/in/container",
+                    ],
                     "working_dir": "/tmp/",
                     "environment": {"FOO": "bar"},
                     "entrypoint": None,
