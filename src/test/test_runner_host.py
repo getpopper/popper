@@ -374,6 +374,7 @@ class TestHostPodmanRunner(PopperTest):
                 c2,
             ]
             __, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
+            print(c1_status, c2_status)
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
 
@@ -472,7 +473,6 @@ class TestHostPodmanRunner(PopperTest):
 
         config_dict = {
             "engine": {
-                # TODO: check why engine is not podman
                 "name": "podman",
                 "options": {
                     "privileged": True,
