@@ -347,7 +347,7 @@ class TestHostPodmanRunner(PopperTest):
             cmd = ["podman", "run", "-d"]
             _, _, c1 = HostRunner._exec_cmd(
                 cmd
-                + ["debian:buster-slim", "sleep", "20000", "-q", "--network", "host"],
+                + ["debian:buster-slim", "sleep", "20000", "-q"],
                 logging=False,
             )
             _, _, c2 = HostRunner._exec_cmd(
