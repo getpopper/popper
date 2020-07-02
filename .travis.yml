@@ -22,15 +22,11 @@ install:
 
 script:
 # run tests
-# - coverage run -m unittest -v src/test/test_*
+- coverage run -m unittest -v src/test/test_*
 # generate versioning file (src/popper/_version.py)
-# - popper version
+- popper version
 # run docker image pipeline
-# - popper run --allow-undefined-secrets-in-ci
-- podman run -d debian:buster-slim sleep 20000 -q
-- podman run -d alpine:3.9 sleep 10000 -q
-- podman container ls -a
-- sleep 40
-- podman container ls -a
-# after_success:
-# - bash <(curl -s https://codecov.io/bash)
+- popper run --allow-undefined-secrets-in-ci
+
+after_success:
+- bash <(curl -s https://codecov.io/bash)

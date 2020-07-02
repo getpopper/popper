@@ -356,28 +356,17 @@ class TestHostPodmanRunner(PopperTest):
             pr._spawned_containers.add(c1)
             pr._spawned_containers.add(c2)
             pr.stop_running_tasks()
-            c1_status_cmd = [
+            status_cmd = [
                 "podman",
                 "container",
                 "inspect",
                 "-f",
                 str("{{.State.Status}}"),
-                c1,
             ]
-            __, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
-            c2_status_cmd = [
-                "podman",
-                "container",
-                "inspect",
-                "-f",
-                str("{{.State.Status}}"),
-                c2,
-            ]
-            __, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
-            print(f"c1: {c1}")
-            print(f"c1_status: {c1_status}")
-            print(f"c2: {c2}")
-            print(f"c2_status: {c2_status}")
+            c1_status_cmd = status_cmd + [c1]
+            c2_status_cmd = status_cmd + [c2]
+            _, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
+            _, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
             self.assertEqual(c1_status, "exited\n")
             self.assertEqual(c2_status, "exited\n")
 
