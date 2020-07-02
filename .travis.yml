@@ -28,6 +28,7 @@ script:
 # run docker image pipeline
 # - popper run --allow-undefined-secrets-in-ci
 - podman run -d debian:buster-slim sleep 20000 -q
+- podman run -d alpine:3.9 10000 -q
 - podman container ls -a
 
 # after_success:
