@@ -6,6 +6,6 @@ if [ "$ENGINE" == "podman" ]; then
     echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/testing/xUbuntu_${VERSION_ID}/ /" | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:testing.list
     curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/testing/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add -
     sudo apt-get update -qq
-    sudo apt-get -qq -y install slirp4netns podman
+    sudo apt-get -qq -y install software-properties-common uidmap slirp4netns podman
     podman version
 fi
