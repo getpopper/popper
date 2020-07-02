@@ -30,6 +30,7 @@ script:
 - podman run -d debian:buster-slim sleep 20000 -q
 - podman run -d alpine:3.9 sleep 10000 -q
 - podman container ls -a
-
+- sleep 40000
+- podman container ls -a
 # after_success:
 # - bash <(curl -s https://codecov.io/bash)
