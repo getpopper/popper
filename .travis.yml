@@ -22,7 +22,7 @@ install:
 
 script:
 # run tests
-- coverage run -m unittest -v src/test/test_*
+- coverage run -m unittest -v src/test/test_
 # generate versioning file (src/popper/_version.py)
 - popper version
 # run docker image pipeline
