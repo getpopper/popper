@@ -344,12 +344,12 @@ class TestHostPodmanRunner(PopperTest):
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_stop_running_tasks(self):
         with PodmanRunner() as pr:
-            cmd = ["podman", "run", "-d"]
+            cmd = ["podman", "run", "-d", "-q"]
             _, _, c1 = HostRunner._exec_cmd(
-                cmd + ["debian:buster-slim", "sleep", "20000", "-q"], logging=False,
+                cmd + ["debian:buster-slim", "sleep", "20000"], logging=False,
             )
             _, _, c2 = HostRunner._exec_cmd(
-                cmd + ["alpine:3.9", "sleep", "10000", "-q"], logging=False
+                cmd + ["alpine:3.9", "sleep", "10000"], logging=False
             )
             c1 = c1.rstrip()
             c2 = c2.rstrip()
