@@ -10,6 +10,7 @@ python:
 
 env:
 - ENGINE=docker
+- ENGINE=singularity
 - ENGINE=podman
 
 services: docker
