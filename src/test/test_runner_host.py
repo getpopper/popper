@@ -365,8 +365,6 @@ class TestHostPodmanRunner(PopperTest):
             ]
             c1_status_cmd = status_cmd + [c1]
             c2_status_cmd = status_cmd + [c2]
-            print(c1)
-            print(c2)
             _, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
             _, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
             self.assertEqual(c1_status, "exited\n")
