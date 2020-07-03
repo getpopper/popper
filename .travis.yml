@@ -4,9 +4,12 @@ dist: bionic
 language: python
 
 python:
+- "3.6"
 - "3.7"
+- "3.8"
 
 env:
+- ENGINE=docker
 - ENGINE=podman
 
 services: docker
@@ -22,7 +25,7 @@ install:
 
 script:
 # run tests
-- coverage run -m unittest -v src/test/test_*
+- coverage run -m unittest src/test/test_*
 # generate versioning file (src/popper/_version.py)
 - popper version
 # run docker image pipeline
