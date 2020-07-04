@@ -167,10 +167,16 @@ def get_sha(repo, short=None):
     if not repo:
         return None
 
-    if short:
-        return repo.git.rev_parse(repo.head.object.hexsha, short=short)
+    try:
+        if short:
+            sha = repo.git.rev_parse(repo.head.object.hexsha, short=short)
+        else:
+            sha = repo.git.rev_parse(repo.head.object.hexsha)
 
-    return repo.git.rev_parse(repo.head.object.hexsha)
+    except ValueError as e:
+        log.fail(str(e))
+
+    return sha
 
 
 def get_branch(repo):
