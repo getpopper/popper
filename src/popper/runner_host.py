@@ -368,12 +368,12 @@ class PodmanRunner(StepRunner):
     def _find_container(self, cid):
         """Checks whether the container exists."""
         cmd = ["podman", "inspect", "-f", str("{{.Id}}"), cid]
-        _, _, containers = HostRunner._exec_cmd(cmd, logging=False)
+        _, ecode, containers = HostRunner._exec_cmd(cmd, logging=False)
 
-        if containers:
-            return containers.rstrip()
+        if ecode != 0:
+            return None
 
-        return None
+        return containers.rstrip()
 
     def _get_build_info(self, step):
         """Parses the `uses` attribute and returns build information needed.
