@@ -175,7 +175,7 @@ def get_sha(repo, short=None):
 
     except ValueError as e:
         sha = None
-        log.warning(str(e))
+        log.warning(f"Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty.")
 
     return sha
 
