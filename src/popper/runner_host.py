@@ -367,12 +367,11 @@ class PodmanRunner(StepRunner):
 
     def _find_container(self, cid):
         """Checks whether the container exists."""
-        cmd = ["podman", "container", "ls", "--filter", f"id={cid}", "-q"]
+        cmd = ["podman", "inspect", "-f", str("{{.Id}}"), cid]
         _, _, containers = HostRunner._exec_cmd(cmd, logging=False)
-        filtered_containers = [c for c in containers if c == cid]
 
-        if len(filtered_containers):
-            return filtered_containers[0]
+        if containers:
+            return containers.rstrip()
 
         return None
 
