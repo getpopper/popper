@@ -59,7 +59,8 @@ class TestScm(PopperTest):
             self.assertEqual(scm.get_sha(repo), None)
             self.assertEqual(len(cm.output), 1)
             self.assertTrue(
-                f"WARNING:popper:Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty." in cm.output[0]
+                f"WARNING:popper:Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty."
+                in cm.output[0]
             )
 
     def test_clone(self):
