@@ -174,7 +174,8 @@ def get_sha(repo, short=None):
             sha = repo.git.rev_parse(repo.head.object.hexsha)
 
     except ValueError as e:
-        log.fail(str(e))
+        sha = None
+        log.warn(str(e))
 
     return sha
 
