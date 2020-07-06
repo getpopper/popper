@@ -175,7 +175,7 @@ def get_sha(repo, short=None):
 
     except ValueError as e:
         sha = None
-        log.warn(str(e))
+        log.warning(str(e))
 
     return sha
 

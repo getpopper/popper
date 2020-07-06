@@ -54,12 +54,12 @@ class TestScm(PopperTest):
         self.assertIsNone(scm.get_branch(None))
 
         # drop head commit
-        with self.assertLogs("popper", level="ERROR") as cm:
+        with self.assertLogs("popper", level="WARNING") as cm:
             repo.git.update_ref("-d", "HEAD")
-            self.assertRaises(SystemExit, scm.get_sha, repo)
+            self.assertEqual(scm.get_sha(repo), None)
             self.assertEqual(len(cm.output), 1)
             self.assertTrue(
-                "ERROR:popper:Reference at 'HEAD' does not exist" in cm.output[0]
+                "WARNING:popper:Reference at 'HEAD' does not exist" in cm.output[0]
             )
 
     def test_clone(self):
