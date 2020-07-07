@@ -557,40 +557,40 @@ class TestHostPodmanRunner(PopperTest):
                 },
             )
 
-    # @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
-    # def test_podman_basic_run(self):
-    #     repo = self.mk_repo()
-    #     conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_podman_basic_run(self):
+        repo = self.mk_repo()
+        conf = ConfigLoader.load(engine_name="podman", workspace_dir=repo.working_dir)
 
-    #     with WorkflowRunner(conf) as r:
-    #         wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
-    #         r.run(WorkflowParser.parse(wf_data=wf_data))
+        with WorkflowRunner(conf) as r:
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            r.run(WorkflowParser.parse(wf_data=wf_data))
 
-    #         wf_data = {
-    #             "steps": [
-    #                 {
-    #                     "uses": "docker://alpine:3.9",
-    #                     "args": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-    #                     "env": {"FOO": "bar"},
-    #                 }
-    #             ]
-    #         }
-    #         r.run(WorkflowParser.parse(wf_data=wf_data))
-    #         with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
-    #             self.assertEqual(f.read(), "bar\n")
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                        "env": {"FOO": "bar"},
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+            with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
+                self.assertEqual(f.read(), "bar\n")
 
-    #         wf_data = {
-    #             "steps": [
-    #                 {
-    #                     "uses": "docker://alpine:3.9",
-    #                     "args": ["nocommandisnamedlikethis"],
-    #                 }
-    #             ]
-    #         }
-    #         self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["nocommandisnamedlikethis"],
+                    }
+                ]
+            }
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
-    #     repo.close()
-    #     shutil.rmtree(repo.working_dir, ignore_errors=True)
+        repo.close()
+        shutil.rmtree(repo.working_dir, ignore_errors=True)
 
 
 class TestHostSingularityRunner(PopperTest):
