@@ -130,12 +130,12 @@ popper run -f wf.yml get-transpose
   * Learn more about all the [CLI features](./cli_features.md) that 
     Popper provides.
 
-  * Take a look at the ["Workflow Language"](./cn_workflows.md#syntax) 
+  * Take a look at the ["Workflow Language"](./cn_workflows.html#syntax) 
     for the details on what else can you specify as part of a Step's 
     attributes.
 
   * Read the ["Popper Execution 
-    Runtime"](./cn_workflows.md#execution-runtime) section to learn 
+    Runtime"](./cn_workflows.html#execution-runtime) section to learn 
     more about what other execution environments Popper supports, as 
     well as how to customize the behavior of the underlying execution.
 
