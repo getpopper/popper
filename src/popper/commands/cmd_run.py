@@ -81,6 +81,7 @@ from popper.runner import WorkflowRunner
     is_flag=True,
 )
 @click.option(
+    "-s",
     "--substitution",
     help="A key-value pair defining a substitution. " "Can be given multiple times.",
     required=False,
