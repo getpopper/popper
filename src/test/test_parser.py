@@ -37,7 +37,7 @@ class TestWorkflow(unittest.TestCase):
                     "env": {"EN": "EE"},
                     "secrets": ["S"],
                     "dir": "/path/to/",
-                    "container_config": {"name": "spam"},
+                    "options": {"name": "spam"},
                 },
                 {"uses": "bar", "runs": ["a", "b"], "args": ["c"], "skip_pull": True},
             ],

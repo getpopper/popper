@@ -35,7 +35,7 @@ class WorkflowParser(object):
                                 "matching-rule": "any",
                                 "mapping": {"regex;(.+)": {"type": "str"}},
                             },
-                            "container_config": {"type": "map", "allowempty": True},
+                            "options": {"type": "map", "allowempty": True},
                         },
                     }
                 ],
