@@ -184,8 +184,6 @@ class TestHostDockerRunner(PopperTest):
         with DockerRunner(init_docker_client=False, config=config) as dr:
             args = dr._get_container_kwargs(step, "alpine:3.9", "container_a")
 
-            print()
-
             self.assertEqual(
                 args,
                 {
