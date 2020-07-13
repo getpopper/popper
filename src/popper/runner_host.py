@@ -1,9 +1,6 @@
 import os
-import json
 import signal
 import threading
-
-import click
 
 import docker
 import dockerpty

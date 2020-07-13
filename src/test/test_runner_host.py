@@ -1,7 +1,6 @@
 import os
 import shutil
 import time
-import sys
 import unittest
 
 from testfixtures import LogCapture
