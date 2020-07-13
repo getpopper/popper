@@ -37,11 +37,11 @@ class TestWorkflow(unittest.TestCase):
                     "env": {"EN": "EE"},
                     "secrets": ["S"],
                     "dir": "/path/to/",
-                    "container_config": {"name": "spam"}
+                    "container_config": {"name": "spam"},
                 },
                 {"uses": "bar", "runs": ["a", "b"], "args": ["c"], "skip_pull": True},
             ],
-            "options": {"env": {"FOO": "bar"}, "secrets": ["Z"], },
+            "options": {"env": {"FOO": "bar"}, "secrets": ["Z"],},
         }
         wf = WorkflowParser.parse(wf_data=wf_data)
 

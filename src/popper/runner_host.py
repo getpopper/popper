@@ -257,7 +257,7 @@ class DockerRunner(StepRunner):
         }
 
         self._update_with_engine_config(args)
-
+        args.update(step.container_config)
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
         return args

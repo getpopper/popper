@@ -159,6 +159,7 @@ class TestHostDockerRunner(PopperTest):
                 "args": ["ls"],
                 "id": "one",
                 "dir": "/tmp/",
+                "container_config": {"privileged": False, "ports": {'8888/tcp': 8888}},
             },
             default_box=True,
         )
@@ -182,7 +183,7 @@ class TestHostDockerRunner(PopperTest):
 
         with DockerRunner(init_docker_client=False, config=config) as dr:
             args = dr._get_container_kwargs(step, "alpine:3.9", "container_a")
-
+            
             self.assertEqual(
                 args,
                 {
@@ -200,9 +201,10 @@ class TestHostDockerRunner(PopperTest):
                     "detach": True,
                     "stdin_open": False,
                     "tty": False,
-                    "privileged": True,
+                    "privileged": False,
                     "hostname": "popper.local",
                     "domainname": "www.example.org",
+                    "ports": {'8888/tcp': 8888},
                 },
             )
 
@@ -231,9 +233,10 @@ class TestHostDockerRunner(PopperTest):
                     "detach": False,
                     "stdin_open": True,
                     "tty": True,
-                    "privileged": True,
+                    "privileged": False,
                     "hostname": "popper.local",
                     "domainname": "www.example.org",
+                    "ports": {'8888/tcp': 8888},
                 },
             )
 
