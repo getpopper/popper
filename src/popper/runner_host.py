@@ -1,6 +1,9 @@
 import os
+import json
 import signal
 import threading
+
+import click
 
 import docker
 import dockerpty
@@ -212,9 +215,17 @@ class DockerRunner(StepRunner):
         if build:
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
-                self._d.images.build(
+
+                _, build_logs = self._d.images.build(
                     path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
                 )
+
+                if not self._config.quiet:
+                    for chunk in build_logs:
+                        if "stream" in chunk:
+                            for line in chunk["stream"].splitlines(True):
+                                log.info(line)
+
         elif not self._config.skip_pull and not step.skip_pull:
             log.info(f"[{step.id}] docker pull {img}:{tag}")
             if not self._config.dry_run:
