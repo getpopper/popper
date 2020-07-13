@@ -29,16 +29,17 @@ folder, this entire workflow gets executed by running:
 
 ```bash
 cd /path/to/my/project/
+
 popper run
 ```
 
-Running a single single step:
+Running a single step:
 
 ```bash
 popper run get-transpose
 ```
 
-Starting a shell inside the `get-transpose` container:
+Starting a shell inside the `get-transpose` step container:
 
 ```bash
 popper sh get-transpose
@@ -62,7 +63,7 @@ Once installed, you can get an overview and list of available
 commands:
 
 ```bash
-popper --help
+popper help
 ```
 
 Read the [Quickstart Guide][getting_started] to learn the basics of 
