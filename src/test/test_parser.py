@@ -51,7 +51,7 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(("Z", "S"), step.secrets)
         self.assertEqual({"EN": "EE", "FOO": "bar"}, step.env)
         self.assertEqual("/path/to/", step.dir)
-        self.assertEqual("spam", step.container_options.name)
+        self.assertEqual("spam", step.options.name)
         self.assertTrue(not step.runs)
         self.assertTrue(not step.args)
         self.assertFalse(step.skip_pull)
