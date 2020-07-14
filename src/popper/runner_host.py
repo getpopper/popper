@@ -348,13 +348,11 @@ class PodmanRunner(StepRunner):
 
         try:
             cmd = ["podman", "start", container]
-            HostRunner._exec_cmd(cmd, logging=False)
+            _, e, _, = HostRunner._exec_cmd(cmd, logging=False)
 
-            cmd = ["podman", "wait", container]
-            _, _, e = HostRunner._exec_cmd(cmd, logging=False)
-            e = e.rsplit()
         except Exception as exc:
             log.fail(exc)
+
         return e
 
     def stop_running_tasks(self):
@@ -467,17 +465,13 @@ class PodmanRunner(StepRunner):
 
         log.debug(f"Container args: {container_args}")
 
-        msg = f"[{step.id}] podman create name={cid}"
-        msg += f' image={container_args["image"]}'
-        if container_args["entrypoint"]:
-            msg += f' entrypoint={container_args["entrypoint"]}'
-        if container_args["command"]:
-            msg += f' command={container_args["command"]}'
+        msg = [f"{step.id}", "podman", "create", f"name={cid}"]
+        msg.append(f"image={container_args.get('image')}")
+        msg.append(f"entrypoint={container_args.get('entrypoint')}" or "")
+        msg.append(f"command={container_args.get('entrypoint')}" or "")
         log.info(msg)
 
         cmd = ["podman", "create"]
-        if "command" in container_args and container_args["command"]:
-            cmd.append(container_args["command"])
         if "name" in container_args and container_args["name"]:
             cmd.extend(["--name", container_args["name"]])
         if "volumes" in container_args and container_args["volumes"]:
@@ -486,7 +480,7 @@ class PodmanRunner(StepRunner):
             for i, j in container_args["environment"].items():
                 cmd.extend(["--env", f"{i}={j}"])
         if "entrypoint" in container_args and container_args["entrypoint"]:
-            cmd.extend(["--entrypoint", container_args["entrypoint"][0]])
+            cmd.extend(["--entrypoint", ''.join(container_args["entrypoint"])])
         if "detach" in container_args and container_args["detach"] == True:
             cmd.append("-d")
         if "working_dir" in container_args and container_args["working_dir"]:
@@ -499,10 +493,26 @@ class PodmanRunner(StepRunner):
             cmd.extend(["--domainname", container_args["domainname"]])
         if "image" in container_args and container_args["image"]:
             cmd.append(container_args["image"])
+        if "command" in container_args and container_args["command"]:
+            cmd.append(''.join(container_args["command"]))
 
-        _, _, container = HostRunner._exec_cmd(cmd, logging=False)
+        command = ["podman", "create"]
+        command.extend(["--name", container_args.get("name") or ""])
+        command.extend(["-v", container_args.get("volumes")[0] or ""])
+        if container_args.get("environment"):
+            for i, j in container_args["environment"].items():
+                command.extend(["-e", f"{i}={j}"])
+        command.append("-d" if container_args.get("detach") else "")
+        command.extend(["-w", container_args.get("working_dir") or ""])
+        command.extend(["-h", container_args.get("hostname") or ""])
+        command.extend(["-t", container_args.get("tty") or ""])
+        command.extend(["--domainname", container_args.get("domainname") or ""])
+        command.append(container_args.get("image") or "")
+        command.extend([container_args.get("command")[0] or ""])
+
+        _, ecode, container = HostRunner._exec_cmd(command, logging=False)
+        print(container)
         container = container.rsplit()
-
         return container[0]
 
 
