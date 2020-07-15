@@ -43,7 +43,9 @@ step. All attributes are optional with the exception of the `uses` attribute.
 | `env`       | **optional** The environment variables to set inside the container's runtime environment. If<br>you need to pass environment variables into a step, make sure it runs a command<br>shell to perform variable substitution. For example, if your `runs` attribute is<br>set to `["sh", "-c"]`, the value of `args` will be passed to `sh -c` and<br>executed in a command shell. Alternatively, if your `Dockerfile` uses an<br>`ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a<br>command shell as well. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
 | `secrets`   | **optional** Specifies the names of the secret variables to set in the runtime environment<br>which the container can access as an environment variable. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
 | `skip_pull` | **optional** Assume that the given container image already exist and skip pulling it. |
-| `dir`       | **optional** Specifies the working directory for a step. By default, the directory is always `/workspace` if another one is not defined. |
+| `dir`       | **opftional** Specifies the working directory for a step. By default, the directory is always `/workspace` if another one is not defined. |
+| `options`   | **optional** Container configuration options. For instance: `options: {ports: {8888:8888}, interactive: True, tty: True}`.  Currently only supported for the docker runtime. See the parameters of `client.containers.runs()` in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options
+|
 
 ### Referencing images in a step
 
@@ -397,6 +399,11 @@ command to specify custom options for the underlying engine in
 question (see [here][engconf] for more).
 
 [engconf]: ./cli_features#customizing-container-engine-behavior
+
+
+Alternatively, to restrict a configuration to a specific step in a workflow, set the desired parameters in the step's `options`
+**Note**: this is currently only supported for the Docker runtime 
+
 
 ## Resource Managers
 
