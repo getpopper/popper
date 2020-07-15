@@ -276,7 +276,7 @@ class TestHostDockerRunner(PopperTest):
 
         with WorkflowRunner(conf) as r:
             wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
-            with self.assertLogs(log, level="INFO") as cm:
+            with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
             value = test_string in cm.output
             self.assertTrue(value)
@@ -307,7 +307,7 @@ class TestHostDockerRunner(PopperTest):
         conf = ConfigLoader.load(workspace_dir=repo.working_dir, quiet=True)
         with WorkflowRunner(conf) as r:
             wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
-            with self.assertLogs(log, level="INFO") as cm:
+            with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
             value = test_string in cm.output
             self.assertFalse(value)

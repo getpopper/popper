@@ -5,8 +5,6 @@ import threading
 import docker
 import dockerpty
 
-from docker import APIClient
-
 from subprocess import Popen, STDOUT, PIPE, SubprocessError, CalledProcessError
 
 import spython
@@ -209,28 +207,24 @@ class DockerRunner(StepRunner):
         return (build, img, tag, build_ctx_path)
 
     def _create_container(self, cid, step):
-        client = APIClient(base_url="unix://var/run/docker.sock")
         build, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
-
-                streamer = client.build(
+                streamer = self._d.api.build(
                     decode=True,
                     path=build_ctx_path,
                     tag=f"{img}:{tag}",
                     rm=True,
-                    pull=True,
                 )
-
-                if not self._config.quiet:
-                    for chunk in streamer:
-                        if "stream" in chunk:
-                            for line in chunk["stream"].splitlines(True):
-                                log.info(line)
-
-                    client.close()
+                for chunk in streamer:
+                    if self._config.quiet:
+                        continue
+                    if "stream" in chunk:
+                        lines = [line for line in chunk["stream"].splitlines() if line]
+                        for line in lines:
+                            log.step_info(line.strip())
 
         elif not self._config.skip_pull and not step.skip_pull:
             log.info(f"[{step.id}] docker pull {img}:{tag}")
