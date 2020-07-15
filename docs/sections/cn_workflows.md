@@ -44,8 +44,7 @@ step. All attributes are optional with the exception of the `uses` attribute.
 | `secrets`   | **optional** Specifies the names of the secret variables to set in the runtime environment<br>which the container can access as an environment variable. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
 | `skip_pull` | **optional** Assume that the given container image already exist and skip pulling it. |
 | `dir`       | **opftional** Specifies the working directory for a step. By default, the directory is always `/workspace` if another one is not defined. |
-| `options`   | **optional** Container configuration options. For instance: `options: {ports: {8888:8888}, interactive: True, tty: True}`.  Currently only supported for the docker runtime. See the parameters of `client.containers.runs()` in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options
-|
+| `options`   | **optional** Container configuration options. For instance: `options: {ports: {8888:8888}, interactive: True, tty: True}`.  Currently only supported for the docker runtime. See the parameters of `client.containers.runs()` in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options |
 
 ### Referencing images in a step
 
