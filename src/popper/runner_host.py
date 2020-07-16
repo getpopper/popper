@@ -472,46 +472,23 @@ class PodmanRunner(StepRunner):
         log.info(msg)
 
         cmd = ["podman", "create"]
-        if "name" in container_args and container_args["name"]:
-            cmd.extend(["--name", container_args["name"]])
-        if "volumes" in container_args and container_args["volumes"]:
-            cmd.extend(["--volume", container_args["volumes"][0]])
-        if "environment" in container_args and container_args["environment"]:
-            for i, j in container_args["environment"].items():
-                cmd.extend(["--env", f"{i}={j}"])
-        if "entrypoint" in container_args and container_args["entrypoint"]:
-            cmd.extend(["--entrypoint", ''.join(container_args["entrypoint"])])
-        if "detach" in container_args and container_args["detach"] == True:
-            cmd.append("-d")
-        if "working_dir" in container_args and container_args["working_dir"]:
-            cmd.extend(["-w", container_args["working_dir"]])
-        if "hostname" in container_args and container_args["hostname"]:
-            cmd.extend(["-h", container_args["hostname"]])
-        if "tty" in container_args and container_args["tty"]:
-            cmd.extend(["-t", container_args["tty"]])
-        if "domainname" in container_args and container_args["domainname"]:
-            cmd.extend(["--domainname", container_args["domainname"]])
-        if "image" in container_args and container_args["image"]:
-            cmd.append(container_args["image"])
-        if "command" in container_args and container_args["command"]:
-            cmd.append(''.join(container_args["command"]))
-
-        command = ["podman", "create"]
-        command.extend(["--name", container_args.get("name") or ""])
-        command.extend(["-v", container_args.get("volumes")[0] or ""])
+        cmd.extend(["--name", container_args.get("name") or ""])
+        cmd.extend(["-v", container_args.get("volumes")[0] or ""])
         if container_args.get("environment"):
             for i, j in container_args["environment"].items():
-                command.extend(["-e", f"{i}={j}"])
-        command.append("-d" if container_args.get("detach") else "")
-        command.extend(["-w", container_args.get("working_dir") or ""])
-        command.extend(["-h", container_args.get("hostname") or ""])
-        command.extend(["-t", container_args.get("tty") or ""])
-        command.extend(["--domainname", container_args.get("domainname") or ""])
-        command.append(container_args.get("image") or "")
-        command.extend([container_args.get("command")[0] or ""])
+                cmd.extend(["-e", f"{i}={j}"])
+        cmd.append("-d" if container_args.get("detach") else "")
+        cmd.extend(["-w", container_args.get("working_dir") or ""])
+        cmd.extend(["-h", container_args.get("hostname") or ""])
+        # cmd.extend(["-t", container_args.get("tty") or ""])
+        # cmd.extend(["--domainname", container_args.get("domainname") or ""]) #This is commented out because tty and domain name cannot be left blank
+        cmd.append(container_args.get("image") or "")
+        for i in container_args["command"]:
+            cmd.extend([i or ""])
 
-        _, ecode, container = HostRunner._exec_cmd(command, logging=False)
-        print(container)
+        _, ecode, container = HostRunner._exec_cmd(cmd, logging=False)
+        if ecode != 0:
+            return
         container = container.rsplit()
         return container[0]
 
