@@ -4,22 +4,23 @@ import os
 __version__ = "0.0.0"
 
 _repo_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "..")
-_git_dir = os.path.join(_repo_dir, ".git")
 _version_file = os.path.join(os.path.dirname(os.path.realpath(__file__)), "_version.py")
 
 # check if dunamai is available
 _dunamai_spec = importlib.util.find_spec("dunamai")
 _dunamai_found = _dunamai_spec is not None
 
-# if codebase is inside a git repo and dunamai available
-if os.path.isdir(_git_dir) and _dunamai_found:
+if _dunamai_found:
 
     # if dunamai is found, then we use it to display the version
     import dunamai
 
-    # define GIT_DIR so dunamai gets the info for the popper repo instead of wherever
-    # popper is being invoked from
-    os.environ["GIT_DIR"] = _git_dir
+    # if codebase is inside a git repo, define GIT_DIR so dunamai gets the info for the
+    # popper repo instead of wherever popper is being invoked from
+    _git_dir = os.path.join(_repo_dir, ".git")
+
+    if os.path.isdir(_git_dir):
+        os.environ["GIT_DIR"] = _git_dir
 
     try:
         __version__ = dunamai.Version.from_git().serialize()
@@ -33,7 +34,7 @@ if os.path.isdir(_git_dir) and _dunamai_found:
         v.write(_ver + "\n")
 
     # unset GIT_DIR
-    os.environ.pop("GIT_DIR")
+    os.environ.pop("GIT_DIR", None)
 
 elif os.path.isfile(_version_file):
     # codebase not in a popper repo, and version file exists, so let's read from it
