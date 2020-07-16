@@ -272,14 +272,13 @@ class TestHostDockerRunner(PopperTest):
     def test_docker_basic_run(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
-        test_string = "INFO:popper:Successfully tagged popperized/bin:master\n"
+        test_string = "STEP_INFO:popper:Successfully tagged popperized/bin:master"
 
         with WorkflowRunner(conf) as r:
             wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
-            value = test_string in cm.output
-            self.assertTrue(value)
+            self.assertTrue(test_string in cm.output, f"Got cmd output: {cm.output}")
 
             wf_data = {
                 "steps": [
@@ -309,8 +308,7 @@ class TestHostDockerRunner(PopperTest):
             wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
-            value = test_string in cm.output
-            self.assertFalse(value)
+            self.assertTrue(test_string not in cm.output)
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
