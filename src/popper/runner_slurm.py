@@ -157,6 +157,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
         return " ".join(cmd)
 
+
 class PodmanRunner(SlurmRunner, HostPodmanRunner):
     def __init__(self, **kw):
         super(PodmanRunner, self).__init__(init_Podman_client=False, **kw)
@@ -217,6 +218,7 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
             cmd.append(" ".join(command))
 
         return " ".join(cmd)
+
 
 class SingularityRunner(SlurmRunner, HostSingularityRunner):
     def __init__(self, **kw):

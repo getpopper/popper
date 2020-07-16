@@ -341,221 +341,221 @@ class TestHostPodmanRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
 
-    # @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
-    # def test_stop_running_tasks(self):
-    #     with PodmanRunner() as pr:
-    #         cmd = ["podman", "run", "-d", "-q"]
-    #         _, _, c1 = HostRunner._exec_cmd(
-    #             cmd + ["debian:buster-slim", "sleep", "20000"], logging=False,
-    #         )
-    #         _, _, c2 = HostRunner._exec_cmd(
-    #             cmd + ["alpine:3.9", "sleep", "10000"], logging=False
-    #         )
-    #         c1 = c1.rstrip()
-    #         c2 = c2.rstrip()
-    #         pr._spawned_containers.add(c1)
-    #         pr._spawned_containers.add(c2)
-    #         pr.stop_running_tasks()
-    #         status_cmd = [
-    #             "podman",
-    #             "container",
-    #             "inspect",
-    #             "-f",
-    #             str("{{.State.Status}}"),
-    #         ]
-    #         c1_status_cmd = status_cmd + [c1]
-    #         c2_status_cmd = status_cmd + [c2]
-    #         _, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
-    #         _, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
-    #         self.assertEqual(c1_status, "exited\n")
-    #         self.assertEqual(c2_status, "exited\n")
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_stop_running_tasks(self):
+        with PodmanRunner() as pr:
+            cmd = ["podman", "run", "-d", "-q"]
+            _, _, c1 = HostRunner._exec_cmd(
+                cmd + ["debian:buster-slim", "sleep", "20000"], logging=False,
+            )
+            _, _, c2 = HostRunner._exec_cmd(
+                cmd + ["alpine:3.9", "sleep", "10000"], logging=False
+            )
+            c1 = c1.rstrip()
+            c2 = c2.rstrip()
+            pr._spawned_containers.add(c1)
+            pr._spawned_containers.add(c2)
+            pr.stop_running_tasks()
+            status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+            ]
+            c1_status_cmd = status_cmd + [c1]
+            c2_status_cmd = status_cmd + [c2]
+            _, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
+            _, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
+            self.assertEqual(c1_status, "exited\n")
+            self.assertEqual(c2_status, "exited\n")
 
-    # @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
-    # def test_find_container(self):
-    #     config = ConfigLoader.load()
-    #     step = Box(
-    #         {
-    #             "uses": "docker://alpine:3.9",
-    #             "runs": ["echo hello"],
-    #             "id": "kontainer_one",
-    #         },
-    #         default_box=True,
-    #     )
-    #     cid = pu.sanitized_name(step.id, config.wid)
-    #     with PodmanRunner(init_podman_client=True, config=config) as pr:
-    #         c = pr._find_container(cid)
-    #         self.assertEqual(c, None)
-    #     with PodmanRunner(init_podman_client=True, config=config) as pr:
-    #         container = pr._create_container(cid, step)
-    #         c = pr._find_container(cid)
-    #         self.assertEqual(c, container)
-    #         cmd = ["podman", "container", "rm", "-f", cid]
-    #         HostRunner._exec_cmd(cmd, logging=False)
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_find_container(self):
+        config = ConfigLoader.load()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._find_container(cid)
+            self.assertEqual(c, None)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            container = pr._create_container(cid, step)
+            c = pr._find_container(cid)
+            self.assertEqual(c, container)
+            cmd = ["podman", "container", "rm", "-f", cid]
+            HostRunner._exec_cmd(cmd, logging=False)
 
-    # @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
-    # def test_create_container(self):
-    #     config = ConfigLoader.load()
-    #     step = Box(
-    #         {
-    #             "uses": "docker://alpine:3.9",
-    #             "runs": ["echo hello"],
-    #             "id": "kontainer_one",
-    #         },
-    #         default_box=True,
-    #     )
-    #     cid = pu.sanitized_name(step.id, config.wid)
-    #     with PodmanRunner(init_podman_client=True, config=config) as pr:
-    #         c = pr._create_container(cid, step)
-    #         c_status_cmd = [
-    #             "podman",
-    #             "container",
-    #             "inspect",
-    #             "-f",
-    #             str("{{.State.Status}}"),
-    #             c,
-    #         ]
-    #         __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
-    #         self.assertEqual(c_status, "configured\n")
-    #         cmd = ["podman", "container", "rm", c]
-    #         HostRunner._exec_cmd(cmd, logging=False)
-    #     step = Box(
-    #         {
-    #             "uses": "docker://alpine:3.9",
-    #             "runs": ["echo", "hello_world"],
-    #             "id": "KoNtAiNeR tWo",
-    #         },
-    #         default_box=True,
-    #     )
-    #     cid = pu.sanitized_name(step.id, config.wid)
-    #     with PodmanRunner(init_podman_client=True, config=config) as pr:
-    #         c = pr._create_container(cid, step)
-    #         c_status_cmd = [
-    #             "podman",
-    #             "container",
-    #             "inspect",
-    #             "-f",
-    #             str("{{.State.Status}}"),
-    #             c,
-    #         ]
-    #         __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
-    #         self.assertEqual(c_status, "configured\n")
-    #         cmd = ["podman", "container", "rm", c]
-    #         HostRunner._exec_cmd(cmd, logging=False)
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_create_container(self):
+        config = ConfigLoader.load()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._create_container(cid, step)
+            c_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c,
+            ]
+            __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
+            self.assertEqual(c_status, "configured\n")
+            cmd = ["podman", "container", "rm", c]
+            HostRunner._exec_cmd(cmd, logging=False)
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo", "hello_world"],
+                "id": "KoNtAiNeR tWo",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._create_container(cid, step)
+            c_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c,
+            ]
+            __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
+            self.assertEqual(c_status, "configured\n")
+            cmd = ["podman", "container", "rm", c]
+            HostRunner._exec_cmd(cmd, logging=False)
 
-    # @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
-    # def test_get_build_info(self):
-    #     step = Box(
-    #         {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
-    #         default_box=True,
-    #     )
-    #     with PodmanRunner(init_podman_client=False) as pr:
-    #         build, img, tag, build_sources = pr._get_build_info(step)
-    #         self.assertEqual(build, True)
-    #         self.assertEqual(img, "popperized/bin")
-    #         self.assertEqual(tag, "master")
-    #         self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
-    #         self.assertTrue("github.com/popperized/bin/sh" in build_sources)
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_get_build_info(self):
+        step = Box(
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
+            default_box=True,
+        )
+        with PodmanRunner(init_podman_client=False) as pr:
+            build, img, tag, build_sources = pr._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popperized/bin")
+            self.assertEqual(tag, "master")
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
+            self.assertTrue("github.com/popperized/bin/sh" in build_sources)
 
-    #         step = Box(
-    #             {
-    #                 "uses": "docker://alpine:3.9",
-    #                 "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-    #                 "env": {"FOO": "bar"},
-    #                 "id": "1",
-    #             },
-    #             default_box=True,
-    #         )
+            step = Box(
+                {
+                    "uses": "docker://alpine:3.9",
+                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                    "env": {"FOO": "bar"},
+                    "id": "1",
+                },
+                default_box=True,
+            )
 
-    #     with PodmanRunner(init_podman_client=False) as pr:
-    #         build, img, tag, build_sources = pr._get_build_info(step)
-    #         self.assertEqual(build, False)
-    #         self.assertEqual(img, "alpine")
-    #         self.assertEqual(tag, "3.9")
-    #         self.assertEqual(build_sources, None)
+        with PodmanRunner(init_podman_client=False) as pr:
+            build, img, tag, build_sources = pr._get_build_info(step)
+            self.assertEqual(build, False)
+            self.assertEqual(img, "alpine")
+            self.assertEqual(tag, "3.9")
+            self.assertEqual(build_sources, None)
 
-    # @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
-    # def test_get_container_kwargs(self):
-    #     step = Box(
-    #         {
-    #             "uses": "popperized/bin/sh@master",
-    #             "args": ["ls"],
-    #             "id": "one",
-    #             "dir": "/tmp/",
-    #         },
-    #         default_box=True,
-    #     )
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_get_container_kwargs(self):
+        step = Box(
+            {
+                "uses": "popperized/bin/sh@master",
+                "args": ["ls"],
+                "id": "one",
+                "dir": "/tmp/",
+            },
+            default_box=True,
+        )
 
-    #     config_dict = {
-    #         "engine": {
-    #             "name": "podman",
-    #             "options": {
-    #                 "privileged": True,
-    #                 "hostname": "popper.local",
-    #                 "domainname": "www.example.org",
-    #                 "volumes": ["/path/in/host:/path/in/container"],
-    #                 "environment": {"FOO": "bar"},
-    #             },
-    #         },
-    #     }
+        config_dict = {
+            "engine": {
+                "name": "podman",
+                "options": {
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "volumes": ["/path/in/host:/path/in/container"],
+                    "environment": {"FOO": "bar"},
+                },
+            },
+        }
 
-    #     config = ConfigLoader.load(
-    #         config_file=config_dict, workspace_dir="/path/to/workdir"
-    #     )
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir"
+        )
 
-    #     with PodmanRunner(init_podman_client=False, config=config) as pr:
-    #         args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
+        with PodmanRunner(init_podman_client=False, config=config) as pr:
+            args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
 
-    #         self.assertEqual(
-    #             args,
-    #             {
-    #                 "image": "alpine:3.9",
-    #                 "command": ["ls"],
-    #                 "name": "container_a",
-    #                 "volumes": [
-    #                     "/path/to/workdir:/workspace",
-    #                     "/path/in/host:/path/in/container",
-    #                 ],
-    #                 "working_dir": "/tmp/",
-    #                 "environment": {"FOO": "bar"},
-    #                 "entrypoint": None,
-    #                 "detach": True,
-    #                 "stdin_open": False,
-    #                 "tty": False,
-    #                 "privileged": True,
-    #                 "hostname": "popper.local",
-    #                 "domainname": "www.example.org",
-    #             },
-    #         )
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                        "/path/in/host:/path/in/container",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": True,
+                    "stdin_open": False,
+                    "tty": False,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                },
+            )
 
-    #     # check container kwargs when pty is enabled
-    #     config = ConfigLoader.load(
-    #         config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
-    #     )
+        # check container kwargs when pty is enabled
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
+        )
 
-    #     with PodmanRunner(init_podman_client=False, config=config) as pr:
-    #         args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
+        with PodmanRunner(init_podman_client=False, config=config) as pr:
+            args = pr._get_container_kwargs(step, "alpine:3.9", "container_a")
 
-    #         self.assertEqual(
-    #             args,
-                # {
-                #     "image": "alpine:3.9",
-                #     "command": ["ls"],
-                #     "name": "container_a",
-                #     "volumes": [
-                #         "/path/to/workdir:/workspace",
-                #         "/path/in/host:/path/in/container",
-                #     ],
-                #     "working_dir": "/tmp/",
-                #     "environment": {"FOO": "bar"},
-                #     "entrypoint": None,
-                #     "detach": False,
-                #     "stdin_open": True,
-                #     "tty": True,
-                #     "privileged": True,
-                #     "hostname": "popper.local",
-                #     "domainname": "www.example.org",
-                # },
-    #         )
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                        "/path/in/host:/path/in/container",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": False,
+                    "stdin_open": True,
+                    "tty": True,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                },
+            )
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_podman_basic_run(self):
