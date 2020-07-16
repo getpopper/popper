@@ -21,86 +21,86 @@ import docker
 from box import Box
 
 
-# class TestHostHostRunner(PopperTest):
-#     def setUp(self):
-#         log.setLevel("CRITICAL")
+class TestHostHostRunner(PopperTest):
+    def setUp(self):
+        log.setLevel("CRITICAL")
 
-#     def test_host_run(self):
+    def test_host_run(self):
 
-#         repo = self.mk_repo()
-#         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+        repo = self.mk_repo()
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
 
-#         with WorkflowRunner(conf) as r:
-#             wf_data = {
-#                 "steps": [{"uses": "sh", "runs": ["cat"], "args": ["README.md"],}]
-#             }
-#             r.run(WorkflowParser.parse(wf_data=wf_data))
+        with WorkflowRunner(conf) as r:
+            wf_data = {
+                "steps": [{"uses": "sh", "runs": ["cat"], "args": ["README.md"],}]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
 
-#             wf_data = {
-#                 "steps": [
-#                     {
-#                         "uses": "sh",
-#                         "runs": ["bash", "-c", "echo $FOO > hello.txt ; pwd"],
-#                         "env": {"FOO": "bar"},
-#                     }
-#                 ]
-#             }
-#             r.run(WorkflowParser.parse(wf_data=wf_data))
-#             with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
-#                 self.assertEqual(f.read(), "bar\n")
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "sh",
+                        "runs": ["bash", "-c", "echo $FOO > hello.txt ; pwd"],
+                        "env": {"FOO": "bar"},
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+            with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
+                self.assertEqual(f.read(), "bar\n")
 
-#             wf_data = {"steps": [{"uses": "sh", "runs": ["nocommandisnamedlikethis"]}]}
-#             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+            wf_data = {"steps": [{"uses": "sh", "runs": ["nocommandisnamedlikethis"]}]}
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
-#             # check exit code 78
-#             wf_data = {
-#                 "steps": [
-#                     {"uses": "sh", "runs": ["touch", "one.txt"]},
-#                     {"uses": "sh", "runs": ["bash", "-c", "exit 78"]},
-#                     {"uses": "sh", "runs": ["touch", "two.txt"]},
-#                 ]
-#             }
-#             r.run(WorkflowParser.parse(wf_data=wf_data))
-#             self.assertTrue(os.path.isfile(os.path.join(repo.working_dir, "one.txt")))
-#             self.assertFalse(os.path.isfile(os.path.join(repo.working_dir, "two.txt")))
+            # check exit code 78
+            wf_data = {
+                "steps": [
+                    {"uses": "sh", "runs": ["touch", "one.txt"]},
+                    {"uses": "sh", "runs": ["bash", "-c", "exit 78"]},
+                    {"uses": "sh", "runs": ["touch", "two.txt"]},
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+            self.assertTrue(os.path.isfile(os.path.join(repo.working_dir, "one.txt")))
+            self.assertFalse(os.path.isfile(os.path.join(repo.working_dir, "two.txt")))
 
-#         repo.close()
-#         shutil.rmtree(repo.working_dir, ignore_errors=True)
+        repo.close()
+        shutil.rmtree(repo.working_dir, ignore_errors=True)
 
-#     def test_exec_cmd(self):
-#         cmd = ["echo", "hello-world"]
-#         pid, ecode, output = HostRunner._exec_cmd(cmd, logging=False)
-#         self.assertGreater(pid, 0)
-#         self.assertEqual(ecode, 0)
-#         self.assertEqual(output, "hello-world\n")
+    def test_exec_cmd(self):
+        cmd = ["echo", "hello-world"]
+        pid, ecode, output = HostRunner._exec_cmd(cmd, logging=False)
+        self.assertGreater(pid, 0)
+        self.assertEqual(ecode, 0)
+        self.assertEqual(output, "hello-world\n")
 
-#         with LogCapture("popper") as logc:
-#             pid, ecode, output = HostRunner._exec_cmd(cmd)
-#             self.assertGreater(pid, 0)
-#             self.assertEqual(ecode, 0)
-#             self.assertEqual(output, "")
-#             logc.check_present(("popper", "STEP_INFO", "hello-world\n"))
+        with LogCapture("popper") as logc:
+            pid, ecode, output = HostRunner._exec_cmd(cmd)
+            self.assertGreater(pid, 0)
+            self.assertEqual(ecode, 0)
+            self.assertEqual(output, "")
+            logc.check_present(("popper", "STEP_INFO", "hello-world\n"))
 
-#         cmd = ["env"]
-#         pid, ecode, output = HostRunner._exec_cmd(
-#             cmd, env={"TESTACION": "test"}, cwd="/tmp", logging=False
-#         )
-#         self.assertGreater(pid, 0)
-#         self.assertEqual(ecode, 0)
-#         self.assertTrue("TESTACION" in output)
+        cmd = ["env"]
+        pid, ecode, output = HostRunner._exec_cmd(
+            cmd, env={"TESTACION": "test"}, cwd="/tmp", logging=False
+        )
+        self.assertGreater(pid, 0)
+        self.assertEqual(ecode, 0)
+        self.assertTrue("TESTACION" in output)
 
-#         _pids = set()
-#         _, _, _ = HostRunner._exec_cmd(["sleep", "2"], pids=_pids)
-#         self.assertEqual(len(_pids), 1)
+        _pids = set()
+        _, _, _ = HostRunner._exec_cmd(["sleep", "2"], pids=_pids)
+        self.assertEqual(len(_pids), 1)
 
-#     def test_stop_running_tasks(self):
-#         with HostRunner() as hr:
-#             with Popen(["sleep", "2000"]) as p:
-#                 pid = p.pid
-#                 hr._spawned_pids.add(pid)
-#                 hr.stop_running_tasks()
-#         time.sleep(2)
-#         self.assertRaises(ProcessLookupError, os.kill, pid, 0)
+    def test_stop_running_tasks(self):
+        with HostRunner() as hr:
+            with Popen(["sleep", "2000"]) as p:
+                pid = p.pid
+                hr._spawned_pids.add(pid)
+                hr.stop_running_tasks()
+        time.sleep(2)
+        self.assertRaises(ProcessLookupError, os.kill, pid, 0)
 
 
 class TestHostDockerRunner(PopperTest):
