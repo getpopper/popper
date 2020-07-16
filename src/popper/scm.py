@@ -167,10 +167,19 @@ def get_sha(repo, short=None):
     if not repo:
         return None
 
-    if short:
-        return repo.git.rev_parse(repo.head.object.hexsha, short=short)
+    try:
+        if short:
+            sha = repo.git.rev_parse(repo.head.object.hexsha, short=short)
+        else:
+            sha = repo.git.rev_parse(repo.head.object.hexsha)
 
-    return repo.git.rev_parse(repo.head.object.hexsha)
+    except ValueError as e:
+        sha = None
+        log.warning(
+            f"Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty."
+        )
+
+    return sha
 
 
 def get_branch(repo):

@@ -32,19 +32,20 @@ options that are applied to the workflow.
 ### Workflow steps
 
 The following table describes the attributes that can be used for a 
-step. All attributes are optional with the exception of the `uses` attribute.
+step. All attributes are optional with the exception of the `uses` 
+attribute.
 
 | Attribute   | Description |
 | :---------  | :-------------------- |
-| `uses`      | **required** The Docker image that will be executed for that step. For example,<br>`uses: docker://node:10`. See **"Referencing images in a step"** section below for<br>more examples. |
-| `id`        | **optional** Assigns an identifier to the step. By default, steps are asigned a numerid id<br>corresponding to the order of the step in the list, with `1` identifying<br>the first step. |
-| `runs`      | **optional** Specifies the command to run in the docker image. If `runs` is omitted, the<br>command specified in the `Dockerfile`'s `ENTRYPOINT` instruction will execute.<br>Use the `runs` attribute when the `Dockerfile` does not specify an `ENTRYPOINT`<br>or you want to override the `ENTRYPOINT` command. The `runs` attribute does not<br>invoke a shell by default. Using `runs: "echo $VAR"` will not print the value<br>stored in `$VAR`, but will instead print `\"\$VAR.\"`. To use environment<br>variables with the `runs` instruction, you must include a shell to expand<br>the variables, for example: `runs: ["sh", "-c", "echo $VAR"]`.  If the value of `runs`<br>refers to a local script, the path is relative to the workspace folder (see<br>[The Workspace](#the-workspace) section below)|
-| `args`      | **optional** The arguments to pass to the command. This is an array of strings. For example,<br> `args: ["--flag", "--arg", "value"]`. If the value of `args`<br>refers to a local script, the path is relative to the workspace folder (see<br>[The Workspace](#the-workspace) section below). Similarly to the `runs` attribute, if an envrionment variable is being<br>referenced, in order for this reference to be valid, a shell must be invoked (in the `runs` attribute)<br>in order to expand the value of the variable. |
-| `env`       | **optional** The environment variables to set inside the container's runtime environment. If<br>you need to pass environment variables into a step, make sure it runs a command<br>shell to perform variable substitution. For example, if your `runs` attribute is<br>set to `["sh", "-c"]`, the value of `args` will be passed to `sh -c` and<br>executed in a command shell. Alternatively, if your `Dockerfile` uses an<br>`ENTRYPOINT` to run the same command (`"sh -c"`), `args` will execute in a<br>command shell as well. See [`ENTRYPOINT`](https://docs.docker.com/engine/reference/builder/#entrypoint) for more details. |
-| `secrets`   | **optional** Specifies the names of the secret variables to set in the runtime environment<br>which the container can access as an environment variable. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
-| `skip_pull` | **optional** Assume that the given container image already exist and skip pulling it. |
-| `dir`       | **opftional** Specifies the working directory for a step. By default, the directory is always `/workspace` if another one is not defined. |
-| `options`   | **optional** Container configuration options. For instance: `options: {ports: {8888:8888}, interactive: True, tty: True}`.  Currently only supported for the docker runtime. See the parameters of `client.containers.runs()` in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options |
+| `uses`      | **required** A string with the name of the image that will be executed for that<br>step. For example, `uses: docker://node:10`. See **"Referencing<br>images in a step"** section below for more examples. |
+| `id`        | **optional** Assigns an identifier to the step. By default, steps are assigned a<br>numeric ID corresponding to the order of the step in the list, with<br>`'1'` identifying the first step. |
+| `runs`      | **optional** A list of strings that specifies the command to run in the container.<br>If `runs` is omitted, the command specified in the `Dockerfile`'s<br>`ENTRYPOINT` instruction will execute. Use the `runs` attribute<br>when the `Dockerfile` does not specify an `ENTRYPOINT` or you want<br>to override the `ENTRYPOINT` command. The `runs` attribute does<br>not invoke a shell by default. Using `runs: "echo $VAR"` will<br>**NOT** print the value stored in `$VAR`, but will instead print<br>`\"\$VAR.\"`. To use environment variables with the `runs`<br>instruction, you must include a shell to expand the variables, for<br>example: `runs: ["sh", "-c", "echo $VAR"]`.  If the value of<br>`runs` refers to a local script, the path is relative to the<br>workspace folder (see [The Workspace](#the-workspace) section<br>below). |
+| `args`      | **optional** A list of strings representing the arguments to pass to the command.<br>For example, `args: ["--flag", "--arg", "value"]`. If the value of<br>`args` refers to a local script, the path is relative to the workspace<br>folder (see [The Workspace](#the-workspace) section below). Similarly<br>to the `runs` attribute, if an environment variable is being<br>referenced, in order for this reference to be valid, a shell must be<br>invoked (in the `runs` attribute) in order to expand the value of the<br>variable. |
+| `env`       | **optional** A dictionary of environment variables to set inside the container's<br>runtime environment. For example: `env: {VAR1: FOO, VAR2: bar}`. In<br>order to access these environment variables from a script that runs<br>inside the container, make sure the script runs a shell (e.g. `bash`)<br>in order to perform variable substitution. |
+| `secrets`   | **optional** A list of strings representing the names of secret variables to define<br>in the environment of the container for the step. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
+| `skip_pull` | **optional** A boolean value that determines whether to pull the image before<br>executing the step. By default this is `false`. If the given container<br>image already exist (e.g. because it was built by a previous step in<br>the same workflow), assigning `true` skips downloading the image from<br>the registry. |
+| `dir`       | **optional** A string representing an absolute path inside the container to use as the<br>working directory. By default, this is `/workspace`. |
+| `options`   | **optional** Container configuration options. For instance:<br>`options: {ports: {8888:8888}, interactive: True, tty: True}`. Currently only<br> supported for the docker runtime. See the parameters of `client.containers.runs()`<br> in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options |
 
 ### Referencing images in a step
 
@@ -58,7 +59,7 @@ image on a public Git repository or Docker container registry:
 
 | Template                           | Description |
 | :--------------------------------- | :--------------------------------- |
-| `./path/to/dir`                    | The path to the directory that contains the `Dockerfile`. This is a relative<br>path with respect to the workspace directory (see<br>[The Workspace](#the-workspace) section below). **Example:** `./path/to/myimg/`. |
+| `./path/to/dir`                    | The path to the directory that contains the `Dockerfile`. This is<br>a relative path with respect to the workspace directory (see<br>[The Workspace](#the-workspace) section below). **Example:** `./path/to/myimg/`. |
 | `{url}/{user}/{repo}@{ref}`        | A specific branch, ref, or SHA in a public Git repository. If `url`<br>is ommited, `github.com` is used by default.<br>**Example:** `https://bitbucket.com/popperized/ansible@master`. |
 | `{url}/{user}/{repo}/{path}@{ref}` | A subdirectory in a public Git repository at a specific branch, ref,<br>or SHA.<br>**Example:** `git@gitlab.com:popperized/geni/build-context@v2.0`. |
 | `docker://{image}:{tag}`           | A Docker image published on [Docker Hub](https://hub.docker.com/).<br>**Example:** `docker://alpine:3.8`. |
@@ -221,8 +222,9 @@ example of this subsection, where we first changed the directory to
 ### Changing the working directory
 
 To specify a working directory for a step, you can use the `dir` 
-attribute in the workflow. This changes where the specified command is 
-executed. For example, adding `dir` as follows:
+attribute in the workflow, which takes as value a string representing 
+an absolute path inside the container. This changes where the 
+specified command is executed. For example, adding `dir` as follows:
 
 ```yaml
 steps:

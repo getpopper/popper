@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-POPPER_VERSION="v2.6.0"
+POPPER_VERSION="v2.7.0"
 
 OS_NAME="$(uname)"
 if [ "$OS_NAME" != "Linux" ] && [ "$OS_NAME" != "Darwin" ]; then
@@ -16,11 +16,12 @@ cat > ./popper << "EOF"
 printenv > /tmp/.envfile
 
 docker run --rm -ti \
+  --volume /tmp:/tmp \
   --volume /var/run/docker.sock:/var/run/docker.sock \
   --volume $PWD:$PWD \
   --workdir $PWD \
   --env-file /tmp/.envfile \
-  getpopper/popper:v2.6.0 $@
+  getpopper/popper:v2.7.0 $@
 EOF
 
 chmod +x "./popper"

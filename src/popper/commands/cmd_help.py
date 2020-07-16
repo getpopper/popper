@@ -1,12 +1,11 @@
 import click
-import os
 
-from popper.cli import pass_context, log, PopperCLI, cmd_folder
+from popper.cli import pass_context, log, PopperCLI
 
 popper_cli = PopperCLI()
 
 
-@click.command("help", short_help="shows help for a given command")
+@click.command("help", short_help="Shows help for a given command.")
 @click.argument(
     "subcommand",
     type=click.Choice(popper_cli.list_commands(click.Context(popper_cli))),
