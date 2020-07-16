@@ -37,10 +37,11 @@ class TestWorkflow(unittest.TestCase):
                     "env": {"EN": "EE"},
                     "secrets": ["S"],
                     "dir": "/path/to/",
+                    "options": {"name": "spam"},
                 },
                 {"uses": "bar", "runs": ["a", "b"], "args": ["c"], "skip_pull": True},
             ],
-            "options": {"env": {"FOO": "bar"}, "secrets": ["Z"]},
+            "options": {"env": {"FOO": "bar"}, "secrets": ["Z"],},
         }
         wf = WorkflowParser.parse(wf_data=wf_data)
 
@@ -50,6 +51,7 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual(("Z", "S"), step.secrets)
         self.assertEqual({"EN": "EE", "FOO": "bar"}, step.env)
         self.assertEqual("/path/to/", step.dir)
+        self.assertEqual("spam", step.options.name)
         self.assertTrue(not step.runs)
         self.assertTrue(not step.args)
         self.assertFalse(step.skip_pull)

@@ -1,4 +1,4 @@
-# CLI feautures
+# CLI features
 
 ## New workflow initialization
 

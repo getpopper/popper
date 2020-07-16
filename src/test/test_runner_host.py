@@ -159,6 +159,7 @@ class TestHostDockerRunner(PopperTest):
                 "args": ["ls"],
                 "id": "one",
                 "dir": "/tmp/",
+                "options": {"ports": {"8888/tcp": 8888}},
             },
             default_box=True,
         )
@@ -203,6 +204,7 @@ class TestHostDockerRunner(PopperTest):
                     "privileged": True,
                     "hostname": "popper.local",
                     "domainname": "www.example.org",
+                    "ports": {"8888/tcp": 8888},
                 },
             )
 
@@ -234,6 +236,7 @@ class TestHostDockerRunner(PopperTest):
                     "privileged": True,
                     "hostname": "popper.local",
                     "domainname": "www.example.org",
+                    "ports": {"8888/tcp": 8888},
                 },
             )
 
