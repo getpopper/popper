@@ -6,6 +6,7 @@ import unittest
 from testfixtures import LogCapture
 from subprocess import Popen
 
+import popper.scm as scm
 import popper.utils as pu
 
 from popper.config import ConfigLoader
@@ -247,12 +248,12 @@ class TestHostDockerRunner(PopperTest):
             default_box=True,
         )
         with DockerRunner(init_docker_client=False) as dr:
-            build, img, tag, build_sources = dr._get_build_info(step)
+            build, img, tag, build_ctx_path = dr._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popperized/bin")
             self.assertEqual(tag, "master")
-            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
-            self.assertTrue("github.com/popperized/bin/sh" in build_sources)
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_ctx_path)
+            self.assertTrue("github.com/popperized/bin/sh" in build_ctx_path)
 
             step = Box(
                 {
@@ -265,11 +266,30 @@ class TestHostDockerRunner(PopperTest):
             )
 
         with DockerRunner(init_docker_client=False) as dr:
-            build, img, tag, build_sources = dr._get_build_info(step)
+            build, img, tag, build_ctx_path = dr._get_build_info(step)
             self.assertEqual(build, False)
             self.assertEqual(img, "alpine")
             self.assertEqual(tag, "3.9")
-            self.assertEqual(build_sources, None)
+            self.assertEqual(build_ctx_path, None)
+
+        step = Box({"uses": "./", "args": ["ls"], "id": "one",}, default_box=True,)
+        conf = ConfigLoader.load(workspace_dir="/tmp")
+        with DockerRunner(init_docker_client=False, config=conf) as dr:
+            build, img, tag, build_ctx_path = dr._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popper_one_step")
+            self.assertEqual(tag, "na")
+            self.assertEqual(build_ctx_path, f"{os.path.realpath('/tmp')}/./")
+
+        # test within a git repo
+        repo = self.mk_repo()
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+        with DockerRunner(init_docker_client=False, config=conf) as dr:
+            build, img, tag, build_ctx_path = dr._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popper_one_step")
+            self.assertEqual(tag, scm.get_sha(repo, short=7))
+            self.assertEqual(build_ctx_path, f"{os.path.realpath(repo.working_dir)}/./")
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_docker_basic_run(self):
@@ -463,11 +483,11 @@ exec /bin/bash "$@"''',
             default_box=True,
         )
         with SingularityRunner() as sr:
-            build, img, build_sources = sr._get_build_info(step)
+            build, img, build_ctx_path = sr._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popperized/bin")
-            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
-            self.assertTrue(f"github.com/popperized/bin/sh" in build_sources)
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_ctx_path)
+            self.assertTrue("github.com/popperized/bin/sh" in build_ctx_path)
 
             step = Box(
                 {
@@ -480,10 +500,10 @@ exec /bin/bash "$@"''',
             )
 
         with SingularityRunner() as sr:
-            build, img, build_sources = sr._get_build_info(step)
+            build, img, build_ctx_path = sr._get_build_info(step)
             self.assertEqual(build, False)
             self.assertEqual(img, "docker://alpine:3.9")
-            self.assertEqual(build_sources, None)
+            self.assertEqual(build_ctx_path, None)
 
     @unittest.skipIf(
         os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
