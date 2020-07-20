@@ -59,7 +59,7 @@ from popper.runner import WorkflowRunner
     "-r",
     "--resource-manager",
     help="Specify resource manager for executing the workflow.",
-    type=click.Choice(["host", "slurm"]),
+    type=click.Choice(["host", "slurm", "kubernetes"]),
 )
 @click.option(
     "--skip",
