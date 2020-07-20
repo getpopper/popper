@@ -1,10 +1,9 @@
 import difflib
+import importlib
 import os
 import signal
-import sys
 
 import click
-from click.exceptions import ClickException
 
 import popper.log as logging
 
@@ -58,23 +57,21 @@ class PopperCLI(click.MultiCommand):
             function as callback.For reference visit
             https://click.palletsprojects.com/en/7.x/api/#decorators .
         """
-        try:
-            if sys.version_info[0] == 2:
-                name = name.encode("ascii", "replace")
-            mod = __import__("popper.commands.cmd_" + name, None, None, ["cli"])
-        except ImportError as e:
-            commands = self.list_commands(ctx)
-            most_similar_commands = ", ".join(
-                difflib.get_close_matches(name, commands, 3, 0.3)
-            )
-            message = ""
-            if len(most_similar_commands) != 0:
-                message = "\n\nThe most similar commands are: " + most_similar_commands
-            raise ClickException(
-                "Command '" + name + "' doesn't exist.\n"
-                "Type 'popper --help' for more.\n" + message + "\n" + str(e)
-            )
-        return mod.cli
+        cmd_path = f"popper.commands.cmd_{name}"
+        cmd_spec = importlib.util.find_spec(cmd_path)
+
+        if cmd_spec is not None:
+            # found it
+            cmd_mod = importlib.import_module(cmd_path)
+            return cmd_mod.cli
+
+        # given command doesn't exist, find a similarly named one
+        commands = self.list_commands(ctx)
+        similar_cmd = ", ".join(difflib.get_close_matches(name, commands, 1, 0.3))
+        log.fail(
+            f"Command '{name}' doesn't exist, did you mean '{similar_cmd}'? "
+            "Run 'popper help' for more."
+        )
 
 
 @click.command(cls=PopperCLI)
