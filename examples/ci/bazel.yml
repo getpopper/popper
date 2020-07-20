@@ -1,25 +1,16 @@
-options:
-  env:
-    GOPATH: /workspace
 steps:
-- id: get-workspace-gen
-  uses: docker://tikhoplav/go
-  args: [go, get, github.com/jin/create-bazel-workspace]
-
-- id: install-gen
-  uses: docker://tikhoplav/go 
-  args: [go, install, github.com/jin/create-bazel-workspace]
-
-- id: gen-workspace
-  uses: docker://tikhoplav/go
-  args: [./bin/create-bazel-workspace]
+- id: fetch-dependencies
+  uses: docker://insready/bazel
+  args: [bazel, fetch, //...]
 
 - id: build
   uses: docker://insready/bazel
-  dir: /workspace/bazel-workspace
-  args: [bazel, build]
+  args: [bazel, build, //...]
+
+- id: test
+  uses: docker://insready/bazel
+  args: [bazel, test, //...]
 
 - id: clean
   uses: docker://insready/bazel
-  dir: /workspace/bazel-workspace
   args: [bazel, clean]
