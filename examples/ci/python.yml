@@ -1,0 +1,29 @@
+steps:
+
+# create virtualenv and install dependencies (including pytest and black)
+- id: install-requirements
+  uses: docker://python:3.8-slim-buster
+  runs: [bash, -uexc]
+  args:
+  - |
+    python -mvenv venv/
+    source venv/bin/activate
+    pip install -r requirements.txt
+
+# lint codebase using black
+- id: lint
+  uses: docker://python:3.8-slim-buster
+  runs: [bash, -uexc]
+  args:
+  - |
+    source venv/bin/activate
+    black .
+
+# run tests
+- id: run-tests
+  uses: docker://python:3.8-slim-buster
+  runs: [bash, -uexc]
+  args:
+  - |
+    source venv/bin/activate
+    pytest
