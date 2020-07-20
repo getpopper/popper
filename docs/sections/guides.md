@@ -174,9 +174,9 @@ To adapt the recommendations of this guide to your own workflow, fork this
 
 Thoughout this guide, the  
 [Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
-research competition on Driven Data is used as an example project for developing the workflow. To help follow allong, see the final [repository]() for this workflow.
-This exmaple is from machine learning but an knowledge of the field is not
-essential to this guide.
+research competition on Driven Data is used as an example project for developing the workflow. 
+To help follow allong, see the final [repository]() for this workflow.
+This example is from machine learning but  knowledge of the field is not essential to this guide.
 
 Initial project structure:
 ```
@@ -235,7 +235,7 @@ Computational research usually has an exploratory phase.
 To make it easier to adapt exploratory work to a final workflow, it is recommended 
 to do both in the same environment.
 
-Computational notebooks are a great tool for exploratory work. We cover here how to 
+Computational notebooks are a great tool for exploratory work. This sections covers how to 
 launch a Jupyter notebook using Popper.
 
 Add a new step to the workflow in `wf.yml`
@@ -249,7 +249,8 @@ Add a new step to the workflow in `wf.yml`
 ```
 
 Remarks:
-- `uses` is set to `./` (current directory), as this step uses an image built from the `Dockerfile` in the local workspace directory
+- `uses` is set to `./` (current directory), as this step uses an image built from the 
+  `Dockerfile` in the local workspace directory
 - `ports` is set to `{8888/tcp: 8888}` which will allow the host machine to connect to the notebook server in the container
 
 In your local shell, execute the step in interactive mode
