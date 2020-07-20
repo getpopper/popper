@@ -483,3 +483,35 @@ Remarks:
 - This step uses a basic LaTeX installation. For more sophisticated needs,
 use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags) 
 - `dir` is set to `workspace/paper` so that Popper looks for, and outputs files in the `paper` folder
+
+
+### Conclusion
+
+This is the final workflow
+```yaml
+steps:
+  - id: "get-data"
+    uses: "docker://jacobcarlborg/docker-alpine-wget"
+    runs: ["sh"]
+    args: ["src/get_data.sh"]
+ 
+ - id: "notebook"
+   uses: "./"
+   rgs: ["sh"] 
+   options: 
+     ports: 
+       8888/tcp: 8888
+
+  - id: "predict"
+    uses: "./"
+    args: "python src/predict.py"
+    
+  - id: "predict"
+    uses: "./"
+    args: "python src/evaluate_model.py"
+    
+  - id: "paper"
+    uses: "docker://blang/latex:ctanbasic"
+    args: ["pdflatex", "paper.tex"]
+    dir: "/workspace/paper"
+```
