@@ -219,7 +219,7 @@ ls
 Now, wrap this step using a Popper workflow. In `wf.yml`,
 ```yaml
 steps:
-  - id: "get-data"
+  - id: "dataset"
     uses: "docker://jacobcarlborg/docker-alpine-wget"
     runs: ["sh"]
     args: ["src/get_data.sh"]
@@ -462,7 +462,7 @@ if __name__ == "__main__":
 With the following step
 
 ```yaml
-  - id: "predict"
+  - id: "figures"
     uses: "./"
     args: "python src/evaluate_model.py"
 ```
@@ -490,7 +490,7 @@ use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags)
 This is the final workflow
 ```yaml
 steps:
-  - id: "get-data"
+  - id: "dataset"
     uses: "docker://jacobcarlborg/docker-alpine-wget"
     runs: ["sh"]
     args: ["src/get_data.sh"]
@@ -506,7 +506,7 @@ steps:
     uses: "./"
     args: "python src/predict.py"
     
-  - id: "predict"
+  - id: "figures"
     uses: "./"
     args: "python src/evaluate_model.py"
     
