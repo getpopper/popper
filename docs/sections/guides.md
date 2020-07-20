@@ -502,16 +502,16 @@ steps:
      ports: 
        8888/tcp: 8888
 
-  - id: "predict"
-    uses: "./"
+ - id: "predict"
+   uses: "./"
     args: "python src/predict.py"
     
-  - id: "figures"
-    uses: "./"
-    args: "python src/evaluate_model.py"
+ - id: "figures"
+   uses: "./"
+   args: "python src/evaluate_model.py"
     
-  - id: "paper"
-    uses: "docker://blang/latex:ctanbasic"
-    args: ["pdflatex", "paper.tex"]
-    dir: "/workspace/paper"
+ - id: "paper"
+   uses: "docker://blang/latex:ctanbasic"
+   args: ["pdflatex", "paper.tex"]
+   dir: "/workspace/paper"
 ```
