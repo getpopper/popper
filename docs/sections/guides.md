@@ -473,10 +473,10 @@ It is easy to wrap the generation of the final paper in a Popper workflow.
 This is  useful to ensure that the paper is always built with the most up-to-date data and figures.
 
 ```yaml
-- id: "paper"
-  uses: "docker://blang/latex:ctanbasic"
-  args: ["pdflatex", "paper.tex"]
-  dir: "/workspace/paper"
+  - id: "paper"
+    uses: "docker://blang/latex:ctanbasic"
+    args: ["pdflatex", "paper.tex"]
+    dir: "/workspace/paper"
 ```
 
 Remarks:
