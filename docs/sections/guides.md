@@ -178,7 +178,6 @@ To adapt the recommendations of this guide to your own workflow, start by forkin
 
 Thoughout this guide, Driven Data's  
 [Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
-<<<<<<< HEAD
 research competition is used an example for developing  a workflow. 
 
 This case study gives an example of using Popper to
@@ -190,11 +189,10 @@ This case study gives an example of using Popper to
 To help follow allong, see the final [repository]() for this workflow.
 This examples comes from machine learning, but no knowledge of
 the field is necessary to understand the guide.
-=======
+
 research competition on Driven Data is used as an example project for developing the workflow. 
 To help follow allong, see the final [repository]() for this workflow.
 This example is from machine learning but  knowledge of the field is not essential to this guide.
->>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
 
 Initial project structure:
 ```
@@ -520,7 +518,6 @@ use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags)
 This is the final workflow:
 =======
 This is the final workflow
->>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
 ```yaml
 steps:
   - id: "dataset"
@@ -567,5 +564,3 @@ installations using
 ```sh
 popper run -f wf.yml
 ```
-=======
->>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
