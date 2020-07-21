@@ -1,0 +1,16 @@
+steps:
+- id: fetch-dependencies
+  uses: docker://insready/bazel
+  args: [bazel, fetch, //...]
+
+- id: build
+  uses: docker://insready/bazel
+  args: [bazel, build, //...]
+
+- id: test
+  uses: docker://insready/bazel
+  args: [bazel, test, //...]
+
+- id: clean
+  uses: docker://insready/bazel
+  args: [bazel, clean]
