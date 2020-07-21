@@ -481,7 +481,7 @@ class PodmanRunner(StepRunner):
             for i, j in env.items():
                 cmd.extend(["-e", f"{i}={j}"])
 
-        cmd.append("-d" if container_args.get("detach") else "")
+        cmd.extend(["-d" if container_args.get("detach") else ""])
 
         cmd.extend(["-w", container_args.get("working_dir")])
 
