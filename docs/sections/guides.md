@@ -254,14 +254,7 @@ computational notebooks such as Jupyter.
 To make it easier to adapt exploratory work to a final workflow, it is recommended 
 to do both in the same environment.
 
-<<<<<<< HEAD
 To run the JupyterLab environemnent, first add a new step to the workflow in `wf.yml`
-=======
-Computational notebooks are a great tool for exploratory work. This sections covers how to 
-launch a Jupyter notebook using Popper.
-
-Add a new step to the workflow in `wf.yml`
->>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
 ```yml
   - id: "notebook"
     uses: "./"
@@ -275,7 +268,7 @@ Remarks:
   `Dockerfile` in the local workspace directory
 - `ports` is set to `{8888/tcp: 8888}` which will allow the host machine to connect to the notebook server in the container
 
-Next, in your local shell, execute the step in interactive mode
+Next, in the local shell, execute the step in interactive mode
 ```sh
 popper sh -f wf.yml jupyter
 ```
@@ -514,10 +507,7 @@ use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags)
 
 ### Conclusion
 
-<<<<<<< HEAD
 This is the final workflow:
-=======
-This is the final workflow
 ```yaml
 steps:
   - id: "dataset"
@@ -545,7 +535,6 @@ steps:
    args: ["pdflatex", "paper.tex"]
    dir: "/workspace/paper"
 ```
-<<<<<<< HEAD
 Final project structure:
 ```
 ├── Dockerfile               <- Definition of the OS environment.
