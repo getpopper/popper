@@ -178,6 +178,7 @@ To adapt the recommendations of this guide to your own workflow, start by forkin
 
 Thoughout this guide, Driven Data's  
 [Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
+<<<<<<< HEAD
 research competition is used an example for developing  a workflow. 
 
 This case study gives an example of using Popper to
@@ -189,6 +190,11 @@ This case study gives an example of using Popper to
 To help follow allong, see the final [repository]() for this workflow.
 This examples comes from machine learning, but no knowledge of
 the field is necessary to understand the guide.
+=======
+research competition on Driven Data is used as an example project for developing the workflow. 
+To help follow allong, see the final [repository]() for this workflow.
+This example is from machine learning but  knowledge of the field is not essential to this guide.
+>>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
 
 Initial project structure:
 ```
@@ -233,7 +239,7 @@ echo "Files downloaded: $(ls)"
 Now, wrap this step using a Popper workflow. In a new file `wf.yml`,
 ```yaml
 steps:
-  - id: "get-data"
+  - id: "dataset"
     uses: "docker://jacobcarlborg/docker-alpine-wget"
     runs: ["sh"]
     args: ["src/get_data.sh"]
@@ -250,7 +256,14 @@ computational notebooks such as Jupyter.
 To make it easier to adapt exploratory work to a final workflow, it is recommended 
 to do both in the same environment.
 
+<<<<<<< HEAD
 To run the JupyterLab environemnent, first add a new step to the workflow in `wf.yml`
+=======
+Computational notebooks are a great tool for exploratory work. This sections covers how to 
+launch a Jupyter notebook using Popper.
+
+Add a new step to the workflow in `wf.yml`
+>>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
 ```yml
   - id: "notebook"
     uses: "./"
@@ -260,7 +273,8 @@ To run the JupyterLab environemnent, first add a new step to the workflow in `wf
         8888/tcp: 8888
 ```
 Remarks:
-- `uses` is set to `./` (current directory), as this step uses an image built from the `Dockerfile` in the local workspace directory
+- `uses` is set to `./` (current directory), as this step uses an image built from the 
+  `Dockerfile` in the local workspace directory
 - `ports` is set to `{8888/tcp: 8888}` which will allow the host machine to connect to the notebook server in the container
 
 Next, in your local shell, execute the step in interactive mode
@@ -476,7 +490,7 @@ if __name__ == "__main__":
 With the following step
 
 ```yaml
-  - id: "predict"
+  - id: "figures"
     uses: "./"
     args: "python src/evaluate_model.py"
 ```
@@ -488,10 +502,10 @@ This is  useful to ensure that the paper is always built with the most up-to-dat
  and figures.
 
 ```yaml
-- id: "paper"
-  uses: "docker://blang/latex:ctanbasic"
-  args: ["pdflatex", "paper.tex"]
-  dir: "/workspace/paper"
+  - id: "paper"
+    uses: "docker://blang/latex:ctanbasic"
+    args: ["pdflatex", "paper.tex"]
+    dir: "/workspace/paper"
 ```
 
 Remarks:
@@ -502,7 +516,11 @@ use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags)
 
 ### Conclusion
 
+<<<<<<< HEAD
 This is the final workflow:
+=======
+This is the final workflow
+>>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
 ```yaml
 steps:
   - id: "dataset"
@@ -530,6 +548,7 @@ steps:
    args: ["pdflatex", "paper.tex"]
    dir: "/workspace/paper"
 ```
+<<<<<<< HEAD
 Final project structure:
 ```
 ├── Dockerfile               <- Definition of the OS environment.
@@ -548,3 +567,5 @@ installations using
 ```sh
 popper run -f wf.yml
 ```
+=======
+>>>>>>> 1deeacb867714af3ce5108a201487c81cabdda7c
