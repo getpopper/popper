@@ -1,5 +1,5 @@
 import os
-import copy
+import subprocess
 import time
 import tarfile
 
@@ -37,6 +37,7 @@ class KubernetesRunner(StepRunner):
         self._vol_claim_name = f'{self._pod_name}-pvc'
         self._vol_size = self._config.resman_opts.get('volume_size', '500Mi')
 
+        self._init_pod_created = False
         self._vol_claim_created = False
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
@@ -45,27 +46,33 @@ class KubernetesRunner(StepRunner):
 
     def run(self, step):
         """Execute a step in a kubernetes cluster."""
+        self._pod_name += f"-{step.id}"
         self._build_and_push_image(step)
 
         m = f'[{step.id}] kubernetes run default.{self._pod_name}'
         log.info(m)
 
         if self._config.dry_run:
-            return 1
+            return 0
 
         ecode = 1
         try:
             self._vol_claim_create()
-            self._init_pod_create()
-            self._copy_ctx()
-            self._init_pod_delete()
+
+            if not self._init_pod_created:
+                self._init_pod_create()
+                self._copy_ctx()
+                self._init_pod_delete()
+                self._init_pod_created = True
+
             self._pod_create(step)
             ecode = self._pod_exec(step)
         except Exception as e:
             log.fail(e)
         finally:
-            self._pod_delete()
-            self._vol_claim_delete()
+            pass
+            # self._pod_delete()
+            # self._vol_claim_delete()
 
         log.debug(f"Returning with {ecode}")
         return ecode
@@ -102,9 +109,15 @@ class KubernetesRunner(StepRunner):
                     'persistentVolumeClaim': {
                         'claimName': self._vol_claim_name,
                     }
-                }]
+                }],
             }
         }
+
+        if self._config.resman_opts.nodeSelectorHostName:
+            _init_pod_conf['spec']['nodeSelector'] = {
+                    'kubernetes.io/hostname': self._config.resman_opts.nodeSelectorHostName
+                }
+
         self._kclient.create_namespaced_pod(body=_init_pod_conf, namespace='default')
 
         counter = 1
@@ -130,16 +143,19 @@ class KubernetesRunner(StepRunner):
             for f in files:
                 archive.add(f)
 
-        os.system(f"kubectl cp ctx.tar.gz default/{self._init_pod_name}:/workspace")
-        os.system(f"kubectl exec {self._init_pod_name} -- tar -xvf /workspace/ctx.tar.gz")
-
+        e = subprocess.call(["kubectl", "cp", "ctx.tar.gz", f"default/{self._init_pod_name}:/workspace"], stdout=subprocess.PIPE)
+        if e != 0:
+            log.fail("Couldn't copy workspace context into init pod")
+        
+        e = subprocess.call(["kubectl", "exec", f"{self._init_pod_name}", "--", "tar", "-xvf", "/workspace/ctx.tar.gz"], stdout=subprocess.PIPE)
+        if e != 0:
+            log.fail("Unpacking context inside pod failed")
 
     def _init_pod_delete(self):
         log.debug(f'deleting pod {self._pod_name}')
         self._kclient.delete_namespaced_pod(self._init_pod_name,
                                            namespace='default',
                                            body=V1DeleteOptions())
-
 
     def _vol_claim_create(self):
         _vol_claim_conf = {
@@ -158,6 +174,11 @@ class KubernetesRunner(StepRunner):
                 }
             }
         }
+
+        log.debug(_vol_claim_conf)
+
+        if self._config.resman_opts.persistentVolumeName:
+            _vol_claim_conf['spec']['volumeName'] = self._config.resman_opts.persistentVolumeName
 
         if self._vol_claim_created:
             return
@@ -187,6 +208,11 @@ class KubernetesRunner(StepRunner):
     # wait for sometime and create pod from step
     def _pod_create(self, step):
         _pod_conf = self._pod_conf(step)
+
+        if self._config.resman_opts.nodeSelectorHostName:
+            _pod_conf['spec']['nodeSelector'] = {
+                    'kubernetes.io/hostname': self._config.resman_opts.nodeSelectorHostName
+                }
 
         self._kclient.create_namespaced_pod(body=_pod_conf,
                                            namespace='default')
@@ -253,7 +279,6 @@ class KubernetesRunner(StepRunner):
         if args:
             commands += ' '.join(list(args)) + " "
         
-        print("executing command ")
         return os.system(f"kubectl exec {self._pod_name} -- {commands}")
 
     def _pod_delete(self):
@@ -273,12 +298,12 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         needs_build, img, tag, build_ctx_path = self._get_build_info(step)
         if not needs_build:
             return
-        # if not self._config.registry:
-        #     raise Exception("Expecting 'registry' option in configuration.")
-        # img = f"{self._config.registry}/{img}"
-        img = f"docker.io/{img}"
+
+        if not self._config.resman_opts.registry:
+            raise Exception("Expecting 'registry' option in configuration.")
+        img = f"{self._config.resman_opts.registry}/{img}"
+
         self._d.images.build(path=build_ctx_path, tag=f'{img}:{tag}', rm=True, pull=True)
 
-        step['uses'] = f"{img}:{tag}"
-        for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
-            log.step_info(l)
+        step.uses = f"{img}:{tag}"
+        self._d.images.push(img, tag=tag, stream=True, decode=True)
