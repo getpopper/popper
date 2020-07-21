@@ -308,12 +308,12 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
-        _, _, self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
 
         if not init_podman_client:
             return
 
         try:
+            _, _, self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
             self._p_version = HostRunner._exec_cmd(["podman", "version"], logging=False)
         except Exception as e:
             log.debug(f"Podman error: {e}")
@@ -348,7 +348,7 @@ class PodmanRunner(StepRunner):
 
         try:
             cmd = ["podman", "start", container]
-            _, e, _, = HostRunner._exec_cmd(cmd, logging=False)
+            _, e, _, = HostRunner._exec_cmd(cmd)
 
         except Exception as exc:
             log.fail(exc)
@@ -472,23 +472,40 @@ class PodmanRunner(StepRunner):
         log.info(msg)
 
         cmd = ["podman", "create"]
+
         cmd.extend(["--name", container_args.get("name") or ""])
         cmd.extend(["-v", container_args.get("volumes")[0] or ""])
-        if container_args.get("environment"):
-            for i, j in container_args["environment"].items():
+
+        env = container_args.get("environment")
+        if env:
+            for i, j in env.items():
                 cmd.extend(["-e", f"{i}={j}"])
+
         cmd.append("-d" if container_args.get("detach") else "")
-        cmd.extend(["-w", container_args.get("working_dir") or ""])
-        cmd.extend(["-h", container_args.get("hostname") or ""])
-        # cmd.extend(["-t", container_args.get("tty") or ""])
-        # cmd.extend(["--domainname", container_args.get("domainname") or ""]) #This is commented out because tty and domain name cannot be left blank
-        cmd.append(container_args.get("image") or "")
+
+        cmd.extend(["-w", container_args.get("working_dir")])
+
+        h = container_args.get("hostname", None)
+        if h:
+            cmd.extend(["-h", h])
+
+        domain_name = container_args.get("domainname", None)
+        if domain_name:
+            cmd.extend(["--domainname", dommain_name])
+
+        tty = container_args.get("tty", None)
+        if tty:
+            cmd.extend(["-t", tty])
+
+        cmd.append(container_args.get("image"))
+
         for i in container_args["command"]:
             cmd.extend([i or ""])
 
         _, ecode, container = HostRunner._exec_cmd(cmd, logging=False)
         if ecode != 0:
-            return
+            return None
+
         container = container.rsplit()
         return container[0]
 
