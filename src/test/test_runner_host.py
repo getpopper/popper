@@ -473,6 +473,25 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(tag, "3.9")
             self.assertEqual(build_sources, None)
 
+        # step = Box({"uses": "./", "args": ["ls"], "id": "one",}, default_box=True,)
+        # conf = ConfigLoader.load(workspace_dir="/tmp")
+        # with PodmanRunner(init_podman_client=False, config=conf) as pr:
+        #     build, img, tag, build_ctx_path = pr._get_build_info(step)
+        #     self.assertEqual(build, True)
+        #     self.assertEqual(img, "popper_one_step")
+        #     self.assertEqual(tag, "na")
+        #     self.assertEqual(build_ctx_path, f"{os.path.realpath('/tmp')}/./")
+
+        # # test within a git repo
+        # repo = self.mk_repo()
+        # conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+        # with PodmanRunner(init_podman_client=False, config=conf) as pr:
+        #     build, img, tag, build_ctx_path = pr._get_build_info(step)
+        #     self.assertEqual(build, True)
+        #     self.assertEqual(img, "popper_one_step")
+        #     self.assertEqual(tag, scm.get_sha(repo, short=7))
+        #     self.assertEqual(build_ctx_path, f"{os.path.realpath(repo.working_dir)}/./")
+
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_get_container_kwargs(self):
         step = Box(
@@ -512,7 +531,7 @@ class TestHostPodmanRunner(PopperTest):
                     "command": ["ls"],
                     "name": "container_a",
                     "volumes": [
-                        "/path/to/workdir:/workspace",
+                        "/path/to/workdir:/workspace:Z",
                         "/path/in/host:/path/in/container",
                     ],
                     "working_dir": "/tmp/",
@@ -542,7 +561,7 @@ class TestHostPodmanRunner(PopperTest):
                     "command": ["ls"],
                     "name": "container_a",
                     "volumes": [
-                        "/path/to/workdir:/workspace",
+                        "/path/to/workdir:/workspace:Z",
                         "/path/in/host:/path/in/container",
                     ],
                     "working_dir": "/tmp/",
