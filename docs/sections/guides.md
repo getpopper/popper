@@ -152,35 +152,46 @@ run.
 
 ## Computational research with Python
 
+Computational research often relies on complex software dependencies (mixes of scripts a
+and compiled code) which can prove difficult to port across environments. Furthermore,
+the resulting worfklow will usually invoke multiple dependent steps which will be 
+painful to replicate if not properly documented.
+
+Popper eases these challenges by abstracting over software environments and forcing users
+ to document their workflows explicetely.
+
 This guide explains how to use Popper to develop and run reproducible workflows
-in for computational research in fields such as physics, machine learning or
-bioinformatics
+for computational research and data analysis in fields such as bioinformatics, 
+machine learning, physics or statistics. 
 
-### Getting started
 
-[TODO: introduction to reproducibility and major concepts in Popper?]
 
-#### Pre-requisites
+### Pre-requisites
 
 Basic knowledge of git, command line and Python. It is also 
 recommended to read through the rest of the
-[documentation](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
-for Popper. 
+[documentation](https://popper.readthedocs.io/en/latest/sections/getting_started.html).
 
-To adapt the recommendations of this guide to your own workflow, fork this 
-[template repository]() or use the [Cookiecutter template](). (TODO: fix links)
+To adapt the recommendations of this guide to your own workflow, start by forking this [template repository]() or use the [Cookiecutter template](). (TODO: fix links)
 
-#### Case study
+### Case study
 
-Thoughout this guide, the  
+Thoughout this guide, Driven Data's  
 [Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
-research competition on Driven Data is used as an example project for developing the workflow. To help follow allong, see the final [repository]() for this workflow.
-This exmaple is from machine learning but an knowledge of the field is not
-essential to this guide.
+research competition is used an example for developing  a workflow. 
+
+This case study gives an example of using Popper to
+- download data
+- fit/simulate a model
+- visualize the results
+- generate a paper with up-to-date results
+
+To help follow allong, see the final [repository]() for this workflow.
+This examples comes from machine learning, but no knowledge of
+the field is necessary to understand the guide.
 
 Initial project structure:
 ```
-├── environment.yml          <- The file defining the conda Python environmentt. 
 ├── LICENSE                                 
 ├── README.md                <- The top-level README.
 ├── data
@@ -190,20 +201,24 @@ Initial project structure:
 |   ├── models               <- Serialized models, predictions, model summaries.
 |   └── figures              <- Graphics created during analysis.
 ├── paper                    <- Generated analysis as PDF, LaTeX.
+│   ├── paper.tex
 └── src                      <- Source code for this project.
     ├── notebooks            <- Jupyter notebooks.
-    ├── get_data.sh
-    ├── models.py
-    ├── predict.py
-    ├── evaluate_model.py 
+    ├── get_data.sh          <- Script for downloading the original data dump.
+    ├── models.py            <- Script defining models.
+    ├── predict.py           <- Script for generating model predictions.
+    ├── evaluate_model.py    <- Script for generating model evaluation plots.
     └── __init__.py          <- Makes this a python module.
 ```    
 
+
+
+
 ### Downloading data
 
-A computational workflow should automate the acquisition of data to ensure
+The workflow should automate the acquisition of data to ensure
 that the correct version of the data is used.
-In our example, this can be done with a python script
+In this example, this can be done with a simple shell script
 
 ```sh
 #!/bin/sh
@@ -213,10 +228,9 @@ wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/test_set_features.
 wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_labels.csv"
 wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_features.csv"
 
-echo "Files downloaded:"
-ls 
+echo "Files downloaded: $(ls)"
 ```
-Now, wrap this step using a Popper workflow. In `wf.yml`,
+Now, wrap this step using a Popper workflow. In a new file `wf.yml`,
 ```yaml
 steps:
   - id: "get-data"
@@ -225,20 +239,18 @@ steps:
     args: ["src/get_data.sh"]
 ```
 Remarks:
-- it is important to ensure that the Docker images contains the necessary utilities. 
-For instance, a default Alpine image does not include `wget` 
+- make sure that the Docker image contains the necessary utilities. 
+For instance, a default Alpine image does not include `wget`.
 
 
 ### Interactive development
 
-Computational research usually has an exploratory phase.
+Computational research usually has an exploratory phase, often taking form of
+computational notebooks such as Jupyter.
 To make it easier to adapt exploratory work to a final workflow, it is recommended 
 to do both in the same environment.
 
-Computational notebooks are a great tool for exploratory work. We cover here how to 
-launch a Jupyter notebook using Popper.
-
-Add a new step to the workflow in `wf.yml`
+To run the JupyterLab environemnent, first add a new step to the workflow in `wf.yml`
 ```yml
   - id: "notebook"
     uses: "./"
@@ -247,12 +259,11 @@ Add a new step to the workflow in `wf.yml`
       ports: 
         8888/tcp: 8888
 ```
-
 Remarks:
 - `uses` is set to `./` (current directory), as this step uses an image built from the `Dockerfile` in the local workspace directory
 - `ports` is set to `{8888/tcp: 8888}` which will allow the host machine to connect to the notebook server in the container
 
-In your local shell, execute the step in interactive mode
+Next, in your local shell, execute the step in interactive mode
 ```sh
 popper sh -f wf.yml jupyter
 ```
@@ -260,7 +271,7 @@ In the docker container's shell, run
 ```sh
 jupyter lab --ip 0.0.0.0 --no-browser --allow-root 
 ```
-Skip this second step if you only need the shell interface
+Skip this second step if you only need the shell interface.
 
 Remarks:
 - `--ip 0.0.0.0` allows the user to access JupyterLab from outside the container (by default, 
@@ -269,7 +280,7 @@ Jupyter only allows access from `localhost`)
 - `--allow-root` allows us to run JupyterLab as a root user (the default user in our Docker
 image), which Jupyter does not enable by default
 
-Copy and paste the generated link in the browser on your host machine to access the JupyterLab 
+Paste the generated link in a browser to access the JupyterLab 
 environment.
 
 
@@ -310,13 +321,16 @@ RUN pip install -r requirements.txt
 
 ### Models and visualization
 
-Following the above advice, wrap your code for data processing, modeling and generating
-figures
+Following the above advice, it is easy to wrap modeliing code in a Popper workflow,
+assuming it was developed from the start in a container environment.
 
-In this example generate model diagnostic plots and predictions on the
-hold-out test set
+This section shows example steps for code that fits a model and generates:
+- model evalution plots
+- predictions on a hold-out dataset that will be used by the organizers to score 
+competition entries
 
-Exploratory work yielded the following model
+This first script defines the model this workflow uses
+
 ```python
 from sklearn import impute, preprocessing, compose, pipeline, linear_model, multioutput
 
@@ -387,17 +401,18 @@ if __name__ == "__main__":
     sub.to_csv(os.path.join(PRED_PATH, "baseline_pred.csv"), index = False)
  ```
 
-Add this script as a step in the Popper workflow. This must be after the `get_data` 
+Add this script as a step in the Popper workflow. This must come after the `get_data` 
 step
 ```yaml
   - id: "predict"
     uses: "./"
     args: "python src/predict.py"
 ```
-The same Docker container as for the `jupyter` step is used.
+The same Docker container as for the `jupyter` step is used, given that is where
+the script was developed! 
 
+Similarly, add the script for generating model plots to the workflow
 
-Similarly, the script for generating model plots is added to the workflow
 ```python
 import seaborn as sns
 import matplotlib.pyplot as plt
@@ -469,7 +484,8 @@ With the following step
 ### Building a paper using LaTeX
 
 It is easy to wrap the generation of the final paper in a Popper workflow.
-This is  useful to ensure that the paper is always built with the most up-to-date data and figures.
+This is  useful to ensure that the paper is always built with the most up-to-date data 
+ and figures.
 
 ```yaml
 - id: "paper"
@@ -482,3 +498,53 @@ Remarks:
 - This step uses a basic LaTeX installation. For more sophisticated needs,
 use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags) 
 - `dir` is set to `workspace/paper` so that Popper looks for, and outputs files in the `paper` folder
+
+
+### Conclusion
+
+This is the final workflow:
+```yaml
+steps:
+  - id: "dataset"
+    uses: "docker://jacobcarlborg/docker-alpine-wget"
+    runs: ["sh"]
+    args: ["src/get_data.sh"]
+ 
+ - id: "notebook"
+   uses: "./"
+   rgs: ["sh"] 
+   options: 
+     ports: 
+       8888/tcp: 8888
+
+ - id: "predict"
+   uses: "./"
+    args: "python src/predict.py"
+    
+ - id: "figures"
+   uses: "./"
+   args: "python src/evaluate_model.py"
+    
+ - id: "paper"
+   uses: "docker://blang/latex:ctanbasic"
+   args: ["pdflatex", "paper.tex"]
+   dir: "/workspace/paper"
+```
+Final project structure:
+```
+├── Dockerfile               <- Definition of the OS environment.
+├── environment.yml          <- Definition of the Python environment.
+├── LICENSE                                 
+├── README.md                <- The top-level README.
+├── wf.yml                   <- Definition of the workflow.
+├── data
+├── results             
+├── paper                    <- Generated analysis as PDF, LaTeX.
+└── src                      <- Source code for this project.
+```
+
+The full analysis can now be executed on any machine with Popper and Docker 
+installations using
+```sh
+popper run -f wf.yml
+```
