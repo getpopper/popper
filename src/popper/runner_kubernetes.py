@@ -48,7 +48,7 @@ class KubernetesRunner(StepRunner):
     def run(self, step):
         """Execute a step in a kubernetes cluster."""
         self._pod_name = self._base_pod_name + f"-{step.id}"
-        self._build_and_push_image(step)
+        image = self._build_and_push_image(step)
 
         m = f"[{step.id}] kubernetes run default.{self._pod_name}"
         log.info(m)
@@ -66,7 +66,7 @@ class KubernetesRunner(StepRunner):
                 self._init_pod_delete()
                 self._init_pod_created = True
 
-            self._pod_create(step)
+            self._pod_create(step, image)
             self._pod_read_log()
             ecode = self._pod_exit_code()
         except Exception as e:
@@ -223,8 +223,8 @@ class KubernetesRunner(StepRunner):
         self._vol_claim_created = True
 
     # wait for sometime and create pod from step
-    def _pod_create(self, step):
-        _pod_conf = self._pod_conf(step)
+    def _pod_create(self, step, image):
+        _pod_conf = self._pod_conf(step, image)
 
         if self._config.resman_opts.nodeSelectorHostName:
             _pod_conf["spec"]["nodeSelector"] = {
@@ -286,7 +286,7 @@ class KubernetesRunner(StepRunner):
         return 0
 
     # supply pod conf
-    def _pod_conf(self, step):
+    def _pod_conf(self, step, image):
         _ws_vol_mount = f"{self._pod_name}-ws"
         _pod_conf = {
             "apiVersion": "v1",
@@ -296,7 +296,7 @@ class KubernetesRunner(StepRunner):
                 "restartPolicy": "Never",
                 "containers": [
                     {
-                        "image": f'{step["uses"].replace("docker://", "")}',
+                        "image": image,
                         "name": f"{step.id}",
                         "workingDir": "/workspace",
                         "volumeMounts": [
@@ -338,15 +338,22 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
     def _build_and_push_image(self, step):
         needs_build, img, tag, build_ctx_path = self._get_build_info(step)
         if not needs_build:
-            return
+            return step.uses.replace("docker://", "")
 
         if not self._config.resman_opts.registry:
             raise Exception("Expecting 'registry' option in configuration.")
-        img = f"{self._config.resman_opts.registry}/{img}"
+        
+        img = img.replace("/", "_")
+        img = f"{self._config.resman_opts.registry}/{self._config.resman_opts.registry_user}/{img}"
 
+        log.debug("Building image...")
         self._d.images.build(
             path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
         )
+        log.debug("Image built")
 
-        step.uses = f"{img}:{tag}"
-        self._d.images.push(img, tag=tag, stream=True, decode=True)
+        for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
+            log.step_info(l)
+
+        log.debug(f"{img}:{tag}")
+        return f"{img}:{tag}"
