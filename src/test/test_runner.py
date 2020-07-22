@@ -197,7 +197,7 @@ class TestStepRunner(PopperTest):
             default_box=True,
         )
         with StepRunner() as r:
-            build, img_full, _, _,build_ctx_path = r._get_build_info(step)
+            build, img_full, _, _, build_ctx_path = r._get_build_info(step)
             self.assertEqual(build, False)
             self.assertEqual(img_full, "docker://alpine:3.9")
             self.assertEqual(build_ctx_path, None)
