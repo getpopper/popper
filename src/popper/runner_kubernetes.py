@@ -29,13 +29,13 @@ class KubernetesRunner(StepRunner):
 
         _, active_context = config.list_kube_config_contexts()
 
-        self._pod_name = pu.sanitized_name(f"pod", self._config.wid)
-        self._pod_name = self._pod_name.replace("_", "-")
+        self._base_pod_name = pu.sanitized_name(f"pod", self._config.wid)
+        self._base_pod_name = self._base_pod_name.replace("_", "-")
 
         self._init_pod_name = pu.sanitized_name("init-pod", self._config.wid)
         self._init_pod_name = self._init_pod_name.replace("_", "-")
 
-        self._vol_claim_name = f"{self._pod_name}-pvc"
+        self._vol_claim_name = f"{self._base_pod_name}-pvc"
         self._vol_size = self._config.resman_opts.get("volume_size", "500Mi")
 
         self._init_pod_created = False
@@ -47,7 +47,7 @@ class KubernetesRunner(StepRunner):
 
     def run(self, step):
         """Execute a step in a kubernetes cluster."""
-        self._pod_name += f"-{step.id}"
+        self._pod_name = self._base_pod_name + f"-{step.id}"
         self._build_and_push_image(step)
 
         m = f"[{step.id}] kubernetes run default.{self._pod_name}"
@@ -132,7 +132,7 @@ class KubernetesRunner(StepRunner):
             log.debug(f"Pod {self._init_pod_name} not started yet")
 
             if counter == 10:
-                raise Exception("Timed out waiting for pod to start")
+                raise Exception("Timed out waiting for Pod to start")
 
             time.sleep(1)
             counter += 1
@@ -215,7 +215,7 @@ class KubernetesRunner(StepRunner):
             log.debug(f"Volume claim {self._vol_claim_name} not created yet")
 
             if counter == 60:
-                raise Exception("Timed out waiting for volume creation")
+                raise Exception("Timed out waiting for PersistentVolumeClaim creation")
 
             time.sleep(1)
             counter += 1
@@ -257,8 +257,8 @@ class KubernetesRunner(StepRunner):
 
             log.debug(f"Pod {self._pod_name} not started yet")
 
-            if counter == 10:
-                raise Exception("Timed out waiting for pod to start")
+            if counter == self._config.resman_opts.timeoutRetryLimit:
+                raise Exception("Timed out waiting for Pod to start")
 
             time.sleep(1)
             counter += 1
