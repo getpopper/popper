@@ -582,8 +582,8 @@ class TestHostPodmanRunner(PopperTest):
         conf = ConfigLoader.load(engine_name="podman", workspace_dir=repo.working_dir)
 
         with WorkflowRunner(conf) as r:
-            # wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
-            # r.run(WorkflowParser.parse(wf_data=wf_data))
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            r.run(WorkflowParser.parse(wf_data=wf_data))
 
             wf_data = {
                 "steps": [

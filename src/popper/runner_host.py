@@ -497,7 +497,16 @@ class PodmanRunner(StepRunner):
         if tty:
             cmd.extend(["-t", tty])
 
+        entrypoint = container_args.get("entrypoint")
+        if entrypoint:
+            cmd.extend(["--entrypoint", entrypoint[0]])
+            entrypoint_rmd = entrypoint[1:]
+
         cmd.append(container_args.get("image"))
+
+        if entrypoint:
+            for i in entrypoint_rmd:
+                cmd.extend([i or ""])
 
         for i in container_args["command"]:
             cmd.extend([i or ""])
