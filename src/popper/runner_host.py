@@ -515,7 +515,6 @@ class PodmanRunner(StepRunner):
         if ecode != 0:
             return None
 
-        print(cmd)
         container = container.rsplit()
         return container[0]
 
