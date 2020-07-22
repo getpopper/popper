@@ -67,7 +67,8 @@ class KubernetesRunner(StepRunner):
                 self._init_pod_created = True
 
             self._pod_create(step)
-            ecode = self._pod_exec(step)
+            self._pod_read_log()
+            ecode = self._pod_exit_code()
         except Exception as e:
             log.fail(e)
         finally:
@@ -230,6 +231,19 @@ class KubernetesRunner(StepRunner):
                 "kubernetes.io/hostname": self._config.resman_opts.nodeSelectorHostName
             }
 
+        runs = list(step.runs) if step.runs else None
+        args = list(step.args) if step.args else None
+
+        log.debug(runs)
+        log.debug(args)
+        log.debug(_pod_conf)
+
+        if runs:
+            _pod_conf["spec"]["containers"][0]["command"] = runs
+
+        if args:
+            _pod_conf["spec"]["containers"][0]["args"] = args
+
         self._kclient.create_namespaced_pod(body=_pod_conf, namespace="default")
 
         counter = 1
@@ -249,6 +263,28 @@ class KubernetesRunner(StepRunner):
             time.sleep(1)
             counter += 1
 
+    def _pod_read_log(self):
+        log.debug(f"Reading logs")
+        resp = self._kclient.read_namespaced_pod_log(
+            name=self._pod_name,
+            namespace="default",
+            follow=True,
+            tail_lines=10,
+            _preload_content=False,
+        )
+        for line in resp:
+            log.step_info(line.decode().rstrip())
+
+    def _pod_exit_code(self):
+        time.sleep(2)
+        resp = self._kclient.read_namespaced_pod(
+            name=self._pod_name, namespace="default"
+        )
+        log.debug(f"Got status {resp.status.phase}")
+        if resp.status.phase != "Succeeded":
+            return 1
+        return 0
+
     # supply pod conf
     def _pod_conf(self, step):
         _ws_vol_mount = f"{self._pod_name}-ws"
@@ -263,7 +299,6 @@ class KubernetesRunner(StepRunner):
                         "image": f'{step["uses"].replace("docker://", "")}',
                         "name": f"{step.id}",
                         "workingDir": "/workspace",
-                        "command": ["sleep", "infinity"],
                         "volumeMounts": [
                             {"name": _ws_vol_mount, "mountPath": "/workspace",}
                         ],
@@ -285,18 +320,6 @@ class KubernetesRunner(StepRunner):
         self._kclient.delete_namespaced_persistent_volume_claim(
             self._vol_claim_name, namespace="default", body=V1DeleteOptions()
         )
-
-    def _pod_exec(self, step):
-        runs = step.runs if step.runs else None
-        args = step.args if step.args else None
-
-        commands = ""
-        if runs:
-            commands += " ".join(list(runs)) + " "
-        if args:
-            commands += " ".join(list(args)) + " "
-
-        return os.system(f"kubectl exec {self._pod_name} -- {commands}")
 
     def _pod_delete(self):
         log.debug(f"deleting pod {self._pod_name}")
