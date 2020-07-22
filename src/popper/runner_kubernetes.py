@@ -342,7 +342,7 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
 
         if not self._config.resman_opts.registry:
             raise Exception("Expecting 'registry' option in configuration.")
-        
+
         img = img.replace("/", "_")
         img = f"{self._config.resman_opts.registry}/{self._config.resman_opts.registry_user}/{img}"
 
