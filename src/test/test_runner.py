@@ -4,6 +4,8 @@ import shutil
 
 from unittest.mock import patch
 
+import popper.scm as scm
+
 from popper.cli import log
 from popper.config import ConfigLoader
 from popper.parser import WorkflowParser
@@ -136,3 +138,66 @@ class TestStepRunner(PopperTest):
             }
             self.assertDictEqual(expected, env)
             os.environ.pop("A")
+
+    def test_get_build_info(self):
+        step = Box(
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
+            default_box=True,
+        )
+        with StepRunner() as r:
+            build, _, img, tag, build_ctx_path = r._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popperized/bin")
+            self.assertEqual(tag, "master")
+            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_ctx_path)
+            self.assertTrue("github.com/popperized/bin/sh" in build_ctx_path)
+
+            step = Box(
+                {
+                    "uses": "docker://alpine:3.9",
+                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                    "env": {"FOO": "bar"},
+                    "id": "1",
+                },
+                default_box=True,
+            )
+        with StepRunner() as r:
+            build, _, img, tag, build_sources = r._get_build_info(step)
+            self.assertEqual(build, False)
+            self.assertEqual(img, "alpine")
+            self.assertEqual(tag, "3.9")
+            self.assertEqual(build_sources, None)
+
+        step = Box({"uses": "./", "args": ["ls"], "id": "one",}, default_box=True,)
+        conf = ConfigLoader.load(workspace_dir="/tmp")
+        with StepRunner(config=conf) as r:
+            build, _, img, tag, build_ctx_path = r._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popper_one_step")
+            self.assertEqual(tag, "na")
+            self.assertEqual(build_ctx_path, f"{os.path.realpath('/tmp')}/./")
+
+        # test within a git repo
+        repo = self.mk_repo()
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+        with StepRunner(config=conf) as r:
+            build, _, img, tag, build_ctx_path = r._get_build_info(step)
+            self.assertEqual(build, True)
+            self.assertEqual(img, "popper_one_step")
+            self.assertEqual(tag, scm.get_sha(repo, short=7))
+            self.assertEqual(build_ctx_path, f"{os.path.realpath(repo.working_dir)}/./")
+
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                "env": {"FOO": "bar"},
+                "name": "1",
+            },
+            default_box=True,
+        )
+        with StepRunner() as r:
+            build, img_full, _, _,build_ctx_path = r._get_build_info(step)
+            self.assertEqual(build, False)
+            self.assertEqual(img_full, "docker://alpine:3.9")
+            self.assertEqual(build_ctx_path, None)
