@@ -12,7 +12,6 @@ from spython.main.parse.parsers import DockerParser
 from spython.main.parse.writers import SingularityWriter
 
 from popper import utils as pu
-from popper import scm
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 

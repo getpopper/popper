@@ -231,6 +231,7 @@ class StepRunner(object):
         return step_env
 
     def _get_build_info(self, step):
+
         """Parses the `uses` attribute and returns build information needed.
 
         Args:
@@ -271,6 +272,7 @@ class StepRunner(object):
         return (build, img_full, img, tag, build_ctx_path)
 
     def _update_with_engine_config(self, container_args):
+
         """Given container arguments, it extends it so it includes options
         obtained from the popper.config.Config.engine_opts property.
         """

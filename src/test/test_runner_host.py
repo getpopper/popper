@@ -6,7 +6,6 @@ import unittest
 from testfixtures import LogCapture
 from subprocess import Popen
 
-import popper.scm as scm
 import popper.utils as pu
 
 from popper.config import ConfigLoader
