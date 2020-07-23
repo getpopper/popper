@@ -230,7 +230,7 @@ class StepRunner(object):
             )
         return step_env
 
-    def _get_build_info(self, step,  class_name):
+    def _get_build_info(self, step, class_name):
 
         """Parses the `uses` attribute and returns build information needed.
 
