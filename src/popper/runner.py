@@ -230,7 +230,7 @@ class StepRunner(object):
             )
         return step_env
 
-    def _get_build_info(self, step):
+    def _get_build_info(self, step,  class_name):
 
         """Parses the `uses` attribute and returns build information needed.
 
@@ -245,29 +245,44 @@ class StepRunner(object):
         build_ctx_path = None
         img_full = None
 
-        if (
-            "docker://" in step.uses
-            or "shub://" in step.uses
-            or "library://" in step.uses
-        ):
-            img_full = step.uses
-            img = step.uses.replace("docker://", "")
-            if ":" in img:
-                (img, tag) = img.split(":")
+        if class_name == "SingularityRunner":
+            if (
+                "docker://" in step.uses
+                or "shub://" in step.uses
+                or "library://" in step.uses
+            ):
+                img_full = step.uses
+                build = False
+
+            elif "./" in step.uses:
+                img = f'{pu.sanitized_name(step.id, "step")}'
+                build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
             else:
-                tag = "latest"
-            build = False
-        elif "./" in step.uses:
-            img = pu.sanitized_name(step.id, "step").lower()
-            tag = self._config.git_sha_short if self._config.git_sha_short else "na"
-            build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
+                _, service, user, repo, step_dir, version = scm.parse(step.uses)
+                wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
+                repo_dir = os.path.join(wf_cache_dir, service, user, repo)
+                img = f"{user}/{repo}".lower()
+                build_ctx_path = os.path.join(repo_dir, step_dir)
+
         else:
-            _, service, user, repo, step_dir, version = scm.parse(step.uses)
-            wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
-            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
-            img = f"{user}/{repo}".lower()
-            tag = version
-            build_ctx_path = os.path.join(repo_dir, step_dir)
+            if "docker://" in step.uses:
+                img = step.uses.replace("docker://", "")
+                if ":" in img:
+                    (img, tag) = img.split(":")
+                else:
+                    tag = "latest"
+                build = False
+            elif "./" in step.uses:
+                img = pu.sanitized_name(step.id, "step").lower()
+                tag = self._config.git_sha_short if self._config.git_sha_short else "na"
+                build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
+            else:
+                _, service, user, repo, step_dir, version = scm.parse(step.uses)
+                wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
+                repo_dir = os.path.join(wf_cache_dir, service, user, repo)
+                img = f"{user}/{repo}".lower()
+                tag = version
+                build_ctx_path = os.path.join(repo_dir, step_dir)
 
         return (build, img_full, img, tag, build_ctx_path)
 

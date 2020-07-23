@@ -109,6 +109,7 @@ class DockerRunner(StepRunner):
 
         self._spawned_containers = set()
         self._d = None
+        self.class_name = self.__class__.__name__
 
         if not init_docker_client:
             return
@@ -172,7 +173,7 @@ class DockerRunner(StepRunner):
             c.stop()
 
     def _create_container(self, cid, step):
-        build, _, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
 
         if build:
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
@@ -228,8 +229,7 @@ class DockerRunner(StepRunner):
             "tty": self._config.pty,
             "stdin_open": self._config.pty,
         }
-        class_name = self.__class__.__name__
-        self._update_with_engine_config(args, class_name)
+        self._update_with_engine_config(args, self.class_name)
         args.update(step.options)
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
@@ -254,6 +254,7 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
+        self.class_name = self.__class__.__name__
 
         if not init_podman_client:
             return
@@ -333,15 +334,14 @@ class PodmanRunner(StepRunner):
             "stdin_open": self._config.pty,
         }
 
-        class_name = self.__class__.__name__
-        self._update_with_engine_config(args, class_name)
+        self._update_with_engine_config(args, self.class_name)
 
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
         return args
 
     def _create_container(self, cid, step):
-        build, _, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
 
         if build:
             log.info(f"[{step.id}] podman build {img}:{tag} {build_ctx_path}")
@@ -424,7 +424,7 @@ class SingularityRunner(StepRunner):
 
         self._spawned_containers = set()
         self._s = None
-        class_name = self.__class__.__name__
+        self.class_name = self.__class__.__name__
 
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
@@ -497,8 +497,7 @@ class SingularityRunner(StepRunner):
             "bind": [f"{self._config.workspace_dir}:/workspace"],
         }
 
-        class_name = self.__class__.__name__
-        self._update_with_engine_config(container_args, class_name)
+        self._update_with_engine_config(container_args, self.class_name)
 
         options = []
         for k, v in container_args.items():
@@ -514,7 +513,7 @@ class SingularityRunner(StepRunner):
         return options
 
     def _create_container(self, step, cid):
-        build, image, _, _, build_ctx_path = self._get_build_info(step)
+        build, image, _, _, build_ctx_path = self._get_build_info(step, self.class_name)
 
         if build:
             log.info(f"[{step.id}] singularity build {cid} {build_ctx_path}")
