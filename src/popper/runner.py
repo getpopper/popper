@@ -244,6 +244,7 @@ class StepRunner(object):
         img = None
         build_ctx_path = None
         img_full = None
+        tag = None
 
         if class_name == "SingularityRunner":
             if (
