@@ -99,7 +99,7 @@ class SlurmRunner(HostRunner):
 class DockerRunner(SlurmRunner, HostDockerRunner):
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(init_docker_client=False, **kw)
-
+        self.class_name = self.__class__.__name__
     def __exit__(self, exc_type, exc, traceback):
         pass
 
@@ -108,7 +108,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
-        build, _, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
 
         cmd.append(f"docker rm -f {cid} || true")
 
@@ -161,6 +161,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 class PodmanRunner(SlurmRunner, HostPodmanRunner):
     def __init__(self, **kw):
         super(PodmanRunner, self).__init__(init_Podman_client=False, **kw)
+        self.class_name = self.__class__.__name__
 
     def __exit__(self, exc_type, exc, traceback):
         pass
@@ -170,7 +171,7 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
-        build, _, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
 
         cmd.append(f"podman rm -f {cid} || true")
 
