@@ -100,6 +100,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(init_docker_client=False, **kw)
         self.class_name = self.__class__.__name__
+
     def __exit__(self, exc_type, exc, traceback):
         pass
 
