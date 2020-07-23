@@ -299,7 +299,7 @@ class KubernetesRunner(StepRunner):
 
             log.debug(f"pod {self._pod_name} not started yet")
 
-            if counter == self._config.resman_opts.timeoutRetryLimit:
+            if counter == self._config.resman_opts.get("step_pod_retry_limit", 60):
                 raise Exception("Timed out waiting for Pod to start")
 
             time.sleep(1)
