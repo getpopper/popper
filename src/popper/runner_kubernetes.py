@@ -19,7 +19,6 @@ class KubernetesRunner(StepRunner):
     def __init__(self, **kw):
         super(KubernetesRunner, self).__init__(**kw)
 
-        # load the k8s config from host
         config.load_kube_config()
 
         c = Configuration()
@@ -28,6 +27,8 @@ class KubernetesRunner(StepRunner):
         self._kclient = core_v1_api.CoreV1Api()
 
         _, active_context = config.list_kube_config_contexts()
+
+        self._namespace = self._config.resman_opts.get("namespace", "default")        
 
         self._base_pod_name = pu.sanitized_name(f"pod", self._config.wid)
         self._base_pod_name = self._base_pod_name.replace("_", "-")
@@ -50,7 +51,7 @@ class KubernetesRunner(StepRunner):
         self._pod_name = self._base_pod_name + f"-{step.id}"
         image = self._build_and_push_image(step)
 
-        m = f"[{step.id}] kubernetes run default.{self._pod_name}"
+        m = f"[{step.id}] kubernetes run {self._namespace}.{self._pod_name}"
         log.info(m)
 
         if self._config.dry_run:
@@ -76,7 +77,7 @@ class KubernetesRunner(StepRunner):
             # self._pod_delete()
             # self._vol_claim_delete()
 
-        log.debug(f"Returning with {ecode}")
+        log.debug(f"returning with {ecode}")
         return ecode
 
     def _build_and_push_image(self, step):
@@ -86,8 +87,12 @@ class KubernetesRunner(StepRunner):
         self._pod_delete()
 
     def _init_pod_create(self):
-        _ws_vol_mount = f"{self._init_pod_name}-ws"
-        _init_pod_conf = {
+        """Create a init Pod mounted on a volume with alpine image so that 
+        the `tar` utility is available by default and the workflow context 
+        can be copied from the local machine into the volume.
+        """
+        ws_vol_mount = f"{self._init_pod_name}-ws"
+        init_pod_conf = {
             "apiVersion": "v1",
             "kind": "Pod",
             "metadata": {"name": self._init_pod_name},
@@ -100,39 +105,39 @@ class KubernetesRunner(StepRunner):
                         "workingDir": "/workspace",
                         "command": ["sleep", "infinity"],
                         "volumeMounts": [
-                            {"name": _ws_vol_mount, "mountPath": "/workspace",}
+                            {"name": ws_vol_mount, "mountPath": "/workspace",}
                         ],
                     }
                 ],
                 "volumes": [
                     {
-                        "name": _ws_vol_mount,
+                        "name": ws_vol_mount,
                         "persistentVolumeClaim": {"claimName": self._vol_claim_name,},
                     }
                 ],
             },
         }
 
-        if self._config.resman_opts.nodeSelectorHostName:
-            _init_pod_conf["spec"]["nodeSelector"] = {
-                "kubernetes.io/hostname": self._config.resman_opts.nodeSelectorHostName
+        if self._config.resman_opts.node_selector_host_name:
+            init_pod_conf["spec"]["nodeSelector"] = {
+                "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
             }
 
-        self._kclient.create_namespaced_pod(body=_init_pod_conf, namespace="default")
+        self._kclient.create_namespaced_pod(body=init_pod_conf, namespace=self._namespace)
 
+        # loop and wait for the init pod to come up
         counter = 1
         while True:
             resp = self._kclient.read_namespaced_pod(
-                self._init_pod_name, namespace="default"
+                self._init_pod_name, namespace=self._namespace
             )
-            log.debug(resp.status)
             if resp.status.phase != "Pending":
                 break
 
-            log.debug(f"Pod {self._init_pod_name} not started yet")
+            log.debug(f"init pod {self._init_pod_name} not started yet")
 
             if counter == 10:
-                raise Exception("Timed out waiting for Pod to start")
+                raise Exception("Timed out waiting for init pod to start")
 
             time.sleep(1)
             counter += 1
@@ -146,9 +151,11 @@ class KubernetesRunner(StepRunner):
         e = subprocess.call(
             [
                 "kubectl",
+                "-n",
+                self._namespace,
                 "cp",
                 "ctx.tar.gz",
-                f"default/{self._init_pod_name}:/workspace",
+                f"{self._namespace}/{self._init_pod_name}:/workspace",
             ],
             stdout=subprocess.PIPE,
         )
@@ -159,6 +166,8 @@ class KubernetesRunner(StepRunner):
             [
                 "kubectl",
                 "exec",
+                "-n",
+                self._namespace,
                 f"{self._init_pod_name}",
                 "--",
                 "tar",
@@ -171,13 +180,19 @@ class KubernetesRunner(StepRunner):
             log.fail("Unpacking context inside pod failed")
 
     def _init_pod_delete(self):
-        log.debug(f"deleting pod {self._pod_name}")
+        """Teardown the init Pod after the context has been copied
+        into the volume.
+        """
+        log.debug(f"deleting init pod {self._pod_name}")
         self._kclient.delete_namespaced_pod(
-            self._init_pod_name, namespace="default", body=V1DeleteOptions()
+            self._init_pod_name, namespace=self._namespace, body=V1DeleteOptions()
         )
 
     def _vol_claim_create(self):
-        _vol_claim_conf = {
+        """Create a PersistentVolumeClaim to claim usable storage space 
+        from a previously created PersistentVolume.
+        """
+        vol_claim_conf = {
             "apiVersion": "v1",
             "kind": "PersistentVolumeClaim",
             "metadata": {"name": self._vol_claim_name},
@@ -188,31 +203,28 @@ class KubernetesRunner(StepRunner):
             },
         }
 
-        log.debug(_vol_claim_conf)
-
-        if self._config.resman_opts.persistentVolumeName:
-            _vol_claim_conf["spec"][
+        if self._config.resman_opts.persistent_volume_name:
+            vol_claim_conf["spec"][
                 "volumeName"
-            ] = self._config.resman_opts.persistentVolumeName
+            ] = self._config.resman_opts.persistent_volume_name
 
         if self._vol_claim_created:
             return
 
         self._kclient.create_namespaced_persistent_volume_claim(
-            namespace="default", body=_vol_claim_conf
+            namespace=self._namespace, body=vol_claim_conf
         )
 
+        # wait for the volume claim to go into `Bound` state.
         counter = 1
         while True:
             resp = self._kclient.read_namespaced_persistent_volume_claim(
-                self._vol_claim_name, namespace="default"
+                self._vol_claim_name, namespace=self._namespace
             )
-
-            log.debug(resp.status.phase)
             if resp.status.phase != "Pending":
                 break
 
-            log.debug(f"Volume claim {self._vol_claim_name} not created yet")
+            log.debug(f"volume claim {self._vol_claim_name} not created yet")
 
             if counter == 60:
                 raise Exception("Timed out waiting for PersistentVolumeClaim creation")
@@ -222,73 +234,19 @@ class KubernetesRunner(StepRunner):
 
         self._vol_claim_created = True
 
-    # wait for sometime and create pod from step
+    def _vol_claim_delete(self):
+        """Delete the PersistentVolumeClaim.
+        """
+        log.debug(f"deleting volume claim {self._vol_claim_name}")
+        self._kclient.delete_namespaced_persistent_volume_claim(
+            self._vol_claim_name, namespace=self._namespace, body=V1DeleteOptions()
+        )
+
     def _pod_create(self, step, image):
-        _pod_conf = self._pod_conf(step, image)
-
-        if self._config.resman_opts.nodeSelectorHostName:
-            _pod_conf["spec"]["nodeSelector"] = {
-                "kubernetes.io/hostname": self._config.resman_opts.nodeSelectorHostName
-            }
-
-        runs = list(step.runs) if step.runs else None
-        args = list(step.args) if step.args else None
-
-        log.debug(runs)
-        log.debug(args)
-        log.debug(_pod_conf)
-
-        if runs:
-            _pod_conf["spec"]["containers"][0]["command"] = runs
-
-        if args:
-            _pod_conf["spec"]["containers"][0]["args"] = args
-
-        self._kclient.create_namespaced_pod(body=_pod_conf, namespace="default")
-
-        counter = 1
-        while True:
-            resp = self._kclient.read_namespaced_pod(
-                self._pod_name, namespace="default"
-            )
-            log.debug(resp.status)
-            if resp.status.phase != "Pending":
-                break
-
-            log.debug(f"Pod {self._pod_name} not started yet")
-
-            if counter == self._config.resman_opts.timeoutRetryLimit:
-                raise Exception("Timed out waiting for Pod to start")
-
-            time.sleep(1)
-            counter += 1
-
-    def _pod_read_log(self):
-        log.debug(f"Reading logs")
-        resp = self._kclient.read_namespaced_pod_log(
-            name=self._pod_name,
-            namespace="default",
-            follow=True,
-            tail_lines=10,
-            _preload_content=False,
-        )
-        for line in resp:
-            log.step_info(line.decode().rstrip())
-
-    def _pod_exit_code(self):
-        time.sleep(2)
-        resp = self._kclient.read_namespaced_pod(
-            name=self._pod_name, namespace="default"
-        )
-        log.debug(f"Got status {resp.status.phase}")
-        if resp.status.phase != "Succeeded":
-            return 1
-        return 0
-
-    # supply pod conf
-    def _pod_conf(self, step, image):
-        _ws_vol_mount = f"{self._pod_name}-ws"
-        _pod_conf = {
+        """Start a Pod for each step.
+        """
+        ws_vol_mount = f"{self._pod_name}-ws"
+        pod_conf = {
             "apiVersion": "v1",
             "kind": "Pod",
             "metadata": {"name": self._pod_name},
@@ -300,31 +258,83 @@ class KubernetesRunner(StepRunner):
                         "name": f"{step.id}",
                         "workingDir": "/workspace",
                         "volumeMounts": [
-                            {"name": _ws_vol_mount, "mountPath": "/workspace",}
+                            {"name": ws_vol_mount, "mountPath": "/workspace",}
                         ],
                     }
                 ],
                 "volumes": [
                     {
-                        "name": _ws_vol_mount,
+                        "name": ws_vol_mount,
                         "persistentVolumeClaim": {"claimName": self._vol_claim_name,},
                     }
                 ],
             },
         }
-        log.debug(f"Pod spec: {_pod_conf}")
-        return _pod_conf
 
-    def _vol_claim_delete(self):
-        log.debug(f"deleting volume {self._vol_claim_name}")
-        self._kclient.delete_namespaced_persistent_volume_claim(
-            self._vol_claim_name, namespace="default", body=V1DeleteOptions()
+        if self._config.resman_opts.node_selector_host_name:
+            pod_conf["spec"]["nodeSelector"] = {
+                "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
+            }
+
+        runs = list(step.runs) if step.runs else None
+        args = list(step.args) if step.args else None
+
+        if runs:
+            pod_conf["spec"]["containers"][0]["command"] = runs
+
+        if args:
+            pod_conf["spec"]["containers"][0]["args"] = args
+
+        self._kclient.create_namespaced_pod(body=pod_conf, namespace=self._namespace)
+
+        counter = 1
+        while True:
+            resp = self._kclient.read_namespaced_pod(
+                self._pod_name, namespace=self._namespace
+            )
+            if resp.status.phase != "Pending":
+                break
+
+            log.debug(f"pod {self._pod_name} not started yet")
+
+            if counter == self._config.resman_opts.timeoutRetryLimit:
+                raise Exception("Timed out waiting for Pod to start")
+
+            time.sleep(1)
+            counter += 1
+
+    def _pod_read_log(self):
+        """Read logs from the Pod after it moves into `Completed` state.
+        """
+        log.debug(f"reading logs from {self._pod_name}")
+        resp = self._kclient.read_namespaced_pod_log(
+            name=self._pod_name,
+            namespace=self._namespace,
+            follow=True,
+            tail_lines=10,
+            _preload_content=False,
         )
+        for line in resp:
+            log.step_info(line.decode().rstrip())
+
+    def _pod_exit_code(self):
+        """Read the exit code from the Pod to decide the exit code of the step.
+        """
+        time.sleep(2)
+        resp = self._kclient.read_namespaced_pod(
+            name=self._pod_name, namespace=self._namespace
+        )
+        log.debug(f"got status {resp.status.phase}")
+        if resp.status.phase != "Succeeded":
+            return 1
+        return 0
 
     def _pod_delete(self):
+        """Delete the Pod after it has moved into `Completed` state.
+        """
         log.debug(f"deleting pod {self._pod_name}")
         self._kclient.delete_namespaced_pod(
-            self._pod_name, namespace="default", body=V1DeleteOptions()
+            self._pod_name, namespace=self._namespace, body=V1DeleteOptions()
         )
 
 
@@ -346,14 +356,12 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         img = img.replace("/", "_")
         img = f"{self._config.resman_opts.registry}/{self._config.resman_opts.registry_user}/{img}"
 
-        log.debug("Building image...")
         self._d.images.build(
             path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
         )
-        log.debug("Image built")
 
         for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
 
-        log.debug(f"{img}:{tag}")
+        log.debug(f"image built {img}:{tag}")
         return f"{img}:{tag}"
