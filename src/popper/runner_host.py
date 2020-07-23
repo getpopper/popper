@@ -228,8 +228,8 @@ class DockerRunner(StepRunner):
             "tty": self._config.pty,
             "stdin_open": self._config.pty,
         }
-
-        self._update_with_engine_config(args)
+        class_name = self.__class__.__name__
+        self._update_with_engine_config(args, class_name)
         args.update(step.options)
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
@@ -254,6 +254,7 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
+        class_name = self.__class__.__name__
 
         if not init_podman_client:
             return
@@ -333,7 +334,8 @@ class PodmanRunner(StepRunner):
             "stdin_open": self._config.pty,
         }
 
-        self._update_with_engine_config(args)
+        class_name = self.__class__.__name__
+        self._update_with_engine_config(args, class_name)
 
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
@@ -423,6 +425,7 @@ class SingularityRunner(StepRunner):
 
         self._spawned_containers = set()
         self._s = None
+        class_name = self.__class__.__name__
 
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
@@ -495,7 +498,8 @@ class SingularityRunner(StepRunner):
             "bind": [f"{self._config.workspace_dir}:/workspace"],
         }
 
-        self._update_with_engine_config(container_args)
+        class_name = self.__class__.__name__
+        self._update_with_engine_config(args, class_name)
 
         options = []
         for k, v in container_args.items():

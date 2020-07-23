@@ -271,7 +271,7 @@ class StepRunner(object):
 
         return (build, img_full, img, tag, build_ctx_path)
 
-    def _update_with_engine_config(self, container_args):
+    def _update_with_engine_config(self, container_args, class_name):
 
         """Given container arguments, it extends it so it includes options
         obtained from the popper.config.Config.engine_opts property.
@@ -280,21 +280,22 @@ class StepRunner(object):
         if not update_with:
             return
 
-        if container_args.get("volumes"):
-            container_args["volumes"] = [
-                *container_args["volumes"],
-                *update_with.get("volumes", list()),
-            ]
+        if class_name != "SingularityRunner":
+            if container_args.get("volumes"):
+                container_args["volumes"] = [
+                    *container_args["volumes"],
+                    *update_with.get("volumes", list()),
+                ]
+        else:
+            if container_args.get("bind"):
+                container_args["bind"] = [
+                    *container_args["bind"],
+                    *update_with.get("bind", list()),
+                ]
 
-        if container_args.get("bind"):
-            container_args["bind"] = [
-                *container_args["bind"],
-                *update_with.get("bind", list()),
-            ]
-
-        if update_with.get("environment"):
-            for k, v in update_with.get("environment", dict()).items():
-                if k != None and v != None:
+        if class_name != "SingularityRunner":
+            if update_with.get("environment"):
+                for k, v in update_with.get("environment", dict()).items():
                     container_args["environment"].update({k: v})
 
         for k, v in update_with.items():
