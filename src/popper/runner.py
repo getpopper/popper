@@ -271,7 +271,7 @@ class StepRunner(object):
 
         return (build, img_full, img, tag, build_ctx_path)
 
-    def _update_with_engine_config(self, container_args):
+    def _update_with_engine_config(self, container_args, runtime):
 
         """Given container arguments, it extends it so it includes options
         obtained from the popper.config.Config.engine_opts property.
@@ -295,6 +295,7 @@ class StepRunner(object):
         if update_with.get("environment"):
             for k, v in update_with.get("environment", dict()).items():
                 container_args["environment"].update({k: v})
+                print(container_args["environment"].update({k: v}))
 
         for k, v in update_with.items():
             if k not in container_args.keys():
