@@ -28,7 +28,7 @@ class KubernetesRunner(StepRunner):
 
         _, active_context = config.list_kube_config_contexts()
 
-        self._namespace = self._config.resman_opts.get("namespace", "default")        
+        self._namespace = self._config.resman_opts.get("namespace", "default")
 
         self._base_pod_name = pu.sanitized_name(f"pod", self._config.wid)
         self._base_pod_name = self._base_pod_name.replace("_", "-")
@@ -123,7 +123,9 @@ class KubernetesRunner(StepRunner):
                 "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
             }
 
-        self._kclient.create_namespaced_pod(body=init_pod_conf, namespace=self._namespace)
+        self._kclient.create_namespaced_pod(
+            body=init_pod_conf, namespace=self._namespace
+        )
 
         # loop and wait for the init pod to come up
         counter = 1
