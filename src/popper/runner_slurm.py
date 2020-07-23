@@ -108,7 +108,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
-        build, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         cmd.append(f"docker rm -f {cid} || true")
 
@@ -170,7 +170,7 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
-        build, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         cmd.append(f"podman rm -f {cid} || true")
 
@@ -234,7 +234,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
         self._container = os.path.join(self._singularity_cache, cid)
 
-        build, img, build_ctx_path = self._get_build_info(step)
+        build, img, _, _, build_ctx_path = self._get_build_info(step)
 
         HostRunner._exec_cmd(["rm", "-rf", self._container])
 
