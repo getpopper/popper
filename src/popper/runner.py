@@ -294,8 +294,8 @@ class StepRunner(object):
 
         if update_with.get("environment"):
             for k, v in update_with.get("environment", dict()).items():
-                container_args["environment"].update({k: v})
-                print(container_args["environment"].update({k: v}))
+                if k != None and v != None:
+                    container_args["environment"].update({k: v})
 
         for k, v in update_with.items():
             if k not in container_args.keys():
