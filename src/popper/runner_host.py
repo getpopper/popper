@@ -254,7 +254,6 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
-        class_name = self.__class__.__name__
 
         if not init_podman_client:
             return
@@ -499,7 +498,7 @@ class SingularityRunner(StepRunner):
         }
 
         class_name = self.__class__.__name__
-        self._update_with_engine_config(args, class_name)
+        self._update_with_engine_config(container_args, class_name)
 
         options = []
         for k, v in container_args.items():
