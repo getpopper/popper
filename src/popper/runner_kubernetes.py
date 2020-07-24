@@ -358,12 +358,18 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         if not self._config.resman_opts.registry_user:
             raise Exception("Expecting 'registry_user' option in configuration.")
 
+        if not self._config.resman_opts.registry_password:
+            raise Exception("Expecting 'registry_password' option in configuration.")
+
         img = img.replace("/", "_")
         img = f"{self._config.resman_opts.registry}/{self._config.resman_opts.registry_user}/{img}"
 
         self._d.images.build(
             path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
         )
+
+        self._d.login(self._config.resman_opts.registry_user, self._config.resman_opts.registry_password)
+        log.debug("login successful")
 
         for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
