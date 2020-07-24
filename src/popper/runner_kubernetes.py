@@ -369,7 +369,10 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
             path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
         )
 
-        self._d.login(self._config.resman_opts.registry_user, self._config.resman_opts.registry_password)
+        self._d.login(
+            self._config.resman_opts.registry_user,
+            self._config.resman_opts.registry_password,
+        )
         log.debug("login successful")
 
         for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
