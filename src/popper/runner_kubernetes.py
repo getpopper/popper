@@ -358,6 +358,7 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         if not self._config.resman_opts.registry_user:
             raise Exception("Expecting 'registry_user' option in configuration.")
 
+        # TODO: this needs to be changed. password should not be in config
         if not self._config.resman_opts.registry_password:
             raise Exception("Expecting 'registry_password' option in configuration.")
 
