@@ -414,6 +414,45 @@ either through the `--resource-manager/-r` option or through the config file.
 If neither of them are provided, the steps are run in the host machine 
 by default. 
 
+### Kubernetes
+
+Popper enable leveraging the insane compute and storage capabilities of the cloud by allowing running workflows on 
+Kubernetes clusters. One need to have access to the config file and ensure that any PersistentVolume is available
+inside the cluster. Popper will take care of the rest.
+
+#### Architecture and Design
+
+TODO
+
+#### Example
+
+For running workflows on Kubernetes, several configuration options need to be passed to the resource manager through the config file.
+
+##### Config file contents for running on a cluster without shared storage
+```yaml
+resource_manager: 
+  name: kubernetes
+  options:
+    node_selector_host_name: <hostname>
+    persistent_volume_name: <volume-name>
+    registry: <docker.io/quay.io/gcr.io/...>
+    registry_user: <username>
+    registry_password: <password>
+    namespace: <namespace>
+    volume_size: <1Gi/500Mi/...>
+    step_pod_retry_limit: 10
+```
+
+###### Config file contents for running on a cluster with shared storage
+
+TODO
+
+
+```
+$ popper scaffold
+$ popper run -f wf.yml -c config.yml
+```
+
 ### SLURM
 
 Popper workflows can run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments) 
