@@ -18,15 +18,15 @@ printenv > /tmp/.envfile
 docker run --rm -ti \
   --volume /tmp:/tmp \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume $PWD:$PWD \
-  --workdir $PWD \
+  --volume "$PWD":"$PWD" \
+  --workdir "$PWD" \
   --env-file /tmp/.envfile \
   getpopper/popper:v2.7.0 $@
 EOF
 
 chmod +x "./popper"
 
-echo -e "\nInstalled version $POPPER_VERSION to executable file $PWD/popper\n"
+echo -e "\nInstalled version $POPPER_VERSION to executable file '$PWD/popper'\n"
 
 while true; do
   read -p "Do you wish to move this binary to /usr/local/bin/? [Y/n] " yn < /dev/tty
