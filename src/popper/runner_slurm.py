@@ -238,7 +238,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
         self._container = os.path.join(self._singularity_cache, cid)
 
-        build, img, _, _, build_ctx_path = self._get_build_info(step)
+        build, img, _, _, build_ctx_path = self._get_build_info(step, self.class_name)
 
         HostRunner._exec_cmd(["rm", "-rf", self._container])
 
