@@ -1,16 +1,12 @@
 #!/bin/bash
 set -ex
 
-if [[ -n $WITH_K8S ]]; then
-  git clone \
-    --depth 1 \
-    --branch "v0.7.0-2" \
-    --single-branch \
-    https://github.com/k8s-school/kind-travis-ci.git
+if [[ -n "$WITH_K8S" ]]; then
+  # download kind
+  curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.8.1/kind-$(uname)-amd64"
+  chmod +x ./kind
+  mv ./kind /some-dir-in-your-PATH/kind
 
-  ./kind-travis-ci/kind/k8s-create.sh
-
-  mkdir -p $HOME/.kube
-
-  cp $(kind get kubeconfig-path --name="kind") $HOME/.kube/config  
+  # create cluster
+  kind create cluster
 fi
