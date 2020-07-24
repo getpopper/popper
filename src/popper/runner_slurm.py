@@ -225,6 +225,8 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
 class SingularityRunner(SlurmRunner, HostSingularityRunner):
     def __init__(self, **kw):
         super(SingularityRunner, self).__init__(init_spython_client=False, **kw)
+        self.class_name = self.__class__.__name__
+
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
 
