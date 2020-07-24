@@ -149,80 +149,80 @@ run.
 [create]: https://docs.docker.com/get-started/part2/
 
 
-
 ## Computational research with Python
 
-Computational research often relies on complex software dependencies (mixes of scripts a
-and compiled code) which can prove difficult to port across environments. Furthermore,
-the resulting worfklow will usually invoke multiple dependent steps which will be 
-painful to replicate if not properly documented.
-
-Popper eases these challenges by abstracting over software environments and forcing users
- to document their workflows explicetely.
-
 This guide explains how to use Popper to develop and run reproducible workflows
-for computational research and data analysis in fields such as bioinformatics, 
-machine learning, physics or statistics. 
+for computational research in fields such as bioinformatics, machine learning, physics 
+or statistics. 
+Computational research relies on complex software dependencies that are difficult to port 
+across environments. In addition, a typical workflow involves multiple dependent 
+steps which will be hard to replicate if not properly documented.
+Popper offers a solution to these challenges:
+- Poppers abstracts over software environments with [Linux containers](https://popper.readthedocs.io/en/latest/sections/concepts.html#glossary).
+- Poppers forces you to define your workflow explicetely such that it can be re-run in 
+in a single command.
 
-
+Popper thus provides an open-source alternative to managed solutions such as
+Code Ocean for reproducible computational research.
 
 ### Pre-requisites
 
-Basic knowledge of git, command line and Python. It is also 
-recommended to read through the rest of the
-[documentation](https://popper.readthedocs.io/en/latest/sections/getting_started.html).
+You should have basic knowledge of:
+- git
+- command line 
+- Python
 
-To adapt the recommendations of this guide to your own workflow, start by forking this [template repository]() or use the [Cookiecutter template](). (TODO: fix links)
+In addition, you should be familiar with the concepts introduced in the 
+[Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
+section.
+This guide uses examples from machine learning but no prior knowledge of the field
+is required.
 
-### Case study
 
-Thoughout this guide, Driven Data's  
+### Getting started
+
+The examples presented in this guide come from a workflow developed for the 
 [Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
-research competition is used an example for developing  a workflow. 
+research competition on Driven Data.
+This workflow shows examples of using Popper to automate common tasks in computational
+research:
+- downloading data
+- using a Jupyter notebook
+- fitting/simulating a model
+- visualizing the results
+- generating a paper with up-to-date results
 
-This case study gives an example of using Popper to
-- download data
-- fit/simulate a model
-- visualize the results
-- generate a paper with up-to-date results
+To help follow allong, see this 
+[repository](https://github.com/getpopper/popper-examples/tree/master/workflows/comp-research/python) with the final version of the workflow.
+To adapt the advice in this guide to your own project, get started
+with this [Cookiecutter template for Popper](https://github.com/getpopper/cookiecutter-popper-python).
 
-To help follow allong, see the final [repository]() for this workflow.
-This examples comes from machine learning, but no knowledge of
-the field is necessary to understand the guide.
-
-research competition on Driven Data is used as an example project for developing the workflow. 
-To help follow allong, see the final [repository]() for this workflow.
-This example is from machine learning but  knowledge of the field is not essential to this guide.
 
 Initial project structure:
 ```
 ├── LICENSE                                 
 ├── README.md                <- The top-level README.
-├── data
-│   ├── processed            <- The final, canonical data sets for modeling.
-│   └── raw                  <- The original, immutable data dump.
+├── data                     <- The original, immutable data dump.
 ├── results             
 |   ├── models               <- Serialized models, predictions, model summaries.
 |   └── figures              <- Graphics created during analysis.
 ├── paper                    <- Generated analysis as PDF, LaTeX.
 │   ├── paper.tex
-└── src                      <- Source code for this project.
+|   └── referenced.bib
+└── src                      <- Python source code for this project.
     ├── notebooks            <- Jupyter notebooks.
     ├── get_data.sh          <- Script for downloading the original data dump.
     ├── models.py            <- Script defining models.
     ├── predict.py           <- Script for generating model predictions.
-    ├── evaluate_model.py    <- Script for generating model evaluation plots.
-    └── __init__.py          <- Makes this a python module.
+    └── evaluate_model.py    <- Script for generating model evaluation plots.
 ```    
 
 
+### Getting data
 
-
-### Downloading data
-
-The workflow should automate the acquisition of data to ensure
-that the correct version of the data is used.
-In this example, this can be done with a simple shell script
+Your workflow should automate downloading or generating data to ensure that the correct,
+up-to-date version of the data is used. In this example, you can download data with a 
+simple shell script:
 
 ```sh
 #!/bin/sh
@@ -234,107 +234,167 @@ wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_featu
 
 echo "Files downloaded: $(ls)"
 ```
-Now, wrap this step using a Popper workflow. In a new file `wf.yml`,
+Now, wrap this step using a Popper workflow. In a new file `wf.yml` at the root 
+of the folder,
+
 ```yaml
 steps:
-  - id: "dataset"
-    uses: "docker://jacobcarlborg/docker-alpine-wget"
-    runs: ["sh"]
-    args: ["src/get_data.sh"]
+
+- id: "dataset"
+  uses: "docker://jacobcarlborg/docker-alpine-wget"
+  runs: "sh"
+  args: ["src/get_data.sh"]
 ```
-Remarks:
-- make sure that the Docker image contains the necessary utilities. 
+Notes:
+- pick a Docker image that contains the necessary utilities. 
 For instance, a default Alpine image does not include `wget`.
 
 
-### Interactive development
+### Launching a Juyter Notebook
 
-Computational research usually has an exploratory phase, often taking form of
-computational notebooks such as Jupyter.
-To make it easier to adapt exploratory work to a final workflow, it is recommended 
-to do both in the same environment.
+This sections explains how to use Popper to launch a Jupyter notebooks, which are a  useful tool for exploratory work.
+To make it easier to refactor successful expirements into your final workflow, it 
+is important to use the same software environment for both. To do this, you can define a 
+ container to share between steps.
 
-To run the JupyterLab environemnent, first add a new step to the workflow in `wf.yml`
-```yml
-  - id: "notebook"
-    uses: "./"
-    args: ["sh"] 
-    options: 
-      ports: 
-        8888/tcp: 8888
+Some workflows use multiple containers (and `Dockerfiles`), so it is
+good practice to organize these from the start in a seperate folder.
+In `containers/`, create this `Dockerfile`:
+
+```Dockerfile
+FROM continuumio/miniconda3:4.8.2
+
+ENV PYTHONDONTWRITEBYTECODE=true 
+
+# update conda environment with packages and clean up conda installation by removing 
+# conda cache/package tarbarlls and python bytecode
+COPY environment.yml .
+RUN conda env update -f exploration_env.yml \
+    && conda clean -afy \
+    && find /opt/conda/ -follow -type f -name '*.pyc' -delete 
+CMD [ "/bin/sh" ] 
+```
+Use a seperate `environment.yml` file to define your Python environment. This
+avoids modifying the `Dockerfile` manually each time you need a new Python package.
+Create `containers/environment.yml`:
+
+```yaml
+name: base
+channels:
+  - conda-forge
+  - base
+dependencies:
+  - jupyterlab=1.0
+```
+
+To run the Jupyter Lab environment, first add a new step to the workflow in `wf.yml`
+```yaml
+- id: "notebook"
+  uses: "./containers/"
+  runs: "sh"
+  args: ["jupyter", "--version"] 
+  options: 
+    ports: 
+      8888/tcp: 8888
 ```
 Remarks:
-- `uses` is set to `./` (current directory), as this step uses an image built from the 
-  `Dockerfile` in the local workspace directory
-- `ports` is set to `{8888/tcp: 8888}` which will allow the host machine to connect to the notebook server in the container
+- `uses` is set to `./containers/` which tells Popper where to find the `Dockerfile` 
+defining the container used for this step
+- `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect to the Jupyter Lab server in the container
 
-Next, in the local shell, execute the step in interactive mode
+Next, in you local command line, execute this step in interactive mode
 ```sh
 popper sh -f wf.yml jupyter
 ```
-In the docker container's shell, run
+Now, in the docker container's shell, run
 ```sh
 jupyter lab --ip 0.0.0.0 --no-browser --allow-root 
 ```
 Skip this second step if you only need the shell interface.
 
-Remarks:
+Notes:
 - `--ip 0.0.0.0` allows the user to access JupyterLab from outside the container (by default, 
-Jupyter only allows access from `localhost`)
-- `--no-browser` tells jupyter to not expect to find a browser in the docker container
-- `--allow-root` allows us to run JupyterLab as a root user (the default user in our Docker
-image), which Jupyter does not enable by default
+Jupyter only allows access from `localhost`).
+- `--no-browser` tells jupyter to not expect to find a browser in the docker container.
+- `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker containers), which is not enabled by default.
 
-Paste the generated link in a browser to access the JupyterLab 
-environment.
-
+Paste the generated link in a browser to access Jupyter Lab.
 
 ### Package management
 
 It can be difficult to guess in advance which software libraries will be needed. 
-Instead, we recommend updating the workflow requirements as you go using one of 
-the package managers available for Python.
+Instead, update the workflow requirements as you go using one of the 
+ package managers available for Python.
 
 #### conda
  
-Conda is recommended for managing packages, due to its superior dependency 
-management and support for data analysis work. 
-While executing the `notebook` step interactively, extra packages can be installed as
-needed using 
+Conda is recommend for package management because it has better dependency
+management and support for compiled libraries. 
+While executing the `notebook` step interactively, install package as needed using:
+
 ```bash
 conda install PACKAGE [PACKAGE ...]
 ```
-Then save the resulting requirements using 
+
+Update the environmnent requirements with:
+
 ``` bash
-conda env export > environment.yml
+conda env export > containers/environment.yml
 ```
-The next time Popper executes this step, it will rebuild the Docker image with
-these new requirements (This is done by copying `environment.yml` in our `Dockerfile`)
+
+On the next use of the Docker image, Popper will rebuild it with the updated 
+requirements.
 
 #### pip
 
-The workflow described for `conda` can easily be adapted to `pip`. 
+You can adapt the process decribed for `conda` to `pip`:
 
 ```bash
 pip install PACKAGE [PACKAGE ...]
-pip freeze > requirements.txt
+pip freeze > containers/requirements.txt
 ```
-Modify the run command `RUN` in the provided `Dockerfile` to
+Modify the run command `RUN` in the `Dockerfile` to:
 ```dockerfile
 RUN pip install -r requirements.txt
 ```
 
+#### Seperating docker images
+
+Some workflows have conflicting software requirements between steps, for
+instance if two steps require different versions of a library. In this case, 
+organize your container definitions as follows:
+
+```
+└── containers
+    ├── step_A 
+    |   ├── Dockerfile
+    |   └── environment.yml
+    └── step_B
+        ├── Dockerfile
+        └── environment.yml
+```
+
+Then, in  `wf.yml`:
+
+```yaml
+- id: "step_A"
+  uses: "./containers/step_A/"
+# ...
+
+- id: "step_b"
+  uses: "./containers/step_B/
+```
+
+
 ### Models and visualization
 
-Following the above advice, it is easy to wrap modeliing code in a Popper workflow,
-assuming it was developed from the start in a container environment.
+Following the above, automate  the other steps in your workflow using Popper. 
+This section shows examples for code that:
+- fits a model to data 
+- generates model evaluation plots
+- uses the model to make predictions on a hold-out dataset.
 
-This section shows example steps for code that fits a model and generates:
-- model evalution plots
-- predictions on a hold-out dataset that will be used by the organizers to score 
-competition entries
-
-This first script defines the model this workflow uses
+A first file, `src/models.py` defines the model this workflow uses:
 
 ```python
 from sklearn import impute, preprocessing, compose, pipeline, linear_model, multioutput
@@ -368,7 +428,9 @@ def get_lr_model(num_features, cat_features, C = 1.0):
     return model
 
 ```
-A second script calls this model to generate predictions:
+
+A second script, `src/predict.py`, uses this model to generate the predictions
+on the hold-out dataset:
 
  ```python
 import pandas as pd
@@ -408,26 +470,29 @@ if __name__ == "__main__":
 
 Add this script as a step in the Popper workflow. This must come after the `get_data` 
 step
-```yaml
-  - id: "predict"
-    uses: "./"
-    args: "python src/predict.py"
-```
-The same Docker container as for the `jupyter` step is used, given that is where
-the script was developed! 
 
-Similarly, add the script for generating model plots to the workflow
+```yaml
+- id: "predict"
+  uses: "./containers/"
+  runs: "sh"
+  args: ["python", "src/predict.py"]
+```
+
+Notes:
+- This use the same container as in the `notebook` step. Again, the final, 'canonical' analysis should be developed in the same environment
+as exploratory code.
+
+Similarly, add the `src/evaluate_model.py`, which generates model plots, to
+the workflow.
 
 ```python
-import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib as mpl
-
-import pandas as pd
-import os
 import numpy as np
-
-from sklearn.model_selection import cross_validate
+import os
+import pandas as pd
+import seaborn as sns
+from sklearn.model_selection import cross_val_score
 from models import get_lr_model
 
 DATA_PATH = "data/raw"
@@ -448,28 +513,28 @@ if __name__ == "__main__":
     cat_features = X_train.columns[X_train.dtypes == "object"].values
 
     Cs = np.logspace(-2, 1, num = 10, base = 10)
-    means = []
-    stds = []
-    best_auc = 0
-    for C in Cs:
-        cv = cross_validate(
-            estimator = get_model(C),
-            X = X_train,
-            y = y_train,
-            cv = 5,
-            n_jobs = -1,
-            scoring = "roc_auc",
-        )
-        means.append(np.mean(cv["test_score"]))
-        stds.append(np.std(cv["test_score"]))
-        if means[-1] > best_auc:
-            best_C = C
-            best_auc = means[-1]
+    auc_scores = cross_val_score(
+        estimator = get_model(C),
+        X = X_train,
+        y = y_train,
+        cv = 5,
+        n_jobs = -1,
+        scoring = "roc_auc",
+    )
 
     fig, ax = plt.subplots()
-    ax.plot(Cs, means)
-    ax.vlines(best_C, ymin = 0.82, ymax = 0.86, colors = "r", linestyle = "dotted")
-    ax.annotate("$C = 0.464$ \n ROC AUC = 0.843", xy = (0.5, 0.835))
+    ax.plot(Cs, auc_scores)
+    ax.vlines(
+      Cs[np.argmax[auc_scores]], 
+      ymin = 0.82, 
+      ymax = 0.86, 
+      colors = "r", 
+      linestyle = "dotted"
+    )
+    ax.annotate(
+      "$C = 0.464$ \n ROC AUC ={:.4f}".format(np.max(auc_scores)), 
+      xy = (0.5, 0.835)
+    )
     ax.set_xscale("log")
     ax.set_xlabel("$C$")
     ax.grid(axis = "x")
@@ -478,31 +543,37 @@ if __name__ == "__main__":
     fig.savefig(os.path.join(FIG_PATH, "lr_reg_performance.png"))
 ```
 
-With the following step
+Use a similar step to the previous one:
 
 ```yaml
-  - id: "figures"
-    uses: "./"
-    args: "python src/evaluate_model.py"
+- id: "figures"
+  uses: "./"
+  runs: "sh"
+  args: ["python, src/evaluate_model.py"]
 ```
+
+Note that these steps each read data from `data/` and output to `results/`.
+It is good practice to keep the input and outputs of a workflow separate
+to avoid accidently modifying the source data, which is considered immutable.
 
 ### Building a paper using LaTeX
 
-It is easy to wrap the generation of the final paper in a Popper workflow.
-This is  useful to ensure that the paper is always built with the most up-to-date data 
- and figures.
+Wrap the build of the paper in your Popper workflow.
+This is  useful to ensure that the pdf is always built with the most up-to-date data 
+and figures.
 
 ```yaml
-  - id: "paper"
-    uses: "docker://blang/latex:ctanbasic"
-    args: ["pdflatex", "paper.tex"]
-    dir: "/workspace/paper"
+- id: "paper"
+  uses: "docker://blang/latex:ctanbasic"
+  runs: "sh"
+  args: ["pdflatex", "paper.tex"]
+  dir: "/workspace/paper"
 ```
 
-Remarks:
+Notes:
 - This step uses a basic LaTeX installation. For more sophisticated needs,
 use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags) 
-- `dir` is set to `workspace/paper` so that Popper looks for, and outputs files in the `paper` folder
+- `dir` is set to `workspace/paper` so that Popper looks for and outputs files in the `paper/` folder
 
 
 ### Conclusion
@@ -510,46 +581,60 @@ use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags)
 This is the final workflow:
 ```yaml
 steps:
-  - id: "dataset"
-    uses: "docker://jacobcarlborg/docker-alpine-wget"
-    runs: ["sh"]
-    args: ["src/get_data.sh"]
+- id: "dataset"
+  uses: "docker://jacobcarlborg/docker-alpine-wget"
+  runs: "sh"
+  args: ["src/get_data.sh"]
  
- - id: "notebook"
-   uses: "./"
-   rgs: ["sh"] 
-   options: 
-     ports: 
-       8888/tcp: 8888
+- id: "notebook"
+  uses: "./"
+  runs: "sh"
+  args: ["jupyter", "--version"] 
+  options: 
+    ports: 
+      8888/tcp: 8888
 
- - id: "predict"
-   uses: "./"
-    args: "python src/predict.py"
+- id: "predict"
+  uses: "./"
+  runs: "sh"
+  args: ["python, src/predict.py"]
     
- - id: "figures"
-   uses: "./"
-   args: "python src/evaluate_model.py"
+- id: "figures"
+  uses: "./"
+  runs: "sh"
+  args: ["python, src/evaluate_model.py"]
     
- - id: "paper"
-   uses: "docker://blang/latex:ctanbasic"
-   args: ["pdflatex", "paper.tex"]
-   dir: "/workspace/paper"
+- id: "paper"
+  uses: "docker://blang/latex:ctanbasic"
+  runs: "sh"
+  args: ["pdflatex", "paper.tex"]
+  dir: "/workspace/paper"
 ```
-Final project structure:
+
+And this is the final project structure:
 ```
-├── Dockerfile               <- Definition of the OS environment.
-├── environment.yml          <- Definition of the Python environment.
-├── LICENSE                                 
+ LICENSE                                 
 ├── README.md                <- The top-level README.
 ├── wf.yml                   <- Definition of the workflow.
-├── data
+├── containers               
+|   ├── Dockerfile           <- Definition of the OS environment.
+|   └── environment.yml      <- Definition of the Python environment.
+├── data                     <- The original, immutable data dump.
 ├── results             
+|   ├── models               <- Serialized models, predictions, model summaries.
+|   └── figures              <- Graphics created during analysis.
 ├── paper                    <- Generated analysis as PDF, LaTeX.
-└── src                      <- Source code for this project.
+│   ├── paper.tex
+|   └── referenced.bib
+└── src                      <- Python source code for this project.
+    ├── notebooks            <- Jupyter notebooks.
+    ├── get_data.sh          <- Script for downloading the original data dump.
+    ├── models.py            <- Script defining models.
+    ├── predict.py           <- Script for generating model predictions.
+    └── evaluate_model.py    <- Script for generating model evaluation plots.
 ```
 
-The full analysis can now be executed on any machine with Popper and Docker 
-installations using
+To run the entire workflow,
 ```sh
 popper run -f wf.yml
 ```
