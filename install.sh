@@ -26,7 +26,9 @@ EOF
 
 chmod +x "./popper"
 
-echo -e "\nInstalled version $POPPER_VERSION to executable file '$PWD/popper'\n"
+echo
+echo "Installed version $POPPER_VERSION to executable file '$PWD/popper'"
+echo
 
 while true; do
   read -p "Do you wish to move this binary to /usr/local/bin/? [Y/n] " yn < /dev/tty
@@ -38,14 +40,19 @@ while true; do
         sudo -p "password: " -- mkdir -p /usr/local/bin/
         sudo mv ./popper /usr/local/bin/
       fi
-      echo -e "\nPopper is now available for all users in this system!"
+      echo
+      echo "Popper is now available for all users in this system!"
       break
       ;;
-    [Nn]* ) echo -e "\nTo make the popper command globally available, add it"
-      echo -e "to a folder reachable by the PATH variable.\n"
+    [Nn]* ) echo
+      echo "To make the popper command globally available, add it"
+      echo "to a folder reachable by the PATH variable."
+      echo
       break
       ;;
-    * ) echo -e "\nPlease answer 'Y' or 'n'.\n"
+    * ) echo
+      echo "Please answer 'Y' or 'n'."
+      echo
       ;;
   esac
 done
