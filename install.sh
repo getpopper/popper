@@ -1,5 +1,29 @@
 #!/usr/bin/env sh
 
+# Move the "popper" executable to /usr/local/bin/.
+install_system_wide() {
+  if command -v sudo >/dev/null 2>&1; then
+    echo "You might be asked for your (sudo) password."
+    if [ -d "/usr/local/bin" ]; then
+      sudo -p "password: " -- mv ./popper /usr/local/bin/
+    else
+      sudo -p "password: " -- mkdir -p /usr/local/bin/
+      sudo mv ./popper /usr/local/bin/
+    fi
+  else
+    echo
+    echo "sudo command not found. Trying to move file without sudo..."
+    if ! mkdir -p /usr/local/bin/ || ! mv ./popper /usr/local/bin/; then
+      echo >&2
+      echo >&2 "Moving popper to /usr/local/bin failed."
+      echo >&2 "Try executing this script as root user."
+      exit 1
+    fi
+  fi
+  echo
+  echo "Popper is now available for all users in this system!"
+}
+
 POPPER_VERSION="v2.7.0"
 
 OS_NAME="$(uname)"
@@ -18,34 +42,41 @@ printenv > /tmp/.envfile
 docker run --rm -ti \
   --volume /tmp:/tmp \
   --volume /var/run/docker.sock:/var/run/docker.sock \
-  --volume $PWD:$PWD \
-  --workdir $PWD \
+  --volume "$PWD":"$PWD" \
+  --workdir "$PWD" \
   --env-file /tmp/.envfile \
   getpopper/popper:v2.7.0 $@
 EOF
 
-chmod +x "./popper"
+if [ "$?" -eq 0 ]; then
+  echo
+  echo "Installed version $POPPER_VERSION to executable file '$PWD/popper'"
+  echo
+else
+  echo >&2
+  echo >&2 "Creating 'popper' file failed."
+  echo >&2 "Please make sure you have write permission in this folder and try again."
+  exit 1
+fi
 
-echo "\nInstalled version $POPPER_VERSION to executable file $PWD/popper\n"
+chmod +x "./popper"
 
 while true; do
   read -p "Do you wish to move this binary to /usr/local/bin/? [Y/n] " yn < /dev/tty
   case $yn in
-    [Yy]* ) echo "You might be asked for your (sudo) password."
-      if [ -d "/usr/local/bin" ]; then
-        sudo -p "password: " -- mv ./popper /usr/local/bin/
-      else
-        sudo -p "password: " -- mkdir -p /usr/local/bin/
-        sudo mv ./popper /usr/local/bin/
-      fi
-      echo "\nPopper is now available for all users in this system!"
+    [Yy]* )
+      install_system_wide
       break
       ;;
-    [Nn]* ) echo "\nTo make the popper command globally available, add it"
-      echo "to a folder reachable by the PATH variable.\n"
+    [Nn]* ) echo
+      echo "To make the popper command globally available, add it"
+      echo "to a folder reachable by the PATH variable."
+      echo
       break
       ;;
-    * ) echo "\nPlease answer 'Y' or 'n'.\n"
+    * ) echo
+      echo "Please answer 'Y' or 'n'."
+      echo
       ;;
   esac
 done
