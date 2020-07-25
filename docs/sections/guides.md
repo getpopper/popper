@@ -302,11 +302,11 @@ Remarks:
 defining the container used for this step
 - `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect to the Jupyter Lab server in the container
 
-Next, in you local command line, execute this step in interactive mode
+Next, in you local command line, execute this step in interactive mode:
 ```sh
 popper sh -f wf.yml jupyter
 ```
-Now, in the docker container's shell, run
+Now, in the docker container's command line, run:
 ```sh
 jupyter lab --ip 0.0.0.0 --no-browser --allow-root 
 ```
@@ -318,19 +318,21 @@ Jupyter only allows access from `localhost`).
 - `--no-browser` tells jupyter to not expect to find a browser in the docker container.
 - `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker containers), which is not enabled by default.
 
-Paste the generated link in a browser to access Jupyter Lab.
+Follow the generated link in a browser to access Jupyter Lab.
 
 ### Package management
 
 It can be difficult to guess in advance which software libraries will be needed. 
-Instead, update the workflow requirements as you go using one of the 
- package managers available for Python.
+Instead, update the workflow requirements as you go using one of the package managers 
+available for Python.
 
 #### conda
  
 Conda is recommend for package management because it has better dependency
 management and support for compiled libraries. 
-While executing the `notebook` step interactively, install package as needed using:
+When executing the `notebook` step interactively, install package as needed using
+(the easiest way to access the container's command line in this situation is 
+Jupyter Lab's terminal interface):
 
 ```bash
 conda install PACKAGE [PACKAGE ...]
@@ -392,7 +394,7 @@ Following the above, automate  the other steps in your workflow using Popper.
 This section shows examples for code that:
 - fits a model to data 
 - generates model evaluation plots
-- uses the model to make predictions on a hold-out dataset.
+- uses the model to make predictions on a hold-out dataset
 
 A first file, `src/models.py` defines the model this workflow uses:
 
@@ -634,7 +636,7 @@ And this is the final project structure:
     └── evaluate_model.py    <- Script for generating model evaluation plots.
 ```
 
-To run the entire workflow,
+To re-run the entire workflow, use:
 ```sh
 popper run -f wf.yml
 ```
