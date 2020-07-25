@@ -198,6 +198,10 @@ class DockerRunner(StepRunner):
             return
 
         container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
+        if container_args["volumes"]:
+            container_args["volumes"].insert(
+                1, "/var/run/docker.sock:/var/run/docker.sock"
+            )
 
         log.debug(f"Container args: {container_args}")
 
@@ -212,28 +216,6 @@ class DockerRunner(StepRunner):
         container = self._d.containers.create(**container_args)
 
         return container
-
-    def _get_container_kwargs(self, step, img, name):
-        args = {
-            "image": img,
-            "command": list(step.args),
-            "name": name,
-            "volumes": [
-                f"{self._config.workspace_dir}:/workspace",
-                "/var/run/docker.sock:/var/run/docker.sock",
-            ],
-            "working_dir": step.dir if step.dir else "/workspace",
-            "environment": self._prepare_environment(step),
-            "entrypoint": step.runs if step.runs else None,
-            "detach": not self._config.pty,
-            "tty": self._config.pty,
-            "stdin_open": self._config.pty,
-        }
-        self._update_with_engine_config(args, self.class_name)
-        args.update(step.options)
-        log.debug(f"container args: {pu.prettystr(args)}\n")
-
-        return args
 
     def _find_container(self, cid):
         """Check whether the container exists."""
@@ -319,26 +301,6 @@ class PodmanRunner(StepRunner):
             return None
 
         return containers.rstrip()
-
-    def _get_container_kwargs(self, step, img, name):
-        args = {
-            "image": img,
-            "command": list(step.args),
-            "name": name,
-            "volumes": [f"{self._config.workspace_dir}:/workspace:Z",],
-            "working_dir": step.dir if step.dir else "/workspace",
-            "environment": self._prepare_environment(step),
-            "entrypoint": step.runs if step.runs else None,
-            "detach": not self._config.pty,
-            "tty": self._config.pty,
-            "stdin_open": self._config.pty,
-        }
-
-        self._update_with_engine_config(args, self.class_name)
-
-        log.debug(f"container args: {pu.prettystr(args)}\n")
-
-        return args
 
     def _create_container(self, cid, step):
         build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)

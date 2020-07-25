@@ -203,3 +203,90 @@ class TestStepRunner(PopperTest):
             self.assertEqual(build, False)
             self.assertEqual(img_full, "docker://alpine:3.9")
             self.assertEqual(build_ctx_path, None)
+
+    def test_get_container_kwargs(self):
+        step = Box(
+            {
+                "uses": "popperized/bin/sh@master",
+                "args": ["ls"],
+                "id": "one",
+                "dir": "/tmp/",
+                "options": {"ports": {"8888/tcp": 8888}},
+            },
+            default_box=True,
+        )
+
+        config_dict = {
+            "engine": {
+                "name": "docker",
+                "options": {
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "volumes": ["/path/in/host:/path/in/container"],
+                    "environment": {"FOO": "bar"},
+                },
+            },
+        }
+
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir"
+        )
+
+        with StepRunner(config=config) as r:
+            args = r._get_container_kwargs(step, "alpine:3.9", "container_a")
+
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace",
+                        "/var/run/docker.sock:/var/run/docker.sock",
+                        "/path/in/host:/path/in/container",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": True,
+                    "stdin_open": False,
+                    "tty": False,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "ports": {"8888/tcp": 8888},
+                },
+            )
+
+        # check container kwargs when pty is enabled
+        config = ConfigLoader.load(
+            config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
+        )
+
+        with StepRunner(config=config) as r:
+            args = r._get_container_kwargs(step, "alpine:3.9", "container_a")
+
+            self.assertEqual(
+                args,
+                {
+                    "image": "alpine:3.9",
+                    "command": ["ls"],
+                    "name": "container_a",
+                    "volumes": [
+                        "/path/to/workdir:/workspace:Z",
+                        "/path/in/host:/path/in/container",
+                    ],
+                    "working_dir": "/tmp/",
+                    "environment": {"FOO": "bar"},
+                    "entrypoint": None,
+                    "detach": False,
+                    "stdin_open": True,
+                    "tty": True,
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "ports": {"8888/tcp": 8888},
+                },
+            )
