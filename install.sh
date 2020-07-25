@@ -48,12 +48,18 @@ docker run --rm -ti \
   getpopper/popper:v2.7.0 $@
 EOF
 
+if [ "$?" -eq 0 ]; then
+  echo
+  echo "Installed version $POPPER_VERSION to executable file '$PWD/popper'"
+  echo
+else
+  echo >&2
+  echo >&2 "Creating 'popper' file failed."
+  echo >&2 "Please make sure you have write permission in this folder and try again."
+  exit 1
+fi
+
 chmod +x "./popper"
-
-echo
-echo "Installed version $POPPER_VERSION to executable file '$PWD/popper'"
-echo
-
 
 while true; do
   read -p "Do you wish to move this binary to /usr/local/bin/? [Y/n] " yn < /dev/tty
