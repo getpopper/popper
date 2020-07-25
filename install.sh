@@ -1,5 +1,29 @@
 #!/usr/bin/env sh
 
+# Move the "popper" executable to /usr/local/bin/.
+install_system_wide() {
+  if command -v sudo >/dev/null 2>&1; then
+    echo "You might be asked for your (sudo) password."
+    if [ -d "/usr/local/bin" ]; then
+      sudo -p "password: " -- mv ./popper /usr/local/bin/
+    else
+      sudo -p "password: " -- mkdir -p /usr/local/bin/
+      sudo mv ./popper /usr/local/bin/
+    fi
+  else
+    echo
+    echo "sudo command not found. Trying to move file without sudo..."
+    if ! mkdir -p /usr/local/bin/ || ! mv ./popper /usr/local/bin/; then
+      echo >&2
+      echo >&2 "Moving popper to /usr/local/bin failed."
+      echo >&2 "Try executing this script as root user."
+      exit 1
+    fi
+  fi
+  echo
+  echo "Popper is now available for all users in this system!"
+}
+
 POPPER_VERSION="v2.7.0"
 
 OS_NAME="$(uname)"
@@ -30,18 +54,12 @@ echo
 echo "Installed version $POPPER_VERSION to executable file '$PWD/popper'"
 echo
 
+
 while true; do
   read -p "Do you wish to move this binary to /usr/local/bin/? [Y/n] " yn < /dev/tty
   case $yn in
-    [Yy]* ) echo "You might be asked for your (sudo) password."
-      if [ -d "/usr/local/bin" ]; then
-        sudo -p "password: " -- mv ./popper /usr/local/bin/
-      else
-        sudo -p "password: " -- mkdir -p /usr/local/bin/
-        sudo mv ./popper /usr/local/bin/
-      fi
-      echo
-      echo "Popper is now available for all users in this system!"
+    [Yy]* )
+      install_system_wide
       break
       ;;
     [Nn]* ) echo
