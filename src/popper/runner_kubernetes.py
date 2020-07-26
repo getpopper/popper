@@ -3,7 +3,6 @@ import subprocess
 import base64
 import time
 import tarfile
-from tempfile import TemporaryFile
 
 from kubernetes import config, client
 from kubernetes.client import Configuration, V1DeleteOptions
@@ -205,43 +204,6 @@ class KubernetesRunner(StepRunner):
 
             time.sleep(1)
             counter += 1
-
-    # def _copy_ctx(self):
-    #     files = os.listdir(self._config.workspace_dir)
-    #     with tarfile.open("ctx" + ".tar.gz", mode="w:gz") as archive:
-    #         for f in files:
-    #             archive.add(f)
-
-    #     e = subprocess.call(
-    #         [
-    #             "kubectl",
-    #             "-n",
-    #             self._namespace,
-    #             "cp",
-    #             "ctx.tar.gz",
-    #             f"{self._namespace}/{self._init_pod_name}:/workspace",
-    #         ],
-    #         stdout=subprocess.PIPE,
-    #     )
-    #     if e != 0:
-    #         log.fail("Couldn't copy workspace context into init pod")
-
-    #     e = subprocess.call(
-    #         [
-    #             "kubectl",
-    #             "exec",
-    #             "-n",
-    #             self._namespace,
-    #             f"{self._init_pod_name}",
-    #             "--",
-    #             "tar",
-    #             "-xvf",
-    #             "/workspace/ctx.tar.gz",
-    #         ],
-    #         stdout=subprocess.PIPE,
-    #     )
-    #     if e != 0:
-    #         log.fail("Unpacking context inside pod failed")
 
     def _init_pod_delete(self):
         """Teardown the init Pod after the context has been copied
