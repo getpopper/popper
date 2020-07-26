@@ -100,20 +100,28 @@ class KubernetesRunner(StepRunner):
             for f in files:
                 archive.add(f)
 
-        exec_command = ['/bin/sh']
-        resp = stream(self._kclient.connect_get_namespaced_pod_exec, self._init_pod_name, self._namespace,
-                    command=exec_command,
-                    stderr=True, stdin=True,
-                    stdout=True, tty=False,
-                    _preload_content=False)
+        exec_command = ["/bin/sh"]
+        resp = stream(
+            self._kclient.connect_get_namespaced_pod_exec,
+            self._init_pod_name,
+            self._namespace,
+            command=exec_command,
+            stderr=True,
+            stdin=True,
+            stdout=True,
+            tty=False,
+            _preload_content=False,
+        )
 
-        source_file = 'ctx.tar.gz'
-        destination_file = '/workspace/ctx.tar.gz'
+        source_file = "ctx.tar.gz"
+        destination_file = "/workspace/ctx.tar.gz"
 
         with open(source_file, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
 
-        commands = [f"echo {encoded_string.decode('utf-8')} | base64 --decode > {destination_file}"]
+        commands = [
+            f"echo {encoded_string.decode('utf-8')} | base64 --decode > {destination_file}"
+        ]
 
         while resp.is_open():
             resp.update(timeout=1)
@@ -129,20 +137,19 @@ class KubernetesRunner(StepRunner):
                 break
         resp.close()
 
+        exec_command = ["tar", "-zxvf", "/workspace/ctx.tar.gz"]
 
-        exec_command = [
-            'tar',
-            '-zxvf',
-            '/workspace/ctx.tar.gz'
-        ]
-        
-        resp = stream(self._kclient.connect_get_namespaced_pod_exec,
-                  self._init_pod_name,
-                  self._namespace,
-                  command=exec_command,
-                  stderr=True, stdin=False,
-                  stdout=True, tty=False)
-                  
+        resp = stream(
+            self._kclient.connect_get_namespaced_pod_exec,
+            self._init_pod_name,
+            self._namespace,
+            command=exec_command,
+            stderr=True,
+            stdin=False,
+            stdout=True,
+            tty=False,
+        )
+
         log.debug("response: " + resp)
 
     def _init_pod_create(self):
