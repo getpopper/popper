@@ -1,5 +1,4 @@
 import os
-import subprocess
 import base64
 import time
 import tarfile
@@ -66,7 +65,7 @@ class KubernetesRunner(StepRunner):
             if not self._init_pod_created:
                 self._init_pod_create()
                 self._copy_ctx()
-                # self._init_pod_delete()
+                self._init_pod_delete()
                 self._init_pod_created = True
 
             self._pod_create(step, image)
@@ -130,22 +129,21 @@ class KubernetesRunner(StepRunner):
                 break
         resp.close()
 
-        e = subprocess.call(
-            [
-                "kubectl",
-                "exec",
-                "-n",
-                self._namespace,
-                f"{self._init_pod_name}",
-                "--",
-                "tar",
-                "-xvf",
-                "/workspace/ctx.tar.gz",
-            ],
-            stdout=subprocess.PIPE,
-        )
-        if e != 0:
-            log.fail("Unpacking context inside pod failed")
+
+        exec_command = [
+            'tar',
+            '-zxvf',
+            '/workspace/ctx.tar.gz'
+        ]
+        
+        resp = stream(self._kclient.connect_get_namespaced_pod_exec,
+                  self._init_pod_name,
+                  self._namespace,
+                  command=exec_command,
+                  stderr=True, stdin=False,
+                  stdout=True, tty=False)
+                  
+        log.debug("response: " + resp)
 
     def _init_pod_create(self):
         """Create a init Pod mounted on a volume with alpine image so that 
