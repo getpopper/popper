@@ -131,7 +131,7 @@ class KubernetesRunner(StepRunner):
                 log.debug("stderr: %s" % resp.read_stderr())
             if commands:
                 c = commands.pop(0)
-                print("running command... %s\n" % c)
+                log.debug("running command... %s\n" % c)
                 resp.write_stdin(c)
             else:
                 break
