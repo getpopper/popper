@@ -1,11 +1,14 @@
 import os
 import subprocess
+import base64
 import time
 import tarfile
+from tempfile import TemporaryFile
 
 from kubernetes import config, client
 from kubernetes.client import Configuration, V1DeleteOptions
 from kubernetes.client.api import core_v1_api
+from kubernetes.stream import stream
 
 from popper import utils as pu
 from popper.cli import log as log
@@ -64,7 +67,7 @@ class KubernetesRunner(StepRunner):
             if not self._init_pod_created:
                 self._init_pod_create()
                 self._copy_ctx()
-                self._init_pod_delete()
+                # self._init_pod_delete()
                 self._init_pod_created = True
 
             self._pod_create(step, image)
@@ -84,7 +87,66 @@ class KubernetesRunner(StepRunner):
         raise NotImplementedError("Needs implementation in derived class.")
 
     def stop_running_tasks(self):
+        """Delete the Pod and then the PersistentVolumeClaim upon receiving SIGINT.
+        """
+        log.debug("received SIGINT. deleting pod and volume claim")
         self._pod_delete()
+        self._vol_claim_delete()
+
+    def _copy_ctx(self):
+        """Tar up the workspace context and copy the tar file into
+        the PersistentVolume in the Pod.
+        """
+        files = os.listdir(self._config.workspace_dir)
+        with tarfile.open("ctx" + ".tar.gz", mode="w:gz") as archive:
+            for f in files:
+                archive.add(f)
+
+        exec_command = ['/bin/sh']
+        resp = stream(self._kclient.connect_get_namespaced_pod_exec, self._init_pod_name, self._namespace,
+                    command=exec_command,
+                    stderr=True, stdin=True,
+                    stdout=True, tty=False,
+                    _preload_content=False)
+
+        source_file = 'ctx.tar.gz'
+        destination_file = '/workspace/ctx.tar.gz'
+
+        with open(source_file, "rb") as image_file:
+            encoded_string = base64.b64encode(image_file.read())
+
+        commands = [f"echo {encoded_string.decode('utf-8')} | base64 --decode > {destination_file}"]
+
+        while resp.is_open():
+            resp.update(timeout=1)
+            if resp.peek_stdout():
+                log.debug("stdout: %s" % resp.read_stdout())
+            if resp.peek_stderr():
+                log.debug("stderr: %s" % resp.read_stderr())
+            if commands:
+                c = commands.pop(0)
+                print("running command... %s\n" % c)
+                resp.write_stdin(c)
+            else:
+                break
+        resp.close()
+
+        e = subprocess.call(
+            [
+                "kubectl",
+                "exec",
+                "-n",
+                self._namespace,
+                f"{self._init_pod_name}",
+                "--",
+                "tar",
+                "-xvf",
+                "/workspace/ctx.tar.gz",
+            ],
+            stdout=subprocess.PIPE,
+        )
+        if e != 0:
+            log.fail("Unpacking context inside pod failed")
 
     def _init_pod_create(self):
         """Create a init Pod mounted on a volume with alpine image so that 
@@ -100,7 +162,7 @@ class KubernetesRunner(StepRunner):
                 "restartPolicy": "Never",
                 "containers": [
                     {
-                        "image": "alpine:3.11",
+                        "image": "debian:stable",
                         "name": self._init_pod_name,
                         "workingDir": "/workspace",
                         "command": ["sleep", "infinity"],
@@ -138,48 +200,48 @@ class KubernetesRunner(StepRunner):
 
             log.debug(f"init pod {self._init_pod_name} not started yet")
 
-            if counter == 10:
+            if counter == self._config.resman_opts.get("step_pod_retry_limit", 60):
                 raise Exception("Timed out waiting for init pod to start")
 
             time.sleep(1)
             counter += 1
 
-    def _copy_ctx(self):
-        files = os.listdir(self._config.workspace_dir)
-        with tarfile.open("ctx" + ".tar.gz", mode="w:gz") as archive:
-            for f in files:
-                archive.add(f)
+    # def _copy_ctx(self):
+    #     files = os.listdir(self._config.workspace_dir)
+    #     with tarfile.open("ctx" + ".tar.gz", mode="w:gz") as archive:
+    #         for f in files:
+    #             archive.add(f)
 
-        e = subprocess.call(
-            [
-                "kubectl",
-                "-n",
-                self._namespace,
-                "cp",
-                "ctx.tar.gz",
-                f"{self._namespace}/{self._init_pod_name}:/workspace",
-            ],
-            stdout=subprocess.PIPE,
-        )
-        if e != 0:
-            log.fail("Couldn't copy workspace context into init pod")
+    #     e = subprocess.call(
+    #         [
+    #             "kubectl",
+    #             "-n",
+    #             self._namespace,
+    #             "cp",
+    #             "ctx.tar.gz",
+    #             f"{self._namespace}/{self._init_pod_name}:/workspace",
+    #         ],
+    #         stdout=subprocess.PIPE,
+    #     )
+    #     if e != 0:
+    #         log.fail("Couldn't copy workspace context into init pod")
 
-        e = subprocess.call(
-            [
-                "kubectl",
-                "exec",
-                "-n",
-                self._namespace,
-                f"{self._init_pod_name}",
-                "--",
-                "tar",
-                "-xvf",
-                "/workspace/ctx.tar.gz",
-            ],
-            stdout=subprocess.PIPE,
-        )
-        if e != 0:
-            log.fail("Unpacking context inside pod failed")
+    #     e = subprocess.call(
+    #         [
+    #             "kubectl",
+    #             "exec",
+    #             "-n",
+    #             self._namespace,
+    #             f"{self._init_pod_name}",
+    #             "--",
+    #             "tar",
+    #             "-xvf",
+    #             "/workspace/ctx.tar.gz",
+    #         ],
+    #         stdout=subprocess.PIPE,
+    #     )
+    #     if e != 0:
+    #         log.fail("Unpacking context inside pod failed")
 
     def _init_pod_delete(self):
         """Teardown the init Pod after the context has been copied
@@ -348,6 +410,9 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         super(DockerRunner, self).__init__(**kw)
 
     def _build_and_push_image(self, step):
+        """Clones the action repository, builds the image
+        and pushes the image to an  an image registry for a Pod to use.
+        """
         needs_build, img, tag, build_ctx_path = self._get_build_info(step)
         if not needs_build:
             return step.uses.replace("docker://", "")
