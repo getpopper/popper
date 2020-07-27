@@ -327,7 +327,7 @@ class StepRunner(object):
         }
 
         self._update_with_engine_config(args)
-
+        args.update(step.options)
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
         return args

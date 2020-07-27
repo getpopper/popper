@@ -14,7 +14,7 @@ from popper.runner import WorkflowRunner, StepRunner
 from .test_common import PopperTest
 
 from box import Box
-from pprint import  pprint
+
 
 class TestWorkflowRunner(unittest.TestCase):
     def setUp(self):
@@ -235,7 +235,6 @@ class TestStepRunner(PopperTest):
 
         with StepRunner(config=config) as r:
             args = r._get_container_kwargs(step, "alpine:3.9", "container_a")
-            pprint(args)
             self.assertEqual(
                 args,
                 {
