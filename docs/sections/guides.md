@@ -3,7 +3,7 @@
 This is a list of guides related to several aspects of working with 
 Popper workflows.
 
-### Choosing a location for your step
+## Choosing a location for your step
 
 If you are developing a docker image for other people to use, we 
 recommend keeping this image in its own repository instead of bundling
@@ -14,7 +14,7 @@ discover, narrows the scope of the code base for developers fixing
 issues and extending the image, and decouples the image's versioning 
 from the versioning of other application code.
 
-### Using shell scripts to define step logic
+## Using shell scripts to define step logic
 
 Shell scripts are a great way to write the code in steps. If you can 
 write a step in under 100 lines of code and it doesn't require complex 
@@ -32,7 +32,8 @@ guidelines:
 -   Use `set -eu` in your shell script to avoid continuing when errors
     or undefined variables are present.
 
-### Hello world step example
+
+## Hello world step example
 
 You can create a new step by adding a `Dockerfile` to the directory in 
 your repository that contains your step code. This example creates a 
@@ -217,48 +218,47 @@ Initial project structure:
     └── evaluate_model.py    <- Script for generating model evaluation plots.
 ```    
 
-
 ### Getting data
 
-Your workflow should automate downloading or generating data to ensure that the correct,
-up-to-date version of the data is used. In this example, you can download data with a 
+Your workflow should automate downloading or generating data to ensure that it uses the correct,
+up-to-date version of the data. In this example, you can download data with a 
 simple shell script:
 
 ```sh
 #!/bin/sh
-cd data/raw
+cd $1
 
-wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/test_set_features.csv"
-wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_labels.csv"
-wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_features.csv"
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/test_set_features.csv" --no-check-certificate
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_labels.csv" --no-check-certificate
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_features.csv" --no-check-certificate
 
 echo "Files downloaded: $(ls)"
 ```
+
 Now, wrap this step using a Popper workflow. In a new file `wf.yml` at the root 
 of the folder,
 
 ```yaml
 steps:
-
 - id: "dataset"
   uses: "docker://jacobcarlborg/docker-alpine-wget"
-  runs: "sh"
-  args: ["src/get_data.sh"]
+  args: ["src/get_data.sh", "data"]
 ```
 Notes:
 - pick a Docker image that contains the necessary utilities. 
 For instance, a default Alpine image does not include `wget`.
 
 
-### Launching a Juyter Notebook
+### Launching a Jupyter Notebook
 
-This sections explains how to use Popper to launch a Jupyter notebooks, which are a  useful tool for exploratory work.
+This sections explains how to use Popper to launch a Jupyter notebooks, which are a
+ useful tool for exploratory work.
 To make it easier to refactor successful expirements into your final workflow, it 
-is important to use the same software environment for both. To do this, you can define a 
- container to share between steps.
+is important to use the same software environment for both. To do this, define a 
+ container shared between steps.
 
 Some workflows use multiple containers (and `Dockerfiles`), so it is
-good practice to organize these from the start in a seperate folder.
+ good practice to organize these from the start in a seperate folder.
 In `containers/`, create this `Dockerfile`:
 
 ```Dockerfile
@@ -274,6 +274,7 @@ RUN conda env update -f exploration_env.yml \
     && find /opt/conda/ -follow -type f -name '*.pyc' -delete 
 CMD [ "/bin/sh" ] 
 ```
+
 Use a seperate `environment.yml` file to define your Python environment. This
 avoids modifying the `Dockerfile` manually each time you need a new Python package.
 Create `containers/environment.yml`:
@@ -291,18 +292,19 @@ To run the Jupyter Lab environment, first add a new step to the workflow in `wf.
 ```yaml
 - id: "notebook"
   uses: "./containers/"
-  runs: "sh"
   args: ["jupyter", "--version"] 
   options: 
     ports: 
       8888/tcp: 8888
 ```
-Remarks:
-- `uses` is set to `./containers/` which tells Popper where to find the `Dockerfile` 
-defining the container used for this step
-- `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect to the Jupyter Lab server in the container
 
-Next, in you local command line, execute this step in interactive mode:
+Remarks:
+- `uses` is set to `./containers/` which tells Popper where to find the `Dockerfile`
+ defining the container used for this step
+- `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect
+ to the Jupyter Lab server in the container
+
+Next, in the local command line, execute this step in interactive mode:
 ```sh
 popper sh -f wf.yml jupyter
 ```
@@ -328,8 +330,8 @@ available for Python.
 
 #### conda
  
-Conda is recommend for package management because it has better dependency
-management and support for compiled libraries. 
+Conda is recommended for package management because it has better dependency
+ management and support for compiled libraries. 
 When executing the `notebook` step interactively, install package as needed using
 (the easiest way to access the container's command line in this situation is 
 Jupyter Lab's terminal interface):
@@ -338,7 +340,7 @@ Jupyter Lab's terminal interface):
 conda install PACKAGE [PACKAGE ...]
 ```
 
-Update the environmnent requirements with:
+Update the environment requirements with:
 
 ``` bash
 conda env export > containers/environment.yml
@@ -390,11 +392,11 @@ Then, in  `wf.yml`:
 
 ### Models and visualization
 
-Following the above, automate  the other steps in your workflow using Popper. 
-This section shows examples for code that:
-- fits a model to data 
-- generates model evaluation plots
-- uses the model to make predictions on a hold-out dataset
+Following the above, automate the other steps in your workflow using Popper. 
+This section shows examples for:
+- fitting a model to data 
+- generating model evaluation plots
+- using the model to make predictions on a hold-out dataset
 
 A first file, `src/models.py` defines the model this workflow uses:
 
@@ -476,7 +478,6 @@ step
 ```yaml
 - id: "predict"
   uses: "./containers/"
-  runs: "sh"
   args: ["python", "src/predict.py"]
 ```
 
@@ -516,7 +517,7 @@ if __name__ == "__main__":
 
     Cs = np.logspace(-2, 1, num = 10, base = 10)
     auc_scores = cross_val_score(
-        estimator = get_model(C),
+        estimator = get_model(num_features, cat_features, C),
         X = X_train,
         y = y_train,
         cv = 5,
@@ -550,13 +551,12 @@ Use a similar step to the previous one:
 ```yaml
 - id: "figures"
   uses: "./"
-  runs: "sh"
   args: ["python, src/evaluate_model.py"]
 ```
 
 Note that these steps each read data from `data/` and output to `results/`.
 It is good practice to keep the input and outputs of a workflow separate
-to avoid accidently modifying the source data, which is considered immutable.
+to avoid accidently modifying the original data, which is considered immutable.
 
 ### Building a paper using LaTeX
 
@@ -567,8 +567,7 @@ and figures.
 ```yaml
 - id: "paper"
   uses: "docker://blang/latex:ctanbasic"
-  runs: "sh"
-  args: ["pdflatex", "paper.tex"]
+  args: ["latexmk", "-pdf", "paper.tex"]
   dir: "/workspace/paper"
 ```
 
@@ -585,12 +584,10 @@ This is the final workflow:
 steps:
 - id: "dataset"
   uses: "docker://jacobcarlborg/docker-alpine-wget"
-  runs: "sh"
-  args: ["src/get_data.sh"]
+  args: ["sh", "src/get_data.sh", "data"]
  
 - id: "notebook"
   uses: "./"
-  runs: "sh"
   args: ["jupyter", "--version"] 
   options: 
     ports: 
@@ -598,24 +595,21 @@ steps:
 
 - id: "predict"
   uses: "./"
-  runs: "sh"
   args: ["python, src/predict.py"]
     
 - id: "figures"
   uses: "./"
-  runs: "sh"
   args: ["python, src/evaluate_model.py"]
     
 - id: "paper"
   uses: "docker://blang/latex:ctanbasic"
-  runs: "sh"
-  args: ["pdflatex", "paper.tex"]
+  args: ["latexmk", "-pdf", "paper.tex"]
   dir: "/workspace/paper"
 ```
 
 And this is the final project structure:
 ```
- LICENSE                                 
+├──LICENSE                                 
 ├── README.md                <- The top-level README.
 ├── wf.yml                   <- Definition of the workflow.
 ├── containers               
