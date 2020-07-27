@@ -14,7 +14,7 @@ from popper.runner import WorkflowRunner, StepRunner
 from .test_common import PopperTest
 
 from box import Box
-
+from pprint import  pprint
 
 class TestWorkflowRunner(unittest.TestCase):
     def setUp(self):
@@ -235,7 +235,7 @@ class TestStepRunner(PopperTest):
 
         with StepRunner(config=config) as r:
             args = r._get_container_kwargs(step, "alpine:3.9", "container_a")
-
+            pprint(args)
             self.assertEqual(
                 args,
                 {
@@ -243,8 +243,7 @@ class TestStepRunner(PopperTest):
                     "command": ["ls"],
                     "name": "container_a",
                     "volumes": [
-                        "/path/to/workdir:/workspace",
-                        "/var/run/docker.sock:/var/run/docker.sock",
+                        "/path/to/workdir:/workspace:Z",
                         "/path/in/host:/path/in/container",
                     ],
                     "working_dir": "/tmp/",

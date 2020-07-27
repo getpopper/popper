@@ -109,7 +109,6 @@ class DockerRunner(StepRunner):
 
         self._spawned_containers = set()
         self._d = None
-        self.class_name = self.__class__.__name__
 
         if not init_docker_client:
             return
@@ -173,7 +172,7 @@ class DockerRunner(StepRunner):
             c.stop()
 
     def _create_container(self, cid, step):
-        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.__class__.__name__)
 
         if build:
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
@@ -236,7 +235,6 @@ class PodmanRunner(StepRunner):
         super(PodmanRunner, self).__init__(**kw)
 
         self._spawned_containers = set()
-        self.class_name = self.__class__.__name__
 
         if not init_podman_client:
             return
@@ -303,7 +301,7 @@ class PodmanRunner(StepRunner):
         return containers.rstrip()
 
     def _create_container(self, cid, step):
-        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.__class__.__name__)
 
         if build:
             log.info(f"[{step.id}] podman build {img}:{tag} {build_ctx_path}")
@@ -386,7 +384,6 @@ class SingularityRunner(StepRunner):
 
         self._spawned_containers = set()
         self._s = None
-        self.class_name = self.__class__.__name__
 
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
@@ -459,7 +456,7 @@ class SingularityRunner(StepRunner):
             "bind": [f"{self._config.workspace_dir}:/workspace"],
         }
 
-        self._update_with_engine_config(container_args, self.class_name)
+        self._update_with_engine_config(container_args, self.__class__.__name__)
 
         options = []
         for k, v in container_args.items():
@@ -475,7 +472,7 @@ class SingularityRunner(StepRunner):
         return options
 
     def _create_container(self, step, cid):
-        build, image, _, _, build_ctx_path = self._get_build_info(step, self.class_name)
+        build, image, _, _, build_ctx_path = self._get_build_info(step, self.__class__.__name__)
 
         if build:
             log.info(f"[{step.id}] singularity build {cid} {build_ctx_path}")

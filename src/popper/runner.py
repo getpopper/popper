@@ -231,7 +231,7 @@ class StepRunner(object):
             )
         return step_env
 
-    def _get_build_info(self, step, class_name):
+    def _get_build_info(self, step, class_name="DockerRunner"):
 
         """Parses the `uses` attribute and returns build information needed.
 
@@ -280,7 +280,7 @@ class StepRunner(object):
 
         return (build, img_full, img, tag, build_ctx_path)
 
-    def _update_with_engine_config(self, container_args, class_name):
+    def _update_with_engine_config(self, container_args, class_name="DockerRunner"):
 
         """Given container arguments, it extends it so it includes options
 
@@ -326,7 +326,7 @@ class StepRunner(object):
             "stdin_open": self._config.pty,
         }
 
-        self._update_with_engine_config(args, self.class_name)
+        self._update_with_engine_config(args)
 
         log.debug(f"container args: {pu.prettystr(args)}\n")
 
