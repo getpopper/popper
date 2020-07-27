@@ -73,10 +73,6 @@ class KubernetesRunner(StepRunner):
             ecode = self._pod_exit_code()
         except Exception as e:
             log.fail(e)
-        finally:
-            pass
-            # self._pod_delete()
-            # self._vol_claim_delete()
 
         log.debug(f"returning with {ecode}")
         return ecode
@@ -184,7 +180,7 @@ class KubernetesRunner(StepRunner):
             },
         }
 
-        if self._config.resman_opts.node_selector_host_name:
+        if self._config.resman_opts.get("node_selector_host_name", None):
             init_pod_conf["spec"]["nodeSelector"] = {
                 "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
             }
@@ -204,8 +200,8 @@ class KubernetesRunner(StepRunner):
 
             log.debug(f"init pod {self._init_pod_name} not started yet")
 
-            if counter == self._config.resman_opts.get("step_pod_retry_limit", 60):
-                raise Exception("Timed out waiting for init pod to start")
+            if counter == self._config.resman_opts.get("pod_retry_limit", 60):
+                raise Exception("Timed out waiting for Init Pod to start")
 
             time.sleep(1)
             counter += 1
@@ -234,7 +230,7 @@ class KubernetesRunner(StepRunner):
             },
         }
 
-        if self._config.resman_opts.persistent_volume_name:
+        if self._config.resman_opts.get("persistent_volume_name", None):
             vol_claim_conf["spec"][
                 "volumeName"
             ] = self._config.resman_opts.persistent_volume_name
@@ -302,7 +298,7 @@ class KubernetesRunner(StepRunner):
             },
         }
 
-        if self._config.resman_opts.node_selector_host_name:
+        if self._config.resman_opts.get("node_selector_host_name", None):
             pod_conf["spec"]["nodeSelector"] = {
                 "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
             }
@@ -328,7 +324,7 @@ class KubernetesRunner(StepRunner):
 
             log.debug(f"pod {self._pod_name} not started yet")
 
-            if counter == self._config.resman_opts.get("step_pod_retry_limit", 60):
+            if counter == self._config.resman_opts.get("pod_retry_limit", 60):
                 raise Exception("Timed out waiting for Pod to start")
 
             time.sleep(1)
@@ -384,28 +380,17 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         if not needs_build:
             return step.uses.replace("docker://", "")
 
-        if not self._config.resman_opts.registry:
-            raise Exception("Expecting 'registry' option in configuration.")
+        registry = self._config.resman_opts.get("registry", "docker.io")
 
         if not self._config.resman_opts.registry_user:
             raise Exception("Expecting 'registry_user' option in configuration.")
 
-        # TODO: this needs to be changed. password should not be in config
-        if not self._config.resman_opts.registry_password:
-            raise Exception("Expecting 'registry_password' option in configuration.")
-
         img = img.replace("/", "_")
-        img = f"{self._config.resman_opts.registry}/{self._config.resman_opts.registry_user}/{img}"
+        img = f"{registry}/{self._config.resman_opts.registry_user}/{img}"
 
         self._d.images.build(
             path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
         )
-
-        self._d.login(
-            self._config.resman_opts.registry_user,
-            self._config.resman_opts.registry_password,
-        )
-        log.debug("login successful")
 
         for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
             log.step_info(l)
