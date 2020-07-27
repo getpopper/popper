@@ -101,7 +101,7 @@ class KubernetesRunner(StepRunner):
                 archive.add(f)
 
         exec_command = ["/bin/sh"]
-        resp = stream(
+        response = stream(
             self._kclient.connect_get_namespaced_pod_exec,
             self._init_pod_name,
             self._namespace,
@@ -123,23 +123,23 @@ class KubernetesRunner(StepRunner):
             f"echo {encoded_string.decode('utf-8')} | base64 --decode > {destination_file}"
         ]
 
-        while resp.is_open():
-            resp.update(timeout=1)
-            if resp.peek_stdout():
-                log.debug("stdout: %s" % resp.read_stdout())
-            if resp.peek_stderr():
-                log.debug("stderr: %s" % resp.read_stderr())
+        while response.is_open():
+            response.update(timeout=1)
+            if response.peek_stdout():
+                log.debug(f"stdout: {response.read_stdout()}")
+            if response.peek_stderr():
+                log.debug(f"stderr: {response.read_stderr()}")
             if commands:
                 c = commands.pop(0)
-                log.debug("running command... %s\n" % c)
-                resp.write_stdin(c)
+                log.debug(f"running command... {c}")
+                response.write_stdin(c)
             else:
                 break
-        resp.close()
+        response.close()
 
+        # extract the archive inside the pod
         exec_command = ["tar", "-zxvf", "/workspace/ctx.tar.gz"]
-
-        resp = stream(
+        response = stream(
             self._kclient.connect_get_namespaced_pod_exec,
             self._init_pod_name,
             self._namespace,
@@ -150,7 +150,7 @@ class KubernetesRunner(StepRunner):
             tty=False,
         )
 
-        log.debug("response: " + resp)
+        log.debug(response)
 
     def _init_pod_create(self):
         """Create a init Pod mounted on a volume with alpine image so that 
@@ -196,10 +196,10 @@ class KubernetesRunner(StepRunner):
         # loop and wait for the init pod to come up
         counter = 1
         while True:
-            resp = self._kclient.read_namespaced_pod(
+            response = self._kclient.read_namespaced_pod(
                 self._init_pod_name, namespace=self._namespace
             )
-            if resp.status.phase != "Pending":
+            if response.status.phase != "Pending":
                 break
 
             log.debug(f"init pod {self._init_pod_name} not started yet")
@@ -249,10 +249,10 @@ class KubernetesRunner(StepRunner):
         # wait for the volume claim to go into `Bound` state.
         counter = 1
         while True:
-            resp = self._kclient.read_namespaced_persistent_volume_claim(
+            response = self._kclient.read_namespaced_persistent_volume_claim(
                 self._vol_claim_name, namespace=self._namespace
             )
-            if resp.status.phase != "Pending":
+            if response.status.phase != "Pending":
                 break
 
             log.debug(f"volume claim {self._vol_claim_name} not created yet")
@@ -320,10 +320,10 @@ class KubernetesRunner(StepRunner):
 
         counter = 1
         while True:
-            resp = self._kclient.read_namespaced_pod(
+            response = self._kclient.read_namespaced_pod(
                 self._pod_name, namespace=self._namespace
             )
-            if resp.status.phase != "Pending":
+            if response.status.phase != "Pending":
                 break
 
             log.debug(f"pod {self._pod_name} not started yet")
@@ -338,25 +338,25 @@ class KubernetesRunner(StepRunner):
         """Read logs from the Pod after it moves into `Completed` state.
         """
         log.debug(f"reading logs from {self._pod_name}")
-        resp = self._kclient.read_namespaced_pod_log(
+        response = self._kclient.read_namespaced_pod_log(
             name=self._pod_name,
             namespace=self._namespace,
             follow=True,
             tail_lines=10,
             _preload_content=False,
         )
-        for line in resp:
+        for line in response:
             log.step_info(line.decode().rstrip())
 
     def _pod_exit_code(self):
         """Read the exit code from the Pod to decide the exit code of the step.
         """
         time.sleep(2)
-        resp = self._kclient.read_namespaced_pod(
+        response = self._kclient.read_namespaced_pod(
             name=self._pod_name, namespace=self._namespace
         )
-        log.debug(f"got status {resp.status.phase}")
-        if resp.status.phase != "Succeeded":
+        log.debug(f"got status {response.status.phase}")
+        if response.status.phase != "Succeeded":
             return 1
         return 0
 
