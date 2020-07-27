@@ -231,6 +231,7 @@ class DockerRunner(StepRunner):
 
 
 class PodmanRunner(StepRunner):
+
     """Runs steps in podman on the local machine."""
 
     def __init__(self, init_podman_client=True, **kw):
@@ -246,7 +247,7 @@ class PodmanRunner(StepRunner):
             self._p_version = HostRunner._exec_cmd(["podman", "version"], logging=False)
         except Exception as e:
             log.debug(f"Podman error: {e}")
-            log.fail(f"Unable to connect to podman, is it installed?")
+            log.fail("Unable to connect to podman, is it installed?")
 
         log.debug(f"Podman info: {pu.prettystr(self._p_info)}")
 
@@ -321,7 +322,7 @@ class PodmanRunner(StepRunner):
             return
 
         container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
-
+        print(container_args)
         log.debug(f"Container args: {container_args}")
 
         msg = [f"{step.id}", "podman", "create", f"name={cid}"]
@@ -350,7 +351,7 @@ class PodmanRunner(StepRunner):
 
         domain_name = container_args.get("domainname", None)
         if domain_name:
-            cmd.extend(["--domainname", dommain_name])
+            cmd.extend(["--domainname", domain_name])
 
         tty = container_args.get("tty", None)
         if tty:
