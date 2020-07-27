@@ -322,13 +322,12 @@ class PodmanRunner(StepRunner):
             return
 
         container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
-        print(container_args)
         log.debug(f"Container args: {container_args}")
 
         msg = [f"{step.id}", "podman", "create", f"name={cid}"]
         msg.append(f"image={container_args.get('image')}")
         msg.append(f"entrypoint={container_args.get('entrypoint')}" or "")
-        msg.append(f"command={container_args.get('entrypoint')}" or "")
+        msg.append(f"command={container_args.get('command')}" or "")
         log.info(msg)
 
         cmd = ["podman", "create"]
