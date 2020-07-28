@@ -45,7 +45,7 @@ docker run --rm -ti \
   --volume "$PWD":"$PWD" \
   --workdir "$PWD" \
   --env-file /tmp/.envfile \
-  getpopper/popper:v2.7.0 $@
+  getpopper/popper:v2.7.0 "$@"
 EOF
 
 if [ "$?" -eq 0 ]; then
