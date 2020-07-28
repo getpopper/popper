@@ -37,6 +37,13 @@ command -v docker >/dev/null 2>&1 || { echo >&2 "docker command not found. Abort
 cat > ./popper << "EOF"
 #!/usr/bin/env sh
 
+if echo "$@" | grep '\e\s*singularity\|--engine\s*singularity'; then
+  echo >&2 'Singularity is not supported.',
+  echo >&2 'Please install Popper as a Python Package. Instructions can be found here:'
+  echo >&2 'https://github.com/getpopper/popper/blob/master/docs/installation.md'
+  exit 1
+fi
+
 printenv > /tmp/.envfile
 
 docker run --rm -ti \
