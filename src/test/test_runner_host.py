@@ -232,8 +232,8 @@ class TestHostPodmanRunner(PopperTest):
             _, _, c2 = HostRunner._exec_cmd(
                 cmd + ["alpine:3.9", "sleep", "10000"], logging=False
             )
-            c1 = c1.rstrip()
-            c2 = c2.rstrip()
+            c1 = c1.strip()
+            c2 = c2.strip()
             pr._spawned_containers.add(c1)
             pr._spawned_containers.add(c2)
             pr.stop_running_tasks()

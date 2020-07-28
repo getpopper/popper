@@ -276,12 +276,15 @@ class PodmanRunner(StepRunner):
 
         self._spawned_containers.add(container)
 
-        try:
-            cmd = ["podman", "start", container]
-            _, e, _, = HostRunner._exec_cmd(cmd)
+        cmd = ["podman", "start", "-a", container]
+        _, e, output, = HostRunner._exec_cmd(cmd)
 
-        except Exception as exc:
-            log.fail(exc)
+        cmd1 = ["podman", "inspect", "-f", "{{.State.ExitCode}}", container]
+        _, _, ecode = HostRunner._exec_cmd(cmd1, logging=False)
+        ecode = int(ecode)
+
+        if ecode != 0:
+            log.fail("")
 
         return e
 
@@ -295,13 +298,16 @@ class PodmanRunner(StepRunner):
 
     def _find_container(self, cid):
         """Checks whether the container exists."""
-        cmd = ["podman", "inspect", "-f", str("{{.Id}}"), cid]
+        cmd = ["podman", "inspect", "-f", "{{.Id}}", cid]
         _, ecode, containers = HostRunner._exec_cmd(cmd, logging=False)
 
-        if ecode != 0:
+        if ecode == 125:
             return None
 
-        return containers.rstrip()
+        if ecode != 0:
+            log.fail(f"podman inspect fail: {containers}")
+
+        return containers.strip()
 
     def _create_container(self, cid, step):
         build, _, img, tag, build_ctx_path = self._get_build_info(
@@ -371,6 +377,7 @@ class PodmanRunner(StepRunner):
             cmd.extend([i or ""])
 
         _, ecode, container = HostRunner._exec_cmd(cmd, logging=False)
+
         if ecode != 0:
             return None
 
