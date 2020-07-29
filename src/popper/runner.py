@@ -301,9 +301,8 @@ class StepRunner(object):
                 *update_with.get("bind", list()),
             ]
 
-        if container_args.get("environment"):
-            for k, v in update_with.get("environment", dict()).items():
-                container_args["environment"].update({k: v})
+        for k, v in update_with.get("environment", dict()).items():
+            container_args["environment"].update({k: v})
 
         for k, v in update_with.items():
             if k not in container_args.keys():
