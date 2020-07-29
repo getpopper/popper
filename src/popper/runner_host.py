@@ -199,10 +199,10 @@ class DockerRunner(StepRunner):
             return
 
         container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
-        if container_args["volumes"]:
-            container_args["volumes"].insert(
-                1, "/var/run/docker.sock:/var/run/docker.sock"
-            )
+
+        if "volumes" not in container_args:
+            container_args["volumes"] = []
+        container_args["volumes"].insert(1, "/var/run/docker.sock:/var/run/docker.sock")
 
         log.debug(f"Container args: {container_args}")
 
