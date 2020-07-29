@@ -280,7 +280,7 @@ class StepRunner(object):
 
         return (build, img_full, img, tag, build_ctx_path)
 
-    def _update_with_engine_config(self, container_args, class_name="DockerRunner"):
+    def _update_with_engine_config(self, container_args):
 
         """Given container arguments, it extends it so it includes options
 
@@ -290,23 +290,20 @@ class StepRunner(object):
         if not update_with:
             return
 
-        if class_name != "SingularityRunner":
-            if container_args.get("volumes"):
-                container_args["volumes"] = [
-                    *container_args["volumes"],
-                    *update_with.get("volumes", list()),
-                ]
-        else:
-            if container_args.get("bind"):
-                container_args["bind"] = [
-                    *container_args["bind"],
-                    *update_with.get("bind", list()),
-                ]
+        if container_args.get("volumes"):
+            container_args["volumes"] = [
+                *container_args["volumes"],
+                *update_with.get("volumes", list()),
+            ]
+        if container_args.get("bind"):
+            container_args["bind"] = [
+                *container_args["bind"],
+                *update_with.get("bind", list()),
+            ]
 
-        if class_name != "SingularityRunner":
-            if update_with.get("environment"):
-                for k, v in update_with.get("environment", dict()).items():
-                    container_args["environment"].update({k: v})
+        if update_with.get("environment"):
+            for k, v in update_with.get("environment", dict()).items():
+                container_args["environment"].update({k: v})
 
         for k, v in update_with.items():
             if k not in container_args.keys():

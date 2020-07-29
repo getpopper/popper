@@ -467,7 +467,7 @@ class SingularityRunner(StepRunner):
             "bind": [f"{self._config.workspace_dir}:/workspace"],
         }
 
-        self._update_with_engine_config(container_args, self.__class__.__name__)
+        self._update_with_engine_config(container_args)
 
         options = []
         for k, v in container_args.items():
