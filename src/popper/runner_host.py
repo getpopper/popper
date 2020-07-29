@@ -313,15 +313,17 @@ class SingularityRunner(StepRunner):
         self._s = None
 
         if SingularityRunner._in_docker():
-            log.fail((
-                "You seem to be running Popper in a Docker container.\n"
-                "Singularity cannot be executed this way.\n"
-                "Either run Popper without Singularity or install Popper "
-                "through PIP.\n"
-                "Instructions are available here:\n"
-                "https://github.com/getpopper/popper/"
-                "blob/master/docs/installation.md"
-            ))
+            log.fail(
+                (
+                    "You seem to be running Popper in a Docker container.\n"
+                    "Singularity cannot be executed this way.\n"
+                    "Either run Popper without Singularity or install Popper "
+                    "through PIP.\n"
+                    "Instructions are available here:\n"
+                    "https://github.com/getpopper/popper/"
+                    "blob/master/docs/installation.md"
+                )
+            )
 
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
@@ -375,9 +377,9 @@ class SingularityRunner(StepRunner):
     @staticmethod
     def _in_docker():
         """ Returns TRUE if we are being executed in a Docker container. """
-        if os.path.isfile('/proc/1/cgroup'):
-            with open('/proc/1/cgroup', 'r') as f:
-                return 'docker' in f.read() or 'lxc' in f.read()
+        if os.path.isfile("/proc/1/cgroup"):
+            with open("/proc/1/cgroup", "r") as f:
+                return "docker" in f.read() or "lxc" in f.read()
 
     def _build_from_recipe(self, build_ctx_path, build_dest, cid):
         SingularityRunner.lock.acquire()
