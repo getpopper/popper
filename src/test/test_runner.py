@@ -145,7 +145,7 @@ class TestStepRunner(PopperTest):
             default_box=True,
         )
         with StepRunner() as r:
-            build, _, img, tag, build_ctx_path = r._get_build_info(step, "DockerRunner")
+            build, _, img, tag, build_ctx_path = r._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popperized/bin")
             self.assertEqual(tag, "master")
@@ -162,7 +162,7 @@ class TestStepRunner(PopperTest):
                 default_box=True,
             )
         with StepRunner() as r:
-            build, _, img, tag, build_sources = r._get_build_info(step, "PodmanRunner")
+            build, _, img, tag, build_sources = r._get_build_info(step)
             self.assertEqual(build, False)
             self.assertEqual(img, "alpine")
             self.assertEqual(tag, "3.9")
@@ -171,7 +171,7 @@ class TestStepRunner(PopperTest):
         step = Box({"uses": "./", "args": ["ls"], "id": "one",}, default_box=True,)
         conf = ConfigLoader.load(workspace_dir="/tmp")
         with StepRunner(config=conf) as r:
-            build, _, img, tag, build_ctx_path = r._get_build_info(step, "DockerRunner")
+            build, _, img, tag, build_ctx_path = r._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popper_one_step")
             self.assertEqual(tag, "na")
@@ -181,7 +181,7 @@ class TestStepRunner(PopperTest):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
         with StepRunner(config=conf) as r:
-            build, _, img, tag, build_ctx_path = r._get_build_info(step, "PodmanRunner")
+            build, _, img, tag, build_ctx_path = r._get_build_info(step)
             self.assertEqual(build, True)
             self.assertEqual(img, "popper_one_step")
             self.assertEqual(tag, scm.get_sha(repo, short=7))
@@ -197,9 +197,7 @@ class TestStepRunner(PopperTest):
             default_box=True,
         )
         with StepRunner() as r:
-            build, img_full, _, _, build_ctx_path = r._get_build_info(
-                step, "SingularityRunner"
-            )
+            build, img_full, _, _, build_ctx_path = r._get_build_info(step)
             self.assertEqual(build, False)
             self.assertEqual(img_full, "docker://alpine:3.9")
             self.assertEqual(build_ctx_path, None)

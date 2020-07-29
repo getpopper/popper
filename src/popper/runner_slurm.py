@@ -99,7 +99,6 @@ class SlurmRunner(HostRunner):
 class DockerRunner(SlurmRunner, HostDockerRunner):
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(init_docker_client=False, **kw)
-        self.class_name = self.__class__.__name__
 
     def __exit__(self, exc_type, exc, traceback):
         pass
@@ -109,7 +108,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
-        build, _, img, tag, build_ctx_path = self._get_build_info(step, self.class_name)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         cmd.append(f"docker rm -f {cid} || true")
 
@@ -229,7 +228,6 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 class SingularityRunner(SlurmRunner, HostSingularityRunner):
     def __init__(self, **kw):
         super(SingularityRunner, self).__init__(init_spython_client=False, **kw)
-        self.class_name = self.__class__.__name__
 
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
@@ -242,7 +240,12 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
         self._container = os.path.join(self._singularity_cache, cid)
 
-        build, img, _, _, build_ctx_path = self._get_build_info(step, self.class_name)
+        build, img, _, _, build_ctx_path = self._get_build_info(step)
+
+        if "shub://" in step.uses or "library://" in step.uses:
+            build = False
+            img = step.uses
+            build_ctx_path = None
 
         HostRunner._exec_cmd(["rm", "-rf", self._container])
 

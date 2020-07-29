@@ -231,7 +231,7 @@ class StepRunner(object):
             )
         return step_env
 
-    def _get_build_info(self, step, class_name="DockerRunner"):
+    def _get_build_info(self, step):
 
         """Parses the `uses` attribute and returns build information needed.
 
@@ -247,15 +247,8 @@ class StepRunner(object):
         img_full = None
         tag = None
 
-        if (
-            "docker://" in step.uses
-            or "shub://" in step.uses
-            or "library://" in step.uses
-        ) and class_name == "SingularityRunner":
+        if "docker://" in step.uses:
             img_full = step.uses
-            build = False
-
-        elif "docker://" in step.uses:
             img = step.uses.replace("docker://", "")
             if ":" in img:
                 (img, tag) = img.split(":")
