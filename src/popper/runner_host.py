@@ -172,7 +172,7 @@ class DockerRunner(StepRunner):
             c.stop()
 
     def _create_container(self, cid, step):
-        build, _, img, tag, build_ctx_path = self._get_build_info()
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
@@ -308,7 +308,7 @@ class PodmanRunner(StepRunner):
         return containers.strip()
 
     def _create_container(self, cid, step):
-        build, _, img, tag, build_ctx_path = self._get_build_info()
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
             log.info(f"[{step.id}] podman build {img}:{tag} {build_ctx_path}")
@@ -479,7 +479,7 @@ class SingularityRunner(StepRunner):
         return options
 
     def _create_container(self, step, cid):
-        build, image, _, _, build_ctx_path = self._get_build_info()
+        build, image, _, _, build_ctx_path = self._get_build_info(step)
 
         if "shub://" in step.uses or "library://" in step.uses:
             build = False
