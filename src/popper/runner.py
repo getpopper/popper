@@ -301,7 +301,7 @@ class StepRunner(object):
                 *update_with.get("bind", list()),
             ]
 
-        if update_with.get("environment"):
+        if container_args.get("environment"):
             for k, v in update_with.get("environment", dict()).items():
                 container_args["environment"].update({k: v})
 
