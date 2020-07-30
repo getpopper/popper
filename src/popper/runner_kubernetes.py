@@ -60,7 +60,9 @@ class KubernetesRunner(StepRunner):
 
         ecode = 1
         try:
-            self._vol_claim_create()
+            if not self._vol_claim_created:
+                self._vol_claim_create()
+                self._vol_claim_created = True
 
             if not self._init_pod_created:
                 self._init_pod_create()
@@ -235,9 +237,6 @@ class KubernetesRunner(StepRunner):
                 "volumeName"
             ] = self._config.resman_opts.persistent_volume_name
 
-        if self._vol_claim_created:
-            return
-
         self._kclient.create_namespaced_persistent_volume_claim(
             namespace=self._namespace, body=vol_claim_conf
         )
@@ -258,8 +257,6 @@ class KubernetesRunner(StepRunner):
 
             time.sleep(1)
             counter += 1
-
-        self._vol_claim_created = True
 
     def _vol_claim_delete(self):
         """Delete the PersistentVolumeClaim.
