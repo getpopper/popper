@@ -40,7 +40,10 @@ class TestKubernetesRunner(PopperTest):
 
     def tearDown(self):
         log.setLevel("NOTSET")
-
+        
+    @unittest.skipIf(
+        os.environ.get("WITH_K8S", "0") != "1"
+    )
     def test_vol_claim_create(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -54,7 +57,10 @@ class TestKubernetesRunner(PopperTest):
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
-
+        
+    @unittest.skipIf(
+        os.environ.get("WITH_K8S", "0") != "1"
+    )
     def test_init_pod_create(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -72,6 +78,9 @@ class TestKubernetesRunner(PopperTest):
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
+    @unittest.skipIf(
+        os.environ.get("WITH_K8S", "0") != "1"
+    )
     def test_copy_ctx(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
