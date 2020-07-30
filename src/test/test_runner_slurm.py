@@ -248,7 +248,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
             expected = (
                 "docker create --name container_name "
                 "--workdir /workspace:Z "
-                "-v /w:/workspace "
+                "-v /w:/workspace:Z "
                 "-v /var/run/docker.sock:/var/run/docker.sock "
                 "-v /path/in/host:/path/in/container "
                 "-e FOO=bar   --privileged --hostname popper.local "
