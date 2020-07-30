@@ -53,7 +53,7 @@ from popper.runner import WorkflowRunner
     "-e",
     "--engine",
     help="Specify container engine used to execute workflow steps.",
-    type=click.Choice(["docker", "singularity", "vagrant"]),
+    type=click.Choice(["docker", "singularity"]),
 )
 @click.option(
     "-r",
