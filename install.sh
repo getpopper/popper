@@ -34,6 +34,9 @@ fi
 
 command -v docker >/dev/null 2>&1 || { echo >&2 "docker command not found. Aborting."; exit 1; }
 
+# We override the environment variables PATH of the host system with the
+# default of Popper’s Docker image. This prevents unforeseeable side effects if
+# the host’s PATH is non-standard.
 cat > ./popper << "EOF"
 #!/usr/bin/env sh
 
@@ -45,6 +48,7 @@ docker run --rm -ti \
   --volume "$PWD":"$PWD" \
   --workdir "$PWD" \
   --env-file /tmp/.envfile \
+  --env "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
   getpopper/popper:v2.7.0 "$@"
 EOF
 
