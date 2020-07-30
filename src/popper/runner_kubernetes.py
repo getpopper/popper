@@ -210,7 +210,7 @@ class KubernetesRunner(StepRunner):
         """Teardown the init Pod after the context has been copied
         into the volume.
         """
-        log.debug(f"deleting init pod {self._pod_name}")
+        log.debug(f"deleting init pod {self._init_pod_name}")
         self._kclient.delete_namespaced_pod(
             self._init_pod_name, namespace=self._namespace, body=V1DeleteOptions()
         )
