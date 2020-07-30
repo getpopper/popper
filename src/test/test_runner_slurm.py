@@ -219,7 +219,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
                 "docker create"
                 " --name container_name"
                 " --workdir /workspace:Z"
-                " -v /w:/workspace"
+                " -v /w:/workspace:Z"
                 " -v /var/run/docker.sock:/var/run/docker.sock"
                 "   foo:1.9 -two -flags"
             )
