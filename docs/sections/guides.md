@@ -251,11 +251,11 @@ For instance, a default Alpine image does not include `wget`.
 
 ### Launching a Jupyter Notebook
 
-This sections explains how to use Popper to launch a Jupyter notebooks, which are a
+This sections explains how to use Popper to launch Jupyter notebooks, which are a
  useful tool for exploratory work.
-To make it easier to refactor successful expirements into your final workflow, it 
-is important to use the same software environment for both. To do this, define a 
- container shared between steps.
+Refactoring successful expirements into your final workflow is easier if you keep
+the software environment consistent between both, which you can do by defining a
+container shared between steps.
 
 Some workflows use multiple containers (and `Dockerfiles`), so it is
  good practice to organize these from the start in a seperate folder.
@@ -263,9 +263,7 @@ In `containers/`, create this `Dockerfile`:
 
 ```Dockerfile
 FROM continuumio/miniconda3:4.8.2
-
 ENV PYTHONDONTWRITEBYTECODE=true 
-
 # update conda environment with packages and clean up conda installation by removing 
 # conda cache/package tarbarlls and python bytecode
 COPY environment.yml .
@@ -275,7 +273,7 @@ RUN conda env update -f exploration_env.yml \
 CMD [ "/bin/sh" ] 
 ```
 
-Use a seperate `environment.yml` file to define your Python environment. This
+Use a separate `environment.yml` file to define your Python environment. This
 avoids modifying the `Dockerfile` manually each time you need a new Python package.
 Create `containers/environment.yml`:
 
@@ -298,15 +296,15 @@ To run the Jupyter Lab environment, first add a new step to the workflow in `wf.
       8888/tcp: 8888
 ```
 
-Remarks:
+Notes:
 - `uses` is set to `./containers/` which tells Popper where to find the `Dockerfile`
  defining the container used for this step
 - `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect
  to the Jupyter Lab server in the container
 
-Next, in the local command line, execute this step in interactive mode:
+Next, in the local command line, execute the `notebook` step in interactive mode:
 ```sh
-popper sh -f wf.yml jupyter
+popper sh -f wf.yml notebbok
 ```
 Now, in the docker container's command line, run:
 ```sh
@@ -318,7 +316,8 @@ Notes:
 - `--ip 0.0.0.0` allows the user to access JupyterLab from outside the container (by default, 
 Jupyter only allows access from `localhost`).
 - `--no-browser` tells jupyter to not expect to find a browser in the docker container.
-- `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker containers), which is not enabled by default.
+- `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker
+ containers), which is not enabled by default.
 
 Follow the generated link in a browser to access Jupyter Lab.
 
