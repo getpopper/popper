@@ -218,7 +218,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
             expected = (
                 "docker create"
                 " --name container_name"
-                " --workdir /workspace:Z"
+                " --workdir /workspace"
                 " -v /w:/workspace:Z"
                 " -v /var/run/docker.sock:/var/run/docker.sock"
                 "   foo:1.9 -two -flags"
