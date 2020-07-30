@@ -1,6 +1,7 @@
 import os
 import base64
 import time
+import shutil
 import tarfile
 
 from kubernetes import config, client
@@ -93,8 +94,9 @@ class KubernetesRunner(StepRunner):
         """Tar up the workspace context and copy the tar file into
         the PersistentVolume in the Pod.
         """
+        shutil.rmtree(os.path.join(self._config.workspace_dir, ".git"), ignore_errors=True)
         files = os.listdir(self._config.workspace_dir)
-        with tarfile.open("ctx" + ".tar.gz", mode="w:gz") as archive:
+        with tarfile.open(os.path.join(self._config.workspace_dir, "ctx.tar.gz"), mode="w:gz") as archive:
             for f in files:
                 archive.add(f)
 
@@ -111,7 +113,7 @@ class KubernetesRunner(StepRunner):
             _preload_content=False,
         )
 
-        source_file = "ctx.tar.gz"
+        source_file = os.path.join(self._config.workspace_dir, "ctx.tar.gz")
         destination_file = "/workspace/ctx.tar.gz"
 
         with open(source_file, "rb") as image_file:
