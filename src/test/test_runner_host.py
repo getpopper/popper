@@ -6,7 +6,6 @@ import unittest
 from testfixtures import LogCapture
 from subprocess import Popen
 
-import popper.scm as scm
 import popper.utils as pu
 
 from popper.config import ConfigLoader
@@ -151,145 +150,6 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(c1.status, "created")
             self.assertEqual(c2.status, "created")
             dclient.close()
-
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
-    def test_get_container_kwargs(self):
-        step = Box(
-            {
-                "uses": "popperized/bin/sh@master",
-                "args": ["ls"],
-                "id": "one",
-                "dir": "/tmp/",
-                "options": {"ports": {"8888/tcp": 8888}},
-            },
-            default_box=True,
-        )
-
-        config_dict = {
-            "engine": {
-                "name": "docker",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-        }
-
-        config = ConfigLoader.load(
-            config_file=config_dict, workspace_dir="/path/to/workdir"
-        )
-
-        with DockerRunner(init_docker_client=False, config=config) as dr:
-            args = dr._get_container_kwargs(step, "alpine:3.9", "container_a")
-
-            self.assertEqual(
-                args,
-                {
-                    "image": "alpine:3.9",
-                    "command": ["ls"],
-                    "name": "container_a",
-                    "volumes": [
-                        "/path/to/workdir:/workspace",
-                        "/var/run/docker.sock:/var/run/docker.sock",
-                        "/path/in/host:/path/in/container",
-                    ],
-                    "working_dir": "/tmp/",
-                    "environment": {"FOO": "bar"},
-                    "entrypoint": None,
-                    "detach": True,
-                    "stdin_open": False,
-                    "tty": False,
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "ports": {"8888/tcp": 8888},
-                },
-            )
-
-        # check container kwargs when pty is enabled
-        config = ConfigLoader.load(
-            config_file=config_dict, workspace_dir="/path/to/workdir", pty=True
-        )
-
-        with DockerRunner(init_docker_client=False, config=config) as dr:
-            args = dr._get_container_kwargs(step, "alpine:3.9", "container_a")
-
-            self.assertEqual(
-                args,
-                {
-                    "image": "alpine:3.9",
-                    "command": ["ls"],
-                    "name": "container_a",
-                    "volumes": [
-                        "/path/to/workdir:/workspace",
-                        "/var/run/docker.sock:/var/run/docker.sock",
-                        "/path/in/host:/path/in/container",
-                    ],
-                    "working_dir": "/tmp/",
-                    "environment": {"FOO": "bar"},
-                    "entrypoint": None,
-                    "detach": False,
-                    "stdin_open": True,
-                    "tty": True,
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "ports": {"8888/tcp": 8888},
-                },
-            )
-
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
-    def test_get_build_info(self):
-        step = Box(
-            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
-            default_box=True,
-        )
-        with DockerRunner(init_docker_client=False) as dr:
-            build, img, tag, build_ctx_path = dr._get_build_info(step)
-            self.assertEqual(build, True)
-            self.assertEqual(img, "popperized/bin")
-            self.assertEqual(tag, "master")
-            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_ctx_path)
-            self.assertTrue("github.com/popperized/bin/sh" in build_ctx_path)
-
-            step = Box(
-                {
-                    "uses": "docker://alpine:3.9",
-                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-                    "env": {"FOO": "bar"},
-                    "id": "1",
-                },
-                default_box=True,
-            )
-
-        with DockerRunner(init_docker_client=False) as dr:
-            build, img, tag, build_ctx_path = dr._get_build_info(step)
-            self.assertEqual(build, False)
-            self.assertEqual(img, "alpine")
-            self.assertEqual(tag, "3.9")
-            self.assertEqual(build_ctx_path, None)
-
-        step = Box({"uses": "./", "args": ["ls"], "id": "one",}, default_box=True,)
-        conf = ConfigLoader.load(workspace_dir="/tmp")
-        with DockerRunner(init_docker_client=False, config=conf) as dr:
-            build, img, tag, build_ctx_path = dr._get_build_info(step)
-            self.assertEqual(build, True)
-            self.assertEqual(img, "popper_one_step")
-            self.assertEqual(tag, "na")
-            self.assertEqual(build_ctx_path, f"{os.path.realpath('/tmp')}/./")
-
-        # test within a git repo
-        repo = self.mk_repo()
-        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
-        with DockerRunner(init_docker_client=False, config=conf) as dr:
-            build, img, tag, build_ctx_path = dr._get_build_info(step)
-            self.assertEqual(build, True)
-            self.assertEqual(img, "popper_one_step")
-            self.assertEqual(tag, scm.get_sha(repo, short=7))
-            self.assertEqual(build_ctx_path, f"{os.path.realpath(repo.working_dir)}/./")
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_docker_basic_run(self):
@@ -473,37 +333,6 @@ exec /bin/bash "$@"''',
                     "--ipc",
                 ],
             )
-
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
-    def test_get_build_info(self):
-        step = Box(
-            {"uses": "popperized/bin/sh@master", "args": ["ls"], "name": "one",},
-            default_box=True,
-        )
-        with SingularityRunner() as sr:
-            build, img, build_ctx_path = sr._get_build_info(step)
-            self.assertEqual(build, True)
-            self.assertEqual(img, "popperized/bin")
-            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_ctx_path)
-            self.assertTrue("github.com/popperized/bin/sh" in build_ctx_path)
-
-            step = Box(
-                {
-                    "uses": "docker://alpine:3.9",
-                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-                    "env": {"FOO": "bar"},
-                    "name": "1",
-                },
-                default_box=True,
-            )
-
-        with SingularityRunner() as sr:
-            build, img, build_ctx_path = sr._get_build_info(step)
-            self.assertEqual(build, False)
-            self.assertEqual(img, "docker://alpine:3.9")
-            self.assertEqual(build_ctx_path, None)
 
     @unittest.skipIf(
         os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
