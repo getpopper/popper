@@ -3,20 +3,13 @@ import shutil
 import time
 import unittest
 
-from testfixtures import LogCapture
-from subprocess import Popen
-
 import popper.scm as scm
 import popper.utils as pu
 
 from popper.config import ConfigLoader
-from popper.parser import WorkflowParser
-from popper.runner import WorkflowRunner
 from popper.runner_kubernetes import DockerRunner, KubernetesRunner
 from popper.cli import log as log
 from .test_common import PopperTest
-
-import docker
 
 from kubernetes import config, client
 from kubernetes.client import Configuration, V1DeleteOptions
