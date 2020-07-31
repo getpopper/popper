@@ -92,3 +92,41 @@ class TestKubernetesRunner(PopperTest):
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
+
+    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
+    def test_pod_create_delete_exitcode(self):
+        repo = self.mk_repo()
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+        with KubernetesRunner(config=conf) as kr:
+            kr._vol_claim_create()
+            step = Box({
+                'id': 'test', 'uses': 'docker://alpine:3.9', 'runs': ('echo', 'hello')},
+                default_box=True
+            )
+            kr._pod_name = kr._base_pod_name + f"-{step.id}"
+            kr._pod_create(step, "alpine:3.9")
+            self.assertEqual(kr._pod_exit_code(), 0)
+            response = self._kclient.read_namespaced_pod(
+                kr._pod_name, namespace="default"
+            )
+            self.assertEqual(response.status.phase, "Succeeded")
+            kr._pod_delete()
+            self.assertRaises(Exception, self._kclient.read_namespaced_pod, **{"name": kr._pod_name, "namespace": "default"})
+
+            time.sleep(5)
+
+            step = Box({
+                'id': 'test', 'uses': 'docker://alpine:3.9', 'runs': ('ecdho', 'hello')},
+                default_box=True
+            )
+            kr._pod_name = kr._base_pod_name + f"-{step.id}"
+            kr._pod_create(step, "alpine:3.9")
+            self.assertEqual(kr._pod_exit_code(), 1)
+            response = self._kclient.read_namespaced_pod(
+                kr._pod_name, namespace="default"
+            )
+            self.assertEqual(response.status.phase, "Failed")
+            kr._pod_delete()
+            kr._vol_claim_delete()
+
+            self.assertRaises(Exception, self._kclient.read_namespaced_pod, **{"name": kr._pod_name, "namespace": "default"})

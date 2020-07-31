@@ -334,7 +334,7 @@ class KubernetesRunner(StepRunner):
             counter += 1
 
     def _pod_read_log(self):
-        """Read logs from the Pod after it moves into `Completed` state.
+        """Read logs from the Pod after it moves into `Running` state.
         """
         log.debug(f"reading logs from {self._pod_name}")
         response = self._kclient.read_namespaced_pod_log(
@@ -360,7 +360,7 @@ class KubernetesRunner(StepRunner):
         return 0
 
     def _pod_delete(self):
-        """Delete the Pod after it has moved into `Completed` state.
+        """Delete the Pod after it has Completed or Failed.
         """
         log.debug(f"deleting pod {self._pod_name}")
         self._kclient.delete_namespaced_pod(
