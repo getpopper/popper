@@ -42,7 +42,7 @@ class TestKubernetesRunner(PopperTest):
         log.setLevel("NOTSET")
 
     @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
-    def test_vol_claim_create(self):
+    def test_vol_claim_create_delete(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
         with KubernetesRunner(config=conf) as kr:
@@ -52,12 +52,17 @@ class TestKubernetesRunner(PopperTest):
             )
             self.assertEqual(response.status.phase, "Bound")
             kr._vol_claim_delete()
+            self.assertRaises(
+                Exception,
+                self._kclient.read_namespaced_persistent_volume_claim,
+                {"name": kr._vol_claim_name, "namespace": "default"},
+            )
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
     @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
-    def test_init_pod_create(self):
+    def test_init_pod_create_delete(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
         with KubernetesRunner(config=conf) as kr:
@@ -70,6 +75,11 @@ class TestKubernetesRunner(PopperTest):
             self.assertEqual(response.status.phase, "Running")
             kr._init_pod_delete()
             kr._vol_claim_delete()
+            self.assertRaises(
+                Exception,
+                self._kclient.read_namespaced_pod,
+                **{"name": kr._init_pod_name, "namespace": "default"},
+            )
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
