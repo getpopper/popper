@@ -162,66 +162,66 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         return " ".join(cmd)
 
 
-# class PodmanRunner(SlurmRunner, HostPodmanRunner):
-#     def __init__(self, **kw):
-#         super(PodmanRunner, self).__init__(init_Podman_client=False, **kw)
+class PodmanRunner(SlurmRunner, HostPodmanRunner):
+    def __init__(self, **kw):
+        super(PodmanRunner, self).__init__(init_podman_client=False, **kw)
 
-#     def __exit__(self, exc_type, exc, traceback):
-#         pass
+    def __exit__(self, exc_type, exc, traceback):
+        pass
 
-#     def run(self, step):
-#         """Execute the given step via slurm in the docker engine."""
-#         cid = pu.sanitized_name(step.id, self._config.wid)
-#         cmd = []
+    def run(self, step):
+        """Execute the given step via slurm in the docker engine."""
+        cid = pu.sanitized_name(step.id, self._config.wid)
+        cmd = []
 
-#         build, _, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
-#         cmd.append(f"podman rm -f {cid} || true")
+        cmd.append(f"podman rm -f {cid} || true")
 
-#         if build:
-#             cmd.append(f"podman build -t {img}:{tag} {build_ctx_path}")
-#         elif not self._config.skip_pull and not step.skip_pull:
-#             cmd.append(f"podman pull {img}:{tag}")
+        if build:
+            cmd.append(f"podman build -t {img}:{tag} {build_ctx_path}")
+        elif not self._config.skip_pull and not step.skip_pull:
+            cmd.append(f"podman pull {img}:{tag}")
 
-#         cmd.append(self._create_cmd(step, f"{img}:{tag}", cid))
-#         cmd.append(f"podman start --attach {cid}")
+        cmd.append(self._create_cmd(step, f"{img}:{tag}", cid))
+        cmd.append(f"podman start --attach {cid}")
 
-#         self._spawned_containers.add(cid)
-#         ecode = self._submit_batch_job(cmd, step)
-#         self._spawned_containers.remove(cid)
-#         return ecode
+        self._spawned_containers.add(cid)
+        ecode = self._submit_batch_job(cmd, step)
+        self._spawned_containers.remove(cid)
+        return ecode
 
-#     def _create_cmd(self, step, img, cid):
-#         container_args = self._get_container_kwargs(step, img, cid)
-#         container_args.pop("detach")
-#         cmd = ["podman create"]
-#         cmd.append(f"--name {container_args.pop('name')}")
-#         cmd.append(f"--workdir {container_args.pop('working_dir')}")
+    def _create_cmd(self, step, img, cid):
+        container_args = self._get_container_kwargs(step, img, cid)
+        container_args.pop("detach")
+        cmd = ["podman create"]
+        cmd.append(f"--name {container_args.pop('name')}")
+        cmd.append(f"--workdir {container_args.pop('working_dir')}")
 
-#         entrypoint = container_args.pop("entrypoint", None)
-#         if entrypoint:
-#             cmd.append(f"--entrypoint {' '.join(entrypoint)}")
+        entrypoint = container_args.pop("entrypoint", None)
+        if entrypoint:
+            cmd.append(f"--entrypoint {' '.join(entrypoint)}")
 
-#         # append volume and environment flags
-#         for vol in container_args.pop("volumes"):
-#             cmd.append(f"-v {vol}")
-#         for env_key, env_val in container_args.pop("environment").items():
-#             cmd.append(f"-e {env_key}={env_val}")
+        # append volume and environment flags
+        for vol in container_args.pop("volumes"):
+            cmd.append(f"-v {vol}")
+        for env_key, env_val in container_args.pop("environment").items():
+            cmd.append(f"-e {env_key}={env_val}")
 
-#         command = container_args.pop("command")
-#         image = container_args.pop("image")
+        command = container_args.pop("command")
+        image = container_args.pop("image")
 
-#         # anything else is treated as a flag
-#         for k, v in container_args.items():
-#             cmd.append(pu.key_value_to_flag(k, v))
+        # anything else is treated as a flag
+        for k, v in container_args.items():
+            cmd.append(pu.key_value_to_flag(k, v))
 
-#         # append the image and the commands
-#         cmd.append(image)
+        # append the image and the commands
+        cmd.append(image)
 
-#         if command:
-#             cmd.append(" ".join(command))
+        if command:
+            cmd.append(" ".join(command))
 
-#         return " ".join(cmd)
+        return " ".join(cmd)
 
 
 class SingularityRunner(SlurmRunner, HostSingularityRunner):
