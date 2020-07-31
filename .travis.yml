@@ -16,6 +16,7 @@ services: docker
 
 before_install:
 - src/scripts/install_singularity.sh
+- src/scripts/install_podman.sh
 - pip install coverage
 
 install:
