@@ -280,8 +280,6 @@ class PodmanRunner(StepRunner):
         if e != 0:
             log.fail(f"{output}")
 
-        print(output)
-
         return e
 
     def stop_running_tasks(self):
@@ -376,7 +374,7 @@ class PodmanRunner(StepRunner):
             return None
 
         container = container.rsplit()
-        return container[0]
+        return container[-1]
 
 
 class SingularityRunner(StepRunner):
@@ -438,6 +436,13 @@ class SingularityRunner(StepRunner):
             return SingularityRunner._convert(dockerfile, singularityfile)
         else:
             log.fail("No Dockerfile was found.")
+
+    @staticmethod
+    def _in_docker():
+        """ Returns TRUE if we are being executed in a Docker container. """
+        if os.path.isfile("/proc/1/cgroup"):
+            with open("/proc/1/cgroup", "r") as f:
+                return "docker" in f.read() or "lxc" in f.read()
 
     def _build_from_recipe(self, build_ctx_path, build_dest, cid):
         SingularityRunner.lock.acquire()
