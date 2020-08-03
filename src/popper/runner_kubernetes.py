@@ -6,6 +6,7 @@ import tarfile
 
 from kubernetes import config, client
 from kubernetes.client import Configuration, V1DeleteOptions
+from kubernetes.client.rest import ApiException
 from kubernetes.client.api import core_v1_api
 from kubernetes.stream import stream
 
@@ -62,7 +63,8 @@ class KubernetesRunner(StepRunner):
         ecode = 1
         try:
             if not self._vol_claim_created:
-                self._vol_claim_create()
+                if not self._vol_claim_exists():
+                    self._vol_claim_create()
                 self._vol_claim_created = True
 
             if not self._init_pod_created:
@@ -264,6 +266,19 @@ class KubernetesRunner(StepRunner):
 
             time.sleep(1)
             counter += 1
+
+    def _vol_claim_exists(self):
+        vol_claim_exists = False
+        try:
+            self._kclient.read_namespaced_persistent_volume_claim(
+                self._vol_claim_name, namespace=self._namespace
+            )
+            vol_claim_exists = True
+        except ApiException as e:
+            if e.reason != "Not Found":
+                raise Exception(e)
+
+        return vol_claim_exists
 
     def _vol_claim_delete(self):
         """Delete the PersistentVolumeClaim.
