@@ -441,6 +441,13 @@ class SingularityRunner(StepRunner):
         else:
             log.fail("No Dockerfile was found.")
 
+    @staticmethod
+    def _in_docker():
+        """ Returns TRUE if we are being executed in a Docker container. """
+        if os.path.isfile("/proc/1/cgroup"):
+            with open("/proc/1/cgroup", "r") as f:
+                return "docker" in f.read() or "lxc" in f.read()
+
     def _build_from_recipe(self, build_ctx_path, build_dest, cid):
         SingularityRunner.lock.acquire()
         pwd = os.getcwd()
