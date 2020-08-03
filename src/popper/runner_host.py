@@ -388,6 +388,19 @@ class SingularityRunner(StepRunner):
         self._spawned_containers = set()
         self._s = None
 
+        if SingularityRunner._in_docker():
+            log.fail(
+                (
+                    "You seem to be running Popper in a Docker container.\n"
+                    "Singularity cannot be executed this way.\n"
+                    "Either run Popper without Singularity or install Popper "
+                    "through PIP.\n"
+                    "Instructions are available here:\n"
+                    "https://github.com/getpopper/popper/"
+                    "blob/master/docs/installation.md"
+                )
+            )
+
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
 
