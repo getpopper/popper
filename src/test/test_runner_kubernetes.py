@@ -169,7 +169,12 @@ class TestDockerRunner(PopperTest):
 
     def test_build_and_push_image(self):
         repo = self.mk_repo()
-        config = {"resource_manager": {"name": "kubernetes", "options": {"registry_user": "jcnitdgp25"}}}
+        config = {
+            "resource_manager": {
+                "name": "kubernetes",
+                "options": {"registry_user": "jcnitdgp25"},
+            }
+        }
         kwargs = {"config_file": config}
         conf = ConfigLoader.load(**kwargs)
         step = Box(
