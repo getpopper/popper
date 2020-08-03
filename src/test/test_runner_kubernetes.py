@@ -167,6 +167,7 @@ class TestDockerRunner(PopperTest):
     def tearDown(self):
         log.setLevel("NOTSET")
 
+    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
     def test_build_and_push_image(self):
         repo = self.mk_repo()
         config = {
