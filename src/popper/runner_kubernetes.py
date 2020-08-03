@@ -76,6 +76,8 @@ class KubernetesRunner(StepRunner):
             ecode = self._pod_exit_code()
         except Exception as e:
             log.fail(e)
+        finally:
+            self._pod_delete()
 
         log.debug(f"returning with {ecode}")
         return ecode
@@ -88,7 +90,6 @@ class KubernetesRunner(StepRunner):
         """
         log.debug("received SIGINT. deleting pod and volume claim")
         self._pod_delete()
-        self._vol_claim_delete()
 
     def _copy_ctx(self):
         """Tar up the workspace context and copy the tar file into
