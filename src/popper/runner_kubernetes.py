@@ -308,7 +308,9 @@ class KubernetesRunner(StepRunner):
         if len(env.keys()) > 0:
             pod_conf["spec"]["containers"][0]["env"] = []
             for name, value in env.items():
-                pod_conf["spec"]["containers"][0]["env"].append({"name": name, "value": value})
+                pod_conf["spec"]["containers"][0]["env"].append(
+                    {"name": name, "value": value}
+                )
 
         if self._config.resman_opts.get("node_selector_host_name", None):
             pod_conf["spec"]["nodeSelector"] = {
