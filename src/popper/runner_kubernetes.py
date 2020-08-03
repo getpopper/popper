@@ -276,6 +276,9 @@ class KubernetesRunner(StepRunner):
     def _pod_create(self, step, image):
         """Start a Pod for each step.
         """
+        env = self._prepare_environment(step)
+        log.debug(env)
+
         ws_vol_mount = f"{self._pod_name}-ws"
         pod_conf = {
             "apiVersion": "v1",
@@ -301,6 +304,11 @@ class KubernetesRunner(StepRunner):
                 ],
             },
         }
+
+        if len(env.keys()) > 0:
+            pod_conf["spec"]["containers"][0]["env"] = []
+            for name, value in env.items():
+                pod_conf["spec"]["containers"][0]["env"].append({"name": name, "value": value})
 
         if self._config.resman_opts.get("node_selector_host_name", None):
             pod_conf["spec"]["nodeSelector"] = {
