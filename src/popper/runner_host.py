@@ -217,7 +217,6 @@ class DockerRunner(StepRunner):
 
         return container
 
-<<<<<<< HEAD
     def _get_container_kwargs(self, step, img, name):
         args = {
             "image": img,
