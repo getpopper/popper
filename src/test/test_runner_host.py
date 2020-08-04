@@ -334,15 +334,15 @@ class TestHostPodmanRunner(PopperTest):
             }
             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "docker://golang:1.14.4-alpine3.11",
-                        "args": ["go", "build", "-v", "."],
-                    }
-                ]
-            }
-            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+            # wf_data = {
+            #     "steps": [
+            #         {
+            #             "uses": "docker://golang:1.14.4-alpine3.11",
+            #             "args": ["go", "build", "-v", "."],
+            #         }
+            #     ]
+            # }
+            # self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
