@@ -304,7 +304,7 @@ Notes:
 
 Next, in the local command line, execute the `notebook` step in interactive mode:
 ```sh
-popper sh -f wf.yml notebbok
+popper sh -f wf.yml notebook
 ```
 Now, in the docker container's command line:
 ```sh
