@@ -217,7 +217,6 @@ class DockerRunner(StepRunner):
 
         return container
 
-
     def _find_container(self, cid):
         """Check whether the container exists."""
         containers = self._d.containers.list(all=True, filters={"name": cid})
