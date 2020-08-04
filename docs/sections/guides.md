@@ -306,7 +306,7 @@ Next, in the local command line, execute the `notebook` step in interactive mode
 ```sh
 popper sh -f wf.yml notebook
 ```
-Now, in the docker container's command line:
+Now, in the Docker container's command line:
 ```sh
 jupyter lab --ip 0.0.0.0 --no-browser --allow-root 
 ```
@@ -319,7 +319,7 @@ Jupyter only allows access from `localhost`).
 - `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker
  containers), which is not enabled by default.
 
-Follow the generated link in a browser to access JupyterLab.
+Open the generated link in a browser to access JupyterLab.
 
 ### Package management
 
@@ -348,7 +348,7 @@ conda env export > containers/environment.yml
 
 On the next use of the Docker image, Popper will rebuild it with the updated 
 requirements 
-(Note: this only happens because of ` COPY environment.yml` in the `Dockerfile`).
+(Note: this is triggered by` COPY environment.yml` in the `Dockerfile`).
 
 #### pip
 

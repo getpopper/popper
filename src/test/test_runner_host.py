@@ -152,6 +152,7 @@ class TestHostDockerRunner(PopperTest):
             dclient.close()
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
+<<<<<<< HEAD
     def test_get_container_kwargs(self):
         step = Box(
             {
@@ -272,13 +273,18 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(build_sources, None)
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
+=======
+>>>>>>> 7dc5c2878e2646e3f5a3b793d9177b1236e9dde1
     def test_docker_basic_run(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
+        test_string = "STEP_INFO:popper:Successfully tagged popperized/bin:master"
 
         with WorkflowRunner(conf) as r:
             wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
-            r.run(WorkflowParser.parse(wf_data=wf_data))
+            with self.assertLogs(log, level="STEP_INFO") as cm:
+                r.run(WorkflowParser.parse(wf_data=wf_data))
+            self.assertTrue(test_string in cm.output, f"Got cmd output: {cm.output}")
 
             wf_data = {
                 "steps": [
@@ -302,6 +308,13 @@ class TestHostDockerRunner(PopperTest):
                 ]
             }
             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+
+        conf = ConfigLoader.load(workspace_dir=repo.working_dir, quiet=True)
+        with WorkflowRunner(conf) as r:
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            with self.assertLogs(log, level="STEP_INFO") as cm:
+                r.run(WorkflowParser.parse(wf_data=wf_data))
+            self.assertTrue(test_string not in cm.output)
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
@@ -443,37 +456,6 @@ exec /bin/bash "$@"''',
                     "--ipc",
                 ],
             )
-
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
-    def test_get_build_info(self):
-        step = Box(
-            {"uses": "popperized/bin/sh@master", "args": ["ls"], "name": "one",},
-            default_box=True,
-        )
-        with SingularityRunner() as sr:
-            build, img, build_sources = sr._get_build_info(step)
-            self.assertEqual(build, True)
-            self.assertEqual(img, "popperized/bin")
-            self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_sources)
-            self.assertTrue(f"github.com/popperized/bin/sh" in build_sources)
-
-            step = Box(
-                {
-                    "uses": "docker://alpine:3.9",
-                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-                    "env": {"FOO": "bar"},
-                    "name": "1",
-                },
-                default_box=True,
-            )
-
-        with SingularityRunner() as sr:
-            build, img, build_sources = sr._get_build_info(step)
-            self.assertEqual(build, False)
-            self.assertEqual(img, "docker://alpine:3.9")
-            self.assertEqual(build_sources, None)
 
     @unittest.skipIf(
         os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"

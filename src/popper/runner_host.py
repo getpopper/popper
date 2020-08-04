@@ -172,49 +172,23 @@ class DockerRunner(StepRunner):
             log.info(f"Stopping container {c.name}")
             c.stop()
 
-    def _get_build_info(self, step):
-        """Parses the `uses` attribute and returns build information needed.
-
-        Args:
-            step(dict): dict with step data
-
-        Returns:
-            (str, str, str, str): bool (build), image, tag, Dockerfile
-        """
-        build = True
-        img = None
-        build_ctx_path = None
-
-        if "docker://" in step.uses:
-            img = step.uses.replace("docker://", "")
-            if ":" in img:
-                (img, tag) = img.split(":")
-            else:
-                tag = "latest"
-            build = False
-        elif "./" in step.uses:
-            img = f'{pu.sanitized_name(step.id, "step")}'.lower()
-            tag = f"{self._config.git_sha_short}"
-            build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
-        else:
-            _, service, user, repo, step_dir, version = scm.parse(step.uses)
-            wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
-            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
-            img = f"{user}/{repo}".lower()
-            tag = version
-            build_ctx_path = os.path.join(repo_dir, step_dir)
-
-        return (build, img, tag, build_ctx_path)
-
     def _create_container(self, cid, step):
-        build, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
-                self._d.images.build(
-                    path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
+                streamer = self._d.api.build(
+                    decode=True, path=build_ctx_path, tag=f"{img}:{tag}", rm=True,
                 )
+                for chunk in streamer:
+                    if self._config.quiet:
+                        continue
+                    if "stream" in chunk:
+                        lines = [line for line in chunk["stream"].splitlines() if line]
+                        for line in lines:
+                            log.step_info(line.strip())
+
         elif not self._config.skip_pull and not step.skip_pull:
             log.info(f"[{step.id}] docker pull {img}:{tag}")
             if not self._config.dry_run:
@@ -224,6 +198,10 @@ class DockerRunner(StepRunner):
             return
 
         container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
+
+        if "volumes" not in container_args:
+            container_args["volumes"] = []
+        container_args["volumes"].insert(1, "/var/run/docker.sock:/var/run/docker.sock")
 
         log.debug(f"Container args: {container_args}")
 
@@ -239,6 +217,7 @@ class DockerRunner(StepRunner):
 
         return container
 
+<<<<<<< HEAD
     def _get_container_kwargs(self, step, img, name):
         args = {
             "image": img,
@@ -262,6 +241,8 @@ class DockerRunner(StepRunner):
 
         return args
 
+=======
+>>>>>>> 7dc5c2878e2646e3f5a3b793d9177b1236e9dde1
     def _find_container(self, cid):
         """Check whether the container exists."""
         containers = self._d.containers.list(all=True, filters={"name": cid})
@@ -272,25 +253,6 @@ class DockerRunner(StepRunner):
             return filtered_containers[0]
 
         return None
-
-    def _update_with_engine_config(self, container_args):
-        """Given container arguments, it extends it so it includes options
-        obtained from the popper.config.Config.engine_opts property.
-        """
-        update_with = self._config.engine_opts
-        if not update_with:
-            return
-
-        container_args["volumes"] = [
-            *container_args["volumes"],
-            *update_with.get("volumes", list()),
-        ]
-        for k, v in update_with.get("environment", dict()).items():
-            container_args["environment"].update({k: v})
-
-        for k, v in update_with.items():
-            if k not in container_args.keys():
-                container_args[k] = update_with[k]
 
 
 class SingularityRunner(StepRunner):
@@ -303,6 +265,19 @@ class SingularityRunner(StepRunner):
 
         self._spawned_containers = set()
         self._s = None
+
+        if SingularityRunner._in_docker():
+            log.fail(
+                (
+                    "You seem to be running Popper in a Docker container.\n"
+                    "Singularity cannot be executed this way.\n"
+                    "Either run Popper without Singularity or install Popper "
+                    "through PIP.\n"
+                    "Instructions are available here:\n"
+                    "https://github.com/getpopper/popper/"
+                    "blob/master/docs/installation.md"
+                )
+            )
 
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
@@ -353,6 +328,13 @@ class SingularityRunner(StepRunner):
         else:
             log.fail("No Dockerfile was found.")
 
+    @staticmethod
+    def _in_docker():
+        """ Returns TRUE if we are being executed in a Docker container. """
+        if os.path.isfile("/proc/1/cgroup"):
+            with open("/proc/1/cgroup", "r") as f:
+                return "docker" in f.read() or "lxc" in f.read()
+
     def _build_from_recipe(self, build_ctx_path, build_dest, cid):
         SingularityRunner.lock.acquire()
         pwd = os.getcwd()
@@ -362,50 +344,11 @@ class SingularityRunner(StepRunner):
         os.chdir(pwd)
         SingularityRunner.lock.release()
 
-    def _get_build_info(self, step):
-        build = True
-        img = None
-        build_ctx_path = None
-
-        if (
-            "docker://" in step.uses
-            or "shub://" in step.uses
-            or "library://" in step.uses
-        ):
-            img = step.uses
-            build = False
-
-        elif "./" in step.uses:
-            img = f'{pu.sanitized_name(step.id, "step")}'
-            build_ctx_path = os.path.join(self._config.workspace_dir, step.uses)
-        else:
-            _, service, user, repo, step_dir, version = scm.parse(step.uses)
-            wf_cache_dir = os.path.join(self._config.cache_dir, self._config.wid)
-            repo_dir = os.path.join(wf_cache_dir, service, user, repo)
-            img = f"{user}/{repo}".lower()
-            build_ctx_path = os.path.join(repo_dir, step_dir)
-
-        return (build, img, build_ctx_path)
-
     def _setup_singularity_cache(self):
         self._singularity_cache = os.path.join(
             self._config.cache_dir, "singularity", self._config.wid
         )
         os.makedirs(self._singularity_cache, exist_ok=True)
-
-    def _update_with_engine_config(self, container_args):
-        update_with = self._config.engine_opts
-        if not update_with:
-            return
-
-        container_args["bind"] = [
-            *container_args["bind"],
-            *update_with.get("bind", list()),
-        ]
-
-        for k, v in update_with.items():
-            if k not in container_args.keys():
-                container_args[k] = update_with[k]
 
     def _get_container_options(self):
         container_args = {
@@ -430,7 +373,12 @@ class SingularityRunner(StepRunner):
         return options
 
     def _create_container(self, step, cid):
-        build, image, build_ctx_path = self._get_build_info(step)
+        build, image, _, _, build_ctx_path = self._get_build_info(step)
+
+        if "shub://" in step.uses or "library://" in step.uses:
+            build = False
+            image = step.uses
+            build_ctx_path = None
 
         if build:
             log.info(f"[{step.id}] singularity build {cid} {build_ctx_path}")

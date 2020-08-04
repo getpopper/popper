@@ -1,15 +1,19 @@
+import os
+
 from setuptools import setup
 
-version = {}
-with open("popper/_version.py") as f:
-    exec(f.read(), version)
+version = {"__popper_version__": "0.0.0"}
+version_file = "./popper/_version.py"
+if os.path.isfile(version_file):
+    with open(version_file) as f:
+        exec(f.read(), version)
 
 setup(
     name="popper",
     version=version["__popper_version__"],
     author="The Popper Development Team",
-    author_email="ivo@cs.ucsc.edu",
-    url="http://falsifiable.us",
+    author_email="ivotron@ucsc.edu",
+    url="https://getpopper.io",
     description="Popper CLI tool to generate reproducible papers.",
     packages=["popper", "popper.commands"],
     include_package_data=True,
@@ -17,7 +21,7 @@ setup(
         "click==7.1.2",
         "docker==4.2.0",
         "dockerpty==0.4.1",
-        "GitPython==3.1.0",
+        "GitPython==3.1.7",
         "pykwalify==1.7.0",
         "python-box==4.2.3",
         "pyyaml==5.3.1",
@@ -32,9 +36,8 @@ setup(
     """,
     project_urls={
         "Documentation": "https://popper.readthedocs.io",
-        "Say Thanks!": "http://gitter.im/falsifiable-us/popper",
-        "Source": "https://github.com/systemslab/popper/",
-        "Tracker": "https://github.com/systemslab/popper/",
+        "Source": "https://github.com/getpopper/popper/",
+        "Tracker": "https://github.com/getpopper/popper/issues",
     },
     keywords="popper reproducibility automation continuous-integration",
     license="MIT",

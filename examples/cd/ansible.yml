@@ -7,6 +7,6 @@ steps:
   env:
     ANSIBLE_LOG_PATH: ./ansible.log
     ANSIBLE_SSH_CONTROL_PATH: /dev/shm/cp%%h-%%p-%%r
-    ANSIBLE_HOST_KEY_CHECKING: false
+    ANSIBLE_HOST_KEY_CHECKING: "false"
   secrets:
   - ANSIBLE_SSH_KEY_DATA

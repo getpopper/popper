@@ -107,7 +107,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         cid = pu.sanitized_name(step.id, self._config.wid)
         cmd = []
 
-        build, img, tag, build_ctx_path = self._get_build_info(step)
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         cmd.append(f"docker rm -f {cid} || true")
 
@@ -126,6 +126,11 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
 
     def _create_cmd(self, step, img, cid):
         container_args = self._get_container_kwargs(step, img, cid)
+
+        if "volumes" not in container_args:
+            container_args["volumes"] = []
+        container_args["volumes"].insert(1, "/var/run/docker.sock:/var/run/docker.sock")
+
         container_args.pop("detach")
         cmd = ["docker create"]
         cmd.append(f"--name {container_args.pop('name')}")
@@ -171,7 +176,12 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
         self._container = os.path.join(self._singularity_cache, cid)
 
-        build, img, build_ctx_path = self._get_build_info(step)
+        build, img, _, _, build_ctx_path = self._get_build_info(step)
+
+        if "shub://" in step.uses or "library://" in step.uses:
+            build = False
+            img = step.uses
+            build_ctx_path = None
 
         HostRunner._exec_cmd(["rm", "-rf", self._container])
 
