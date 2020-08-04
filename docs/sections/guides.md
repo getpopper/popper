@@ -253,11 +253,11 @@ For instance, a default Alpine image does not include `wget`.
 
 This sections explains how to use Popper to launch Jupyter notebooks, which are a
  useful tool for exploratory work.
-Refactoring successful expirements into your final workflow is easier if you keep
+Refactoring successful experiments into your final workflow is easier if you keep
 the software environment consistent between both, which you can do by defining a
 container shared between steps.
 
-Some workflows use multiple containers (and `Dockerfiles`), so it is
+Some workflows will require multiple containers (and `Dockerfiles`), so it is
  good practice to organize these from the start in a seperate folder.
 In `containers/`, create this `Dockerfile`:
 
