@@ -217,31 +217,7 @@ class DockerRunner(StepRunner):
 
         return container
 
-    def _get_container_kwargs(self, step, img, name):
-        args = {
-            "image": img,
-            "command": list(step.args),
-            "name": name,
-            "volumes": [
-                f"{self._config.workspace_dir}:/workspace",
-                "/var/run/docker.sock:/var/run/docker.sock",
-            ],
-            "working_dir": step.dir if step.dir else "/workspace",
-            "environment": self._prepare_environment(step),
-            "entrypoint": step.runs if step.runs else None,
-            "detach": not self._config.pty,
-            "tty": self._config.pty,
-            "stdin_open": self._config.pty,
-        }
 
-        self._update_with_engine_config(args)
-        args.update(step.options)
-        log.debug(f"container args: {pu.prettystr(args)}\n")
-
-        return args
-
-=======
->>>>>>> 7dc5c2878e2646e3f5a3b793d9177b1236e9dde1
     def _find_container(self, cid):
         """Check whether the container exists."""
         containers = self._d.containers.list(all=True, filters={"name": cid})
