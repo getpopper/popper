@@ -275,10 +275,10 @@ class PodmanRunner(StepRunner):
         self._spawned_containers.add(container)
 
         cmd = ["podman", "start", "-a", container]
-        _, e, output = HostRunner._exec_cmd(cmd, logging=False)
+        _, e, _ = HostRunner._exec_cmd(cmd)
 
         if e != 0:
-            log.fail(f"{output}")
+            log.fail(f"{e}")
 
         return e
 
@@ -374,6 +374,9 @@ class PodmanRunner(StepRunner):
             return None
 
         container = container.rsplit()
+        if len(container) < 1:
+            return None
+
         return container[-1]
 
 
