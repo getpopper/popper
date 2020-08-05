@@ -249,23 +249,21 @@ Notes:
 For instance, a default Alpine image does not include `wget`.
 
 
-### Launching a Jupyter Notebook
+### Using JupyterLab
 
-This sections explains how to use Popper to launch a Jupyter notebooks, which are a
+This sections explains how to use Popper to launch Jupyter notebooks, which are a
  useful tool for exploratory work.
-To make it easier to refactor successful expirements into your final workflow, it 
-is important to use the same software environment for both. To do this, define a 
- container shared between steps.
+Refactoring successful experiments into your final workflow is easier if you keep
+the software environment consistent between both, which you can do by defining a
+container shared between steps.
 
-Some workflows use multiple containers (and `Dockerfiles`), so it is
+Some workflows will require multiple containers (and `Dockerfiles`), so it is
  good practice to organize these from the start in a seperate folder.
 In `containers/`, create this `Dockerfile`:
 
 ```Dockerfile
 FROM continuumio/miniconda3:4.8.2
-
 ENV PYTHONDONTWRITEBYTECODE=true 
-
 # update conda environment with packages and clean up conda installation by removing 
 # conda cache/package tarbarlls and python bytecode
 COPY environment.yml .
@@ -275,7 +273,7 @@ RUN conda env update -f exploration_env.yml \
 CMD [ "/bin/sh" ] 
 ```
 
-Use a seperate `environment.yml` file to define your Python environment. This
+Use a separate `environment.yml` file to define your Python environment. This
 avoids modifying the `Dockerfile` manually each time you need a new Python package.
 Create `containers/environment.yml`:
 
@@ -288,7 +286,7 @@ dependencies:
   - jupyterlab=1.0
 ```
 
-To run the Jupyter Lab environment, first add a new step to the workflow in `wf.yml`
+To launch JupyterLab, first add a new step to your workflow in `wf.yml`
 ```yaml
 - id: "notebook"
   uses: "./containers/"
@@ -298,17 +296,17 @@ To run the Jupyter Lab environment, first add a new step to the workflow in `wf.
       8888/tcp: 8888
 ```
 
-Remarks:
+Notes:
 - `uses` is set to `./containers/` which tells Popper where to find the `Dockerfile`
  defining the container used for this step
 - `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect
  to the Jupyter Lab server in the container
 
-Next, in the local command line, execute this step in interactive mode:
+Next, in the local command line, execute the `notebook` step in interactive mode:
 ```sh
-popper sh -f wf.yml jupyter
+popper sh -f wf.yml notebook
 ```
-Now, in the docker container's command line, run:
+Now, in the Docker container's command line:
 ```sh
 jupyter lab --ip 0.0.0.0 --no-browser --allow-root 
 ```
@@ -318,13 +316,15 @@ Notes:
 - `--ip 0.0.0.0` allows the user to access JupyterLab from outside the container (by default, 
 Jupyter only allows access from `localhost`).
 - `--no-browser` tells jupyter to not expect to find a browser in the docker container.
-- `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker containers), which is not enabled by default.
+- `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker
+ containers), which is not enabled by default.
 
-Follow the generated link in a browser to access Jupyter Lab.
+Open the generated link in a browser to access JupyterLab.
 
 ### Package management
 
-It can be difficult to guess in advance which software libraries will be needed. 
+It can be difficult to guess in advance which software libraries are needed in
+the final workflow. 
 Instead, update the workflow requirements as you go using one of the package managers 
 available for Python.
 
@@ -347,7 +347,8 @@ conda env export > containers/environment.yml
 ```
 
 On the next use of the Docker image, Popper will rebuild it with the updated 
-requirements.
+requirements 
+(Note: this is triggered by` COPY environment.yml` in the `Dockerfile`).
 
 #### pip
 
@@ -364,9 +365,9 @@ RUN pip install -r requirements.txt
 
 #### Seperating docker images
 
-Some workflows have conflicting software requirements between steps, for
-instance if two steps require different versions of a library. In this case, 
-organize your container definitions as follows:
+Some workflows have conflicting software requirements between steps, for instance if two
+ steps require different versions of a library. In this case, organize your container
+ definitions as follows:
 
 ```
 └── containers
@@ -413,7 +414,7 @@ def _get_preprocessor(num_features , cat_features):
     cat_transformer = pipeline.Pipeline([
         ("impute", impute.SimpleImputer(strategy = "constant", fill_value = "missing")),
         ("encode", preprocessing.OneHotEncoder(drop = "first")),
-    ] )
+    ])
 
     preprocessor = compose.ColumnTransformer(
         [("num", num_transformer, num_features), 
@@ -482,8 +483,8 @@ step
 ```
 
 Notes:
-- This use the same container as in the `notebook` step. Again, the final, 'canonical' analysis should be developed in the same environment
-as exploratory code.
+- This use the same container as in the `notebook` step. Again, the final, 'canonical' 
+analysis should be developed in the same environment as exploratory code.
 
 Similarly, add the `src/evaluate_model.py`, which generates model plots, to
 the workflow.
@@ -561,7 +562,7 @@ to avoid accidently modifying the original data, which is considered immutable.
 ### Building a paper using LaTeX
 
 Wrap the build of the paper in your Popper workflow.
-This is  useful to ensure that the pdf is always built with the most up-to-date data 
+This is useful to ensure that the pdf is always built with the most up-to-date data 
 and figures.
 
 ```yaml
@@ -573,7 +574,7 @@ and figures.
 
 Notes:
 - This step uses a basic LaTeX installation. For more sophisticated needs,
-use a full [TexLive image](https://hub.docker.com/r/blang/latex/tags) 
+use a [full TexLive image](https://hub.docker.com/r/blang/latex/tags) 
 - `dir` is set to `workspace/paper` so that Popper looks for and outputs files in the `paper/` folder
 
 
