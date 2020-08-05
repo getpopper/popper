@@ -277,9 +277,6 @@ class PodmanRunner(StepRunner):
         cmd = ["podman", "start", "-a", container]
         _, e, _ = HostRunner._exec_cmd(cmd)
 
-        if e != 0:
-            log.fail(f"{e}")
-
         return e
 
     def stop_running_tasks(self):
@@ -374,7 +371,7 @@ class PodmanRunner(StepRunner):
             return None
 
         container = container.rsplit()
-        if len(container) < 1:
+        if len(container) == 0:
             return None
 
         return container[-1]
