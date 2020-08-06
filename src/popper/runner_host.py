@@ -306,7 +306,15 @@ class PodmanRunner(StepRunner):
         if build:
             log.info(f"[{step.id}] podman build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
-                cmd = ["podman", "build", "--tag", f"{img}:{tag}", "--rm", "--file", build_ctx_path]
+                cmd = [
+                    "podman",
+                    "build",
+                    "--tag",
+                    f"{img}:{tag}",
+                    "--rm",
+                    "--file",
+                    build_ctx_path,
+                ]
                 HostRunner._exec_cmd(cmd)
         elif not self._config.skip_pull and not step.skip_pull:
             log.info(f"[{step.id}] podman pull {img}:{tag}")
