@@ -11,7 +11,7 @@ import popper.utils as pu
 from popper.config import ConfigLoader
 from popper.parser import WorkflowParser
 from popper.runner import WorkflowRunner
-from popper.runner_host import HostRunner, DockerRunner, SingularityRunner
+from popper.runner_host import HostRunner, DockerRunner, PodmanRunner, SingularityRunner
 from popper.cli import log as log
 from .test_common import PopperTest
 
@@ -192,6 +192,157 @@ class TestHostDockerRunner(PopperTest):
             with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
             self.assertTrue(test_string not in cm.output)
+
+        repo.close()
+        shutil.rmtree(repo.working_dir, ignore_errors=True)
+
+
+class TestHostPodmanRunner(PopperTest):
+    def setUp(self):
+        log.setLevel("CRITICAL")
+
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_stop_running_tasks(self):
+        with PodmanRunner() as pr:
+            cmd = ["podman", "run", "-d", "-q"]
+            _, _, c1 = HostRunner._exec_cmd(
+                cmd + ["debian:buster-slim", "sleep", "20000"], logging=False,
+            )
+            _, _, c2 = HostRunner._exec_cmd(
+                cmd + ["alpine:3.9", "sleep", "10000"], logging=False
+            )
+            c1 = c1.strip()
+            c2 = c2.strip()
+            pr._spawned_containers.add(c1)
+            pr._spawned_containers.add(c2)
+            pr.stop_running_tasks()
+            status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+            ]
+            c1_status_cmd = status_cmd + [c1]
+            c2_status_cmd = status_cmd + [c2]
+            _, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
+            _, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
+            self.assertEqual(c1_status, "exited\n")
+            self.assertEqual(c2_status, "exited\n")
+
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_find_container(self):
+        config = ConfigLoader.load()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._find_container(cid)
+            self.assertEqual(c, None)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            container = pr._create_container(cid, step)
+            c = pr._find_container(cid)
+            self.assertEqual(c, container)
+            cmd = ["podman", "container", "rm", "-f", cid]
+            HostRunner._exec_cmd(cmd, logging=False)
+
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_create_container(self):
+        config = ConfigLoader.load()
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo hello"],
+                "id": "kontainer_one",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._create_container(cid, step)
+            c_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c,
+            ]
+            __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
+            self.assertEqual(c_status, "configured\n")
+            cmd = ["podman", "container", "rm", c]
+            HostRunner._exec_cmd(cmd, logging=False)
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo", "hello_world"],
+                "id": "KoNtAiNeR tWo",
+            },
+            default_box=True,
+        )
+        cid = pu.sanitized_name(step.id, config.wid)
+        with PodmanRunner(init_podman_client=True, config=config) as pr:
+            c = pr._create_container(cid, step)
+            c_status_cmd = [
+                "podman",
+                "container",
+                "inspect",
+                "-f",
+                str("{{.State.Status}}"),
+                c,
+            ]
+            __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
+            self.assertEqual(c_status, "configured\n")
+            cmd = ["podman", "container", "rm", c]
+            HostRunner._exec_cmd(cmd, logging=False)
+
+    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
+    def test_podman_basic_run(self):
+        repo = self.mk_repo()
+        conf = ConfigLoader.load(engine_name="podman", workspace_dir=repo.working_dir)
+
+        with WorkflowRunner(conf) as r:
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                        "env": {"FOO": "bar"},
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+            with open(os.path.join(repo.working_dir, "hello.txt"), "r") as f:
+                self.assertEqual(f.read(), "bar\n")
+
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "docker://alpine:3.9",
+                        "args": ["nocommandisnamedlikethis"],
+                    }
+                ]
+            }
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+
+            # wf_data = {
+            #     "steps": [
+            #         {
+            #             "uses": "docker://golang:1.14.4-alpine3.11",
+            #             "args": ["go", "build", "-v", "."],
+            #         }
+            #     ]
+            # }
+            # self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)

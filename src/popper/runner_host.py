@@ -12,7 +12,6 @@ from spython.main.parse.parsers import DockerParser
 from spython.main.parse.writers import SingularityWriter
 
 from popper import utils as pu
-from popper import scm
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
 
@@ -227,6 +226,164 @@ class DockerRunner(StepRunner):
             return filtered_containers[0]
 
         return None
+
+
+class PodmanRunner(StepRunner):
+
+    """Runs steps in podman on the local machine."""
+
+    def __init__(self, init_podman_client=True, **kw):
+        super(PodmanRunner, self).__init__(**kw)
+
+        self._spawned_containers = set()
+
+        if not init_podman_client:
+            return
+
+        try:
+            _, _, self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
+            self._p_version = HostRunner._exec_cmd(["podman", "version"], logging=False)
+        except Exception as e:
+            log.debug(f"Podman error: {e}")
+            log.fail("Unable to connect to podman, is it installed?")
+
+        log.debug(f"Podman info: {pu.prettystr(self._p_info)}")
+
+    def run(self, step):
+        """Executes the given step in podman."""
+        cid = pu.sanitized_name(step.id, self._config.wid)
+        container = self._find_container(cid)
+
+        if not container and self._config.reuse:
+            log.fail(
+                f"Cannot find an existing container for step '{step.id}' to be reused"
+            )
+
+        if container and not self._config.reuse and not self._config.dry_run:
+            cmd = ["podman", "rm", "-f", container]
+            HostRunner._exec_cmd(cmd, logging=False)
+            container = None
+
+        if not container and not self._config.reuse:
+            container = self._create_container(cid, step)
+
+        log.info(f"[{step.id}] podman start")
+
+        if self._config.dry_run:
+            return 0
+
+        self._spawned_containers.add(container)
+
+        cmd = ["podman", "start", "-a", container]
+        _, e, _ = HostRunner._exec_cmd(cmd)
+
+        return e
+
+    def stop_running_tasks(self):
+        """Stop containers started by Popper."""
+        for c in self._spawned_containers:
+            log.info(f"Stopping container {c}")
+            _, ecode, _ = HostRunner._exec_cmd(["podman", "stop", c], logging=False)
+            if ecode != 0:
+                log.warning(f"Failed to stop the {c} container")
+
+    def _find_container(self, cid):
+        """Checks whether the container exists."""
+        cmd = ["podman", "inspect", "-f", "{{.Id}}", cid]
+        _, ecode, containers = HostRunner._exec_cmd(cmd, logging=False)
+
+        if ecode == 125:
+            return None
+
+        if ecode != 0:
+            log.fail(f"podman inspect fail: {containers}")
+
+        return containers.strip()
+
+    def _create_container(self, cid, step):
+        build, _, img, tag, build_ctx_path = self._get_build_info(step)
+
+        if build:
+            log.info(f"[{step.id}] podman build {img}:{tag} {build_ctx_path}")
+            if not self._config.dry_run:
+                cmd = [
+                    "podman",
+                    "build",
+                    "--tag",
+                    f"{img}:{tag}",
+                    "--rm",
+                    "--file",
+                    build_ctx_path,
+                ]
+                HostRunner._exec_cmd(cmd)
+        elif not self._config.skip_pull and not step.skip_pull:
+            log.info(f"[{step.id}] podman pull {img}:{tag}")
+            if not self._config.dry_run:
+                cmd = ["podman", "pull", f"{img}:{tag}"]
+                HostRunner._exec_cmd(cmd, logging=False)
+
+        if self._config.dry_run:
+            return
+
+        container_args = self._get_container_kwargs(step, f"{img}:{tag}", cid)
+        log.debug(f"Container args: {container_args}")
+
+        msg = [f"{step.id}", "podman", "create", f"name={cid}"]
+        msg.append(f"image={container_args.get('image')}")
+        msg.append(f"entrypoint={container_args.get('entrypoint')}" or "")
+        msg.append(f"command={container_args.get('command')}" or "")
+        log.info(msg)
+
+        cmd = ["podman", "create"]
+
+        cmd.extend(["--name", container_args.get("name") or ""])
+        cmd.extend(["-v", container_args.get("volumes")[0] or ""])
+
+        env = container_args.get("environment")
+        if env:
+            for i, j in env.items():
+                cmd.extend(["-e", f"{i}={j}"])
+
+        cmd.extend(["-d" if container_args.get("detach") else ""])
+
+        cmd.extend(["-w", container_args.get("working_dir")])
+
+        h = container_args.get("hostname", None)
+        if h:
+            cmd.extend(["-h", h])
+
+        domain_name = container_args.get("domainname", None)
+        if domain_name:
+            cmd.extend(["--domainname", domain_name])
+
+        tty = container_args.get("tty", None)
+        if tty:
+            cmd.extend(["-t", tty])
+
+        entrypoint = container_args.get("entrypoint")
+        if entrypoint:
+            cmd.extend(["--entrypoint", entrypoint[0]])
+            entrypoint_rmd = entrypoint[1:]
+
+        cmd.append(container_args.get("image"))
+
+        if entrypoint:
+            for i in entrypoint_rmd:
+                cmd.extend([i or ""])
+
+        for i in container_args["command"]:
+            cmd.extend([i or ""])
+
+        _, ecode, container = HostRunner._exec_cmd(cmd, logging=False)
+
+        if ecode != 0:
+            return None
+
+        container = container.rsplit()
+        if len(container) == 0:
+            return None
+
+        return container[-1]
 
 
 class SingularityRunner(StepRunner):

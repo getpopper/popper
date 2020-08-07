@@ -96,9 +96,6 @@ class TestWorkflowRunner(unittest.TestCase):
             self.assertEqual(
                 "HostRunner", r._step_runner("host", None).__class__.__name__
             )
-            self.assertEqual(
-                "DockerRunner", r._step_runner("docker", None).__class__.__name__
-            )
 
 
 class TestStepRunner(PopperTest):
@@ -154,15 +151,15 @@ class TestStepRunner(PopperTest):
             self.assertTrue(f"{os.environ['HOME']}/.cache/popper" in build_ctx_path)
             self.assertTrue("github.com/popperized/bin/sh" in build_ctx_path)
 
-            step = Box(
-                {
-                    "uses": "docker://alpine:3.9",
-                    "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
-                    "env": {"FOO": "bar"},
-                    "id": "1",
-                },
-                default_box=True,
-            )
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["sh", "-c", "echo $FOO > hello.txt ; pwd"],
+                "env": {"FOO": "bar"},
+                "id": "1",
+            },
+            default_box=True,
+        )
         with StepRunner() as r:
             build, _, img, tag, build_sources = r._get_build_info(step)
             self.assertEqual(build, False)

@@ -233,6 +233,7 @@ class StepRunner(object):
     def _get_build_info(self, step):
 
         """Parses the `uses` attribute and returns build information needed.
+        
             Args:
                 step(dict): dict with step data
             Returns:
@@ -273,6 +274,7 @@ class StepRunner(object):
     def _update_with_engine_config(self, container_args):
 
         """Given container arguments, it extends it so it includes options
+
         obtained from the popper.config.Config.engine_opts property.
         """
         update_with = self._config.engine_opts
