@@ -133,6 +133,22 @@ popper run -f wf.yml -c config.yml
 
 [privmode]: https://docs.docker.com/engine/reference/run/#runtime-privilege-and-linux-capabilities
 
+Alternatively, container engine behavior can be customized at
+the step level using the `options` mapping:
+```yaml
+- id: mystep
+  uses: docker://ubuntu:18.04
+  runs: ["ls", "-l"]
+  options:
+  privileged: True
+  volumes:
+   - myvol1:/folder
+   - myvol2:/app     
+```
+> **NOTE**:
+>
+> Currently, this is only supported for the `docker` and `singularity`
+> engines.
 
 ## Continuously validating a workflow
 
