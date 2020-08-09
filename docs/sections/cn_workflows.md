@@ -45,7 +45,7 @@ attribute.
 | `secrets`   | **optional** A list of strings representing the names of secret variables to define<br>in the environment of the container for the step. For example,<br>`secrets: ["SECRET1", "SECRET2"]`. |
 | `skip_pull` | **optional** A boolean value that determines whether to pull the image before<br>executing the step. By default this is `false`. If the given container<br>image already exist (e.g. because it was built by a previous step in<br>the same workflow), assigning `true` skips downloading the image from<br>the registry. |
 | `dir`       | **optional** A string representing an absolute path inside the container to use as the<br>working directory. By default, this is `/workspace`. |
-| `options`   | **optional** Container configuration options. For instance:<br>`options: {ports: {8888:8888}, interactive: True, tty: True}`. Currently only<br> supported for the docker runtime. See the parameters of `client.containers.runs()`<br> in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options |
+| `options`   | **optional** Container engine customization options. For instance:<br>`options: {ports: {8888:8888}, interactive: True, tty: True}`. Currently only<br> supported for the `docker` and `singularity` engines. For Docker, see the parameters of `client.containers.runs()`<br> in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options. For Singularity, every available flag the `singularity run` command is a valid option. e.g. for `--hostname myhost` set `hostname: myhost`, for `--fakeroot` use `fakeroot: True` and so on. |
 
 ### Referencing images in a step
 
@@ -399,11 +399,12 @@ engine. However, a `--conf` flag is provided by the `popper run`
 command to specify custom options for the underlying engine in 
 question (see [here][engconf] for more).
 
-[engconf]: ./cli_features#customizing-container-engine-behavior
+[engconf]: ./cli_features.html#customizing-container-engine-behavior
 
 
-Alternatively, to restrict a configuration to a specific step in a workflow, set the desired parameters in the step's `options`
-**Note**: this is currently only supported for the Docker runtime 
+Alternatively, to restrict a configuration to a specific step in a workflow, set the 
+desired parameters in the step's `options`.
+**NOTE**: this is currently only supported for the `docker` and `singularity` engines.
 
 
 ## Resource Managers
