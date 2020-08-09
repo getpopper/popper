@@ -546,6 +546,18 @@ class SingularityRunner(StepRunner):
             return 0
 
         options = self._get_container_options()
+        step_options = []  # step-specific configuration
+        for k, v in step.options.items():
+            if isinstance(v, list):
+                flag = f"-{k}" if len(k) == 1 else f"--{k}"
+                step_options.append(flag)
+                for item in v.items():
+                    step_options.append(item)
+            else:
+                step_options.append(pu.key_value_to_flag(k, v))
+        step_options = " ".join(step_options).split(" ")
+        options = options + step_options
+        
         output = start_fn(self._container, commands, stream=True, options=options)
         try:
             for line in output:
