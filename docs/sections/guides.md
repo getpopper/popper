@@ -179,6 +179,8 @@ section.
 This guide uses examples from machine learning but no prior knowledge of the field
 is required.
 
+By default, this guide assumes that you use the Docker container engine, but 
+highlights where the workflow will differ if you use another engine.
 
 ### Getting started
 
@@ -320,6 +322,16 @@ Jupyter only allows access from `localhost`).
  containers), which is not enabled by default.
 
 Open the generated link in a browser to access JupyterLab.
+
+#### Using other container engines
+
+The above steps are for Docker. If you use Singularity, omit 
+```yaml
+options:
+  ports:
+    8888/tcp: 8888
+```
+Which is not needed because Singularity has no network isolation
 
 ### Package management
 
