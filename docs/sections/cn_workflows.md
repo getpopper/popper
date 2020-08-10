@@ -420,9 +420,7 @@ Popper enables leveraging the compute and storage capabilities of the cloud by a
 Kubernetes clusters. One need to have access to the config file and ensure that any PersistentVolume is available
 inside the cluster. Popper takes care of the workflow execution from there.
 
-#### Architecture and Design
-
-TODO
+When a workflow is executed, Popper first creates a persistent volume claim and spawns an init pod and uses it to copy the workflow context (compressed in the form of a `.tar.gz` file) into the persistent volume. Then, popper teardowns this init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted, so that it can reused by subsequent workflow executions.
 
 For running workflows on Kubernetes, some configuration options need to be passed to the kubernetes resource manager through the popper configuration file.
 
@@ -459,13 +457,13 @@ $ kubectl apply -f pv.yaml
 
 3. Write a configuration file similar to this.
 ```bash
-cat<< EOF > config.yml
+$ cat<< EOF > config.yml
 resource_manager: 
   name: kubernetes
   options:
-    node_selector_host_name: <hostname>
-    persistent_volume_name: <volume-name>
-    registry_user: <username>
+    node_selector_host_name: mynode
+    persistent_volume_name: myvol
+    registry_user: myuser
 EOF
 ```
 
