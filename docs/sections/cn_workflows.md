@@ -424,11 +424,9 @@ inside the cluster. Popper takes care of the workflow execution from there.
 
 TODO
 
-#### Example
-
 For running workflows on Kubernetes, some configuration options need to be passed to the kubernetes resource manager through the popper configuration file.
 
-##### Config file contents for running on a cluster without shared storage
+#### Running on a cluster without shared storage
 
 **NOTE:** If your workflow needs to build an image from a `Dockerfile`, make sure you are logged in to dockerhub.
 
@@ -476,7 +474,7 @@ EOF
 $ popper run -c config.yml
 ```
 
-###### Config file contents for running on a cluster with shared storage
+#### Running on a cluster with shared storage
 
 TODO
 
