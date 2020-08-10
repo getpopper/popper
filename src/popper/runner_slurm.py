@@ -8,6 +8,7 @@ from popper.cli import log as log
 from popper.runner_host import HostRunner
 from popper.runner_host import DockerRunner as HostDockerRunner
 from popper.runner_host import SingularityRunner as HostSingularityRunner
+from popper.runner_host import PodmanRunner as HostPodmanRunner
 
 
 class SlurmRunner(HostRunner):

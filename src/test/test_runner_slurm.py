@@ -9,7 +9,12 @@ from testfixtures.mock import call
 from popper.config import ConfigLoader
 from popper.runner import WorkflowRunner
 from popper.parser import WorkflowParser
-from popper.runner_slurm import SlurmRunner, DockerRunner, SingularityRunner
+from popper.runner_slurm import (
+    SlurmRunner,
+    DockerRunner,
+    SingularityRunner,
+    PodmanRunner,
+)
 from popper.cli import log as log
 
 from .test_common import PopperTest
