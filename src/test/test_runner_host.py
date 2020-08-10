@@ -509,6 +509,22 @@ exec /bin/bash "$@"''',
             sr._create_container(step, cid)
             self.assertEqual(sr._singularity_start(step, cid), 0)
 
+        step = Box(
+            {
+                "uses": "docker://alpine:3.9",
+                "runs": ["echo", "($hostname)"],
+                "options": {"hostname": "foo"},
+                "name": "test_2"
+            },
+            default_box=True
+        )
+        cid = pu.sanitized_name(step["name"], conf.wid)
+        with SingularityRunner(config=conf) as sr:
+            sr._setup_singularity_cache()
+            sr._container = os.path.join(sr._singularity_cache, cid)
+            sr._create_container(step, cid)
+            self.assertEqual(sr._singularity_start(step, cid), 0)
+
         # step = Box({
         #     'uses': 'library://library/default/alpine:3.7',
         #     'runs': ['echo', 'hello'],
