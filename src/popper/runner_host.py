@@ -557,7 +557,7 @@ class SingularityRunner(StepRunner):
                 step_options.append(pu.key_value_to_flag(k, v))
         step_options = " ".join(step_options).split(" ")
         options = options + step_options
-        
+
         output = start_fn(self._container, commands, stream=True, options=options)
         try:
             for line in output:
