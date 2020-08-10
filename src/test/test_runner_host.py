@@ -516,7 +516,7 @@ exec /bin/bash "$@"''',
                 "options": {"hostname": "foo"},
                 "name": "test_2",
             },
-            default_box=True,
+            default_box=True
         )
         cid = pu.sanitized_name(step["name"], conf.wid)
         with SingularityRunner(config=conf) as sr:
@@ -526,7 +526,7 @@ exec /bin/bash "$@"''',
             self.assertEqual(sr._singularity_start(step, cid), 0)
 
         # step = Box({
-        #     'uses': 'library://library/dgitefault/alpine:3.7',
+        #     'uses': 'library://library/default/alpine:3.7',
         #     'runs': ['echo', 'hello'],
         #     'name': 'test_2'
         # }, default_box=True)
