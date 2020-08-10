@@ -416,9 +416,9 @@ by default.
 
 ### Kubernetes
 
-Popper enable leveraging the insane compute and storage capabilities of the cloud by allowing running workflows on 
+Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on 
 Kubernetes clusters. One need to have access to the config file and ensure that any PersistentVolume is available
-inside the cluster. Popper will take care of the rest.
+inside the cluster. Popper takes care of the workflow execution from there.
 
 #### Architecture and Design
 
@@ -426,32 +426,59 @@ TODO
 
 #### Example
 
-For running workflows on Kubernetes, several configuration options need to be passed to the resource manager through the config file.
+For running workflows on Kubernetes, some configuration options need to be passed to the kubernetes resource manager through the popper configuration file.
 
 ##### Config file contents for running on a cluster without shared storage
-```yaml
+
+**NOTE:** If your workflow needs to build an image from a `Dockerfile`, make sure you are logged in to dockerhub.
+
+1. Write a persistent volume defination similar to the one shown below.
+
+```bash
+$ cat<< EOF > pv.yaml
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pv-hostpath
+  labels:
+    type: host
+spec:
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/tmp"
+EOF
+```
+
+2. Then create the persistent volume.
+```bash
+$ kubectl apply -f pv.yaml
+```
+
+3. Write a configuration file similar to this.
+```bash
+cat<< EOF > config.yml
 resource_manager: 
   name: kubernetes
   options:
     node_selector_host_name: <hostname>
     persistent_volume_name: <volume-name>
-    registry: <docker.io/quay.io/gcr.io/...>
     registry_user: <username>
-    registry_password: <password>
-    namespace: <namespace>
-    volume_size: <1Gi/500Mi/...>
-    step_pod_retry_limit: 10
+EOF
+```
+
+4. If you have a workflow file named `.popper.yml`, simply execute
+```
+$ popper run -c config.yml
 ```
 
 ###### Config file contents for running on a cluster with shared storage
 
 TODO
-
-
-```
-$ popper scaffold
-$ popper run -f wf.yml -c config.yml
-```
 
 ### SLURM
 
