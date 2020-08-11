@@ -516,7 +516,7 @@ exec /bin/bash "$@"''',
                 "options": {"hostname": "foo"},
                 "name": "test_2",
             },
-            default_box=True
+            default_box=True,
         )
         cid = pu.sanitized_name(step["name"], conf.wid)
         with SingularityRunner(config=conf) as sr:
