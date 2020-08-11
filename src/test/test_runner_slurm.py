@@ -9,7 +9,12 @@ from testfixtures.mock import call
 from popper.config import ConfigLoader
 from popper.runner import WorkflowRunner
 from popper.parser import WorkflowParser
-from popper.runner_slurm import SlurmRunner, DockerRunner, SingularityRunner
+from popper.runner_slurm import (
+    SlurmRunner,
+    DockerRunner,
+    SingularityRunner,
+    PodmanRunner,
+)
 from popper.cli import log as log
 
 from .test_common import PopperTest
@@ -306,6 +311,119 @@ docker rm -f popper_1_{config.wid} || true
 docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/{config.wid}/github.com/popperized/bin/sh
 docker create --name popper_1_{config.wid} --workdir /workspace --entrypoint cat -v /w:/workspace:Z -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar   --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
 docker start --attach popper_1_{config.wid}"""
+            # fmt: on
+            actual = f.read()
+            self.maxDiff = None
+            self.assertEqual(expected, actual)
+
+
+class TestSlurmPodmanRunner(unittest.TestCase):
+    def setUp(self):
+        log.setLevel("CRITICAL")
+        self.Popen = MockPopen()
+        replacer = Replacer()
+        replacer.replace("popper.runner_host.Popen", self.Popen)
+        self.addCleanup(replacer.restore)
+
+    def tearDown(self):
+        log.setLevel("NOTSET")
+
+    def test_create_cmd(self):
+        self.maxDiff = None
+        config = {"workspace_dir": "/w"}
+        with PodmanRunner(config=ConfigLoader.load(**config)) as prunner:
+            step = Box({"args": ["-two", "-flags"]}, default_box=True)
+            cmd = prunner._create_cmd(step, "foo:1.9", "container_name")
+
+            expected = (
+                "podman create"
+                " --name container_name"
+                " --workdir /workspace"
+                " -v /w:/workspace:Z"
+                "   foo:1.9 -two -flags"
+            )
+
+            self.assertEqual(expected, cmd)
+
+        config_dict = {
+            "engine": {
+                "name": "podman",
+                "options": {
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "volumes": ["/path/in/host:/path/in/container"],
+                    "environment": {"FOO": "bar"},
+                },
+            },
+            "resource_manager": {"name": "slurm"},
+        }
+
+        config = {"workspace_dir": "/w", "config_file": config_dict}
+        with PodmanRunner(config=ConfigLoader.load(**config)) as prunner:
+            step = Box({"args": ["-two", "-flags"]}, default_box=True)
+            cmd = prunner._create_cmd(step, "foo:1.9", "container_name")
+
+            expected = (
+                "podman create --name container_name "
+                "--workdir /workspace "
+                "-v /w:/workspace:Z "
+                "-v /path/in/host:/path/in/container "
+                "-e FOO=bar   --privileged --hostname popper.local "
+                "--domainname www.example.org"
+                " foo:1.9 -two -flags"
+            )
+
+            self.assertEqual(expected, cmd)
+
+    @replace("popper.runner_slurm.os.kill", mock_kill)
+    def test_run(self, mock_kill):
+        config_dict = {
+            "engine": {
+                "name": "podman",
+                "options": {
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "volumes": ["/path/in/host:/path/in/container"],
+                    "environment": {"FOO": "bar"},
+                },
+            },
+            "resource_manager": {"name": "slurm"},
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
+
+        self.Popen.set_command(
+            f"sbatch --wait --job-name popper_1_{config.wid} "
+            f"--output {slurm_cache_dir}/popper_1_{config.wid}.out "
+            f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
+            returncode=0,
+        )
+
+        self.Popen.set_command(
+            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
+        )
+
+        with WorkflowRunner(config) as r:
+            wf_data = {
+                "steps": [
+                    {
+                        "uses": "popperized/bin/sh@master",
+                        "runs": ["cat"],
+                        "args": ["README.md"],
+                    }
+                ]
+            }
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+
+        with open(f"{slurm_cache_dir}/popper_1_{config.wid}.sh", "r") as f:
+            # fmt: off
+            expected = f"""#!/bin/bash
+podman rm -f popper_1_{config.wid} || true
+podman build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/{config.wid}/github.com/popperized/bin/sh
+podman create --name popper_1_{config.wid} --workdir /workspace --entrypoint cat -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar   --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
+podman start --attach popper_1_{config.wid}"""
             # fmt: on
             actual = f.read()
             self.maxDiff = None
