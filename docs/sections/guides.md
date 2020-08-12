@@ -747,7 +747,7 @@ To run RStudio Server, first add a new step to your workflow in `wf.yml`
       8787: 8787
 ```
 Notes:
-- `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect
+- `ports` is set to `{8787: 8787}` which is necessary for the host machine to connect
 - `env` is set to `DISABLE_AUTH=true` so that RStudio Server does not prompt you for
 a username/password. Do not do this if you are running Popper on a public cloud,
 instead set a `password` in options and log in with the username `rstudio`
