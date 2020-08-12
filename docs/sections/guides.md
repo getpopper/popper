@@ -150,7 +150,7 @@ run.
 [create]: https://docs.docker.com/get-started/part2/
 
 
-## Computational research with Python
+## Computational research with Python and JupyterLab
 
 This guide explains how to use Popper to develop and run reproducible workflows
 for computational research in fields such as bioinformatics, machine learning, physics 
@@ -571,7 +571,7 @@ Note that these steps each read data from `data/` and output to `results/`.
 It is good practice to keep the input and outputs of a workflow separate
 to avoid accidently modifying the original data, which is considered immutable.
 
-### Building a paper using LaTeX
+### Building a LaTeX paper
 
 Wrap the build of the paper in your Popper workflow.
 This is useful to ensure that the pdf is always built with the most up-to-date data 
@@ -647,3 +647,122 @@ To re-run the entire workflow, use:
 ```sh
 popper run -f wf.yml
 ```
+
+
+## Computational research with R and RStudio Server
+
+This guide explains how to use Popper to develop and run reproducible workflows
+for computational research in fields such as bioinformatics, machine learning, physics 
+or statistics. 
+Computational research relies on complex software dependencies that are difficult to port 
+across environments. In addition, a typical workflow involves multiple dependent 
+steps which will be hard to replicate if not properly documented.
+Popper offers a solution to these challenges:
+- Poppers abstracts over software environments with [Linux containers](https://popper.readthedocs.io/en/latest/sections/concepts.html#glossary).
+- Poppers forces you to define your workflow explicetely such that it can be re-run in 
+in a single command.
+
+Popper thus provides an open-source alternative to managed solutions such as
+Code Ocean for reproducible computational research.
+
+### Pre-requisites
+
+You should have basic knowledge of:
+- git
+- command line 
+- R (code snippets in this guide use the [tidyverse](https://www.tidyverse.org/) libraries)
+
+In addition, you should be familiar with the concepts introduced in the 
+[Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
+section.
+This guide uses examples from machine learning but no prior knowledge of the field
+is required.
+
+By default, this guide assumes that you use the Docker container engine, but 
+highlights where the workflow will differ if you use another engine.
+
+### Getting started
+
+The examples presented in this guide come from a workflow developed for the 
+[Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
+research competition on Driven Data.
+This workflow shows examples of using Popper to automate common tasks in computational
+research with R:
+- downloading data
+- using R Markdown
+- fitting/simulating a model using `tidymodels`
+- visualizing the results with `ggplot2`
+- building a LaTeX paper with up-to-date results
+
+To help follow allong, see this 
+[repository](https://github.com/getpopper/popper-examples/tree/master/workflows/comp-research/rstudio) with the final version of the workflow.
+
+FIXME: template for workflow
+
+### Getting dat
+
+Your workflow should automate downloading or generating data to ensure that it uses the correct,
+up-to-date version of the data. In this example, you can download data with a 
+simple shell script:
+
+```sh
+#!/bin/sh
+cd $1
+
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/test_set_features.csv" --no-check-certificate
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_labels.csv" --no-check-certificate
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_features.csv" --no-check-certificate
+
+echo "Files downloaded: $(ls)"
+```
+
+Now, wrap this step using a Popper workflow. In a new file `wf.yml` at the root 
+of the folder,
+
+```yaml
+steps:
+- id: "dataset"
+  uses: "docker://jacobcarlborg/docker-alpine-wget"
+  args: ["src/get_data.sh", "data"]
+```
+Notes:
+- pick a Docker image that contains the necessary utilities. 
+For instance, a default Alpine image does not include `wget`.
+
+
+### Using RStudio Server
+
+RStudio server provides a browser interface to an R runtime,
+which lets use the familiar RStudio environment from a container.
+
+
+To run RStudio Server, first add a new step to your workflow in `wf.yml`
+```yaml
+- id: "rstudio"
+  uses: "docker://rocker:verse:4.0.0"
+  runs: ["r", "--version"]
+  env: {"DISABLE_AUTH": "true"}
+  options:
+    ports:
+      8787: 8787
+```
+Notes:
+- `ports` is set to `{8888/tcp: 8888}` which is necessary for the host machine to connect
+- `env` is set to `DISABLE_AUTH=true` so that RStudio Server does not prompt you for
+a username/password. Do not do this if you are running Popper on a public cloud,
+instead set a `password` in options and log in with the username `rstudio`
+
+Go to `localhost:8787` in your browser to access RStudio Server.
+
+
+### Package management
+
+`renv` is recommended for package management because of its good integration
+with other RStudio tools and b 
+
+
+### Models and visualization
+
+### Building a LaTeX paper
+
+### Conclusion
