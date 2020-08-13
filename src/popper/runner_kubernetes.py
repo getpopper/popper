@@ -106,7 +106,10 @@ class KubernetesRunner(StepRunner):
             pod_host_node = self._config.resman_opts.pod_host_node
 
         elif not self._config.resman_opts.get("persistent_volume_name", None):
-            nodes = [node.metadata.labels["kubernetes.io/hostname"] for node in self._kclient.list_node().items]
+            nodes = [
+                node.metadata.labels["kubernetes.io/hostname"]
+                for node in self._kclient.list_node().items
+            ]
             for node in nodes:
                 log.debug(f"trying to schedule init pod on {node}")
                 e = self._init_pod_create(node)
@@ -244,7 +247,7 @@ class KubernetesRunner(StepRunner):
 
             time.sleep(1)
             counter += 1
-        
+
         return 0
 
     def _init_pod_delete(self):
@@ -262,23 +265,14 @@ class KubernetesRunner(StepRunner):
         vol_conf = {
             "kind": "PersistentVolume",
             "apiVersion": "v1",
-            "metadata": {
-                "name": volume_name,
-                "labels": {
-                    "type": "host"
-                },
-            },
+            "metadata": {"name": volume_name, "labels": {"type": "host"},},
             "spec": {
                 "persistentVolumeReclaimPolicy": "Recycle",
                 "storageClassName": "manual",
-                "capacity": {
-                    "storage": "1Gi",
-                },
+                "capacity": {"storage": "1Gi",},
                 "accessModes": ["ReadWriteMany"],
-                "hostPath": {
-                    "path": "/tmp"
-                }
-            }
+                "hostPath": {"path": "/tmp"},
+            },
         }
 
         self._kclient.create_persistent_volume(body=vol_conf)
@@ -414,9 +408,7 @@ class KubernetesRunner(StepRunner):
                 )
 
         if pod_host_node:
-            pod_conf["spec"]["nodeSelector"] = {
-                "kubernetes.io/hostname": pod_host_node
-            }
+            pod_conf["spec"]["nodeSelector"] = {"kubernetes.io/hostname": pod_host_node}
 
         runs = list(step.runs) if step.runs else None
         args = list(step.args) if step.args else None
