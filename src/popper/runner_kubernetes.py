@@ -31,8 +31,6 @@ class KubernetesRunner(StepRunner):
 
         _, active_context = config.list_kube_config_contexts()
 
-        # self._select_node_randomly()
-
         self._namespace = self._config.resman_opts.get("namespace", "default")
 
         self._base_pod_name = pu.sanitized_name(f"pod", self._config.wid)
@@ -69,24 +67,21 @@ class KubernetesRunner(StepRunner):
                     self._vol_claim_create()
                 self._vol_claim_created = True
 
-            pod_host_node = None
-            if self._config.resman_opts.get("pod_host_node", None):
-                pod_host_node = self._config.resman_opts.pod_host_node
-
             if not self._init_pod_created:
-                self._init_pod_create(pod_host_node)
+                e, self._pod_host_node = self._init_pod_schedule()
+                if e:
+                    raise Exception("None of the nodes are schedulable.")
                 self._copy_ctx()
                 self._init_pod_delete()
                 self._init_pod_created = True
 
-            self._pod_create(step, image, pod_host_node)
+            self._pod_create(step, image, self._pod_host_node)
             self._pod_read_log()
             ecode = self._pod_exit_code()
         except Exception as e:
             log.fail(e)
         finally:
             self._pod_delete()
-            self._vol_claim_delete()
 
         log.debug(f"returning with {ecode}")
         return ecode
@@ -100,12 +95,31 @@ class KubernetesRunner(StepRunner):
         log.debug("received SIGINT. deleting pod and volume claim")
         self._pod_delete()
 
-    def _select_node_randomly(self):
+    def _init_pod_schedule(self):
         """If a node selector is not provided, select a node randomly
         and stick to it."""
-        nodes = [node.metadata.labels["kubernetes.io/hostname"] for node in self._kclient.list_node().items]
-        print(nodes)
-        pass
+        e = 0
+        pod_host_node = None
+
+        if self._config.resman_opts.get("pod_host_node", None):
+            e = self._init_pod_create(self._config.resman_opts.pod_host_node)
+            pod_host_node = self._config.resman_opts.pod_host_node
+
+        elif not self._config.resman_opts.get("persistent_volume_name", None):
+            nodes = [node.metadata.labels["kubernetes.io/hostname"] for node in self._kclient.list_node().items]
+            for node in nodes:
+                log.debug(f"trying to schedule init pod on {node}")
+                e = self._init_pod_create(node)
+                if not e:
+                    pod_host_node = node
+                    break
+                else:
+                    self._init_pod_delete()
+        else:
+            e = self._init_pod_create()
+            pod_host_node = None
+
+        return e, pod_host_node
 
     def _copy_ctx(self):
         """Tar up the workspace context and copy the tar file into
@@ -226,10 +240,12 @@ class KubernetesRunner(StepRunner):
             log.debug(f"init pod {self._init_pod_name} not started yet")
 
             if counter == self._config.resman_opts.get("pod_retry_limit", 60):
-                raise Exception("Timed out waiting for Init Pod to start")
+                return 1
 
             time.sleep(1)
             counter += 1
+        
+        return 0
 
     def _init_pod_delete(self):
         """Teardown the init Pod after the context has been copied
@@ -360,6 +376,7 @@ class KubernetesRunner(StepRunner):
     def _pod_create(self, step, image, pod_host_node=None):
         """Start a Pod for each step.
         """
+        log.debug(f"trying to start step pod on {pod_host_node}")
         env = self._prepare_environment(step)
         log.debug(env)
 
