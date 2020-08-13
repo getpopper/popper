@@ -227,8 +227,8 @@ class TestHostPodmanRunner(PopperTest):
             c2_status_cmd = status_cmd + [c2]
             _, _, c1_status = HostRunner._exec_cmd(c1_status_cmd, logging=False)
             _, _, c2_status = HostRunner._exec_cmd(c2_status_cmd, logging=False)
-            self.assertEqual(c1_status, "exited\n")
-            self.assertEqual(c2_status, "exited\n")
+            self.assertEqual(c1_status, "exited")
+            self.assertEqual(c2_status, "exited")
 
     @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_find_container(self):
@@ -275,7 +275,7 @@ class TestHostPodmanRunner(PopperTest):
                 c,
             ]
             __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
-            self.assertEqual(c_status, "configured\n")
+            self.assertEqual(c_status, "configured")
             cmd = ["podman", "container", "rm", c]
             HostRunner._exec_cmd(cmd, logging=False)
         step = Box(
@@ -298,7 +298,7 @@ class TestHostPodmanRunner(PopperTest):
                 c,
             ]
             __, _, c_status = HostRunner._exec_cmd(c_status_cmd, logging=False)
-            self.assertEqual(c_status, "configured\n")
+            self.assertEqual(c_status, "configured")
             cmd = ["podman", "container", "rm", c]
             HostRunner._exec_cmd(cmd, logging=False)
 
