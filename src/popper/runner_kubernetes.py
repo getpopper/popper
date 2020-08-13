@@ -299,7 +299,7 @@ class KubernetesRunner(StepRunner):
             volume_name = self._config.resman_opts.persistent_volume_name
         else:
             volume_name = f"pv-hostpath-popper-{self._config.wid}"
-            if not self._vol_exists:
+            if not self._vol_exists(volume_name):
                 self._vol_create(volume_name)
 
         vol_claim_conf = {
