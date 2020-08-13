@@ -31,6 +31,8 @@ class KubernetesRunner(StepRunner):
 
         _, active_context = config.list_kube_config_contexts()
 
+        # self._select_node_randomly()
+
         self._namespace = self._config.resman_opts.get("namespace", "default")
 
         self._base_pod_name = pu.sanitized_name(f"pod", self._config.wid)
@@ -67,19 +69,24 @@ class KubernetesRunner(StepRunner):
                     self._vol_claim_create()
                 self._vol_claim_created = True
 
+            pod_host_node = None
+            if self._config.resman_opts.get("pod_host_node", None):
+                pod_host_node = self._config.resman_opts.pod_host_node
+
             if not self._init_pod_created:
-                self._init_pod_create()
+                self._init_pod_create(pod_host_node)
                 self._copy_ctx()
                 self._init_pod_delete()
                 self._init_pod_created = True
 
-            self._pod_create(step, image)
+            self._pod_create(step, image, pod_host_node)
             self._pod_read_log()
             ecode = self._pod_exit_code()
         except Exception as e:
             log.fail(e)
         finally:
             self._pod_delete()
+            self._vol_claim_delete()
 
         log.debug(f"returning with {ecode}")
         return ecode
@@ -92,6 +99,13 @@ class KubernetesRunner(StepRunner):
         """
         log.debug("received SIGINT. deleting pod and volume claim")
         self._pod_delete()
+
+    def _select_node_randomly(self):
+        """If a node selector is not provided, select a node randomly
+        and stick to it."""
+        nodes = [node.metadata.labels["kubernetes.io/hostname"] for node in self._kclient.list_node().items]
+        print(nodes)
+        pass
 
     def _copy_ctx(self):
         """Tar up the workspace context and copy the tar file into
@@ -159,7 +173,7 @@ class KubernetesRunner(StepRunner):
 
         log.debug(response)
 
-    def _init_pod_create(self):
+    def _init_pod_create(self, pod_host_node=None):
         """Create a init Pod mounted on a volume with alpine image so that 
         the `tar` utility is available by default and the workflow context 
         can be copied from the local machine into the volume.
@@ -191,9 +205,9 @@ class KubernetesRunner(StepRunner):
             },
         }
 
-        if self._config.resman_opts.get("node_selector_host_name", None):
+        if pod_host_node:
             init_pod_conf["spec"]["nodeSelector"] = {
-                "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
+                "kubernetes.io/hostname": pod_host_node
             }
 
         self._kclient.create_namespaced_pod(
@@ -226,10 +240,58 @@ class KubernetesRunner(StepRunner):
             self._init_pod_name, namespace=self._namespace, body=V1DeleteOptions()
         )
 
+    def _vol_create(self, volume_name):
+        """Create a default PersistentVolume of hostPath type.
+        """
+        vol_conf = {
+            "kind": "PersistentVolume",
+            "apiVersion": "v1",
+            "metadata": {
+                "name": volume_name,
+                "labels": {
+                    "type": "host"
+                },
+            },
+            "spec": {
+                "persistentVolumeReclaimPolicy": "Recycle",
+                "storageClassName": "manual",
+                "capacity": {
+                    "storage": "1Gi",
+                },
+                "accessModes": ["ReadWriteMany"],
+                "hostPath": {
+                    "path": "/tmp"
+                }
+            }
+        }
+
+        self._kclient.create_persistent_volume(body=vol_conf)
+
+        counter = 1
+        while True:
+            response = self._kclient.read_persistent_volume(volume_name)
+            if response.status.phase != "Pending":
+                break
+
+            log.debug(f"volume {volume_name} not created yet")
+
+            if counter == 60:
+                raise Exception("Timed out waiting for PersistentVolume creation")
+
+            time.sleep(1)
+            counter += 1
+
     def _vol_claim_create(self):
         """Create a PersistentVolumeClaim to claim usable storage space 
         from a previously created PersistentVolume.
         """
+        if self._config.resman_opts.get("persistent_volume_name", None):
+            volume_name = self._config.resman_opts.persistent_volume_name
+        else:
+            volume_name = f"pv-hostpath-popper-{self._config.wid}"
+            if not self._vol_exists:
+                self._vol_create(volume_name)
+
         vol_claim_conf = {
             "apiVersion": "v1",
             "kind": "PersistentVolumeClaim",
@@ -238,13 +300,9 @@ class KubernetesRunner(StepRunner):
                 "storageClassName": "manual",
                 "accessModes": ["ReadWriteMany"],
                 "resources": {"requests": {"storage": self._vol_size}},
+                "volumeName": volume_name,
             },
         }
-
-        if self._config.resman_opts.get("persistent_volume_name", None):
-            vol_claim_conf["spec"][
-                "volumeName"
-            ] = self._config.resman_opts.persistent_volume_name
 
         self._kclient.create_namespaced_persistent_volume_claim(
             namespace=self._namespace, body=vol_claim_conf
@@ -267,6 +325,17 @@ class KubernetesRunner(StepRunner):
             time.sleep(1)
             counter += 1
 
+    def _vol_exists(self, volume_name):
+        vol_exists = False
+        try:
+            self._kclient.read_persistent_volume(volume_name)
+            vol_exists = True
+        except ApiException as e:
+            if e.reason != "Not Found":
+                raise Exception(e)
+
+        return vol_exists
+
     def _vol_claim_exists(self):
         vol_claim_exists = False
         try:
@@ -288,7 +357,7 @@ class KubernetesRunner(StepRunner):
             self._vol_claim_name, namespace=self._namespace, body=V1DeleteOptions()
         )
 
-    def _pod_create(self, step, image):
+    def _pod_create(self, step, image, pod_host_node=None):
         """Start a Pod for each step.
         """
         env = self._prepare_environment(step)
@@ -327,9 +396,9 @@ class KubernetesRunner(StepRunner):
                     {"name": name, "value": value}
                 )
 
-        if self._config.resman_opts.get("node_selector_host_name", None):
+        if pod_host_node:
             pod_conf["spec"]["nodeSelector"] = {
-                "kubernetes.io/hostname": self._config.resman_opts.node_selector_host_name
+                "kubernetes.io/hostname": pod_host_node
             }
 
         runs = list(step.runs) if step.runs else None
@@ -405,7 +474,7 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         """Clones the action repository, builds the image
         and pushes the image to an  an image registry for a Pod to use.
         """
-        needs_build, img, tag, build_ctx_path = self._get_build_info(step)
+        needs_build, _, img, tag, build_ctx_path = self._get_build_info(step)
         if not needs_build:
             return step.uses.replace("docker://", "")
 
