@@ -80,9 +80,9 @@ class HostRunner(StepRunner):
                 output = []
                 for line in iter(p.stdout.readline, ""):
                     if logging:
-                        log.step_info(line)
+                        log.step_info(line.rstrip())
                     else:
-                        output.append(line)
+                        output.append(line.rstrip())
 
                 p.wait()
                 ecode = p.poll()

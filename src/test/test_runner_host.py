@@ -71,14 +71,14 @@ class TestHostHostRunner(PopperTest):
         pid, ecode, output = HostRunner._exec_cmd(cmd, logging=False)
         self.assertGreater(pid, 0)
         self.assertEqual(ecode, 0)
-        self.assertEqual(output, "hello-world\n")
+        self.assertEqual(output, "hello-world")
 
         with LogCapture("popper") as logc:
             pid, ecode, output = HostRunner._exec_cmd(cmd)
             self.assertGreater(pid, 0)
             self.assertEqual(ecode, 0)
             self.assertEqual(output, "")
-            logc.check_present(("popper", "STEP_INFO", "hello-world\n"))
+            logc.check_present(("popper", "STEP_INFO", "hello-world"))
 
         cmd = ["env"]
         pid, ecode, output = HostRunner._exec_cmd(
