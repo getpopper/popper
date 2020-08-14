@@ -495,12 +495,13 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
         img = img.replace("/", "_")
         img = f"{registry}/{self._config.resman_opts.registry_user}/{img}"
 
+        log.info(f"[{step.id}] docker build -t {img}:{tag} {build_ctx_path}")
         self._d.images.build(
             path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
         )
 
-        for l in self._d.images.push(img, tag=tag, stream=True, decode=True):
-            log.step_info(l)
+        log.info(f"[{step.id}] docker push {img}:{tag}")
+        self._d.images.push(img, tag=tag, decode=True)
 
         log.debug(f"image built {img}:{tag}")
         return f"{img}:{tag}"
