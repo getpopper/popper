@@ -229,7 +229,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
                 "   foo:1.9 -two -flags"
             )
 
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
         config_dict = {
             "engine": {
@@ -261,7 +261,7 @@ class TestSlurmDockerRunner(unittest.TestCase):
                 " foo:1.9 -two -flags"
             )
 
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_run(self, mock_kill):
@@ -343,7 +343,7 @@ class TestSlurmPodmanRunner(unittest.TestCase):
                 "   foo:1.9 -two -flags"
             )
 
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
         config_dict = {
             "engine": {
@@ -374,7 +374,7 @@ class TestSlurmPodmanRunner(unittest.TestCase):
                 " foo:1.9 -two -flags"
             )
 
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_run(self, mock_kill):
@@ -456,7 +456,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
                 " -two -flags"
             )
 
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
         config_dict = {
             "engine": {
