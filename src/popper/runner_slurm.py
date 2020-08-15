@@ -120,6 +120,13 @@ class SlurmRunner(HostRunner):
 
         return ecode
 
+    def stop_running_tasks(self):
+        for job_name in self._spawned_jobs:
+            log.info(f"Cancelling job {job_name}")
+            _, ecode, _ = HostRunner._exec_cmd(["scancel", "--name", job_name])
+            if ecode != 0:
+                log.warning(f"Failed to cancel the job {job_name}.")
+
 
 class DockerRunner(SlurmRunner, HostDockerRunner):
     def __init__(self, **kw):
