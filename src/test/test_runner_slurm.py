@@ -176,6 +176,51 @@ mpirun ls -la""",
 
         self.assertEqual(self.Popen.all_calls, [])
 
+    @replace("popper.runner_slurm.os.kill", mock_kill)
+    def test_exec_srun_failure(self, mock_kill):
+        config_dict = {
+            "engine": {
+                "name": "docker",
+                "options": {
+                    "privileged": True,
+                    "hostname": "popper.local",
+                    "domainname": "www.example.org",
+                    "volumes": ["/path/in/host:/path/in/container"],
+                    "environment": {"FOO": "bar"},
+                },
+            },
+            "resource_manager": {
+                "name": "slurm",
+                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
+
+        self.Popen.set_command(
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker rm -f popper_1_{config.wid}",
+            returncode=0,
+        )
+
+        self.Popen.set_command(
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker pull alpine:latest",
+            returncode=0,
+        )
+
+        self.Popen.set_command(
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
+            returncode=0,
+        )
+
+        self.Popen.set_command(
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker start --attach popper_1_{config.wid}",
+            returncode=12,
+        )
+
+        with WorkflowRunner(config) as r:
+            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+
 
 class TestSlurmDockerRunner(unittest.TestCase):
     def setUp(self):
