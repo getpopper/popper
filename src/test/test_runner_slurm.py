@@ -23,7 +23,6 @@ from box import Box
 
 
 config = ConfigLoader.load(workspace_dir="/w")
-slurm_cache_dir = f"{os.environ['HOME']}/.cache/popper/slurm/{config.wid}"
 
 
 def mock_kill(pid, sig):
@@ -182,7 +181,7 @@ mpirun ls -la""",
     def test_exec_srun_failure(self, mock_kill):
         config_dict = {
             "engine": {
-                "name": "docker",
+                "name": "podman",
                 "options": {
                     "privileged": True,
                     "hostname": "popper.local",
@@ -200,24 +199,51 @@ mpirun ls -la""",
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker rm -f popper_1_{config.wid}",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker pull alpine:latest",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker start --attach popper_1_{config.wid}",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
             returncode=12,
         )
+
+        with WorkflowRunner(config) as r:
+            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+
+    @replace("popper.runner_slurm.os.kill", mock_kill)
+    def test_exec_mpi_failure(self, mock_kill):
+        config_dict = {
+            "engine": {"name": "singularity", "options": {},},
+            "resource_manager": {
+                "name": "slurm",
+                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
+
+        self.Popen.set_command(
+            "sbatch "
+            f"--job-name popper_1_{config.wid} "
+            "--wait "
+            f"--output popper_1_{config.wid}.out "
+            f"popper_1_{config.wid}.sh",
+            returncode=12,
+        )
+
+        self.Popen.set_command(f"tail -f popper_1_{config.wid}.out", returncode=0)
 
         with WorkflowRunner(config) as r:
             wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
@@ -450,15 +476,14 @@ class TestSlurmSingularityRunner(unittest.TestCase):
         config = ConfigLoader.load(workspace_dir="/w")
         with SingularityRunner(config=config) as sr:
             step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            sr._setup_singularity_cache()
-            sr._container = os.path.join(sr._singularity_cache, "c1.sif")
+            sr._container = "c1.sif"
             cmd = sr._create_cmd(step, "c1.sif")
 
             expected = (
                 "singularity run"
                 " --userns --pwd /workspace"
                 " --bind /w:/workspace"
-                f' {os.environ["HOME"]}/.cache/popper/singularity/{config.wid}/c1.sif'
+                " c1.sif"
                 " -two -flags"
             )
 
@@ -480,12 +505,11 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 
         with SingularityRunner(config=config) as sr:
             step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            sr._setup_singularity_cache()
-            sr._container = os.path.join(sr._singularity_cache, "c2.sif")
+            sr._container = "c2.sif"
             cmd = sr._create_cmd(step, "c2.sif")
 
             # fmt: off
-            expected = f"singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local --ipc {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/c2.sif -two -flags"
+            expected = f"singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local --ipc c2.sif -two -flags"
             # fmt: on
             self.assertEqual(expected.split(" "), cmd)
 
