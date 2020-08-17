@@ -69,7 +69,8 @@ class TestSlurmSlurmRunner(PopperTest):
     def test_exec_srun(self, mock_kill):
         config = ConfigLoader.load(workspace_dir="/w")
         self.Popen.set_command(
-            "srun -N 1 " "--ntasks 1 " "--ntasks-per-node 1 " "ls -la", returncode=0,
+            "srun --nodes 1 " "--ntasks 1 " "--ntasks-per-node 1 " "ls -la",
+            returncode=0,
         )
         self.Popen.set_command(f"tail -f popper_sample_{config.wid}.out", returncode=0)
         step = Box({"id": "sample"}, default_box=True)
@@ -77,7 +78,16 @@ class TestSlurmSlurmRunner(PopperTest):
             sr._exec_srun(["ls -la"], step)
 
         call_srun = call.Popen(
-            ["srun", "-N", "1", "--ntasks", "1", "--ntasks-per-node", "1", "ls -la"],
+            [
+                "srun",
+                "--nodes",
+                "1",
+                "--ntasks",
+                "1",
+                "--ntasks-per-node",
+                "1",
+                "ls -la",
+            ],
             cwd=os.getcwd(),
             env=None,
             preexec_fn=os.setsid,
@@ -243,29 +253,29 @@ class TestSlurmDockerRunner(unittest.TestCase):
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"N": 2, "nodelist": "worker1,worker2"}},
+                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
             },
         }
 
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker rm -f popper_1_{config.wid}",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker rm -f popper_1_{config.wid}",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker pull alpine:latest",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker pull alpine:latest",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker start --attach popper_1_{config.wid}",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker start --attach popper_1_{config.wid}",
             returncode=0,
         )
 
@@ -348,29 +358,29 @@ class TestSlurmPodmanRunner(unittest.TestCase):
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"N": 2, "nodelist": "worker1,worker2"}},
+                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
             },
         }
 
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
             returncode=0,
         )
 
@@ -444,7 +454,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"N": 2, "nodelist": "worker1,worker2"}},
+                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
             },
         }
 
@@ -486,24 +496,26 @@ mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /pa
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"mpi": False, "N": 2, "nodelist": "worker1,worker2"}},
+                "options": {
+                    "1": {"mpi": False, "nodes": 2, "nodelist": "worker1,worker2"}
+                },
             },
         }
 
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 rm -rf popper_1_{config.wid}.sif",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 rm -rf popper_1_{config.wid}.sif",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity pull docker://alpine:latest",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity pull docker://alpine:latest",
             returncode=0,
         )
 
         self.Popen.set_command(
-            f"srun -N 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local popper_1_{config.wid}.sif ls",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local popper_1_{config.wid}.sif ls",
             returncode=0,
         )
 

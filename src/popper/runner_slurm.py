@@ -46,17 +46,17 @@ class SlurmRunner(HostRunner):
         self._out_stream_thread.join()
 
     def _set_config_vars(self, step):
-        self._N = self._config.resman_opts.get(step.id, {}).get("N", 1)
+        self._nodes = self._config.resman_opts.get(step.id, {}).get("nodes", 1)
         self._nodelist = self._config.resman_opts.get(step.id, {}).get("nodelist", None)
 
     def _exec_srun(self, cmd, step, logging=False):
         self._set_config_vars(step)
         _cmd = [
             "srun",
-            "-N",
-            f"{self._N}",
+            "--nodes",
+            f"{self._nodes}",
             "--ntasks",
-            f"{self._N}",
+            f"{self._nodes}",
             "--ntasks-per-node",
             "1",
         ]
@@ -86,8 +86,8 @@ class SlurmRunner(HostRunner):
 
         with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
-            f.write(f"#SBATCH --nodes={self._N}\n")
-            f.write(f"#SBATCH --ntasks={self._N}\n")
+            f.write(f"#SBATCH --nodes={self._nodes}\n")
+            f.write(f"#SBATCH --ntasks={self._nodes}\n")
             f.write(f"#SBATCH --ntasks-per-node=1\n")
             if self._nodelist:
                 f.write(f"#SBATCH --nodelist={self._nodelist}\n\n")
