@@ -52,6 +52,7 @@ class SlurmRunner(HostRunner):
         )
 
     def _exec_srun(self, cmd, step, logging=False):
+        self._set_config_vars(step)
         _cmd = [
             "srun",
             "-N",
@@ -73,6 +74,7 @@ class SlurmRunner(HostRunner):
         return ecode
 
     def _exec_mpi(self, cmd, step):
+        self._set_config_vars(step)
         job_name = pu.sanitized_name(step.id, self._config.wid)
         mpi_cmd = ["mpirun", f"{' '.join(cmd)}"]
 
