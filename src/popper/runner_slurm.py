@@ -50,7 +50,7 @@ class SlurmRunner(HostRunner):
         self._nodelist = self._config.resman_opts.get(step.id, {}).get("nodelist", None)
         self._ntasks = self._config.resman_opts.get(step.id, {}).get("ntasks", 1)
         self._ntasks_per_node = self._config.resman_opts.get(step.id, {}).get(
-            "ntasks_per_node", 1
+            "ntasks-per-node", 1
         )
 
     def _exec_srun(self, cmd, step, logging=False):
