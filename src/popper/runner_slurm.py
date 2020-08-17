@@ -47,9 +47,7 @@ class SlurmRunner(HostRunner):
 
     def _set_config_vars(self, step):
         self._N = self._config.resman_opts.get(step.id, {}).get("N", 1)
-        self._nodelist = self._config.resman_opts.get(step.id, {}).get(
-            "nodelist", socket.gethostname()
-        )
+        self._nodelist = self._config.resman_opts.get(step.id, {}).get("nodelist", None)
 
     def _exec_srun(self, cmd, step, logging=False):
         self._set_config_vars(step)
@@ -57,13 +55,15 @@ class SlurmRunner(HostRunner):
             "srun",
             "-N",
             f"{self._N}",
-            "--nodelist",
-            self._nodelist,
             "--ntasks",
             f"{self._N}",
             "--ntasks-per-node",
             "1",
         ]
+
+        if self._nodelist:
+            _cmd.extend(["--nodelist", self._nodelist])
+
         _cmd.extend(cmd)
         log.debug(f"Command: {_cmd}")
 
@@ -89,7 +89,8 @@ class SlurmRunner(HostRunner):
             f.write(f"#SBATCH --nodes={self._N}\n")
             f.write(f"#SBATCH --ntasks={self._N}\n")
             f.write(f"#SBATCH --ntasks-per-node=1\n")
-            f.write(f"#SBATCH --nodelist={self._nodelist}\n\n")
+            if self._nodelist:
+                f.write(f"#SBATCH --nodelist={self._nodelist}\n\n")
             f.write(" ".join(mpi_cmd))
 
         sbatch_cmd = [
