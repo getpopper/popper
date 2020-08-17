@@ -69,13 +69,12 @@ class TestSlurmSlurmRunner(PopperTest):
     def test_exec_srun(self, mock_kill):
         config = ConfigLoader.load(workspace_dir="/w")
         self.Popen.set_command(
-            "srun --nodes 1 " "--ntasks 1 " "--ntasks-per-node 1 " "ls -la",
-            returncode=0,
+            "srun --nodes 1 --ntasks 1 --ntasks-per-node 1 ls -la", returncode=0,
         )
-        self.Popen.set_command(f"tail -f popper_sample_{config.wid}.out", returncode=0)
         step = Box({"id": "sample"}, default_box=True)
         with SlurmRunner(config=config) as sr:
-            sr._exec_srun(["ls -la"], step)
+            e = sr._exec_srun(["ls", "-la"], step, logging=True)
+            self.assertEqual(e, 0)
 
         call_srun = call.Popen(
             [
@@ -86,7 +85,8 @@ class TestSlurmSlurmRunner(PopperTest):
                 "1",
                 "--ntasks-per-node",
                 "1",
-                "ls -la",
+                "ls",
+                "-la",
             ],
             cwd=os.getcwd(),
             env=None,
@@ -102,8 +102,9 @@ class TestSlurmSlurmRunner(PopperTest):
     def test_exec_mpi(self, mock_kill):
         config = ConfigLoader.load(workspace_dir="/w")
         self.Popen.set_command(
-            "sbatch --wait "
+            "sbatch "
             f"--job-name popper_sample_{config.wid} "
+            "--wait "
             f"--output popper_sample_{config.wid}.out "
             f"popper_sample_{config.wid}.sh",
             returncode=0,
@@ -111,7 +112,8 @@ class TestSlurmSlurmRunner(PopperTest):
         self.Popen.set_command(f"tail -f popper_sample_{config.wid}.out", returncode=0)
         step = Box({"id": "sample"}, default_box=True)
         with SlurmRunner(config=config) as sr:
-            sr._exec_mpi(["ls -la"], step)
+            e = sr._exec_mpi(["ls -la"], step)
+            self.assertEqual(e, 0)
             with open(f"popper_sample_{config.wid}.sh", "r") as f:
                 content = f.read()
 
