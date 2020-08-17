@@ -194,7 +194,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         for k, v in container_args.items():
             flag = pu.key_value_to_flag(k, v)
             if flag:
-                cmd.extend(flag)
+                cmd.extend(flag.split(" "))
 
         # append the image and the commands
         cmd.append(image)
@@ -272,7 +272,7 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
         for k, v in container_args.items():
             flag = pu.key_value_to_flag(k, v)
             if flag:
-                cmd.extend(flag)
+                cmd.extend(flag.split(" "))
 
         # append the image and the commands
         cmd.append(image)
