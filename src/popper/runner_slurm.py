@@ -48,6 +48,10 @@ class SlurmRunner(HostRunner):
     def _set_config_vars(self, step):
         self._nodes = self._config.resman_opts.get(step.id, {}).get("nodes", 1)
         self._nodelist = self._config.resman_opts.get(step.id, {}).get("nodelist", None)
+        self._ntasks = self._config.resman_opts.get(step.id, {}).get("ntasks", 1)
+        self._ntasks_per_node = self._config.resman_opts.get(step.id, {}).get(
+            "ntasks_per_node", 1
+        )
 
     def _exec_srun(self, cmd, step, logging=False):
         self._set_config_vars(step)
@@ -56,9 +60,9 @@ class SlurmRunner(HostRunner):
             "--nodes",
             f"{self._nodes}",
             "--ntasks",
-            f"{self._nodes}",
+            f"{self._ntasks}",
             "--ntasks-per-node",
-            "1",
+            f"{self._ntasks_per_node}",
         ]
 
         if self._nodelist:
@@ -87,10 +91,10 @@ class SlurmRunner(HostRunner):
         with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
             f.write(f"#SBATCH --nodes={self._nodes}\n")
-            f.write(f"#SBATCH --ntasks={self._nodes}\n")
-            f.write(f"#SBATCH --ntasks-per-node=1\n")
+            f.write(f"#SBATCH --ntasks={self._ntasks}\n")
+            f.write(f"#SBATCH --ntasks-per-node={self._ntasks_per_node}\n")
             if self._nodelist:
-                f.write(f"#SBATCH --nodelist={self._nodelist}\n\n")
+                f.write(f"#SBATCH --nodelist={self._nodelist}\n")
             f.write(" ".join(mpi_cmd))
 
         sbatch_cmd = [

@@ -326,7 +326,9 @@ class TestSlurmDockerRunner(unittest.TestCase):
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+                "options": {
+                    "1": {"nodes": 2, "ntasks": 2, "nodelist": "worker1,worker2"}
+                },
             },
         }
 
@@ -431,7 +433,9 @@ class TestSlurmPodmanRunner(unittest.TestCase):
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+                "options": {
+                    "1": {"nodes": 2, "ntasks": 2, "nodelist": "worker1,worker2"}
+                },
             },
         }
 
@@ -525,7 +529,9 @@ class TestSlurmSingularityRunner(unittest.TestCase):
             },
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+                "options": {
+                    "1": {"nodes": 2, "ntasks": 2, "nodelist": "worker1,worker2"}
+                },
             },
         }
 
@@ -551,7 +557,6 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 #SBATCH --ntasks=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodelist=worker1,worker2
-
 mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local popper_1_{config.wid}.sif ls"""
             # fmt: on
             actual = f.read()
@@ -568,7 +573,12 @@ mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /pa
             "resource_manager": {
                 "name": "slurm",
                 "options": {
-                    "1": {"mpi": False, "nodes": 2, "nodelist": "worker1,worker2"}
+                    "1": {
+                        "mpi": False,
+                        "nodes": 2,
+                        "ntasks": 2,
+                        "nodelist": "worker1,worker2",
+                    }
                 },
             },
         }
