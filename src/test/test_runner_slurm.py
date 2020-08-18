@@ -247,14 +247,16 @@ mpirun ls -la""",
             "engine": {"name": "singularity", "options": {},},
             "resource_manager": {
                 "name": "slurm",
-                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+                "options": {
+                    "1": {"nodes": 2, "nodelist": "worker1,worker2", "overcommit": True}
+                },
             },
         }
 
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            "sbatch " "--wait " f"popper_1_{config.wid}.sh", returncode=12,
+            "sbatch " "--wait --overcommit " f"popper_1_{config.wid}.sh", returncode=12,
         )
 
         self.Popen.set_command(f"tail -f popper_1_{config.wid}.out", returncode=0)
