@@ -158,21 +158,21 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
         self._exec_srun(["docker", "rm", "-f", f"{cid}"], step)
 
         if build:
-            log.info(f"[{step.id}] docker build -t {img}:{tag} {build_ctx_path}")
+            log.info(f"[{step.id}] srun docker build -t {img}:{tag} {build_ctx_path}")
             self._exec_srun(
                 ["docker", "build", "-t", f"{img}:{tag}", f"{build_ctx_path}"], step
             )
 
         elif not self._config.skip_pull and not step.skip_pull:
-            log.info(f"[{step.id}] docker pull {img}:{tag}")
+            log.info(f"[{step.id}] srun docker pull {img}:{tag}")
             self._exec_srun(["docker", "pull", f"{img}:{tag}"], step)
 
-        log.info(f"[{step.id}] docker create {img}:{tag} {cid}")
+        log.info(f"[{step.id}] srun docker create {img}:{tag} {cid}")
         self._exec_srun(self._create_cmd(step, f"{img}:{tag}", cid), step)
 
         self._spawned_containers.add(cid)
 
-        log.info(f"[{step.id}] docker start --attach {cid}")
+        log.info(f"[{step.id}] srun docker start --attach {cid}")
         ecode = self._exec_srun(
             ["docker", "start", "--attach", f"{cid}"], step, logging=True
         )
@@ -237,21 +237,21 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
         self._exec_srun(["podman", "rm", "-f", f"{cid}"], step)
 
         if build:
-            log.info(f"[{step.id}] podman build -t {img}:{tag} {build_ctx_path}")
+            log.info(f"[{step.id}] srun podman build -t {img}:{tag} {build_ctx_path}")
             self._exec_srun(
                 ["podman", "build", "-t", f"{img}:{tag}", f"{build_ctx_path}"], step
             )
 
         elif not self._config.skip_pull and not step.skip_pull:
-            log.info(f"[{step.id}] podman pull {img}:{tag}")
+            log.info(f"[{step.id}] srun podman pull {img}:{tag}")
             self._exec_srun(["podman", "pull", f"{img}:{tag}"], step)
 
-        log.info(f"[{step.id}] podman create {img}:{tag} {cid}")
+        log.info(f"[{step.id}] srun podman create {img}:{tag} {cid}")
         self._exec_srun(self._create_cmd(step, f"{img}:{tag}", cid), step)
 
         self._spawned_containers.add(cid)
 
-        log.info(f"[{step.id}] podman start --attach {cid}")
+        log.info(f"[{step.id}] srun podman start --attach {cid}")
         ecode = self._exec_srun(
             ["podman", "start", "--attach", f"{cid}"], step, logging=True
         )
@@ -324,22 +324,23 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
         if build:
             recipefile = self._get_recipe_file(build_ctx_path, cid)
-            log.info(f"[{step.id}] singularity build {self._container}")
+            log.info(f"[{step.id}] srun singularity build {self._container}")
             self._exec_srun(
                 ["singularity", "build", "--fakeroot", self._container, recipefile],
                 step,
             )
         else:
-            log.info(f"[{step.id}] singularity pull {self._container}")
+            log.info(f"[{step.id}] srun singularity pull {self._container}")
             self._exec_srun(["singularity", "pull", self._container, img], step)
 
         cmd = self._create_cmd(step, cid)
         self._spawned_containers.add(cid)
 
-        log.info(f'[{step.id}] {" ".join(cmd)}')
         if self._config.resman_opts.get(step.id, {}).get("mpi", True):
+            log.info(f'[{step.id}] sbatch {" ".join(cmd)}')
             ecode = self._exec_mpi(cmd, step)
         else:
+            log.info(f'[{step.id}] srun {" ".join(cmd)}')
             ecode = self._exec_srun(cmd, step, logging=True)
 
         self._spawned_containers.remove(cid)
