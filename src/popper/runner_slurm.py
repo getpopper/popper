@@ -53,6 +53,15 @@ class SlurmRunner(HostRunner):
             "ntasks-per-node", 1
         )
 
+    def _get_resman_kwargs(self, step):
+        resman_options = []
+        for k, v in self._config.resman_opts.get(step.id, {}).items():
+            flag = pu.key_value_to_flag(k, v)
+            if flag:
+                resman_options.extend(flag.split())
+
+        return resman_options
+
     def _exec_srun(self, cmd, step, logging=False):
         self._set_config_vars(step)
         _cmd = [
@@ -67,6 +76,8 @@ class SlurmRunner(HostRunner):
 
         if self._nodelist:
             _cmd.extend(["--nodelist", self._nodelist])
+
+        # _cmd.extend(self._get_resman_kwargs(step))
 
         _cmd.extend(cmd)
         log.debug(f"Command: {_cmd}")
@@ -90,6 +101,8 @@ class SlurmRunner(HostRunner):
 
         with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
+            f.write(f"#SBATCH --job-name={job_name}\n")
+            f.write(f"#SBATCH --output={out_file}\n")
             f.write(f"#SBATCH --nodes={self._nodes}\n")
             f.write(f"#SBATCH --ntasks={self._ntasks}\n")
             f.write(f"#SBATCH --ntasks-per-node={self._ntasks_per_node}\n")
@@ -99,12 +112,9 @@ class SlurmRunner(HostRunner):
 
         sbatch_cmd = [
             "sbatch",
-            "--job-name",
-            f"{job_name}",
             "--wait",
-            "--output",
-            f"{out_file}",
         ]
+        # sbatch_cmd.extend(self._get_resman_kwargs(step))
         sbatch_cmd.extend([job_script])
 
         log.info(f'[{step.id}] {" ".join(sbatch_cmd)}')

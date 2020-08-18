@@ -101,12 +101,7 @@ class TestSlurmSlurmRunner(PopperTest):
     def test_exec_mpi(self, mock_kill):
         config = ConfigLoader.load(workspace_dir="/w")
         self.Popen.set_command(
-            "sbatch "
-            f"--job-name popper_sample_{config.wid} "
-            "--wait "
-            f"--output popper_sample_{config.wid}.out "
-            f"popper_sample_{config.wid}.sh",
-            returncode=0,
+            "sbatch " "--wait " f"popper_sample_{config.wid}.sh", returncode=0,
         )
         self.Popen.set_command(f"tail -f popper_sample_{config.wid}.out", returncode=0)
         step = Box({"id": "sample"}, default_box=True)
@@ -118,7 +113,9 @@ class TestSlurmSlurmRunner(PopperTest):
 
             self.assertEqual(
                 content,
-                """#!/bin/bash
+                f"""#!/bin/bash
+#SBATCH --job-name=popper_sample_{config.wid}
+#SBATCH --output=popper_sample_{config.wid}.out
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --ntasks-per-node=1
@@ -138,15 +135,7 @@ mpirun ls -la""",
         )
 
         call_sbatch = call.Popen(
-            [
-                "sbatch",
-                "--job-name",
-                f"popper_sample_{config.wid}",
-                "--wait",
-                "--output",
-                f"popper_sample_{config.wid}.out",
-                f"popper_sample_{config.wid}.sh",
-            ],
+            ["sbatch", "--wait", f"popper_sample_{config.wid}.sh",],
             cwd=os.getcwd(),
             env=None,
             preexec_fn=os.setsid,
@@ -235,12 +224,7 @@ mpirun ls -la""",
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            "sbatch "
-            f"--job-name popper_1_{config.wid} "
-            "--wait "
-            f"--output popper_1_{config.wid}.out "
-            f"popper_1_{config.wid}.sh",
-            returncode=12,
+            "sbatch " "--wait " f"popper_1_{config.wid}.sh", returncode=12,
         )
 
         self.Popen.set_command(f"tail -f popper_1_{config.wid}.out", returncode=0)
@@ -539,7 +523,9 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 
         # fmt: off
         self.Popen.set_command(
-            f"sbatch --job-name popper_1_{config.wid} --wait --output popper_1_{config.wid}.out popper_1_{config.wid}.sh",
+            "sbatch "
+            "--wait "
+            f"popper_1_{config.wid}.sh",
             returncode=0,
         )
         # fmt: on
@@ -553,6 +539,8 @@ class TestSlurmSingularityRunner(unittest.TestCase):
         with open(f"popper_1_{config.wid}.sh", "r") as f:
             # fmt: off
             expected = f"""#!/bin/bash
+#SBATCH --job-name=popper_1_{config.wid}
+#SBATCH --output=popper_1_{config.wid}.out
 #SBATCH --nodes=2
 #SBATCH --ntasks=2
 #SBATCH --ntasks-per-node=1
