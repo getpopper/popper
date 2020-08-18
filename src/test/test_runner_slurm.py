@@ -66,9 +66,18 @@ class TestSlurmSlurmRunner(PopperTest):
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_srun(self, mock_kill):
-        config = ConfigLoader.load(workspace_dir="/w")
+        config_dict = {
+            "engine": {"name": "podman", "options": {},},
+            "resource_manager": {
+                "name": "slurm",
+                "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
         self.Popen.set_command(
-            "srun --nodes 1 --ntasks 1 --ntasks-per-node 1 ls -la", returncode=0,
+            "srun --nodes 1 --ntasks 1 --ntasks-per-node 1 --gpus-per-task 2 --overcommit ls -la",
+            returncode=0,
         )
         step = Box({"id": "sample"}, default_box=True)
         with SlurmRunner(config=config) as sr:
@@ -84,6 +93,9 @@ class TestSlurmSlurmRunner(PopperTest):
                 "1",
                 "--ntasks-per-node",
                 "1",
+                "--gpus-per-task",
+                "2",
+                "--overcommit",
                 "ls",
                 "-la",
             ],
@@ -99,9 +111,20 @@ class TestSlurmSlurmRunner(PopperTest):
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_mpi(self, mock_kill):
-        config = ConfigLoader.load(workspace_dir="/w")
+        config_dict = {
+            "engine": {"name": "singularity", "options": {},},
+            "resource_manager": {
+                "name": "slurm",
+                "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
         self.Popen.set_command(
-            "sbatch " "--wait " f"popper_sample_{config.wid}.sh", returncode=0,
+            "sbatch "
+            "--wait --gpus-per-task 2 --overcommit "
+            f"popper_sample_{config.wid}.sh",
+            returncode=0,
         )
         self.Popen.set_command(f"tail -f popper_sample_{config.wid}.out", returncode=0)
         step = Box({"id": "sample"}, default_box=True)
@@ -135,7 +158,14 @@ mpirun ls -la""",
         )
 
         call_sbatch = call.Popen(
-            ["sbatch", "--wait", f"popper_sample_{config.wid}.sh",],
+            [
+                "sbatch",
+                "--wait",
+                "--gpus-per-task",
+                "2",
+                "--overcommit",
+                f"popper_sample_{config.wid}.sh",
+            ],
             cwd=os.getcwd(),
             env=None,
             preexec_fn=os.setsid,

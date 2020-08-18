@@ -54,11 +54,13 @@ class SlurmRunner(HostRunner):
         )
 
     def _get_resman_kwargs(self, step):
+        default_options = ["nodes", "nodelist", "ntasks", "ntasks-per-node"]
         resman_options = []
         for k, v in self._config.resman_opts.get(step.id, {}).items():
-            flag = pu.key_value_to_flag(k, v)
-            if flag:
-                resman_options.extend(flag.split())
+            if k not in default_options:
+                flag = pu.key_value_to_flag(k, v)
+                if flag:
+                    resman_options.extend(flag.split())
 
         return resman_options
 
@@ -77,9 +79,9 @@ class SlurmRunner(HostRunner):
         if self._nodelist:
             _cmd.extend(["--nodelist", self._nodelist])
 
-        # _cmd.extend(self._get_resman_kwargs(step))
-
+        _cmd.extend(self._get_resman_kwargs(step))
         _cmd.extend(cmd)
+
         log.debug(f"Command: {_cmd}")
 
         if self._config.dry_run:
@@ -114,10 +116,10 @@ class SlurmRunner(HostRunner):
             "sbatch",
             "--wait",
         ]
-        # sbatch_cmd.extend(self._get_resman_kwargs(step))
+        sbatch_cmd.extend(self._get_resman_kwargs(step))
         sbatch_cmd.extend([job_script])
 
-        log.info(f'[{step.id}] {" ".join(sbatch_cmd)}')
+        log.debug(f"Command: {sbatch_cmd}")
 
         if self._config.dry_run:
             return 0
@@ -165,7 +167,7 @@ class DockerRunner(SlurmRunner, HostDockerRunner):
             log.info(f"[{step.id}] docker pull {img}:{tag}")
             self._exec_srun(["docker", "pull", f"{img}:{tag}"], step)
 
-        log.info(f"[{step.id}] docker create -t {img}:{tag} {cid}")
+        log.info(f"[{step.id}] docker create {img}:{tag} {cid}")
         self._exec_srun(self._create_cmd(step, f"{img}:{tag}", cid), step)
 
         self._spawned_containers.add(cid)
@@ -244,7 +246,7 @@ class PodmanRunner(SlurmRunner, HostPodmanRunner):
             log.info(f"[{step.id}] podman pull {img}:{tag}")
             self._exec_srun(["podman", "pull", f"{img}:{tag}"], step)
 
-        log.info(f"[{step.id}] podman create -t {img}:{tag} {cid}")
+        log.info(f"[{step.id}] podman create {img}:{tag} {cid}")
         self._exec_srun(self._create_cmd(step, f"{img}:{tag}", cid), step)
 
         self._spawned_containers.add(cid)
@@ -334,10 +336,10 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         cmd = self._create_cmd(step, cid)
         self._spawned_containers.add(cid)
 
+        log.info(f'[{step.id}] {" ".join(cmd)}')
         if self._config.resman_opts.get(step.id, {}).get("mpi", True):
             ecode = self._exec_mpi(cmd, step)
         else:
-            log.info(f'[{step.id}] {" ".join(cmd)}')
             ecode = self._exec_srun(cmd, step, logging=True)
 
         self._spawned_containers.remove(cid)
