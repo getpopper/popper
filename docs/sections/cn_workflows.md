@@ -420,6 +420,8 @@ Popper workflows can run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node
 using [Slurm](https://slurm.schedmd.com/overview.html) as the underlying resource manager to distribute the execution of a step to
 several nodes. You can get started with running Popper workflows through Slurm by following the example below.
 
+**NOTE:** Set the `POPPER_CACHE_DIR` environment variable to `/path/to/shared/.cache` while running a workflow on multiple nodes. 
+
 Let's consider a workflow `sample.yml` like the one shown below.
 ```yaml
 steps:
@@ -432,14 +434,16 @@ steps:
   args: ["ls", "-l"]
 ```
 
-To run all the steps of the workflow through slurm resource manager,
+To run all the steps of the workflow through SLURM resource manager,
 use the `--resource-manager` or `-r` option of the `popper run` subcommand to specify the resource manager.
 
 ```bash
 popper run -f sample.yml -r slurm
 ```
 
-To have more finer control on which steps to run through slurm resource manager,
+This runs the workflow on a single compute node in the cluster which is also the default scenario when no specific configuration is provided.
+
+To have more finer control on which steps to run through SLURM resource manager,
 the specifications can be provided through the config file as shown below.
 
 We create a config file called `config.yml` with the following contents.
@@ -464,7 +468,10 @@ Now, we execute `popper run` with this config file as follows:
 popper run -f sample.yml -c config.yml
 ```
 
-This runs the step `one` locally in the host and step `two` through slurm on 2 nodes.
+This runs the step `one` locally in the host and step `two` through SLURM on any 2 compute nodes.
+If `singularity` is used as the container engine, then by default the steps would run using MPI
+as SLURM jobs. This behaviour can be overriden by passing `mpi: false` in the configuration of the
+step for which MPI is not required.
 
 #### Host
 

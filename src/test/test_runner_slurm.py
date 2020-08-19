@@ -535,6 +535,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_run(self, mock_kill):
+        self.maxDiff = None
         config_dict = {
             "engine": {
                 "name": "singularity",
@@ -577,7 +578,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 #SBATCH --ntasks=2
 #SBATCH --ntasks-per-node=1
 #SBATCH --nodelist=worker1,worker2
-mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local popper_1_{config.wid}.sif ls"""
+mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/popper_1_{config.wid}.sif ls"""
             # fmt: on
             actual = f.read()
             self.assertEqual(expected, actual)
@@ -616,7 +617,7 @@ mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /pa
         )
 
         self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local popper_1_{config.wid}.sif ls",
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/popper_1_{config.wid}.sif ls",
             returncode=0,
         )
 

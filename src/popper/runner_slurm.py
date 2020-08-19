@@ -48,7 +48,9 @@ class SlurmRunner(HostRunner):
     def _set_config_vars(self, step):
         self._nodes = self._config.resman_opts.get(step.id, {}).get("nodes", 1)
         self._nodelist = self._config.resman_opts.get(step.id, {}).get("nodelist", None)
-        self._ntasks = self._config.resman_opts.get(step.id, {}).get("ntasks", 1)
+        self._ntasks = self._config.resman_opts.get(step.id, {}).get(
+            "ntasks", self._nodes
+        )
         self._ntasks_per_node = self._config.resman_opts.get(step.id, {}).get(
             "ntasks-per-node", 1
         )
@@ -64,7 +66,7 @@ class SlurmRunner(HostRunner):
 
         return resman_options
 
-    def _exec_srun(self, cmd, step, logging=False):
+    def _exec_srun(self, cmd, step, **kwargs):
         self._set_config_vars(step)
         _cmd = [
             "srun",
@@ -87,10 +89,10 @@ class SlurmRunner(HostRunner):
         if self._config.dry_run:
             return 0
 
-        _, ecode, _ = HostRunner._exec_cmd(_cmd, logging=logging)
+        _, ecode, _ = HostRunner._exec_cmd(_cmd, **kwargs)
         return ecode
 
-    def _exec_mpi(self, cmd, step):
+    def _exec_mpi(self, cmd, step, **kwargs):
         self._set_config_vars(step)
         job_name = pu.sanitized_name(step.id, self._config.wid)
         mpi_cmd = ["mpirun", f"{' '.join(cmd)}"]
@@ -127,7 +129,7 @@ class SlurmRunner(HostRunner):
         self._spawned_jobs.add(job_name)
         self._start_out_stream(out_file)
 
-        _, ecode, _ = HostRunner._exec_cmd(sbatch_cmd, logging=False)
+        _, ecode, _ = HostRunner._exec_cmd(sbatch_cmd, **kwargs)
 
         self._stop_out_stream()
         self._spawned_jobs.remove(job_name)
@@ -311,7 +313,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
     def run(self, step):
         self._setup_singularity_cache()
         cid = pu.sanitized_name(step.id, self._config.wid) + ".sif"
-        self._container = cid
+        self._container = os.path.join(self._singularity_cache, cid)
 
         build, img, _, _, build_ctx_path = self._get_build_info(step)
 
@@ -326,8 +328,9 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
             recipefile = self._get_recipe_file(build_ctx_path, cid)
             log.info(f"[{step.id}] srun singularity build {self._container}")
             self._exec_srun(
-                ["singularity", "build", "--fakeroot", self._container, recipefile],
+                ["singularity", "build", "--fakeroot", self._container, recipefile,],
                 step,
+                cwd=os.path.dirname(recipefile),
             )
         else:
             log.info(f"[{step.id}] srun singularity pull {self._container}")
