@@ -414,6 +414,68 @@ either through the `--resource-manager/-r` option or through the config file.
 If neither of them are provided, the steps are run in the host machine 
 by default. 
 
+### Kubernetes
+
+Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on 
+Kubernetes clusters. One need to have access to the config file and ensure that any PersistentVolume is available
+inside the cluster. Popper takes care of the workflow execution from there.
+
+When a workflow is executed, Popper first creates a persistent volume claim and spawns an init pod and uses it to copy the workflow context (compressed in the form of a `.tar.gz` file) into the persistent volume. Then, popper teardowns this init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted, so that it can reused by subsequent workflow executions.
+
+For running workflows on Kubernetes, some configuration options need to be passed to the kubernetes resource manager through the popper configuration file.
+
+#### Running on a cluster without shared storage
+
+**NOTE:** If your workflow needs to build an image from a `Dockerfile`, make sure you are logged in to dockerhub.
+
+1. Write a persistent volume defination similar to the one shown below.
+
+```bash
+$ cat<< EOF > pv.yaml
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pv-hostpath
+  labels:
+    type: host
+spec:
+  persistentVolumeReclaimPolicy: Recycle
+  storageClassName: manual
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: "/tmp"
+EOF
+```
+
+2. Then create the persistent volume.
+```bash
+$ kubectl apply -f pv.yaml
+```
+
+3. Write a configuration file similar to this.
+```bash
+$ cat<< EOF > config.yml
+resource_manager: 
+  name: kubernetes
+  options:
+    node_selector_host_name: mynode
+    persistent_volume_name: myvol
+    registry_user: myuser
+EOF
+```
+
+4. If you have a workflow file named `.popper.yml`, simply execute
+```
+$ popper run -c config.yml
+```
+
+#### Running on a cluster with shared storage
+
+TODO
+
 ### SLURM
 
 Popper workflows can run on [HPC](https://en.wikipedia.org/wiki/HPC) (Multi-Node environments) 

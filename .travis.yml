@@ -10,6 +10,7 @@ python:
 
 env:
 - ENGINE=docker
+- ENGINE=docker WITH_K8S=1
 - ENGINE=singularity
 - ENGINE=podman
 
@@ -18,6 +19,7 @@ services: docker
 before_install:
 - src/scripts/install_singularity.sh
 - src/scripts/install_podman.sh
+- src/scripts/install_k8s.sh
 - pip install coverage
 
 install:
