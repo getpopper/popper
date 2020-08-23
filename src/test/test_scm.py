@@ -18,6 +18,18 @@ class TestScm(PopperTest):
     def tearDownClass(self):
         log.setLevel("NOTSET")
 
+    def test_empty_repo(self):
+        tempdir = tempfile.mkdtemp()
+        repo = git.Repo.init(tempdir)
+        self.assertTrue(scm.is_empty(repo))
+
+        self.assertIsNone(scm.get_sha(repo))
+        self.assertIsNone(scm.get_branch(repo))
+        self.assertIsNone(scm.get_tag(repo))
+
+        repo = self.mk_repo()
+        self.assertFalse(scm.is_empty(repo))
+
     def test_get_remote_url(self):
         repo = self.mk_repo()
         url = scm.get_remote_url(repo)
@@ -53,16 +65,6 @@ class TestScm(PopperTest):
         self.assertIsNone(scm.get_sha(None, short=8))
         self.assertIsNone(scm.get_branch(None))
 
-        # drop head commit
-        with self.assertLogs("popper", level="WARNING") as cm:
-            repo.git.update_ref("-d", "HEAD")
-            self.assertEqual(None, scm.get_sha(repo))
-            self.assertEqual(1, len(cm.output))
-            self.assertTrue(
-                f"WARNING:popper:Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty."
-                in cm.output[0]
-            )
-
     def test_get_tag(self):
         self.assertIsNone(scm.get_tag(None))
 
@@ -86,7 +88,7 @@ class TestScm(PopperTest):
         os.environ.pop("CI_COMMIT_REF_NAME")
 
         # without any of the above, it should be empty
-        self.assertEqual("", scm.get_tag(repo))
+        self.assertIsNone(scm.get_tag(repo))
 
         # test with a tagged commit
         repo = self.mk_repo(tag="foo")

@@ -19,11 +19,15 @@ def new_repo(gitrepo_dir=None):
     if not gitrepo_dir or not os.path.isdir(gitrepo_dir):
         return None
     try:
-        return git.Repo(gitrepo_dir, search_parent_directories=True)
+        repo = git.Repo(gitrepo_dir, search_parent_directories=True)
     except git.InvalidGitRepositoryError:
         # Optimistically assume that this is due to .git/ folder not existing
         pass
-    return None
+
+    if is_empty(repo):
+        return None
+
+    return repo
 
 
 def get_remote_url(repo=None):
@@ -159,26 +163,24 @@ def parse(url):
     return service_url, service, user, repo, step_dir, version
 
 
+def is_empty(repo):
+    """Whether the currently checked out branch at least one commit"""
+    return repo.git.rev_list("-n 1", "--all") == ""
+
+
 def get_sha(repo, short=None):
     """Returns the commit id for the currently checked out version on the
     given repository object. If short is given, it is interpreted as the number
     of characters from the SHA that get returned. E.g. short=7 returns the
     first 7 characters, otherwise it returns the entire SHA1 string.
     """
-    if not repo:
+    if not repo or is_empty(repo):
         return None
 
-    try:
-        if short:
-            sha = repo.git.rev_parse(repo.head.object.hexsha, short=short)
-        else:
-            sha = repo.git.rev_parse(repo.head.object.hexsha)
-
-    except ValueError:
-        sha = None
-        log.warning(
-            f"Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty."
-        )
+    if short:
+        sha = repo.git.rev_parse(repo.head.object.hexsha, short=short)
+    else:
+        sha = repo.git.rev_parse(repo.head.object.hexsha)
 
     return sha
 
@@ -188,7 +190,7 @@ def get_branch(repo):
     for environment variables commonly used in CI services: TRAVIS_BRANCH,
     GIT_BRANCH (Jenkins), CIRCLE_BRANCH and CI_COMMIT_REF_NAME (Gitlab)
     """
-    if not repo:
+    if not repo or is_empty(repo):
         return None
 
     if not repo.head.is_detached:
@@ -203,11 +205,11 @@ def get_branch(repo):
 
 
 def get_tag(repo):
-    """Get name of tag for current commit. If the repo is in detached head
-    state, it looks for for environment variables commonly used in CI services:
+    """Get name of tag for current commit. If current commit is not tagged,
+    it looks for for environment variables commonly used in CI services:
     TRAVIS_TAG, CIRCLE_TAG, GIT_TAG (Jenkins) and CI_COMMIT_REF_NAME (Gitlab).
     """
-    if not repo:
+    if not repo or is_empty(repo):
         return None
 
     tags = repo.git.tag("--points-at", "HEAD").split()
@@ -220,4 +222,4 @@ def get_tag(repo):
         if tag:
             return tag
 
-    return ""
+    return None
