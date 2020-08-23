@@ -57,14 +57,16 @@ class TestPopperConfig(PopperTest):
         self.assertTrue(not conf.git_commit)
         self.assertTrue(not conf.git_branch)
         self.assertTrue(not conf.git_sha_short)
+        self.assertTrue(not conf.git_tag)
 
     def test_config_with_git_repo(self):
-        r = self.mk_repo()
+        r = self.mk_repo(tag="a-tag")
         conf = ConfigLoader.load(workspace_dir=r.working_dir)
         sha = r.head.object.hexsha
         self.assertEqual(r.git.rev_parse(sha), conf.git_commit)
         self.assertEqual(r.git.rev_parse(sha, short=7), conf.git_sha_short)
         self.assertEqual(r.active_branch.name, conf.git_branch)
+        self.assertEqual(r.git.tag("--points-at", "HEAD"), conf.git_tag)
 
     def test_config_from_file(self):
         config = {

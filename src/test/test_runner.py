@@ -118,7 +118,7 @@ class TestStepRunner(PopperTest):
             self.assertDictEqual({"FOO": "BAR", "A": "", "other": "b"}, env)
 
     def test_prepare_environment_with_git(self):
-        repo = self.mk_repo()
+        repo = self.mk_repo(tag="a-tag")
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
         with StepRunner(conf) as r:
             step = Box(
@@ -134,6 +134,7 @@ class TestStepRunner(PopperTest):
                 "GIT_BRANCH": conf.git_branch,
                 "GIT_SHA_SHORT": conf.git_sha_short,
                 "GIT_REMOTE_ORIGIN_URL": conf.git_remote_origin_url,
+                "GIT_TAG": conf.git_tag,
             }
             self.assertDictEqual(expected, env)
             os.environ.pop("A")
