@@ -164,7 +164,7 @@ def parse(url):
 
 
 def is_empty(repo):
-    """Whether the currently checked out branch at least one commit"""
+    """True if the currently checked out branch has no commits."""
     return repo.git.rev_list("-n 1", "--all") == ""
 
 
