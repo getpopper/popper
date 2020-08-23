@@ -20,7 +20,7 @@ def new_repo(gitrepo_dir=None):
         return None
     try:
         return git.Repo(gitrepo_dir, search_parent_directories=True)
-    except git.exc.InvalidGitRepositoryError:
+    except git.InvalidGitRepositoryError:
         # Optimistically assume that this is due to .git/ folder not existing
         pass
     return None
@@ -173,7 +173,7 @@ def get_sha(repo, short=None):
         else:
             sha = repo.git.rev_parse(repo.head.object.hexsha)
 
-    except ValueError as e:
+    except ValueError:
         sha = None
         log.warning(
             f"Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty."
@@ -193,17 +193,30 @@ def get_branch(repo):
     if not repo.head.is_detached:
         return repo.active_branch.name
 
-    branch = os.environ.get("TRAVIS_BRANCH")
-    if branch:
-        return branch
-    branch = os.environ.get("GIT_BRANCH")
-    if branch:
-        return branch
-    branch = os.environ.get("CIRCLE_BRANCH")
-    if branch:
-        return branch
-    branch = os.environ.get("CI_COMMIT_REF_NAME")
-    if branch:
-        return branch
+    for v in ["TRAVIS_BRANCH", "GIT_BRANCH", "CIRCLE_BRANCH", "CI_COMMIT_REF_NAME"]:
+        branch = os.environ.get(v)
+        if branch:
+            return branch
 
     return get_sha(repo)
+
+
+def get_tag(repo):
+    """Get name of tag for current commit. If the repo is in detached head
+    state, it looks for for environment variables commonly used in CI services:
+    TRAVIS_TAG, CIRCLE_TAG, GIT_TAG (Jenkins) and CI_COMMIT_REF_NAME (Gitlab).
+    """
+    if not repo:
+        return None
+
+    tags = repo.git.tag("--points-at", "HEAD").split()
+
+    if len(tags) > 0:
+        return tags[0]
+
+    for v in ["TRAVIS_TAG", "GIT_TAG", "CIRCLE_TAG", "CI_COMMIT_REF_NAME"]:
+        tag = os.environ.get(v)
+        if tag:
+            return tag
+
+    return ""

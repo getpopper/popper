@@ -56,12 +56,38 @@ class TestScm(PopperTest):
         # drop head commit
         with self.assertLogs("popper", level="WARNING") as cm:
             repo.git.update_ref("-d", "HEAD")
-            self.assertEqual(scm.get_sha(repo), None)
-            self.assertEqual(len(cm.output), 1)
+            self.assertEqual(None, scm.get_sha(repo))
+            self.assertEqual(1, len(cm.output))
             self.assertTrue(
                 f"WARNING:popper:Could not obtain commit ID (SHA1) due to the Git repository at {repo.git_dir} being empty."
                 in cm.output[0]
             )
+
+    def test_get_tag(self):
+        self.assertIsNone(scm.get_tag(None))
+
+        repo = self.mk_repo()
+        repo.git.checkout("HEAD~1")
+        self.assertEqual("", scm.get_tag(repo))
+
+        os.environ["TRAVIS_TAG"] = "travis"
+        self.assertEqual("travis", scm.get_tag(repo))
+        os.environ.pop("TRAVIS_TAG")
+
+        os.environ["GIT_TAG"] = "jenkins"
+        self.assertEqual("jenkins", scm.get_tag(repo))
+        os.environ.pop("GIT_TAG")
+
+        os.environ["CIRCLE_TAG"] = "circle"
+        self.assertEqual("circle", scm.get_tag(repo))
+        os.environ.pop("CIRCLE_TAG")
+
+        os.environ["CI_COMMIT_REF_NAME"] = "gitlab"
+        self.assertEqual("gitlab", scm.get_tag(repo))
+        os.environ.pop("CI_COMMIT_REF_NAME")
+
+        repo = self.mk_repo(tag="foo")
+        self.assertEqual("foo", scm.get_tag(repo))
 
     def test_clone(self):
         tempdir = tempfile.mkdtemp()

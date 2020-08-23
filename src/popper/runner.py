@@ -226,6 +226,7 @@ class StepRunner(object):
                     "GIT_BRANCH": self._config.git_branch,
                     "GIT_SHA_SHORT": self._config.git_sha_short,
                     "GIT_REMOTE_ORIGIN_URL": self._config.git_remote_origin_url,
+                    "GIT_TAG": self._config.git_tag,
                 }
             )
         return step_env
@@ -233,7 +234,7 @@ class StepRunner(object):
     def _get_build_info(self, step):
 
         """Parses the `uses` attribute and returns build information needed.
-        
+
             Args:
                 step(dict): dict with step data
             Returns:

@@ -5,7 +5,7 @@ import unittest
 
 
 class PopperTest(unittest.TestCase):
-    def mk_repo(self):
+    def mk_repo(self, tag=None):
         """creates a test repo in a random temp file. Equivalent to:
         REPODIR=/tmp/<random>
         mkdir $REPODIR
@@ -14,6 +14,10 @@ class PopperTest(unittest.TestCase):
         touch README.md
         git add .
         git commit -m 'first commit'
+        echo 'README content' > README.md
+        git add -u .
+        git commit -m 'second commit'
+        git tag <tag>
         """
         tempdir = tempfile.mkdtemp()
         repo = git.Repo.init(tempdir)
@@ -26,11 +30,15 @@ class PopperTest(unittest.TestCase):
         repo.index.add([readme])
         repo.index.commit("first commit")
 
-        # create second commit
+        # modify README file and create second commit
         with open(readme, "w") as f:
             f.write("README content\n")
         repo.index.add([readme])
         repo.index.commit("second commit")
+
+        # tag commit
+        if tag:
+            repo.create_tag(tag)
 
         # create a remote
         repo.create_remote("origin", url="https://github.com/my/repo")
