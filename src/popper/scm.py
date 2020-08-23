@@ -49,8 +49,8 @@ def get_remote_url(repo=None):
 
 
 def clone(url, org, repo, repo_dir, version=None):
-    """Clones a repository using Git. The URL for the repo is
-    https://github.com/ by default.
+    """Clones a repository using Git. If ``repo_dir`` already exists, it pulls
+    from the remote.
 
     Args:
       url(str): The remote git repository hosting service url.
@@ -105,7 +105,8 @@ def clone(url, org, repo, repo_dir, version=None):
 
 
 def parse(url):
-    """Method to parse the git url.
+    """Method to parse the git url. If a URL schema and hostname are not 
+    included, it assumes ``https://github.com``.
 
     Args:
       url(str): The url in string format.

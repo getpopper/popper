@@ -68,7 +68,6 @@ class TestScm(PopperTest):
 
         repo = self.mk_repo()
         repo.git.checkout("HEAD~1")
-        self.assertEqual("", scm.get_tag(repo))
 
         os.environ["TRAVIS_TAG"] = "travis"
         self.assertEqual("travis", scm.get_tag(repo))
@@ -86,6 +85,10 @@ class TestScm(PopperTest):
         self.assertEqual("gitlab", scm.get_tag(repo))
         os.environ.pop("CI_COMMIT_REF_NAME")
 
+        # without any of the above, it should be empty
+        self.assertEqual("", scm.get_tag(repo))
+
+        # test with a tagged commit
         repo = self.mk_repo(tag="foo")
         self.assertEqual("foo", scm.get_tag(repo))
 

@@ -113,7 +113,7 @@ class WorkflowRunner(object):
             ):
                 continue
 
-            url, service, user, repo, step_dir, version = scm.parse(step.uses)
+            url, service, user, repo, _, version = scm.parse(step.uses)
 
             repo_dir = os.path.join(wf_cache_dir, service, user, repo)
 
