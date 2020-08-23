@@ -18,13 +18,16 @@ def new_repo(gitrepo_dir=None):
     """
     if not gitrepo_dir or not os.path.isdir(gitrepo_dir):
         return None
+
+    repo = None
+
     try:
         repo = git.Repo(gitrepo_dir, search_parent_directories=True)
     except git.InvalidGitRepositoryError:
         # Optimistically assume that this is due to .git/ folder not existing
         pass
 
-    if is_empty(repo):
+    if not repo or is_empty(repo):
         return None
 
     return repo
