@@ -761,7 +761,7 @@ To run RStudio Server, first add a new step to your workflow in `wf.yml`
     ports:
       8787: 8787
 ```
-Notes:
+Note:
 - `ports` is set to `{8787: 8787}` which is necessary for the host machine to connect
 - `env` is set to `DISABLE_AUTH=true` so that RStudio Server does not prompt you for
 a username/password. Do not do this if you are running Popper on a public cloud,
@@ -783,8 +783,43 @@ tool with Popper is somewhat akward as both store data in the local project fold
 which prevents installing isolated libraries before Popper bind-mounts the project
 folder.
 
-When you are developing your analysis code (using the `rstudio` step in interactive mode), in the R command line, initialize the project with 
+Before you start developing your analysis code (using the `rstudio` step in interactive model), at the root of the `workspace` folder, in the R command 
+line, use 
+```R
+renv::init()
+```
+Packages can then be installed as usual using the RStudio interface. Pin the
+new dependencies with
+```R
+renv::snapshot()
+```
+Next time you work on the project, recover the environment with
+```R
+renv::restore()
+```
+Once completed, wrapping your scripts in a Popper step will require some
+small modications. Assuming the main script (i.e. the one from which we source
+other scripts) is located at `src`, include at the beginning
+```R
+renv::restore(
+  library = "../renv/library"
+  lockfile = "../renv.lock",
+  project = ".."
+)
+```
+This ensures that `renv` uses the correct files/paths from the project root.
 
+#### Notes on long package installation times
+
+Installation inside a running container can be long for larger libaries due to the 
+memory performance penalty for bind-mounted containers.
+To avoid this, modify the `Dockerfile` to install these packages in system R
+at container build time:
+```Dockerfile
+...
+RUN R -e "install.version(c(tidymodels), c(0.0.1))"
+```
+Be careful to pin exact versions when doing this!
 
 ### Models and visualization
 
