@@ -226,7 +226,8 @@ class StepRunner(object):
                     "GIT_BRANCH": self._config.git_branch,
                     "GIT_SHA_SHORT": self._config.git_sha_short,
                     "GIT_REMOTE_ORIGIN_URL": self._config.git_remote_origin_url,
-                    "GIT_TAG": self._config.git_tag,
+                    # git_tag might be None, so we use empty string instead
+                    "GIT_TAG": self._config.get("git_tag", ""),
                 }
             )
         return step_env
