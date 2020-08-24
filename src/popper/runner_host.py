@@ -63,6 +63,7 @@ class HostRunner(StepRunner):
     @staticmethod
     def _exec_cmd(cmd, env=None, cwd=os.getcwd(), pids=set(), logging=True):
         pid = 0
+        ecode = None
         try:
             with Popen(
                 cmd,
@@ -91,7 +92,8 @@ class HostRunner(StepRunner):
 
         except SubprocessError as ex:
             output = ""
-            ecode = ex.returncode
+            if not ecode:
+                ecode = 1
             log.step_info(f"Command '{cmd[0]}' failed with: {ex}")
         except Exception as ex:
             output = ""
