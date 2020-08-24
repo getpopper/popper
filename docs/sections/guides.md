@@ -268,8 +268,8 @@ FROM continuumio/miniconda3:4.8.2
 ENV PYTHONDONTWRITEBYTECODE=true 
 # update conda environment with packages and clean up conda installation by removing 
 # conda cache/package tarbarlls and python bytecode
-COPY environment.yml .
-RUN conda env update -f exploration_env.yml \
+COPY containers/environment.yml .
+RUN conda env update -f environment.yml \
     && conda clean -afy \
     && find /opt/conda/ -follow -type f -name '*.pyc' -delete 
 CMD [ "/bin/sh" ] 
@@ -699,7 +699,7 @@ To help follow allong, see this
 
 FIXME: template for workflow
 
-### Getting dat
+### Getting data
 
 Your workflow should automate downloading or generating data to ensure that it uses the correct,
 up-to-date version of the data. In this example, you can download data with a 
@@ -734,14 +734,29 @@ For instance, a default Alpine image does not include `wget`.
 
 RStudio server provides a browser interface to an R runtime,
 which lets use the familiar RStudio environment from a container.
-
+Create this Dockerfile:
+```Dockerfile
+FROM rocker/verse:3.6.3
+# move configuration file where rstudio server will find it
+COPY rsession.conf /etc/rstudio/
+# install renv
+ENV RENV_VERSION 0.11.0-24
+RUN R -e "install.packages('remotes', repos = c(CRAN = 'https://cloud.r-project.org'))" \
+    R -e "remotes::install_github('rstudio/renv@${RENV_VERSION}')" 
+# install project files in
+EXPOSE 8787
+CMD ["bin/sh"]
+```
+This install the `renv` package manager an configures RStudio Server to boot
+into Popper's `workspace` folder.
 
 To run RStudio Server, first add a new step to your workflow in `wf.yml`
 ```yaml
 - id: "rstudio"
-  uses: "docker://rocker:verse:4.0.0"
+  uses: "./"
   runs: ["r", "--version"]
-  env: {"DISABLE_AUTH": "true"}
+  env: 
+    DISABLE_AUTH: "true"
   options:
     ports:
       8787: 8787
@@ -751,18 +766,49 @@ Notes:
 - `env` is set to `DISABLE_AUTH=true` so that RStudio Server does not prompt you for
 a username/password. Do not do this if you are running Popper on a public cloud,
 instead set a `password` in options and log in with the username `rstudio`
+- the container is based by default on the Rocker `verse` image, which includes the 
+`tidyverse` libraries and `latex`. If you do not plan on using `tidyverse` or Latex,
+ using the Rocker `rstudio` image will make for smaller images sizes and much faster 
+ build times.
 
-Go to `localhost:8787` in your browser to access RStudio Server.
+Go to `localhost:8787` in your browser to access RStudio Server. Log in with username
+and password `rstudio`.
 
 
 ### Package management
 
 `renv` is recommended for package management because of its good integration
-with other RStudio tools and b 
+with RStudio and for being generally more consistent than `packrat`. Using either
+tool with Popper is somewhat akward as both store data in the local project folder,
+which prevents installing isolated libraries before Popper bind-mounts the project
+folder.
+
+When you are developing your analysis code (using the `rstudio` step in interactive mode), in the R command line, initialize the project with 
 
 
 ### Models and visualization
 
-### Building a LaTeX paper
+### Building a PDF paper
+
+#### Latex
+
+```yml
+- id: "paper"
+  uses: "./containers
+  args: ["latexmk", "-pdf", "paper.tex"]
+  dir: "/workspace/paper"
+```
+
+#### RMarkdown
+
+Many R users find it more convenient to write up the final analysis directly in 
+RMarkdown and then knit the document to HTML or pdf. You can easily modify the above
+ step to support this workflow:
+```yml
+- id: "paper"
+  uses: "./containers
+  args: TODO
+  dir: "/workspace/paper"
+```
 
 ### Conclusion
