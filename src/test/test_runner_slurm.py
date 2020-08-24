@@ -11,9 +11,7 @@ from popper.runner import WorkflowRunner
 from popper.parser import WorkflowParser
 from popper.runner_slurm import (
     SlurmRunner,
-    DockerRunner,
     SingularityRunner,
-    PodmanRunner,
 )
 from popper.cli import log as log
 
@@ -67,7 +65,7 @@ class TestSlurmSlurmRunner(PopperTest):
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_srun(self, mock_kill):
         config_dict = {
-            "engine": {"name": "podman", "options": {},},
+            "engine": {"name": "singularity", "options": {},},
             "resource_manager": {
                 "name": "slurm",
                 "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
@@ -179,67 +177,63 @@ mpirun ls -la""",
 
     def test_dry_run(self):
         config = ConfigLoader.load(
-            engine_name="docker", resman_name="slurm", dry_run=True,
+            engine_name="singularity", resman_name="slurm", dry_run=True
         )
 
         with WorkflowRunner(config) as r:
             wf_data = {
                 "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "runs": ["cat"],
-                        "args": ["README.md"],
-                    }
+                    {"uses": "docker://alpine", "runs": ["cat"], "args": ["README.md"],}
                 ]
             }
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
         self.assertEqual(self.Popen.all_calls, [])
 
-    @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_exec_srun_failure(self, mock_kill):
-        config_dict = {
-            "engine": {
-                "name": "podman",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {
-                "name": "slurm",
-                "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
-            },
-        }
+    # @replace("popper.runner_slurm.os.kill", mock_kill)
+    # def test_exec_srun_failure(self, mock_kill):
+    #     config_dict = {
+    #         "engine": {
+    #             "name": "singularity",
+    #             "options": {
+    #                 "privileged": True,
+    #                 "hostname": "popper.local",
+    #                 "domainname": "www.example.org",
+    #                 "volumes": ["/path/in/host:/path/in/container"],
+    #                 "environment": {"FOO": "bar"},
+    #             },
+    #         },
+    #         "resource_manager": {
+    #             "name": "slurm",
+    #             "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+    #         },
+    #     }
 
-        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
+    #     config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
-            returncode=0,
-        )
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
+    #         returncode=0,
+    #     )
 
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
-            returncode=0,
-        )
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
+    #         returncode=0,
+    #     )
 
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
-            returncode=0,
-        )
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
+    #         returncode=0,
+    #     )
 
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
-            returncode=12,
-        )
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
+    #         returncode=12,
+    #     )
 
-        with WorkflowRunner(config) as r:
-            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
-            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
+    #     with WorkflowRunner(config) as r:
+    #         wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
+    #         self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_mpi_failure(self, mock_kill):
@@ -264,222 +258,6 @@ mpirun ls -la""",
         with WorkflowRunner(config) as r:
             wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
-
-
-class TestSlurmDockerRunner(unittest.TestCase):
-    def setUp(self):
-        log.setLevel("CRITICAL")
-        self.Popen = MockPopen()
-        replacer = Replacer()
-        replacer.replace("popper.runner_host.Popen", self.Popen)
-        self.addCleanup(replacer.restore)
-
-    def tearDown(self):
-        log.setLevel("NOTSET")
-
-    def test_create_cmd(self):
-        self.maxDiff = None
-        config = {"workspace_dir": "/w"}
-        with DockerRunner(config=ConfigLoader.load(**config)) as drunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = drunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "docker create"
-                " --name container_name"
-                " --workdir /workspace"
-                " -v /w:/workspace:Z"
-                " -v /var/run/docker.sock:/var/run/docker.sock"
-                " foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected.split(" "), cmd)
-
-        config_dict = {
-            "engine": {
-                "name": "docker",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {"name": "slurm"},
-        }
-
-        config = {"workspace_dir": "/w", "config_file": config_dict}
-        with DockerRunner(config=ConfigLoader.load(**config)) as drunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = drunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "docker create --name container_name "
-                "--workdir /workspace "
-                "-v /w:/workspace:Z "
-                "-v /var/run/docker.sock:/var/run/docker.sock "
-                "-v /path/in/host:/path/in/container "
-                "-e FOO=bar --privileged --hostname popper.local "
-                "--domainname www.example.org"
-                " foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected.split(" "), cmd)
-
-    @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_run(self, mock_kill):
-        config_dict = {
-            "engine": {
-                "name": "docker",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {
-                "name": "slurm",
-                "options": {
-                    "1": {"nodes": 2, "ntasks": 2, "nodelist": "worker1,worker2"}
-                },
-            },
-        }
-
-        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker rm -f popper_1_{config.wid}",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker pull alpine:latest",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 docker start --attach popper_1_{config.wid}",
-            returncode=0,
-        )
-
-        with WorkflowRunner(config) as r:
-            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
-            r.run(WorkflowParser.parse(wf_data=wf_data))
-
-
-class TestSlurmPodmanRunner(unittest.TestCase):
-    def setUp(self):
-        log.setLevel("CRITICAL")
-        self.Popen = MockPopen()
-        replacer = Replacer()
-        replacer.replace("popper.runner_host.Popen", self.Popen)
-        self.addCleanup(replacer.restore)
-
-    def tearDown(self):
-        log.setLevel("NOTSET")
-
-    def test_create_cmd(self):
-        self.maxDiff = None
-        config = {"workspace_dir": "/w"}
-        with PodmanRunner(config=ConfigLoader.load(**config)) as prunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = prunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "podman create"
-                " --name container_name"
-                " --workdir /workspace"
-                " -v /w:/workspace:Z"
-                " foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected.split(" "), cmd)
-
-        config_dict = {
-            "engine": {
-                "name": "podman",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {"name": "slurm"},
-        }
-
-        config = {"workspace_dir": "/w", "config_file": config_dict}
-        with PodmanRunner(config=ConfigLoader.load(**config)) as prunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = prunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "podman create --name container_name "
-                "--workdir /workspace "
-                "-v /w:/workspace:Z "
-                "-v /path/in/host:/path/in/container "
-                "-e FOO=bar --privileged --hostname popper.local "
-                "--domainname www.example.org"
-                " foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected.split(" "), cmd)
-
-    @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_run(self, mock_kill):
-        config_dict = {
-            "engine": {
-                "name": "podman",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {
-                "name": "slurm",
-                "options": {
-                    "1": {"nodes": 2, "ntasks": 2, "nodelist": "worker1,worker2"}
-                },
-            },
-        }
-
-        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
-            returncode=0,
-        )
-
-        with WorkflowRunner(config) as r:
-            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
-            r.run(WorkflowParser.parse(wf_data=wf_data))
 
 
 class TestSlurmSingularityRunner(unittest.TestCase):
