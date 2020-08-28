@@ -417,38 +417,30 @@ by default.
 ### Kubernetes
 
 Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on 
-Kubernetes clusters. One need to have access to the config file and ensure that any PersistentVolume is available
-inside the cluster. Popper takes care of the workflow execution from there.
+Kubernetes clusters. One just need to have access to the cluster config file.
+Popper provisions all the required resources and takes care of the workflow execution from there.
 
 When a workflow is executed, Popper first creates a persistent volume claim and spawns an init pod and uses it to copy the workflow context (compressed in the form of a `.tar.gz` file) into the persistent volume. Then, popper teardowns this init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted, so that it can reused by subsequent workflow executions.
 
-For running workflows on Kubernetes, some configuration options need to be passed to the kubernetes resource manager through the popper configuration file.
+For running workflows on Kubernetes, some configuration options may need to be passed to the kubernetes resource manager through the popper configuration file. All the available configuration options is described below:
 
-#### Running on a cluster without shared storage
+* `namespace`: The namespace to use to provision resources like PVCs and Pods for a workflow execution. If not provided the `default` namespace will be used.
+
+* `persistent_volume_name`: Any pre-provisioned persistent volume like an NFS or EBS volume can be supplied through this option. Popper will then claim storage space from the supplied volume. Default is that a local persistent volume of 1Gi will be created.
+
+* `volume_size`: The amount of space to claim from a persistent volume. Default is 500Mi.
+
+* `pod_host_node`: The node on which to restrict deployment of pods. This options is important when you are using a manually created Local persistent volume. In this case, users need to restrict all the pods to a particular node. If this option is not provided, Popper will try using the Kubernetes scheduler to schedule pods randomly. The exception to this is if both the `pod_host_node` and `persistent_volume_name` option is not provided, Popper will try to find out a schedulable pod and schedule all the pods (init + step) on that node since a local storage of 1Gi will automatically get created.
+
+* `registry`: The registry to which to push images after building on the host machine. 
+
+* `registry_user`: The username to use for pushing to the user's preferred registry.
 
 **NOTE:** If your workflow needs to build an image from a `Dockerfile`, make sure you are logged in to dockerhub.
 
+<!-- 
 1. Write a persistent volume defination similar to the one shown below.
 
-```bash
-$ cat<< EOF > pv.yaml
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: pv-hostpath
-  labels:
-    type: host
-spec:
-  persistentVolumeReclaimPolicy: Recycle
-  storageClassName: manual
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteMany
-  hostPath:
-    path: "/tmp"
-EOF
-```
 
 2. Then create the persistent volume.
 ```bash
@@ -474,7 +466,7 @@ $ popper run -c config.yml
 
 #### Running on a cluster with shared storage
 
-TODO
+TODO -->
 
 ### SLURM
 
