@@ -417,12 +417,12 @@ by default.
 ### Kubernetes
 
 Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on 
-Kubernetes clusters. One just need to have access to the cluster config file.
+Kubernetes clusters. One just need to have access to the cluster config file in order to run workflows on Kubernetes.
 Popper provisions all the required resources and takes care of the workflow execution from there.
 
 When a workflow is executed, Popper first creates a persistent volume claim and spawns an init pod and uses it to copy the workflow context (compressed in the form of a `.tar.gz` file) into the persistent volume. Then, popper teardowns this init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted, so that it can reused by subsequent workflow executions.
 
-For running workflows on Kubernetes, some configuration options may need to be passed to the kubernetes resource manager through the popper configuration file. All the available configuration options is described below:
+For running workflows on Kubernetes, some configuration options can be passed to the kubernetes resource manager through the popper configuration file to customize the execution environment. All the available configuration options is described below:
 
 * `namespace`: The namespace to use to provision resources like PVCs and Pods for a workflow execution. If not provided the `default` namespace will be used.
 
@@ -436,37 +436,16 @@ For running workflows on Kubernetes, some configuration options may need to be p
 
 * `registry_user`: The username to use for pushing to the user's preferred registry.
 
-**NOTE:** If your workflow needs to build an image from a `Dockerfile`, make sure you are logged in to dockerhub.
+**NOTE:** 
+1. The `registry` and `registry_user` is required if your workflow needs to build and push images to a registry. 
+2. If your workflow needs to build an image from a `Dockerfile` and push it to a registry like Docker hub, make sure you are logged in to the registry from the CLI.
+3. This requirement of providing the registry options when workflows build image will be waived after [getpopper/popper#911](https://github.com/getpopper/popper/issues/911) is fixed.
 
-<!-- 
-1. Write a persistent volume defination similar to the one shown below.
+To get started with running workflows on Kubernetes,
 
-
-2. Then create the persistent volume.
 ```bash
-$ kubectl apply -f pv.yaml
+$ popper run -f wf.yml -r kubernetes
 ```
-
-3. Write a configuration file similar to this.
-```bash
-$ cat<< EOF > config.yml
-resource_manager: 
-  name: kubernetes
-  options:
-    node_selector_host_name: mynode
-    persistent_volume_name: myvol
-    registry_user: myuser
-EOF
-```
-
-4. If you have a workflow file named `.popper.yml`, simply execute
-```
-$ popper run -c config.yml
-```
-
-#### Running on a cluster with shared storage
-
-TODO -->
 
 ### SLURM
 
