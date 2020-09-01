@@ -444,7 +444,7 @@ The exception to this is, when both the `pod_host_node` and `persistent_volume_n
 
 * `registry_user`: The username to use for pushing to the user's preferred image registry.
 
-**NOTE:** 
+**Note:** 
 1. The `registry` and `registry_user` option is required if the workflow needs to build and push images to a remote registry. 
 2. If your workflow needs to build an image from a `Dockerfile` and push it to a registry like Docker Hub, make sure you are logged in to the registry from the CLI.
 3. The requirement of providing the registry options when workflows need to build and push images will be waived after [getpopper/popper#911](https://github.com/getpopper/popper/issues/911) is fixed.
