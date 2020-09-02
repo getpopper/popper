@@ -430,15 +430,15 @@ All the available configuration options have been described below.
 
 * `namespace`: The namespace within which to provision resources like PVCs and Pods for workflow execution. If not provided the `default` namespace will be used.
 
-* `persistent_volume_name`: Any pre-provisioned persistent volume like an NFS or EBS volume can be supplied through this option. Popper will then claim storage space from the supplied persistent volume. In the default case, a local persistent volume of 1GB will be created by Popper automatically.
+* `persistent_volume_name`: Any pre-provisioned persistent volume like an NFS or EBS volume can be supplied through this option. Popper will then claim storage space from the supplied persistent volume. In the default case, a HostPath persistent volume of 1GB with a name of the form `pv-hostpath-popper-<workflowid>` will be created by Popper automatically.
 
 * `volume_size`: The amount of storage space to claim from a persistent volume for use by a workflow. The default is 500MB.
 
 * `pod_host_node`: The node on which to restrict the deployment of all the pods. 
-This option is important when a local persistent volume is used. 
+This option is important when a HostPath persistent volume is used. 
 In this case, users need to restrict all the pods to a particular node. 
 If this option is not provided, Popper will leave the task of scheduling the pods upon Kubernetes. 
-The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a schedulable pod and schedule all the pods (init-pods + step-pods) on that node to use the local persistent volume of 1GB which will be automatically created.
+The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a schedulable pod and schedule all the pods (init-pods + step-pods) on that node to use the HostPath persistent volume of 1GB which will be automatically created.
 
 * `registry`: The registry to which to push images after building them on the host machine. The default image registry is Docker Hub.
 
