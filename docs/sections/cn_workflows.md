@@ -416,65 +416,61 @@ by default.
 
 ### Kubernetes
 
-Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on 
-Kubernetes clusters. One need to have access to the config file and ensure that any PersistentVolume is available
-inside the cluster. Popper takes care of the workflow execution from there.
+Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on Kubernetes clusters. 
+Users just need to have access to the cluster config file in order to run workflows on Kubernetes.
+Popper provisions all the required resources and orchestrates the entire workflow execution. 
+In general, Kubernetes supports running Pods on different container runtimes like Containerd, CRI-O, Frakti, and Docker. 
+The Popper kubernetes runner currently supports the Docker container runtime only.
 
-When a workflow is executed, Popper first creates a persistent volume claim and spawns an init pod and uses it to copy the workflow context (compressed in the form of a `.tar.gz` file) into the persistent volume. Then, popper teardowns this init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted, so that it can reused by subsequent workflow executions.
+When a workflow is executed, Popper first creates a persistent volume claim, spawns an init pod and uses it to copy the workflow context (packed in the form of a `.tar.gz` file) into the persistent volume and then unpacks the context there. 
+Then, popper teardowns the init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted so that it can be reused by subsequent workflow executions.
 
-For running workflows on Kubernetes, some configuration options need to be passed to the kubernetes resource manager through the popper configuration file.
+For running workflows on Kubernetes, several configuration options can be passed to the Kubernetes resource manager through the popper configuration file to customize the execution environment. 
+All the available configuration options have been described below.
 
-#### Running on a cluster without shared storage
+* `namespace`: The namespace within which to provision resources like PVCs and Pods for workflow execution. If not provided the `default` namespace will be used.
 
-**NOTE:** If your workflow needs to build an image from a `Dockerfile`, make sure you are logged in to dockerhub.
+* `persistent_volume_name`: Any pre-provisioned persistent volume like an NFS or EBS volume can be supplied through this option. Popper will then claim storage space from the supplied persistent volume. In the default case, a HostPath persistent volume of 1GB with a name of the form `pv-hostpath-popper-<workflowid>` will be created by Popper automatically.
 
-1. Write a persistent volume defination similar to the one shown below.
+* `volume_size`: The amount of storage space to claim from a persistent volume for use by a workflow. The default is 500MB.
+
+* `pod_host_node`: The node on which to restrict the deployment of all the pods. 
+This option is important when a HostPath persistent volume is used. 
+In this case, users need to restrict all the pods to a particular node. 
+If this option is not provided, Popper will leave the task of scheduling the pods upon Kubernetes. 
+The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a schedulable pod and schedule all the pods (init-pods + step-pods) on that node to use the HostPath persistent volume of 1GB which will be automatically created.
+
+* `registry`: The registry to which to push images after building them on the host machine. The default image registry is Docker Hub.
+
+* `registry_user`: The username to use for pushing to the user's preferred image registry.
+
+**Note:** 
+1. The `registry` and `registry_user` option is required if the workflow needs to build and push images to a remote registry. 
+2. If your workflow needs to build an image from a `Dockerfile` and push it to a registry like Docker Hub, make sure you are logged in to the registry from the CLI.
+3. The requirement of providing the registry options when workflows need to build and push images will be waived after [getpopper/popper#911](https://github.com/getpopper/popper/issues/911) is fixed.
+
+To get started with running workflows on Kubernetes,
 
 ```bash
-$ cat<< EOF > pv.yaml
-kind: PersistentVolume
-apiVersion: v1
-metadata:
-  name: pv-hostpath
-  labels:
-    type: host
-spec:
-  persistentVolumeReclaimPolicy: Recycle
-  storageClassName: manual
-  capacity:
-    storage: 1Gi
-  accessModes:
-    - ReadWriteMany
-  hostPath:
-    path: "/tmp"
-EOF
+$ popper run -f wf.yml -r kubernetes
 ```
 
-2. Then create the persistent volume.
-```bash
-$ kubectl apply -f pv.yaml
-```
+The above assumes that the workflow doesn't build images. If that is not true,
 
-3. Write a configuration file similar to this.
+1. Write a config file similar to the one shown below mentioning the Docker Hub account to push images after building.
 ```bash
-$ cat<< EOF > config.yml
-resource_manager: 
+$ cat << EOF > config.yml
+resource_manager:
   name: kubernetes
   options:
-    node_selector_host_name: mynode
-    persistent_volume_name: myvol
-    registry_user: myuser
+    registry_user: myusername
 EOF
 ```
 
-4. If you have a workflow file named `.popper.yml`, simply execute
+2. Execute the workflow using the above config file.
 ```
-$ popper run -c config.yml
+$ popper run -f wf.yml -c config.yml
 ```
-
-#### Running on a cluster with shared storage
-
-TODO
 
 ### SLURM
 
