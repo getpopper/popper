@@ -11,9 +11,7 @@ from popper.runner import WorkflowRunner
 from popper.parser import WorkflowParser
 from popper.runner_slurm import (
     SlurmRunner,
-    DockerRunner,
     SingularityRunner,
-    PodmanRunner,
 )
 from popper.cli import log as log
 
@@ -23,7 +21,6 @@ from box import Box
 
 
 config = ConfigLoader.load(workspace_dir="/w")
-slurm_cache_dir = f"{os.environ['HOME']}/.cache/popper/slurm/{config.wid}"
 
 
 def mock_kill(pid, sig):
@@ -66,30 +63,90 @@ class TestSlurmSlurmRunner(PopperTest):
             )
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_submit_batch_job(self, mock_kill):
-        config = ConfigLoader.load(workspace_dir="/w")
+    def test_exec_srun(self, mock_kill):
+        config_dict = {
+            "engine": {"name": "singularity", "options": {},},
+            "resource_manager": {
+                "name": "slurm",
+                "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
         self.Popen.set_command(
-            "sbatch --wait "
-            f"--job-name popper_sample_{config.wid} "
-            f"--output {slurm_cache_dir}/popper_sample_{config.wid}.out "
-            f"{slurm_cache_dir}/popper_sample_{config.wid}.sh",
+            "srun --nodes 1 --ntasks 1 --ntasks-per-node 1 --gpus-per-task 2 --overcommit ls -la",
             returncode=0,
-        )
-        self.Popen.set_command(
-            f"tail -f {slurm_cache_dir}/popper_sample_{config.wid}.out", returncode=0
         )
         step = Box({"id": "sample"}, default_box=True)
         with SlurmRunner(config=config) as sr:
-            sr._submit_batch_job(["ls -la"], step)
-            with open(f"{slurm_cache_dir}/popper_sample_{config.wid}.sh", "r") as f:
+            e = sr._exec_srun(["ls", "-la"], step, logging=True)
+            self.assertEqual(e, 0)
+
+        call_srun = call.Popen(
+            [
+                "srun",
+                "--nodes",
+                "1",
+                "--ntasks",
+                "1",
+                "--ntasks-per-node",
+                "1",
+                "--gpus-per-task",
+                "2",
+                "--overcommit",
+                "ls",
+                "-la",
+            ],
+            cwd=os.getcwd(),
+            env=None,
+            preexec_fn=os.setsid,
+            stderr=-2,
+            stdout=-1,
+            universal_newlines=True,
+        )
+
+        self.assertEqual(call_srun in self.Popen.all_calls, True)
+
+    @replace("popper.runner_slurm.os.kill", mock_kill)
+    def test_exec_mpi(self, mock_kill):
+        config_dict = {
+            "engine": {"name": "singularity", "options": {},},
+            "resource_manager": {
+                "name": "slurm",
+                "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
+        self.Popen.set_command(
+            "sbatch "
+            "--wait --gpus-per-task 2 --overcommit "
+            f"popper_sample_{config.wid}.sh",
+            returncode=0,
+        )
+        self.Popen.set_command(f"tail -f popper_sample_{config.wid}.out", returncode=0)
+        step = Box({"id": "sample"}, default_box=True)
+        with SlurmRunner(config=config) as sr:
+            e = sr._exec_mpi(["ls -la"], step)
+            self.assertEqual(e, 0)
+            with open(f"popper_sample_{config.wid}.sh", "r") as f:
                 content = f.read()
 
-            self.assertEqual(content, "#!/bin/bash\nls -la")
+            self.assertEqual(
+                content,
+                f"""#!/bin/bash
+#SBATCH --job-name=popper_sample_{config.wid}
+#SBATCH --output=popper_sample_{config.wid}.out
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --ntasks-per-node=1
+mpirun ls -la""",
+            )
             self.assertEqual(len(sr._spawned_jobs), 0)
             self.assertEqual(sr._out_stream_thread.is_alive(), False)
 
         call_tail = call.Popen(
-            ["tail", "-f", f"{slurm_cache_dir}/popper_sample_{config.wid}.out"],
+            ["tail", "-f", f"popper_sample_{config.wid}.out"],
             cwd=os.getcwd(),
             env=None,
             preexec_fn=os.setsid,
@@ -102,11 +159,10 @@ class TestSlurmSlurmRunner(PopperTest):
             [
                 "sbatch",
                 "--wait",
-                "--job-name",
-                f"popper_sample_{config.wid}",
-                "--output",
-                f"{slurm_cache_dir}/popper_sample_{config.wid}.out",
-                f"{slurm_cache_dir}/popper_sample_{config.wid}.sh",
+                "--gpus-per-task",
+                "2",
+                "--overcommit",
+                f"popper_sample_{config.wid}.sh",
             ],
             cwd=os.getcwd(),
             env=None,
@@ -119,315 +175,89 @@ class TestSlurmSlurmRunner(PopperTest):
         self.assertEqual(call_tail in self.Popen.all_calls, True)
         self.assertEqual(call_sbatch in self.Popen.all_calls, True)
 
-    @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_submit_job_failure(self, mock_kill):
-        config_dict = {
-            "engine": {"name": "docker", "options": {}},
-            "resource_manager": {"name": "slurm", "options": {}},
-        }
-
-        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
-
-        self.Popen.set_command(
-            f"sbatch --wait --job-name popper_1_{config.wid} "
-            f"--output {slurm_cache_dir}/popper_1_{config.wid}.out "
-            f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
-            returncode=12,
-        )
-
-        self.Popen.set_command(
-            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
-        )
-
-        with WorkflowRunner(config) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "runs": ["cat"],
-                        "args": ["README.md"],
-                    }
-                ]
-            }
-            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
-
-            call_tail = call.Popen(
-                ["tail", "-f", f"{slurm_cache_dir}/popper_1_{config.wid}.out"],
-                cwd=os.getcwd(),
-                env=None,
-                preexec_fn=os.setsid,
-                stderr=-2,
-                stdout=-1,
-                universal_newlines=True,
-            )
-
-            call_sbatch = call.Popen(
-                [
-                    "sbatch",
-                    "--wait",
-                    "--job-name",
-                    f"popper_1_{config.wid}",
-                    "--output",
-                    f"{slurm_cache_dir}/popper_1_{config.wid}.out",
-                    f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
-                ],
-                cwd=os.getcwd(),
-                env=None,
-                preexec_fn=os.setsid,
-                stderr=-2,
-                stdout=-1,
-                universal_newlines=True,
-            )
-
-            self.assertEqual(call_tail in self.Popen.all_calls, True)
-            self.assertEqual(call_sbatch in self.Popen.all_calls, True)
-
     def test_dry_run(self):
         config = ConfigLoader.load(
-            engine_name="docker", resman_name="slurm", dry_run=True,
+            engine_name="singularity", resman_name="slurm", dry_run=True
         )
 
         with WorkflowRunner(config) as r:
             wf_data = {
                 "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "runs": ["cat"],
-                        "args": ["README.md"],
-                    }
+                    {"uses": "docker://alpine", "runs": ["cat"], "args": ["README.md"],}
                 ]
             }
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
         self.assertEqual(self.Popen.all_calls, [])
 
+    # @replace("popper.runner_slurm.os.kill", mock_kill)
+    # def test_exec_srun_failure(self, mock_kill):
+    #     config_dict = {
+    #         "engine": {
+    #             "name": "singularity",
+    #             "options": {
+    #                 "privileged": True,
+    #                 "hostname": "popper.local",
+    #                 "domainname": "www.example.org",
+    #                 "volumes": ["/path/in/host:/path/in/container"],
+    #                 "environment": {"FOO": "bar"},
+    #             },
+    #         },
+    #         "resource_manager": {
+    #             "name": "slurm",
+    #             "options": {"1": {"nodes": 2, "nodelist": "worker1,worker2"}},
+    #         },
+    #     }
 
-class TestSlurmDockerRunner(unittest.TestCase):
-    def setUp(self):
-        log.setLevel("CRITICAL")
-        self.Popen = MockPopen()
-        replacer = Replacer()
-        replacer.replace("popper.runner_host.Popen", self.Popen)
-        self.addCleanup(replacer.restore)
+    #     config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
-    def tearDown(self):
-        log.setLevel("NOTSET")
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman rm -f popper_1_{config.wid}",
+    #         returncode=0,
+    #     )
 
-    def test_create_cmd(self):
-        self.maxDiff = None
-        config = {"workspace_dir": "/w"}
-        with DockerRunner(config=ConfigLoader.load(**config)) as drunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = drunner._create_cmd(step, "foo:1.9", "container_name")
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman pull alpine:latest",
+    #         returncode=0,
+    #     )
 
-            expected = (
-                "docker create"
-                " --name container_name"
-                " --workdir /workspace"
-                " -v /w:/workspace:Z"
-                " -v /var/run/docker.sock:/var/run/docker.sock"
-                "   foo:1.9 -two -flags"
-            )
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman create --name popper_1_{config.wid} --workdir /workspace -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar --privileged --hostname popper.local --domainname www.example.org alpine:latest ls",
+    #         returncode=0,
+    #     )
 
-            self.assertEqual(expected, cmd)
+    #     self.Popen.set_command(
+    #         f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 podman start --attach popper_1_{config.wid}",
+    #         returncode=12,
+    #     )
 
-        config_dict = {
-            "engine": {
-                "name": "docker",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {"name": "slurm"},
-        }
-
-        config = {"workspace_dir": "/w", "config_file": config_dict}
-        with DockerRunner(config=ConfigLoader.load(**config)) as drunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = drunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "docker create --name container_name "
-                "--workdir /workspace "
-                "-v /w:/workspace:Z "
-                "-v /var/run/docker.sock:/var/run/docker.sock "
-                "-v /path/in/host:/path/in/container "
-                "-e FOO=bar   --privileged --hostname popper.local "
-                "--domainname www.example.org"
-                " foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected, cmd)
+    #     with WorkflowRunner(config) as r:
+    #         wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
+    #         self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_run(self, mock_kill):
+    def test_exec_mpi_failure(self, mock_kill):
         config_dict = {
-            "engine": {
-                "name": "docker",
+            "engine": {"name": "singularity", "options": {},},
+            "resource_manager": {
+                "name": "slurm",
                 "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
+                    "1": {"nodes": 2, "nodelist": "worker1,worker2", "overcommit": True}
                 },
             },
-            "resource_manager": {"name": "slurm"},
         }
 
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            f"sbatch --wait --job-name popper_1_{config.wid} "
-            f"--output {slurm_cache_dir}/popper_1_{config.wid}.out "
-            f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
-            returncode=0,
+            "sbatch " "--wait --overcommit " f"popper_1_{config.wid}.sh", returncode=12,
         )
 
-        self.Popen.set_command(
-            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
-        )
+        self.Popen.set_command(f"tail -f popper_1_{config.wid}.out", returncode=0)
 
         with WorkflowRunner(config) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "runs": ["cat"],
-                        "args": ["README.md"],
-                    }
-                ]
-            }
-            r.run(WorkflowParser.parse(wf_data=wf_data))
-
-        with open(f"{slurm_cache_dir}/popper_1_{config.wid}.sh", "r") as f:
-            # fmt: off
-            expected = f"""#!/bin/bash
-docker rm -f popper_1_{config.wid} || true
-docker build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/{config.wid}/github.com/popperized/bin/sh
-docker create --name popper_1_{config.wid} --workdir /workspace --entrypoint cat -v /w:/workspace:Z -v /var/run/docker.sock:/var/run/docker.sock -v /path/in/host:/path/in/container -e FOO=bar   --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
-docker start --attach popper_1_{config.wid}"""
-            # fmt: on
-            actual = f.read()
-            self.maxDiff = None
-            self.assertEqual(expected, actual)
-
-
-class TestSlurmPodmanRunner(unittest.TestCase):
-    def setUp(self):
-        log.setLevel("CRITICAL")
-        self.Popen = MockPopen()
-        replacer = Replacer()
-        replacer.replace("popper.runner_host.Popen", self.Popen)
-        self.addCleanup(replacer.restore)
-
-    def tearDown(self):
-        log.setLevel("NOTSET")
-
-    def test_create_cmd(self):
-        self.maxDiff = None
-        config = {"workspace_dir": "/w"}
-        with PodmanRunner(config=ConfigLoader.load(**config)) as prunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = prunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "podman create"
-                " --name container_name"
-                " --workdir /workspace"
-                " -v /w:/workspace:Z"
-                "   foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected, cmd)
-
-        config_dict = {
-            "engine": {
-                "name": "podman",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {"name": "slurm"},
-        }
-
-        config = {"workspace_dir": "/w", "config_file": config_dict}
-        with PodmanRunner(config=ConfigLoader.load(**config)) as prunner:
-            step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            cmd = prunner._create_cmd(step, "foo:1.9", "container_name")
-
-            expected = (
-                "podman create --name container_name "
-                "--workdir /workspace "
-                "-v /w:/workspace:Z "
-                "-v /path/in/host:/path/in/container "
-                "-e FOO=bar   --privileged --hostname popper.local "
-                "--domainname www.example.org"
-                " foo:1.9 -two -flags"
-            )
-
-            self.assertEqual(expected, cmd)
-
-    @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_run(self, mock_kill):
-        config_dict = {
-            "engine": {
-                "name": "podman",
-                "options": {
-                    "privileged": True,
-                    "hostname": "popper.local",
-                    "domainname": "www.example.org",
-                    "volumes": ["/path/in/host:/path/in/container"],
-                    "environment": {"FOO": "bar"},
-                },
-            },
-            "resource_manager": {"name": "slurm"},
-        }
-
-        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
-
-        self.Popen.set_command(
-            f"sbatch --wait --job-name popper_1_{config.wid} "
-            f"--output {slurm_cache_dir}/popper_1_{config.wid}.out "
-            f"{slurm_cache_dir}/popper_1_{config.wid}.sh",
-            returncode=0,
-        )
-
-        self.Popen.set_command(
-            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
-        )
-
-        with WorkflowRunner(config) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "runs": ["cat"],
-                        "args": ["README.md"],
-                    }
-                ]
-            }
-            r.run(WorkflowParser.parse(wf_data=wf_data))
-
-        with open(f"{slurm_cache_dir}/popper_1_{config.wid}.sh", "r") as f:
-            # fmt: off
-            expected = f"""#!/bin/bash
-podman rm -f popper_1_{config.wid} || true
-podman build -t popperized/bin:master {os.environ['HOME']}/.cache/popper/{config.wid}/github.com/popperized/bin/sh
-podman create --name popper_1_{config.wid} --workdir /workspace --entrypoint cat -v /w:/workspace:Z -v /path/in/host:/path/in/container -e FOO=bar   --privileged --hostname popper.local --domainname www.example.org popperized/bin:master README.md
-podman start --attach popper_1_{config.wid}"""
-            # fmt: on
-            actual = f.read()
-            self.maxDiff = None
-            self.assertEqual(expected, actual)
+            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
+            self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
 
 class TestSlurmSingularityRunner(unittest.TestCase):
@@ -444,19 +274,18 @@ class TestSlurmSingularityRunner(unittest.TestCase):
         config = ConfigLoader.load(workspace_dir="/w")
         with SingularityRunner(config=config) as sr:
             step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            sr._setup_singularity_cache()
-            sr._container = os.path.join(sr._singularity_cache, "c1.sif")
+            sr._container = "c1.sif"
             cmd = sr._create_cmd(step, "c1.sif")
 
             expected = (
                 "singularity run"
                 " --userns --pwd /workspace"
                 " --bind /w:/workspace"
-                f' {os.environ["HOME"]}/.cache/popper/singularity/{config.wid}/c1.sif'
+                " c1.sif"
                 " -two -flags"
             )
 
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
         config_dict = {
             "engine": {
@@ -474,18 +303,17 @@ class TestSlurmSingularityRunner(unittest.TestCase):
 
         with SingularityRunner(config=config) as sr:
             step = Box({"args": ["-two", "-flags"]}, default_box=True)
-            sr._setup_singularity_cache()
-            sr._container = os.path.join(sr._singularity_cache, "c2.sif")
+            sr._container = "c2.sif"
             cmd = sr._create_cmd(step, "c2.sif")
 
             # fmt: off
-            expected = f"singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local --ipc {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/c2.sif -two -flags"
+            expected = f"singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local --ipc c2.sif -two -flags"
             # fmt: on
-
-            self.assertEqual(expected, cmd)
+            self.assertEqual(expected.split(" "), cmd)
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
-    def test_slurm_singularity_run(self, mock_kill):
+    def test_run(self, mock_kill):
+        self.maxDiff = None
         config_dict = {
             "engine": {
                 "name": "singularity",
@@ -494,30 +322,83 @@ class TestSlurmSingularityRunner(unittest.TestCase):
                     "bind": ["/path/in/host:/path/in/container"],
                 },
             },
-            "resource_manager": {"name": "slurm"},
+            "resource_manager": {
+                "name": "slurm",
+                "options": {
+                    "1": {"nodes": 2, "ntasks": 2, "nodelist": "worker1,worker2"}
+                },
+            },
         }
 
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         # fmt: off
         self.Popen.set_command(
-            f"sbatch --wait --job-name popper_1_{config.wid} --output {slurm_cache_dir}/popper_1_{config.wid}.out {slurm_cache_dir}/popper_1_{config.wid}.sh",
+            "sbatch "
+            "--wait "
+            f"popper_1_{config.wid}.sh",
             returncode=0,
         )
         # fmt: on
 
+        self.Popen.set_command(f"tail -f popper_1_{config.wid}.out", returncode=0)
+
+        with WorkflowRunner(config) as r:
+            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
+            r.run(WorkflowParser.parse(wf_data=wf_data))
+
+        with open(f"popper_1_{config.wid}.sh", "r") as f:
+            # fmt: off
+            expected = f"""#!/bin/bash
+#SBATCH --job-name=popper_1_{config.wid}
+#SBATCH --output=popper_1_{config.wid}.out
+#SBATCH --nodes=2
+#SBATCH --ntasks=2
+#SBATCH --ntasks-per-node=1
+#SBATCH --nodelist=worker1,worker2
+mpirun singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/popper_1_{config.wid}.sif ls"""
+            # fmt: on
+            actual = f.read()
+            self.assertEqual(expected, actual)
+
+        config_dict = {
+            "engine": {
+                "name": "singularity",
+                "options": {
+                    "hostname": "popper.local",
+                    "bind": ["/path/in/host:/path/in/container"],
+                },
+            },
+            "resource_manager": {
+                "name": "slurm",
+                "options": {
+                    "1": {
+                        "mpi": False,
+                        "nodes": 2,
+                        "ntasks": 2,
+                        "nodelist": "worker1,worker2",
+                    }
+                },
+            },
+        }
+
+        config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
+
         self.Popen.set_command(
-            f"tail -f {slurm_cache_dir}/popper_1_{config.wid}.out", returncode=0
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 rm -rf popper_1_{config.wid}.sif",
+            returncode=0,
+        )
+
+        self.Popen.set_command(
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity pull docker://alpine:latest",
+            returncode=0,
+        )
+
+        self.Popen.set_command(
+            f"srun --nodes 2 --ntasks 2 --ntasks-per-node 1 --nodelist worker1,worker2 singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/popper_1_{config.wid}.sif ls",
+            returncode=0,
         )
 
         with WorkflowRunner(config) as r:
-            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
+            wf_data = {"steps": [{"uses": "docker://alpine", "args": ["ls"]}]}
             r.run(WorkflowParser.parse(wf_data=wf_data))
-
-        with open(f"{slurm_cache_dir}/popper_1_{config.wid}.sh", "r") as f:
-            # fmt: off
-            expected = f"""#!/bin/bash
-singularity run --userns --pwd /workspace --bind /w:/workspace --bind /path/in/host:/path/in/container --hostname popper.local {os.environ['HOME']}/.cache/popper/singularity/{config.wid}/popper_1_{config.wid}.sif ls"""
-            # fmt: on
-            actual = f.read()
-        self.assertEqual(expected, actual)

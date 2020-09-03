@@ -1,14 +1,13 @@
 import os
 import time
 import signal
+import socket
 import threading
 
 from popper import utils as pu
 from popper.cli import log as log
 from popper.runner_host import HostRunner
-from popper.runner_host import DockerRunner as HostDockerRunner
 from popper.runner_host import SingularityRunner as HostSingularityRunner
-from popper.runner_host import PodmanRunner as HostPodmanRunner
 
 
 class SlurmRunner(HostRunner):
@@ -44,46 +43,93 @@ class SlurmRunner(HostRunner):
             log.warning("Tail process was stopped by some other process.")
         self._out_stream_thread.join()
 
-    def _submit_batch_job(self, cmd, step):
+    def _set_config_vars(self, step):
+        self._nodes = self._config.resman_opts.get(step.id, {}).get("nodes", 1)
+        self._nodelist = self._config.resman_opts.get(step.id, {}).get("nodelist", None)
+        self._ntasks = self._config.resman_opts.get(step.id, {}).get(
+            "ntasks", self._nodes
+        )
+        self._ntasks_per_node = self._config.resman_opts.get(step.id, {}).get(
+            "ntasks-per-node", 1
+        )
+
+    def _get_resman_kwargs(self, step):
+        default_options = ["nodes", "nodelist", "ntasks", "ntasks-per-node"]
+        resman_options = []
+        for k, v in self._config.resman_opts.get(step.id, {}).items():
+            if k not in default_options:
+                flag = pu.key_value_to_flag(k, v)
+                if flag:
+                    resman_options.extend(flag.split())
+
+        return resman_options
+
+    def _exec_srun(self, cmd, step, **kwargs):
+        self._set_config_vars(step)
+        _cmd = [
+            "srun",
+            "--nodes",
+            f"{self._nodes}",
+            "--ntasks",
+            f"{self._ntasks}",
+            "--ntasks-per-node",
+            f"{self._ntasks_per_node}",
+        ]
+
+        if self._nodelist:
+            _cmd.extend(["--nodelist", self._nodelist])
+
+        _cmd.extend(self._get_resman_kwargs(step))
+        _cmd.extend(cmd)
+
+        log.debug(f"Command: {_cmd}")
+
+        if self._config.dry_run:
+            return 0
+
+        _, ecode, _ = HostRunner._exec_cmd(_cmd, **kwargs)
+        return ecode
+
+    def _exec_mpi(self, cmd, step, **kwargs):
+        self._set_config_vars(step)
         job_name = pu.sanitized_name(step.id, self._config.wid)
-        temp_dir = f"{self._config.cache_dir}/slurm/{self._config.wid}"
-        os.makedirs(temp_dir, exist_ok=True)
+        mpi_cmd = ["mpirun", f"{' '.join(cmd)}"]
 
-        job_script = os.path.join(temp_dir, f"{job_name}.sh")
-        out_file = os.path.join(temp_dir, f"{job_name}.out")
+        job_script = os.path.join(f"{job_name}.sh")
+        out_file = os.path.join(f"{job_name}.out")
 
-        # create/truncate log
         with open(out_file, "w"):
             pass
 
         with open(job_script, "w") as f:
             f.write("#!/bin/bash\n")
-            f.write("\n".join(cmd))
+            f.write(f"#SBATCH --job-name={job_name}\n")
+            f.write(f"#SBATCH --output={out_file}\n")
+            f.write(f"#SBATCH --nodes={self._nodes}\n")
+            f.write(f"#SBATCH --ntasks={self._ntasks}\n")
+            f.write(f"#SBATCH --ntasks-per-node={self._ntasks_per_node}\n")
+            if self._nodelist:
+                f.write(f"#SBATCH --nodelist={self._nodelist}\n")
+            f.write(" ".join(mpi_cmd))
 
-        sbatch_cmd = f"sbatch --wait --job-name {job_name} --output {out_file}"
-        sbatch_cmd = sbatch_cmd.split()
+        sbatch_cmd = [
+            "sbatch",
+            "--wait",
+        ]
+        sbatch_cmd.extend(self._get_resman_kwargs(step))
+        sbatch_cmd.extend([job_script])
 
-        for k, v in self._config.resman_opts.get(step.id, {}).items():
-            sbatch_cmd.append(pu.key_value_to_flag(k, v))
-
-        sbatch_cmd.append(job_script)
-
-        log.info(f'[{step.id}] {" ".join(sbatch_cmd)}')
+        log.debug(f"Command: {sbatch_cmd}")
 
         if self._config.dry_run:
             return 0
 
         self._spawned_jobs.add(job_name)
-
-        # start a tail (background) process on the output file
         self._start_out_stream(out_file)
 
-        # submit the job and wait
-        _, ecode, output = HostRunner._exec_cmd(sbatch_cmd, logging=False)
+        _, ecode, _ = HostRunner._exec_cmd(sbatch_cmd, **kwargs)
 
-        # kill the tail process
         self._stop_out_stream()
-
         self._spawned_jobs.remove(job_name)
 
         return ecode
@@ -94,135 +140,6 @@ class SlurmRunner(HostRunner):
             _, ecode, _ = HostRunner._exec_cmd(["scancel", "--name", job_name])
             if ecode != 0:
                 log.warning(f"Failed to cancel the job {job_name}.")
-
-
-class DockerRunner(SlurmRunner, HostDockerRunner):
-    def __init__(self, **kw):
-        super(DockerRunner, self).__init__(init_docker_client=False, **kw)
-
-    def __exit__(self, exc_type, exc, traceback):
-        pass
-
-    def run(self, step):
-        """Execute the given step via slurm in the docker engine."""
-        cid = pu.sanitized_name(step.id, self._config.wid)
-        cmd = []
-
-        build, _, img, tag, build_ctx_path = self._get_build_info(step)
-
-        cmd.append(f"docker rm -f {cid} || true")
-
-        if build:
-            cmd.append(f"docker build -t {img}:{tag} {build_ctx_path}")
-        elif not self._config.skip_pull and not step.skip_pull:
-            cmd.append(f"docker pull {img}:{tag}")
-
-        cmd.append(self._create_cmd(step, f"{img}:{tag}", cid))
-        cmd.append(f"docker start --attach {cid}")
-
-        self._spawned_containers.add(cid)
-        ecode = self._submit_batch_job(cmd, step)
-        self._spawned_containers.remove(cid)
-        return ecode
-
-    def _create_cmd(self, step, img, cid):
-        container_args = self._get_container_kwargs(step, img, cid)
-
-        if "volumes" not in container_args:
-            container_args["volumes"] = []
-        container_args["volumes"].insert(1, "/var/run/docker.sock:/var/run/docker.sock")
-
-        container_args.pop("detach")
-        cmd = ["docker create"]
-        cmd.append(f"--name {container_args.pop('name')}")
-        cmd.append(f"--workdir {container_args.pop('working_dir')}")
-
-        entrypoint = container_args.pop("entrypoint", None)
-        if entrypoint:
-            cmd.append(f"--entrypoint {' '.join(entrypoint)}")
-
-        # append volume and environment flags
-        for vol in container_args.pop("volumes"):
-            cmd.append(f"-v {vol}")
-        for env_key, env_val in container_args.pop("environment").items():
-            cmd.append(f"-e {env_key}={env_val}")
-
-        command = container_args.pop("command")
-        image = container_args.pop("image")
-
-        # anything else is treated as a flag
-        for k, v in container_args.items():
-            cmd.append(pu.key_value_to_flag(k, v))
-
-        # append the image and the commands
-        cmd.append(image)
-
-        if command:
-            cmd.append(" ".join(command))
-
-        return " ".join(cmd)
-
-
-class PodmanRunner(SlurmRunner, HostPodmanRunner):
-    def __init__(self, **kw):
-        super(PodmanRunner, self).__init__(init_podman_client=False, **kw)
-
-    def __exit__(self, exc_type, exc, traceback):
-        pass
-
-    def run(self, step):
-        """Execute the given step via slurm in the docker engine."""
-        cid = pu.sanitized_name(step.id, self._config.wid)
-        cmd = []
-
-        build, _, img, tag, build_ctx_path = self._get_build_info(step)
-
-        cmd.append(f"podman rm -f {cid} || true")
-
-        if build:
-            cmd.append(f"podman build -t {img}:{tag} {build_ctx_path}")
-        elif not self._config.skip_pull and not step.skip_pull:
-            cmd.append(f"podman pull {img}:{tag}")
-
-        cmd.append(self._create_cmd(step, f"{img}:{tag}", cid))
-        cmd.append(f"podman start --attach {cid}")
-
-        self._spawned_containers.add(cid)
-        ecode = self._submit_batch_job(cmd, step)
-        self._spawned_containers.remove(cid)
-        return ecode
-
-    def _create_cmd(self, step, img, cid):
-        container_args = self._get_container_kwargs(step, img, cid)
-        container_args.pop("detach")
-        cmd = ["podman create"]
-        cmd.append(f"--name {container_args.pop('name')}")
-        cmd.append(f"--workdir {container_args.pop('working_dir')}")
-
-        entrypoint = container_args.pop("entrypoint", None)
-        if entrypoint:
-            cmd.append(f"--entrypoint {' '.join(entrypoint)}")
-
-        # append volume and environment flags
-        for vol in container_args.pop("volumes"):
-            cmd.append(f"-v {vol}")
-        for env_key, env_val in container_args.pop("environment").items():
-            cmd.append(f"-e {env_key}={env_val}")
-
-        command = container_args.pop("command")
-        image = container_args.pop("image")
-
-        # anything else is treated as a flag
-        for k, v in container_args.items():
-            cmd.append(pu.key_value_to_flag(k, v))
-
-        # append the image and the commands
-        cmd.append(image)
-
-        if command:
-            cmd.append(" ".join(command))
-
-        return " ".join(cmd)
 
 
 class SingularityRunner(SlurmRunner, HostSingularityRunner):
@@ -246,22 +163,30 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
             img = step.uses
             build_ctx_path = None
 
-        HostRunner._exec_cmd(["rm", "-rf", self._container])
+        self._exec_srun(["rm", "-rf", self._container], step)
 
-        if not self._config.dry_run:
-            if build:
-                recipefile = self._get_recipe_file(build_ctx_path, cid)
-                HostRunner._exec_cmd(
-                    ["singularity", "build", "--fakeroot", self._container, recipefile],
-                    cwd=build_ctx_path,
-                )
-            else:
-                HostRunner._exec_cmd(["singularity", "pull", self._container, img])
+        if build:
+            recipefile = self._get_recipe_file(build_ctx_path, cid)
+            log.info(f"[{step.id}] srun singularity build {self._container}")
+            self._exec_srun(
+                ["singularity", "build", "--fakeroot", self._container, recipefile,],
+                step,
+                cwd=os.path.dirname(recipefile),
+            )
+        else:
+            log.info(f"[{step.id}] srun singularity pull {self._container}")
+            self._exec_srun(["singularity", "pull", self._container, img], step)
 
-        cmd = [self._create_cmd(step, cid)]
-
+        cmd = self._create_cmd(step, cid)
         self._spawned_containers.add(cid)
-        ecode = self._submit_batch_job(cmd, step)
+
+        if self._config.resman_opts.get(step.id, {}).get("mpi", True):
+            log.info(f'[{step.id}] sbatch {" ".join(cmd)}')
+            ecode = self._exec_mpi(cmd, step)
+        else:
+            log.info(f'[{step.id}] srun {" ".join(cmd)}')
+            ecode = self._exec_srun(cmd, step, logging=True)
+
         self._spawned_containers.remove(cid)
         return ecode
 
@@ -272,15 +197,15 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
         if step.runs:
             commands = step.runs
-            cmd = ["singularity exec"]
+            cmd = ["singularity", "exec"]
         else:
             commands = step.args
-            cmd = ["singularity run"]
+            cmd = ["singularity", "run"]
 
         options = self._get_container_options()
 
-        cmd.append(" ".join(options))
-        cmd.append(self._container)
-        cmd.append(" ".join(commands))
+        cmd.extend(options)
+        cmd.extend([self._container])
+        cmd.extend(commands)
 
-        return " ".join(cmd)
+        return cmd
