@@ -8,6 +8,8 @@ python:
 - "3.7"
 - "3.8"
 
+cache: pip
+
 env:
 - ENGINE=docker
 - ENGINE=docker WITH_K8S=1
@@ -29,9 +31,9 @@ install:
 script:
 # run tests
 - coverage run -m unittest src/test/test_*
-# generate versioning file (src/popper/_version.py)
+# obtain version (generate src/popper/_version.py)
 - popper version
-# run docker image pipeline
+# run release pipeline
 - popper run --allow-undefined-secrets-in-ci
 
 after_success:

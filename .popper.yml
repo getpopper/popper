@@ -1,38 +1,46 @@
 steps:
-- id: skip on forks
+- id: filter build
   uses: docker://docker:19.03.3
   runs: [sh, -exc]
-  secrets: [ENGINE, TRAVIS_PYTHON_VERSION, TRAVIS_PULL_REQUEST]
+  secrets: [ENGINE, WITH_K8S, TRAVIS_PYTHON_VERSION, TRAVIS_PULL_REQUEST]
   args:
   - |
-    # skip if this is a build for a PR
-    # for the rest, only continue if build:
-    #   1. is for upstream (getpopper/popper) repo
-    #   2. corresponds to the docker,python-3.7 element of the matrix
-    if [[ $TRAVIS_PULL_REQUEST != false ]] || [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]] || [[ $GIT_BRANCH != "master" ]] || [[ $ENGINE != "docker" ]] || [[ $TRAVIS_PYTHON_VERSION != "3.7" ]]; then
+    # skip execution if this is a build for a PR
+    # for the rest, only continue if:
+    #   1. build is for upstream (getpopper/popper) repo
+    #   2. build corresponds to docker,python-3.7,no-k8s element of the matrix
+    if [[ $TRAVIS_PULL_REQUEST != false ]] || [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]] || [[ $GIT_BRANCH != "master" ]] || [[ $ENGINE != "docker" ]] || [[ $TRAVIS_PYTHON_VERSION != "3.7" ]] || [[ WITH_K8S == "1" ]]; then
       exit 78
     fi
 
-- id: build docker image
+- id: dockerhub release
   uses: docker://docker:19.03
-  runs: [sh, -ec]
-  args:
-  - |
-    docker build -t getpopper/popper:latest src/
-
-    if [ -n "$GIT_TAG" ]; then
-      docker tag getpopper/popper:latest getpopper/popper:$GIT_TAG
-    fi
-
-- id: push image
-  uses: docker://docker:19.03.3
   secrets: [DOCKER_USERNAME, DOCKER_PASSWORD]
   runs: [sh, -ec]
   args:
   - |
+    docker build -t getpopper/popper src/
     docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD"
-    docker push getpopper/popper:latest
 
-    if [ -n "$GIT_TAG" ]; then
-      docker push getpopper/popper:$GIT_TAG
+    docker tag getpopper/popper getpopper/popper:$GIT_SHA_SHORT
+    docker push getpopper/popper
+    docker push getpopper/popper:$GIT_SHA_SHORT
+
+    if [[ -n $GIT_TAG ]]; then
+      docker tag getpopper/popper getpopper/popper:v$GIT_TAG
+      docker push getpopper/popper:v$GIT_TAG
+    fi
+
+- id: pypi release
+  uses: docker://python:3.7-buster
+  secrets: [PYPI_USERNAME, PYPI_PASSWORD]
+  runs: [bash, -ec]
+  args:
+  - |
+    if [[ -n $GIT_TAG ]]; then
+      # only upload to pypi tagged releases
+      pip install twine
+      cd src/
+      python setup.py sdist
+      twine upload -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD" dist/popper-$GIT_TAG.tar.gz
     fi
