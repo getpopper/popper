@@ -86,6 +86,27 @@ environment variable `MYENVVAR` is available. Note that the `runs` and
 used to start the shell, but this can be modified with the 
 `--entrypoint` flag.
 
+## Parametrizing workflows with substitutions
+
+A workflow can be parametrized by making use of substitutions. A 
+substitution is a string in the YAML file with the `$_` prefix, for 
+example:
+
+```yaml
+steps:
+- id: mystep
+  uses: docker://alpine:$_ALPINE_VERSION
+  runs: ["ls", "-l"]
+```
+
+in the above workflow, the `$_ALPINE_VERSION` string defines a 
+substitution, and will be replaced by a value defined in the command 
+line via the `--substutition` or `-s` flags:
+
+```bash
+popper run -s _ALPINE_VERSION=3.12 -f wf.yml
+```
+
 ## Customizing container engine behavior
 
 By default, Popper instantiates containers in the underlying engine by 
@@ -95,9 +116,9 @@ engine-specific options. These options allow you to specify
 fine-grained capabilities, bind-mounting additional folders, etc. In 
 order to do this, you can provide a configuration file to modify the 
 underlying container engine configuration used to spawn containers. 
-This is a YAML file that defines an `engine` dictionary with 
-custom options and is passed to the `popper run` command via the 
-`--conf` (or `-c`) flag.
+This is a YAML file that defines an `engine` dictionary with custom 
+options and is passed to the `popper run` command via the `--conf` (or 
+`-c`) flag.
 
 For example, to make Popper spawn Docker containers in
 [privileged mode][privmode], we can write the following option:
@@ -108,6 +129,7 @@ engine:
     options:
        privileged: True
 ```
+
 Similarly, to bind-mount additional folders, we can use the `volumes` option to list the directories to mount:
 
 ```yaml
@@ -143,10 +165,21 @@ systems. The syntax of this command is the following:
 popper ci --file wf.yml <service-name>
 ```
 
-Where `<name>` is the name of CI system (see `popper ci --help` to get 
-a list of supported systems). In the following, we show how to link 
-github with some of the supported CI systems. In order to do so, we 
-first need to create a repository on github and upload our commits:
+Where `<name>` is the name of the CI system (see `popper ci --help` to get a list of 
+supported systems). If the `wf.yml` workflow makes use of [substitutions](), we 
+can create a matrix by doing:
+
+```bash
+popper ci -f wf.yml travis -s _P1=p1v1 -s _P1=p1v2 -s _P2=p2v1 -s _P2=p2v2
+```
+
+And the above will create a 2x2 matrix job, doing a parameter sweep over the 
+`_P1` and `_P2` given substitution values.
+
+
+In the following, we show how to link github with some of the supported CI 
+systems. In order to do so, we first need to create a repository on github and 
+upload our commits:
 
 ```bash
 # set the new remote
@@ -161,19 +194,22 @@ git push -u origin master
 
 ### TravisCI
 
-For this, we need an account at [Travis CI](http://travis-ci.org). 
-Assuming our Popperized repository is already on GitHub, we can enable 
-it on TravisCI so that it is continuously validated (see 
+In the following, we assume we have an account on [Travis 
+CI](http://travis-ci.com). Assuming our repository is already on 
+GitHub, we can enable it on TravisCI so that it is continuously 
+validated (see 
 [here](https://docs.travis-ci.com/user/getting-started/) for a guide). 
 Once the project is registered on Travis, we proceed to generate a 
 `.travis.yml` file:
 
 ```bash
-cd my-popper-repo/
+cd my-repo/
+
 popper ci --file wf.yml travis
 ```
 
-And commit the file:
+Before we can execute tests on travis, we need to commit the file we 
+just generated:
 
 ```bash
 git add .travis.yml
@@ -195,63 +231,36 @@ commit message.
 > **NOTE**: TravisCI has a limit of 2 hours, after which the test is 
 > terminated and failed.
 
-### CircleCI
+#### Job Matrix
 
-For [CircleCI](https://circleci.com/), the procedure is similar to 
-what we do for TravisCI (see above):
+If the workflow is parametrized by the use of 
+[substitutions](./cli_features.html#parametrizing-workflows-with-substitutions), 
+we can create a matrix. For example, assume a workflow like the 
+following:
 
- 1. Sign in to CircleCI using your github account and enable your 
-    repository.
-
- 2. Generate config files and add them to the repo:
-
-    ```bash
-    cd my-popper-repo/
-    popper ci --file wf.yml circle
-    git add .circleci
-    git commit -m 'Adds CircleCI config files'
-    git push
-    ```
-
-### GitLab-CI
-
-For [GitLab-CI](https://about.gitlab.com/features/gitlab-ci-cd/), the 
-procedure is similar to what we do for TravisCI and CircleCI (see 
-above), i.e. generate config files and add them to the repo:
-
-```bash
-cd my-popper-repo/
-popper ci --file wf.yml gitlab
-git add .gitlab-ci.yml
-git commit -m 'Adds GitLab-CI config file'
-git push
+```yaml
+steps:
+- id: mystep
+  uses: docker://alpine:$_ALPINE_VERSION
+  runs: [sh, -cue]
+  args:
+  - |
+    # execute command with parameter
+    ls -l $_FOLDER
 ```
 
-If CI is enabled on your instance of GitLab, the above should trigger 
-an execution of the pipelines in your repository.
-
-### Jenkins
-
-For [Jenkins](https://jenkinsci.org), generating a `Jenkinsfile` is 
-done in a similar way:
-
 ```bash
-cd my-popper-repo/
-popper ci --file wf.yml jenkins
-git add Jenkinsfile
-git commit -m 'Adds Jenkinsfile'
-git push
+popper ci travis \
+  -f wf.yml \
+  -s _ALPINE_VERSION=3.10 \
+  -s _ALPINE_VERSION=3.11 \
+  -s _ALPINE_VERSION=3.12 \
+  -s _FOLDER=/root \
+  -s _FOLDER=/etc \
+  -s _FOLDER=/usr
 ```
 
-Jenkins is a self-hosted service and needs to be properly configured 
-in order to be able to read a github project with a `Jenkinsfile` in 
-it. The easiest way to add a new project is to use the [Blue Ocean 
-UI](https://jenkins.io/projects/blueocean/). A step-by-step guide on 
-how to create a new project using the Blue Ocean UI can be found 
-[here](https://jenkins.io/doc/book/blueocean/creating-pipelines/). In 
-particular, the `New Pipeline from a Single Repository` has to be 
-selected (as opposed to `Auto-discover Pipelines`).
-
+And the above will create a 3x3 matrix job for travis.
 
 ## Visualizing workflows
 
