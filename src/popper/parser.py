@@ -179,14 +179,7 @@ class WorkflowParser(object):
 
         used = {}
         for substitution in substitutions:
-            item = substitution.split("=", 1)
-            if len(item) < 2:
-                raise Exception("Excepting '=' as seperator")
-
-            k, v = (item[0], item[1])
-
-            if not re.match(r"_[A-Z0-9]+", k):
-                log.fail(f"Expecting substitution key in _[A-Z0-9] format; got '{k}'.")
+            k, v = WorkflowParser.substitution_to_tuple(substitution)
 
             # add dollar sign
             k = "$" + k
@@ -205,6 +198,19 @@ class WorkflowParser(object):
             log.fail("Not all given substitutions are used in the workflow file")
 
         log.debug(f"Workflow after applying substitutions: {wf_data}")
+
+    @staticmethod
+    def substitution_to_tuple(substitution):
+        """given a substitution string of the form ``_KEY=SOME VALUE``, it 
+        obtains a 2-tuple of strings of the form ``("_KEY", "SOME VALUE")``.
+        """
+        item = substitution.split("=", 1)
+        if len(item) < 2:
+            raise Exception("Excepting '=' as seperator")
+        k, v = (item[0], item[1])
+        if not re.match(r"_[A-Z0-9]+", k):
+            log.fail(f"Expecting substitution key in _[A-Z0-9] format; got '{k}'.")
+        return k, v
 
     @staticmethod
     def __skip_steps(wf_data, skip_list=[]):
