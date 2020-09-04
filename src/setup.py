@@ -19,17 +19,17 @@ setup(
     include_package_data=True,
     install_requires=[
         "click==7.1.2",
-        "docker==4.2.0",
+        "docker==4.3.1",
         "dockerpty==0.4.1",
         "GitPython==3.1.7",
         "pykwalify==1.7.0",
-        "python-box==4.2.3",
+        "python-box==5.1.1",
         "pyyaml==5.3.1",
         "spython==0.0.79",
         "kubernetes==11.0.0",
     ],
     extras_require={
-        "dev": ["testfixtures==6.14.0", "black==19.10b0", "dunamai==1.1.0"]
+        "dev": ["testfixtures==6.14.1", "black==19.10b0", "dunamai==1.3.0"]
     },
     entry_points="""
         [console_scripts]
