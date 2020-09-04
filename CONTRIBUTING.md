@@ -29,11 +29,10 @@ The title of each open issue is prefixed with a keyword that denotes the
 following:
 
   * `cli`. An issue that involves modifying code of the 
-    [`CLI`](https://github.com/systemslab/popper/tree/master/src) 
-    tool.
+    [`CLI`](https://github.com/getpopper/popper/tree/master/src) tool.
 
   * `doc`. An issue that involves modifying the 
-    [documentation](https://github.com/systemslab/popper/tree/master/docs).
+    [documentation](https://github.com/getpopper/popper/tree/master/docs).
 
   * `example`. An issue that involves the creation of an example 
     Workflow that showcases available features of the CLI tool, as 
@@ -45,7 +44,7 @@ following:
 
 There are two main branches of the codebase:
 
-  * [`v1.x`](https://github.com/systemslab/popper/tree/v1.x). This branch tracks 
+  * [`v1.x`](https://github.com/getpopper/popper/tree/v1.x). This branch tracks 
     the older version of the CLI tool which supported workflows being defined in 
     YAML format. This is documented 
     [here](https://popper.readthedocs.io/en/v1.1.2/sections/cli_features.html#the-popper-yml-configuration-file).
@@ -104,7 +103,7 @@ First time contributing to an open source project? Check out this guide on [how 
 
 ## How to report bugs
 
-We track bugs as [GitHub issues](https://github.com/systemslab/popper/issues). Before posting a bug as a new issue, [please do a search](https://github.com/systemslab/popper/issues?q=is%3Aopen+is%3Aissue+label%3Abug) to see if the bug you're experiencing was already reported by someone else. If it was, add a comment to that issue instead of creating a new one.
+We track bugs as [GitHub issues](https://github.com/getpopper/popper/issues). Before posting a bug as a new issue, [please do a search](https://github.com/getpopper/popper/issues?q=is%3Aopen+is%3Aissue+label%3Abug) to see if the bug you're experiencing was already reported by someone else. If it was, add a comment to that issue instead of creating a new one.
 
 ### How to submit good bug reports
 
@@ -116,11 +115,11 @@ A more detailed bug report will help people track down and fix your issue faster
 * Describe an exact sequence of steps that can reproduce your issue. If you can't reliably replicate your issues, explain what you were doing before the problem happened and how often it happens.
 * Is this a new bug? Include when you started having these issues.
 
-Post any bugs, requests, or questions on the [GitHub issues page for Popper](https://github.com/systemslab/popper/issues)!
+Post any bugs, requests, or questions on the [GitHub issues page for Popper](https://github.com/getpopper/popper/issues)!
 
 ## Communication channels
 
 If want to contribute and you're still not certain on how to start please feel
 free to [email us](mailto:ivo@cs.ucsc.edu),
-[chat on Gitter](https://gitter.im/systemslab/popper) or [open an
-issue](https://github.com/systemslab/popper/issues/new).
+[chat on Gitter](https://gitter.im/getpopper/popper) or [open an
+issue](https://github.com/getpopper/popper/issues/new).

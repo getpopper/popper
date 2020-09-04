@@ -123,7 +123,7 @@ virtualenv $HOME/venvs/popper
 source $HOME/venvs/popper/bin/activate
 
 # clone popper
-git clone git@github.com:systemslab/popper
+git clone git@github.com:getpopper/popper
 cd popper
 
 # install popper from source
