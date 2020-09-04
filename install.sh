@@ -24,7 +24,7 @@ install_system_wide() {
   echo "Popper is now available for all users in this system!"
 }
 
-POPPER_VERSION="v2.7.0"
+POPPER_VERSION="v2020.09.1"
 
 OS_NAME="$(uname)"
 if [ "$OS_NAME" != "Linux" ] && [ "$OS_NAME" != "Darwin" ]; then
@@ -49,7 +49,7 @@ docker run --rm -ti \
   --workdir "$PWD" \
   --env-file /tmp/.envfile \
   --env "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
-  getpopper/popper:v2.7.0 "$@"
+  getpopper/popper:v2020.09.1 "$@"
 EOF
 
 if [ "$?" -eq 0 ]; then
