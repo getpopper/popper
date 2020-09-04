@@ -9,7 +9,7 @@ steps:
     # for the rest, only continue if:
     #   1. build is for upstream (getpopper/popper) repo
     #   2. build corresponds to docker,python-3.7,no-k8s element of the matrix
-    if [[ $TRAVIS_PULL_REQUEST != false ]] || [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]] || [[ $GIT_BRANCH != "master" ]] || [[ $ENGINE != "docker" ]] || [[ $TRAVIS_PYTHON_VERSION != "3.7" ]] || [[ WITH_K8S == "1" ]]; then
+    if [[ $TRAVIS_PULL_REQUEST != false ]] || [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]] || [[ $GIT_BRANCH != "master" ]] || [[ $ENGINE != "docker" ]] || [[ $TRAVIS_PYTHON_VERSION != "3.7" ]] || [[ -n WITH_K8S ]]; then
       exit 78
     fi
 
