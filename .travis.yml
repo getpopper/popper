@@ -11,7 +11,7 @@ python:
 cache: pip
 
 env:
-- ENGINE=docker
+- ENGINE=docker ENABLE_K8S_RUNNER_TESTS=1 ENABLE_SLURM_RUNNER_TESTS=1
 - ENGINE=singularity
 - ENGINE=podman
 

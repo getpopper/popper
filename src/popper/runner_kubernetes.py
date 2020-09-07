@@ -474,5 +474,6 @@ class KubernetesRunner(StepRunner):
 class DockerRunner(KubernetesRunner, HostDockerRunner):
     """Runs steps on kubernetes; builds images locally using docker.
     """
+
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(**kw)
