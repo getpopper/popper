@@ -2,14 +2,26 @@ steps:
 - id: filter build
   uses: docker://docker:19.03.3
   runs: [sh, -exc]
-  secrets: [ENGINE, WITH_K8S, TRAVIS_PYTHON_VERSION, TRAVIS_PULL_REQUEST]
+  secrets: [ENGINE, TRAVIS_PYTHON_VERSION, TRAVIS_PULL_REQUEST]
   args:
   - |
-    # skip execution if this is a build for a PR
-    # for the rest, only continue if:
-    #   1. build is for upstream (getpopper/popper) repo
-    #   2. build corresponds to docker,python-3.7,no-k8s element of the matrix
-    if [[ $TRAVIS_PULL_REQUEST != false ]] || [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]] || [[ $GIT_BRANCH != "master" ]] || [[ $ENGINE != "docker" ]] || [[ $TRAVIS_PYTHON_VERSION != "3.7" ]] || [[ -n WITH_K8S ]]; then
+    # build does not correspond to the docker,python-3.7 element of the matrix
+    if [[ $ENGINE != "docker" || $TRAVIS_PYTHON_VERSION != "3.7" ]]; then
+      exit 78
+    fi
+
+    # it's a build for a PR
+    if [[ $TRAVIS_PULL_REQUEST == true ]]; then
+      exit 78
+    fi
+
+    # build is not for upstream (getpopper/popper) repo
+    if [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]]; then
+      exit 78
+    fi
+
+    # not on master
+    if [[ $GIT_BRANCH != "master" ]]; then
       exit 78
     fi
 
@@ -38,7 +50,7 @@ steps:
   args:
   - |
     if [[ -n $GIT_TAG ]]; then
-      # only upload to pypi tagged releases
+      # only package tagged releases
       pip install twine
       cd src/
       python setup.py sdist
