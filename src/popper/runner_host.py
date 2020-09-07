@@ -202,7 +202,10 @@ class DockerRunner(StepRunner):
 
         if "volumes" not in container_args:
             container_args["volumes"] = []
-        container_args["volumes"].insert(1, "/var/run/docker.sock:/var/run/docker.sock")
+        else:
+            container_args["volumes"] = list(container_args["volumes"])
+
+        container_args["volumes"].append("/var/run/docker.sock:/var/run/docker.sock")
 
         log.debug(f"Container args: {container_args}")
 
