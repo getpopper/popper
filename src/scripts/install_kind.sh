@@ -1,8 +1,11 @@
 #!/bin/bash
 set -ex
 
-if [[ -n "$WITH_K8S" ]]; then
-  # download kind
+if [[ -z $ENABLE_K8S_RUNNER_TESTS ]]; then
+  exit 0
+fi
+
+# download kind
 curl -Lo ./kind "https://kind.sigs.k8s.io/dl/v0.8.1/kind-$(uname)-amd64"
 curl -LO https://storage.googleapis.com/kubernetes-release/release/v1.18.0/bin/linux/amd64/kubectl
 
@@ -34,5 +37,3 @@ spec:
 EOF
 
 kubectl apply -f pv.yaml 
-
-fi
