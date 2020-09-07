@@ -24,7 +24,7 @@ before_install:
 - pip install coverage
 
 install:
-- pip install src/[dev]
+- pip install -e src/[dev]
 - black --check --diff .
 
 script:
