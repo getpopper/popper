@@ -16,7 +16,7 @@ from popper.runner_host import DockerRunner as HostDockerRunner
 
 
 class KubernetesRunner(StepRunner):
-    """Base class for all kubernetes step runners"""
+    """Runs steps on a kubernetes cluster."""
 
     def __init__(self, **kw):
         super(KubernetesRunner, self).__init__(**kw)
@@ -28,7 +28,7 @@ class KubernetesRunner(StepRunner):
         Configuration.set_default(c)
         self._kclient = core_v1_api.CoreV1Api()
 
-        _, active_context = config.list_kube_config_contexts()
+        config.list_kube_config_contexts()
 
         self._namespace = self._config.resman_opts.get("namespace", "default")
 
@@ -51,7 +51,13 @@ class KubernetesRunner(StepRunner):
     def run(self, step):
         """Execute a step in a kubernetes cluster."""
         self._pod_name = self._base_pod_name + f"-{step.id}"
-        image = self._build_and_push_image(step)
+
+        needs_build, _, img, tag, _ = self._get_build_info(step)
+
+        if needs_build:
+            log.fail(f"Cannot build ")
+
+        image = f"{img}:{tag}"
 
         m = f"[{step.id}] kubernetes run {self._namespace}.{self._pod_name}"
         log.info(m)
@@ -84,9 +90,6 @@ class KubernetesRunner(StepRunner):
 
         log.debug(f"returning with {ecode}")
         return ecode
-
-    def _build_and_push_image(self, step):
-        raise NotImplementedError("Needs implementation in derived class.")
 
     def stop_running_tasks(self):
         """Delete the Pod and then the PersistentVolumeClaim upon receiving SIGINT.
@@ -471,33 +474,5 @@ class KubernetesRunner(StepRunner):
 class DockerRunner(KubernetesRunner, HostDockerRunner):
     """Runs steps on kubernetes; builds images locally using docker.
     """
-
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(**kw)
-
-    def _build_and_push_image(self, step):
-        """Clones the action repository, builds the image
-        and pushes the image to an  an image registry for a Pod to use.
-        """
-        needs_build, _, img, tag, build_ctx_path = self._get_build_info(step)
-        if not needs_build:
-            return step.uses.replace("docker://", "")
-
-        registry = self._config.resman_opts.get("registry", "docker.io")
-
-        if not self._config.resman_opts.registry_user:
-            raise Exception("Expecting 'registry_user' option in configuration.")
-
-        img = img.replace("/", "_")
-        img = f"{registry}/{self._config.resman_opts.registry_user}/{img}"
-
-        log.info(f"[{step.id}] docker build -t {img}:{tag} {build_ctx_path}")
-        self._d.images.build(
-            path=build_ctx_path, tag=f"{img}:{tag}", rm=True, pull=True
-        )
-
-        log.info(f"[{step.id}] docker push {img}:{tag}")
-        self._d.images.push(img, tag=tag, decode=True)
-
-        log.debug(f"image built {img}:{tag}")
-        return f"{img}:{tag}"

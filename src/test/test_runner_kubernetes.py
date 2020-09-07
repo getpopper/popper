@@ -8,7 +8,7 @@ import popper.utils as pu
 
 from popper.config import ConfigLoader
 from popper.runner import WorkflowRunner
-from popper.runner_kubernetes import DockerRunner, KubernetesRunner
+from popper.runner_kubernetes import KubernetesRunner
 from popper.cli import log as log
 from .test_common import PopperTest
 
@@ -20,6 +20,10 @@ from kubernetes.stream import stream
 from box import Box
 
 
+@unittest.skipIf(
+    os.environ.get("ENABLE_K8S_RUNNER_TESTS", "0") != "1",
+    "Kubernetes runner tests not enabled.",
+)
 class TestKubernetesRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
@@ -30,12 +34,11 @@ class TestKubernetesRunner(PopperTest):
         Configuration.set_default(c)
         self._kclient = core_v1_api.CoreV1Api()
 
-        _, active_context = config.list_kube_config_contexts()
+        config.list_kube_config_contexts()
 
     def tearDown(self):
         log.setLevel("NOTSET")
 
-    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
     def test_vol_claim_create_delete(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -55,7 +58,6 @@ class TestKubernetesRunner(PopperTest):
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
-    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
     def test_init_pod_create_delete(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -78,7 +80,6 @@ class TestKubernetesRunner(PopperTest):
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
-    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
     def test_copy_ctx(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -97,7 +98,6 @@ class TestKubernetesRunner(PopperTest):
         repo.close()
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
-    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
     def test_pod_create_delete_exitcode(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -150,39 +150,3 @@ class TestKubernetesRunner(PopperTest):
                 self._kclient.read_namespaced_pod,
                 **{"name": kr._pod_name, "namespace": "default"},
             )
-
-
-class TestDockerRunner(PopperTest):
-    def setUp(self):
-        log.setLevel("CRITICAL")
-        config.load_kube_config()
-
-        c = Configuration()
-        c.assert_hostname = False
-        Configuration.set_default(c)
-        self._kclient = core_v1_api.CoreV1Api()
-
-        _, active_context = config.list_kube_config_contexts()
-
-    def tearDown(self):
-        log.setLevel("NOTSET")
-
-    @unittest.skipIf(os.environ.get("WITH_K8S", "0") != "1", "WITH_K8S != 1")
-    def test_build_and_push_image(self):
-        repo = self.mk_repo()
-        config = {
-            "resource_manager": {
-                "name": "kubernetes",
-                "options": {"registry_user": "jcnitdgp25"},
-            }
-        }
-        kwargs = {"config_file": config}
-        conf = ConfigLoader.load(**kwargs)
-        step = Box(
-            {"uses": "docker://alpine:3.9", "args": ["ls"], "name": "one",},
-            default_box=True,
-        )
-        with WorkflowRunner(conf) as wf:
-            with DockerRunner(config=conf) as dr:
-                # this would not do anything just skip function
-                dr._build_and_push_image(step)

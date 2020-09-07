@@ -329,7 +329,7 @@ By default, Popper workflows run in Docker on the machine where
 `popper run` is being executed (i.e. the host machine). This section 
 describes how to execute in other container engines. See [next 
 section](#resource-managers) for information on how to run workflows 
-on resource managers  such as SLURM and Kubernetes.
+on resource managers such as SLURM and Kubernetes.
 
 To run workflows on other container engines, an `--engine <engine>` 
 flag for the `popper run` command can be given, where `<engine>` is 
@@ -417,16 +417,16 @@ by default.
 ### Kubernetes
 
 Popper enables leveraging the compute and storage capabilities of the cloud by allowing running workflows on Kubernetes clusters. 
-Users just need to have access to the cluster config file in order to run workflows on Kubernetes.
-Popper provisions all the required resources and orchestrates the entire workflow execution. 
-In general, Kubernetes supports running Pods on different container runtimes like Containerd, CRI-O, Frakti, and Docker. 
-The Popper kubernetes runner currently supports the Docker container runtime only.
+Users need to have access to a [cluster config file](https://v1-18.docs.kubernetes.io/docs/tasks/access-application-cluster/configure-access-multiple-clusters/) in order to run workflows on Kubernetes.
+This file can be provided by a system administrator.
 
-When a workflow is executed, Popper first creates a persistent volume claim, spawns an init pod and uses it to copy the workflow context (packed in the form of a `.tar.gz` file) into the persistent volume and then unpacks the context there. 
-Then, popper teardowns the init pod and execute the steps of a workflow in separate pods of their own. After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted so that it can be reused by subsequent workflow executions.
+Popper provisions all the required resources and orchestrates the entire workflow execution.
+When a workflow is executed, Popper first creates a persistent volume claim, spawns an init pod and uses it to copy the workflow context (packed in the form of a `.tar.gz` file) into the persistent volume and then unpacks the context there.
+Subsequently, Popper tears down the init pod and executes the steps of a workflow in separate pods of their own.
+After the execution of each step, the respective pods are deleted but the persistent volume claim is not deleted so that it can be reused by subsequent workflow executions.
 
-For running workflows on Kubernetes, several configuration options can be passed to the Kubernetes resource manager through the popper configuration file to customize the execution environment. 
-All the available configuration options have been described below.
+For running workflows on Kubernetes, several configuration options can be passed to the Kubernetes resource manager through the Popper configuration file to customize the execution environment.
+All the available configuration options have been described below:
 
 * `namespace`: The namespace within which to provision resources like PVCs and Pods for workflow execution. If not provided the `default` namespace will be used.
 
@@ -435,42 +435,22 @@ All the available configuration options have been described below.
 * `volume_size`: The amount of storage space to claim from a persistent volume for use by a workflow. The default is 500MB.
 
 * `pod_host_node`: The node on which to restrict the deployment of all the pods. 
-This option is important when a HostPath persistent volume is used. 
-In this case, users need to restrict all the pods to a particular node. 
-If this option is not provided, Popper will leave the task of scheduling the pods upon Kubernetes. 
-The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a schedulable pod and schedule all the pods (init-pods + step-pods) on that node to use the HostPath persistent volume of 1GB which will be automatically created.
+  This option is important when a HostPath persistent volume is used. 
+  In this case, users need to restrict all the pods to a particular node. 
+  If this option is not provided, Popper will leave the task of scheduling the pods upon Kubernetes. 
+  The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a pod and schedule all the pods (init-pods + step-pods) on that node to use the `HostPath` persistent volume of 1GB which will be automatically created.
 
-* `registry`: The registry to which to push images after building them on the host machine. The default image registry is Docker Hub.
-
-* `registry_user`: The username to use for pushing to the user's preferred image registry.
-
-**Note:** 
-1. The `registry` and `registry_user` option is required if the workflow needs to build and push images to a remote registry. 
-2. If your workflow needs to build an image from a `Dockerfile` and push it to a registry like Docker Hub, make sure you are logged in to the registry from the CLI.
-3. The requirement of providing the registry options when workflows need to build and push images will be waived after [getpopper/popper#911](https://github.com/getpopper/popper/issues/911) is fixed.
-
-To get started with running workflows on Kubernetes,
+To run workflows on Kubernetes:
 
 ```bash
 $ popper run -f wf.yml -r kubernetes
 ```
 
-The above assumes that the workflow doesn't build images. If that is not true,
+#### Limitations
 
-1. Write a config file similar to the one shown below mentioning the Docker Hub account to push images after building.
-```bash
-$ cat << EOF > config.yml
-resource_manager:
-  name: kubernetes
-  options:
-    registry_user: myusername
-EOF
-```
-
-2. Execute the workflow using the above config file.
-```
-$ popper run -f wf.yml -c config.yml
-```
+  * A workflow cannot build local Dockerfiles. In order to work 
+    around this issue, a workflow can build an image using BuildKit or 
+    Kaniko as explained [here](./guides.html#building-images-using-buildkit).
 
 ### SLURM
 
