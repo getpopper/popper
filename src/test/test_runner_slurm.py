@@ -27,6 +27,10 @@ def mock_kill(pid, sig):
     return 0
 
 
+@unittest.skipIf(
+    os.environ.get("ENABLE_SLURM_RUNNER_TESTS", "0") != "1",
+    "Kubernetes runner tests not enabled.",
+)
 class TestSlurmSlurmRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
@@ -260,6 +264,10 @@ mpirun ls -la""",
             self.assertRaises(SystemExit, r.run, WorkflowParser.parse(wf_data=wf_data))
 
 
+@unittest.skipIf(
+    os.environ.get("ENABLE_SLURM_RUNNER_TESTS", "0") != "1",
+    "Kubernetes runner tests not enabled.",
+)
 class TestSlurmSingularityRunner(unittest.TestCase):
     def setUp(self):
         self.Popen = MockPopen()
