@@ -106,12 +106,12 @@ class WorkflowParser(object):
         logging.disable(logging.NOTSET)
 
         WorkflowParser.__add_missing_ids(_wf_data)
+        WorkflowParser.__skip_steps(_wf_data, skipped_steps)
+        WorkflowParser.__filter_step(_wf_data, step)
         WorkflowParser.__propagate_options_to_steps(_wf_data)
         WorkflowParser.__apply_substitutions(
             _wf_data, substitutions=substitutions, allow_loose=allow_loose
         )
-        WorkflowParser.__skip_steps(_wf_data, skipped_steps)
-        WorkflowParser.__filter_step(_wf_data, step)
 
         # create and frozen a box
         wf_box = Box(_wf_data, frozen_box=(immutable is True), default_box=True)
@@ -164,7 +164,7 @@ class WorkflowParser(object):
 
         # for each step, create a copy of the above, and update with info from step in
         # order to make step have higher precedence over workflow-wide options
-        for i, step in enumerate(wf_data["steps"]):
+        for step in wf_data["steps"]:
             step_env = dict(wf_env)
             step_env.update(step.get("env", {}))
             step["env"] = step_env
