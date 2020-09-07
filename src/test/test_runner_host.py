@@ -102,11 +102,11 @@ class TestHostHostRunner(PopperTest):
         self.assertRaises(ProcessLookupError, os.kill, pid, 0)
 
 
+@unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
 class TestHostDockerRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_create_container(self):
         config = ConfigLoader.load()
         step = Box(
@@ -136,7 +136,6 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(c.status, "created")
             c.remove()
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_stop_running_tasks(self):
         with DockerRunner() as dr:
             dclient = docker.from_env()
@@ -151,7 +150,6 @@ class TestHostDockerRunner(PopperTest):
             self.assertEqual(c2.status, "created")
             dclient.close()
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "docker", "ENGINE != docker")
     def test_docker_basic_run(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(workspace_dir=repo.working_dir)
@@ -197,11 +195,11 @@ class TestHostDockerRunner(PopperTest):
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
 
+@unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
 class TestHostPodmanRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_stop_running_tasks(self):
         with PodmanRunner() as pr:
             cmd = ["podman", "run", "-d", "-q"]
@@ -230,7 +228,6 @@ class TestHostPodmanRunner(PopperTest):
             self.assertEqual(c1_status, "exited")
             self.assertEqual(c2_status, "exited")
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_find_container(self):
         config = ConfigLoader.load()
         step = Box(
@@ -252,7 +249,6 @@ class TestHostPodmanRunner(PopperTest):
             cmd = ["podman", "container", "rm", "-f", cid]
             HostRunner._exec_cmd(cmd, logging=False)
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_create_container(self):
         config = ConfigLoader.load()
         step = Box(
@@ -302,7 +298,6 @@ class TestHostPodmanRunner(PopperTest):
             cmd = ["podman", "container", "rm", c]
             HostRunner._exec_cmd(cmd, logging=False)
 
-    @unittest.skipIf(os.environ.get("ENGINE", "docker") != "podman", "ENGINE != podman")
     def test_podman_basic_run(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(engine_name="podman", workspace_dir=repo.working_dir)
@@ -348,13 +343,13 @@ class TestHostPodmanRunner(PopperTest):
         shutil.rmtree(repo.working_dir, ignore_errors=True)
 
 
+@unittest.skipIf(
+    os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
+)
 class TestHostSingularityRunner(PopperTest):
     def setUp(self):
         log.setLevel("CRITICAL")
 
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
     def test_get_recipe_file(self):
         repo = self.mk_repo()
         build_ctx_path = repo.working_dir
@@ -396,9 +391,6 @@ exec /bin/bash "$@"''',
             SystemExit, SingularityRunner._get_recipe_file, build_ctx_path, "sample.sif"
         )
 
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
     def test_create_container(self):
         config = ConfigLoader.load()
         step_one = Box(
@@ -438,9 +430,6 @@ exec /bin/bash "$@"''',
             )
             os.remove(os.path.join(sr._singularity_cache, cid_two))
 
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
     def test_setup_singularity_cache(self):
         config = ConfigLoader.load()
         with SingularityRunner(config=config) as sr:
@@ -450,9 +439,6 @@ exec /bin/bash "$@"''',
                 sr._singularity_cache,
             )
 
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
     def test_get_container_options(self):
         config_dict = {
             "engine": {
@@ -485,9 +471,6 @@ exec /bin/bash "$@"''',
                 ],
             )
 
-    @unittest.skipIf(
-        os.environ.get("ENGINE", "docker") != "singularity", "ENGINE != singularity"
-    )
     def test_singularity_start(self):
         repo = self.mk_repo()
         conf = ConfigLoader.load(
