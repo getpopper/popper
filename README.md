@@ -148,7 +148,7 @@ behavior, please immediately [email us](mailto:ivotron@ucsc.edu).
 > Distributed Processing Symposium Workshops (IPDPSW), 1561–70, 2017. 
 > (https://doi.org/10.1109/IPDPSW.2017.157)
 
-PDF for a pre-print version [available here](https://github.com/getpopper/popper-paper/raw/master/paper/paper.pdf). 
+PDF for a pre-print version [available here](https://www.soe.ucsc.edu/sites/default/files/technical-reports/UCSC-SOE-16-10.pdf). 
 For BibTeX, [click here](https://raw.githubusercontent.com/getpopper/popper-paper/master/popper.bib).
 
 [gfi]: https://github.com/getpopper/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen
