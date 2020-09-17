@@ -6,22 +6,22 @@ steps:
   args:
   - |
     # build does not correspond to the docker,python-3.7 element of the matrix
-    if [[ $ENGINE != "docker" || $TRAVIS_PYTHON_VERSION != "3.7" ]]; then
+    if [[ "$ENGINE" != "docker" || "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then
       exit 78
     fi
 
     # it's a build for a PR
-    if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
+    if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
       exit 78
     fi
 
     # build is not for upstream (getpopper/popper) repo
-    if [[ $GIT_REMOTE_ORIGIN_URL != "https://github.com/getpopper/popper" ]]; then
+    if [[ "$GIT_REMOTE_ORIGIN_URL" != "https://github.com/getpopper/popper" ]]; then
       exit 78
     fi
 
     # not on master
-    if [[ $GIT_BRANCH != "master" ]]; then
+    if [[ "$GIT_BRANCH" != "master" ]]; then
       exit 78
     fi
 
@@ -38,9 +38,18 @@ steps:
     docker push getpopper/popper
     docker push getpopper/popper:$GIT_SHA_SHORT
 
-    if [[ -n $GIT_TAG ]]; then
+    if [[ "$GIT_TAG" != "" ]]; then
       docker tag getpopper/popper getpopper/popper:$GIT_TAG
       docker push getpopper/popper:$GIT_TAG
+    fi
+
+- id: filter pypi if not a tagged release
+  uses: docker://docker:19.03
+  runs: [sh, -ec]
+  args:
+  - |
+    if [[ "$GIT_TAG" == "" ]]; then
+      exit 78
     fi
 
 - id: pypi release
@@ -49,10 +58,7 @@ steps:
   runs: [bash, -ec]
   args:
   - |
-    if [[ -n $GIT_TAG ]]; then
-      # only package tagged releases
-      pip install twine
-      cd src/
-      python setup.py sdist
-      twine upload -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD" dist/*
-    fi
+    pip install twine
+    cd src/
+    python setup.py sdist
+    twine upload -u "$PYPI_USERNAME" -p "$PYPI_PASSWORD" dist/*
