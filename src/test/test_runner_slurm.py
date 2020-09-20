@@ -69,7 +69,10 @@ class TestSlurmSlurmRunner(PopperTest):
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_srun(self, mock_kill):
         config_dict = {
-            "engine": {"name": "singularity", "options": {},},
+            "engine": {
+                "name": "singularity",
+                "options": {},
+            },
             "resource_manager": {
                 "name": "slurm",
                 "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
@@ -114,7 +117,10 @@ class TestSlurmSlurmRunner(PopperTest):
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_mpi(self, mock_kill):
         config_dict = {
-            "engine": {"name": "singularity", "options": {},},
+            "engine": {
+                "name": "singularity",
+                "options": {},
+            },
             "resource_manager": {
                 "name": "slurm",
                 "options": {"sample": {"gpus-per-task": 2, "overcommit": True}},
@@ -187,7 +193,11 @@ mpirun ls -la""",
         with WorkflowRunner(config) as r:
             wf_data = {
                 "steps": [
-                    {"uses": "docker://alpine", "runs": ["cat"], "args": ["README.md"],}
+                    {
+                        "uses": "docker://alpine",
+                        "runs": ["cat"],
+                        "args": ["README.md"],
+                    }
                 ]
             }
             r.run(WorkflowParser.parse(wf_data=wf_data))
@@ -242,7 +252,10 @@ mpirun ls -la""",
     @replace("popper.runner_slurm.os.kill", mock_kill)
     def test_exec_mpi_failure(self, mock_kill):
         config_dict = {
-            "engine": {"name": "singularity", "options": {},},
+            "engine": {
+                "name": "singularity",
+                "options": {},
+            },
             "resource_manager": {
                 "name": "slurm",
                 "options": {
@@ -254,7 +267,8 @@ mpirun ls -la""",
         config = ConfigLoader.load(workspace_dir="/w", config_file=config_dict)
 
         self.Popen.set_command(
-            "sbatch " "--wait --overcommit " f"popper_1_{config.wid}.sh", returncode=12,
+            "sbatch " "--wait --overcommit " f"popper_1_{config.wid}.sh",
+            returncode=12,
         )
 
         self.Popen.set_command(f"tail -f popper_1_{config.wid}.out", returncode=0)

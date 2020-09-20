@@ -18,7 +18,10 @@ from popper.parser import WorkflowParser
     multiple=True,
 )
 @click.option(
-    "--colors", help="Use colors in the graph.", required=False, is_flag=True,
+    "--colors",
+    help="Use colors in the graph.",
+    required=False,
+    is_flag=True,
 )
 @click.command("dot", short_help="Generate a graph in the .dot format.")
 @pass_context

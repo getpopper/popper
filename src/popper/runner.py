@@ -236,11 +236,11 @@ class StepRunner(object):
 
         """Parses the `uses` attribute and returns build information needed.
 
-            Args:
-                step(dict): dict with step data
-            Returns:
-                (str, str, str, str): bool (build), image, tag, Dockerfile
-            """
+        Args:
+            step(dict): dict with step data
+        Returns:
+            (str, str, str, str): bool (build), image, tag, Dockerfile
+        """
         build = True
         img = None
         build_ctx_path = None
@@ -304,7 +304,9 @@ class StepRunner(object):
             "image": img,
             "command": list(step.args),
             "name": name,
-            "volumes": [f"{self._config.workspace_dir}:/workspace:Z",],
+            "volumes": [
+                f"{self._config.workspace_dir}:/workspace:Z",
+            ],
             "working_dir": step.dir if step.dir else "/workspace",
             "environment": self._prepare_environment(step),
             "entrypoint": step.runs if step.runs else None,

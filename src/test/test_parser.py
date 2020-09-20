@@ -41,7 +41,10 @@ class TestWorkflow(unittest.TestCase):
                 },
                 {"uses": "bar", "runs": ["a", "b"], "args": ["c"], "skip_pull": True},
             ],
-            "options": {"env": {"FOO": "bar"}, "secrets": ["Z"],},
+            "options": {
+                "env": {"FOO": "bar"},
+                "secrets": ["Z"],
+            },
         }
         wf = WorkflowParser.parse(wf_data=wf_data)
 
@@ -86,7 +89,13 @@ class TestWorkflow(unittest.TestCase):
         )
 
         # without id
-        wf_data = {"steps": [{"uses": "foo"}, {"uses": "bar"}, {"uses": "baz"},]}
+        wf_data = {
+            "steps": [
+                {"uses": "foo"},
+                {"uses": "bar"},
+                {"uses": "baz"},
+            ]
+        }
         wf = WorkflowParser.parse(wf_data=wf_data, step="2")
         self.assertEqual(1, len(wf.steps))
         self.assertEqual("2", wf.steps[0].id)
@@ -124,7 +133,13 @@ class TestWorkflow(unittest.TestCase):
         self.assertEqual("three", wf.steps[1].id)
 
         # without id
-        wf_data = {"steps": [{"uses": "foo"}, {"uses": "bar"}, {"uses": "baz"},]}
+        wf_data = {
+            "steps": [
+                {"uses": "foo"},
+                {"uses": "bar"},
+                {"uses": "baz"},
+            ]
+        }
         wf = WorkflowParser.parse(wf_data=wf_data, skipped_steps=["1", "3"])
         self.assertEqual(1, len(wf.steps))
         self.assertEqual("2", wf.steps[0].id)

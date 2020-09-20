@@ -180,7 +180,10 @@ class DockerRunner(StepRunner):
             log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
                 streamer = self._d.api.build(
-                    decode=True, path=build_ctx_path, tag=f"{img}:{tag}", rm=True,
+                    decode=True,
+                    path=build_ctx_path,
+                    tag=f"{img}:{tag}",
+                    rm=True,
                 )
                 for chunk in streamer:
                     if self._config.quiet:
