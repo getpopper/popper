@@ -92,7 +92,8 @@ class KubernetesRunner(StepRunner):
         return ecode
 
     def stop_running_tasks(self):
-        """Delete the Pod and then the PersistentVolumeClaim upon receiving SIGINT."""
+        """Delete the Pod and then the PersistentVolumeClaim upon receiving SIGINT.
+        """
         log.debug("received SIGINT. deleting pod and volume claim")
         self._pod_delete()
 
@@ -189,8 +190,8 @@ class KubernetesRunner(StepRunner):
         log.debug(response)
 
     def _init_pod_create(self, pod_host_node=None):
-        """Create a init Pod mounted on a volume with alpine image so that
-        the `tar` utility is available by default and the workflow context
+        """Create a init Pod mounted on a volume with alpine image so that 
+        the `tar` utility is available by default and the workflow context 
         can be copied from the local machine into the volume.
         """
         ws_vol_mount = f"{self._init_pod_name}-ws"
@@ -258,7 +259,8 @@ class KubernetesRunner(StepRunner):
         )
 
     def _vol_create(self, volume_name):
-        """Create a default PersistentVolume of hostPath type."""
+        """Create a default PersistentVolume of hostPath type.
+        """
         vol_conf = {
             "kind": "PersistentVolume",
             "apiVersion": "v1",
@@ -289,7 +291,7 @@ class KubernetesRunner(StepRunner):
             counter += 1
 
     def _vol_claim_create(self):
-        """Create a PersistentVolumeClaim to claim usable storage space
+        """Create a PersistentVolumeClaim to claim usable storage space 
         from a previously created PersistentVolume.
         """
         if self._config.resman_opts.get("persistent_volume_name", None):
@@ -357,14 +359,16 @@ class KubernetesRunner(StepRunner):
         return vol_claim_exists
 
     def _vol_claim_delete(self):
-        """Delete the PersistentVolumeClaim."""
+        """Delete the PersistentVolumeClaim.
+        """
         log.debug(f"deleting volume claim {self._vol_claim_name}")
         self._kclient.delete_namespaced_persistent_volume_claim(
             self._vol_claim_name, namespace=self._namespace, body=V1DeleteOptions()
         )
 
     def _pod_create(self, step, image, pod_host_node=None):
-        """Start a Pod for each step."""
+        """Start a Pod for each step.
+        """
         log.debug(f"trying to start step pod on {pod_host_node}")
         env = self._prepare_environment(step)
         log.debug(env)
@@ -433,7 +437,8 @@ class KubernetesRunner(StepRunner):
             counter += 1
 
     def _pod_read_log(self):
-        """Read logs from the Pod after it moves into `Running` state."""
+        """Read logs from the Pod after it moves into `Running` state.
+        """
         log.debug(f"reading logs from {self._pod_name}")
         response = self._kclient.read_namespaced_pod_log(
             name=self._pod_name,
@@ -446,7 +451,8 @@ class KubernetesRunner(StepRunner):
             log.step_info(line.decode().rstrip())
 
     def _pod_exit_code(self):
-        """Read the exit code from the Pod to decide the exit code of the step."""
+        """Read the exit code from the Pod to decide the exit code of the step.
+        """
         time.sleep(2)
         response = self._kclient.read_namespaced_pod(
             name=self._pod_name, namespace=self._namespace
@@ -457,7 +463,8 @@ class KubernetesRunner(StepRunner):
         return 0
 
     def _pod_delete(self):
-        """Delete the Pod after it has Completed or Failed."""
+        """Delete the Pod after it has Completed or Failed.
+        """
         log.debug(f"deleting pod {self._pod_name}")
         self._kclient.delete_namespaced_pod(
             self._pod_name, namespace=self._namespace, body=V1DeleteOptions()
@@ -465,7 +472,8 @@ class KubernetesRunner(StepRunner):
 
 
 class DockerRunner(KubernetesRunner, HostDockerRunner):
-    """Runs steps on kubernetes; builds images locally using docker."""
+    """Runs steps on kubernetes; builds images locally using docker.
+    """
 
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(**kw)
