@@ -45,6 +45,8 @@ class KubernetesRunner(StepRunner):
         self._vol_claim_created = False
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
+        self._kclient.api_client.rest_client.pool_manager.clear()
+        self._kclient.api_client.close()
         super(KubernetesRunner, self).__exit__(exc_type, exc_value, exc_traceback)
         return True
 
@@ -477,3 +479,7 @@ class DockerRunner(KubernetesRunner, HostDockerRunner):
 
     def __init__(self, **kw):
         super(DockerRunner, self).__init__(**kw)
+
+    def __exit__(self, exc_type, exc_value, exc_traceback):
+        super(DockerRunner, self).__exit__(exc_type, exc_value, exc_traceback)
+        return True

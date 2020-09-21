@@ -37,6 +37,8 @@ class TestKubernetesRunner(PopperTest):
         config.list_kube_config_contexts()
 
     def tearDown(self):
+        self._kclient.api_client.rest_client.pool_manager.clear()
+        self._kclient.api_client.close()
         log.setLevel("NOTSET")
 
     def test_vol_claim_create_delete(self):
