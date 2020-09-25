@@ -30,6 +30,12 @@ from popper.runner import WorkflowRunner
     is_flag=True,
 )
 @click.option(
+    "--skip-clone",
+    help="Skip cloning repositories (assume they have been cloned).",
+    required=False,
+    is_flag=True,
+)
+@click.option(
     "-s",
     "--substitution",
     help="A key-value pair defining a substitution. " "Can be given multiple times.",
@@ -41,7 +47,7 @@ from popper.runner import WorkflowRunner
     "-c", "--conf", help="Path to file with configuration options.", required=False
 )
 @pass_context
-def cli(ctx, file, step, entrypoint, skip_pull, substitution, conf):
+def cli(ctx, file, step, entrypoint, skip_pull, skip_clone, substitution, conf):
     """Opens an interactive shell using all the attributes defined in the workflow file
     for the given STEP, but ignoring ``runs`` and ``args``. By default, it invokes
     /bin/bash. If you need to invoke another one, you can specify it in the --entrypoint
@@ -60,7 +66,11 @@ def cli(ctx, file, step, entrypoint, skip_pull, substitution, conf):
 
     # configure runner so containers execute in attached mode and create a tty
     config = ConfigLoader.load(
-        engine_name="docker", pty=True, skip_pull=skip_pull, config_file=conf
+        engine_name="docker",
+        pty=True,
+        skip_pull=skip_pull,
+        skip_clone=skip_clone,
+        config_file=conf,
     )
 
     with WorkflowRunner(config) as runner:
