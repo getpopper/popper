@@ -149,7 +149,7 @@ behavior, please immediately [email us](mailto:ivotron@ucsc.edu).
 > (https://doi.org/10.1109/IPDPSW.2017.157)
 
 PDF for a pre-print version [available here](https://raw.githubusercontent.com/systemslab/popper-paper/master/paper/paper.pdf). 
-For BibTeX, [click here](https://raw.githubusercontent.com/getpopper/popper-paper/master/popper.bib).
+For BibTeX, [click here](https://raw.githubusercontent.com/systemslab/popper-paper/master/popper.bib).
 
 [gfi]: https://github.com/getpopper/popper/issues?utf8=%E2%9C%93&q=is%3Aissue+label%3A%22good+first+issue%22+is%3Aopen
 [docker]: https://docs.docker.com/get-docker/
