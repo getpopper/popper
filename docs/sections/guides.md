@@ -129,7 +129,7 @@ In this particular example, these scripts depend on CURL and Python.
 Thankfully, docker images for these already exist, so we can make use 
 of them as follows:
 
-```yaml
+```hcl
 - uses: docker://byrnedo/alpine-curl:0.1.8
   args: ["scripts/download-data.sh"]
 
@@ -137,7 +137,7 @@ of them as follows:
   args: ["./scripts/get_mean_by_group.py", "5"]
 
 - uses: docker://python:3.7
-  args: [
+  args [
     "./scripts/validate_output.py",
     "./data/global_per_capita_mean.csv"
   ]
@@ -149,91 +149,13 @@ run.
 [search]: https://hub.docker.com
 [create]: https://docs.docker.com/get-started/part2/
 
-## Building images using BuildKit
 
-[BuildKit](https://github.com/moby/buildkit) can be used as part of a workflow 
-to build a container image:
-
-```yaml
-steps:
-- id: build image using buildkit
-  uses: docker://moby/buildkit:rootless
-  runs: [buildctl-daemonless.sh]
-  options:
-    volumes:
-    - $_DOCKER_CONFIG_DIR:/root/.docker/
-  env:
-    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
-  args:
-  - |
-    build \
-      --frontend dockerfile.v0 \
-      --local context=/workspace/ \
-      --local dockerfile=/workspace/my_container/Dockerfile \
-      --import-cache type=registry,ref=docker.io/myrepo/myimg \
-      --output type=image,name=docker.io/myrepo/myimg,push=true \
-      --export-cache type=inline
-```
-
-The above uses BuildKit to build a container image from the 
-`/workspace/my_container/Dockerfile` file and using `/workspace` as the build 
-context. The `$_DOCKER_CONFIG_DIR` substitution is used to point to the 
-directory where `buildctl` can find authentication credentials in order to pull 
-the container images used as cache, as well as pushing the image produced by 
-this step.
-
-And the above workflow is executed by running:
-
-```bash
-popper run -f wf.yml -s _DOCKER_CONFIG_DIR=$HOME/.docker/
-```
-
-If credentials need to be generated as part of the execution of the workflow, 
-the following step can be executed prior to running the BuildKit step:
-
-```yaml
-- id: dockerhub login
-  uses: docker://docker:19.03
-  secrets: [DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD]
-  runs: [sh, -ec]
-  options:
-    volumes:
-    - $_DOCKER_CONFIG_DIR:/root/.docker/
-  args:
-  - |
-    docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
-```
-
-The above expects `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` environment 
-variables. Alternatively, these can be defined as substitutions:
-
-```yaml
-- id: dockerhub login
-  uses: docker://docker:19.03
-  runs: [sh, -ec]
-  options:
-    volumes:
-    - $_DOCKER_CONFIG_DIR:/root/.docker/
-  args:
-  - |
-    docker login -u $_DOCKERHUB_USERNAME -p $_DOCKERHUB_PASSWORD
-```
-
-And executed as:
-
-```bash
-popper run -f wf.yml \
-  -s _DOCKER_CONFIG_DIR=$PWD/docker-config/ \
-  -s _DOCKERHUB_USERNAME=myuser \
-  -s _DOCKERHUB_PASSWORD=mypass
-```
-
-## Computational research with Python
+## Computational research with Python and JupyterLab
 
 This guide explains how to use Popper to develop and run reproducible workflows
 for computational research in fields such as bioinformatics, machine learning, physics 
 or statistics. 
-Computational research relies on complex software dependencies that are difficult to port 
+Computational research with Python relies on complex software dependencies that are difficult to port 
 across environments. In addition, a typical workflow involves multiple dependent 
 steps which will be hard to replicate if not properly documented.
 Popper offers a solution to these challenges:
@@ -257,6 +179,8 @@ section.
 This guide uses examples from machine learning but no prior knowledge of the field
 is required.
 
+By default, this guide assumes that you use the Docker container engine, but 
+highlights where the workflow will differ if you use another engine.
 
 ### Getting started
 
@@ -344,8 +268,8 @@ FROM continuumio/miniconda3:4.8.2
 ENV PYTHONDONTWRITEBYTECODE=true 
 # update conda environment with packages and clean up conda installation by removing 
 # conda cache/package tarbarlls and python bytecode
-COPY environment.yml .
-RUN conda env update -f exploration_env.yml \
+COPY containers/environment.yml .
+RUN conda env update -f environment.yml \
     && conda clean -afy \
     && find /opt/conda/ -follow -type f -name '*.pyc' -delete 
 CMD [ "/bin/sh" ] 
@@ -398,6 +322,16 @@ Jupyter only allows access from `localhost`).
  containers), which is not enabled by default.
 
 Open the generated link in a browser to access JupyterLab.
+
+#### Using other container engines
+
+The above steps are for Docker. If you use Singularity, omit 
+```yaml
+options:
+  ports:
+    8888/tcp: 8888
+```
+Which is not needed because Singularity has no network isolation
 
 ### Package management
 
@@ -564,7 +498,7 @@ Notes:
 - This use the same container as in the `notebook` step. Again, the final, 'canonical' 
 analysis should be developed in the same environment as exploratory code.
 
-Similarly, add the `src/evaluate_model.py`, which generates model plots, to
+Similarly, add `src/evaluate_model.py`, which generates model performance plots, to
 the workflow.
 
 ```python
@@ -637,7 +571,7 @@ Note that these steps each read data from `data/` and output to `results/`.
 It is good practice to keep the input and outputs of a workflow separate
 to avoid accidently modifying the original data, which is considered immutable.
 
-### Building a paper using LaTeX
+### Building a LaTeX paper
 
 Wrap the build of the paper in your Popper workflow.
 This is useful to ensure that the pdf is always built with the most up-to-date data 
@@ -712,4 +646,460 @@ And this is the final project structure:
 To re-run the entire workflow, use:
 ```sh
 popper run -f wf.yml
+```
+
+
+## Computational research with R and RStudio Server
+
+This guide explains how to use Popper to develop and run reproducible workflows
+for computational research in fields such as bioinformatics, machine learning, physics 
+or statistics. 
+Computational research with R relies on complex software dependencies that are difficult to port 
+across environments. In addition, a typical workflow involves multiple dependent 
+steps which will be hard to replicate if not properly documented.
+Popper offers a solution to these challenges:
+- Poppers abstracts over software environments with [Linux containers](https://popper.readthedocs.io/en/latest/sections/concepts.html#glossary).
+- Poppers forces you to define your workflow explicetely such that it can be re-run in 
+in a single command.
+
+Popper thus provides an open-source alternative to managed solutions such as
+Code Ocean for reproducible computational research.
+
+### Pre-requisites
+
+You should have basic knowledge of:
+- git
+- command line 
+- R (code snippets in this guide use the [tidyverse](https://www.tidyverse.org/) libraries)
+
+In addition, you should be familiar with the concepts introduced in the 
+[Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
+section.
+This guide uses examples from machine learning but no prior knowledge of the field
+is required.
+
+By default, this guide assumes that you use the Docker container engine, but 
+highlights where the workflow will differ if you use another engine.
+
+### Getting started
+
+The examples presented in this guide come from a workflow developed for the 
+[Flu Shot Learning](https://www.drivendata.org/competitions/66/flu-shot-learning/) 
+research competition on Driven Data.
+This workflow shows examples of using Popper to automate common tasks in computational
+research with R:
+- downloading data
+- using R Markdown
+- fitting/simulating a model using `tidymodels`
+- visualizing the results with `ggplot2`
+- building a LaTeX paper with up-to-date results
+
+To help follow allong, see this 
+[repository](https://github.com/getpopper/popper-examples/tree/master/workflows/comp-research/rstudio) 
+with the final version of the workflow.
+To adapt the advice in this guide to your own project, get started
+with this [Cookiecutter template for Popper](https://github.com/getpopper/cookiecutter-popper-r).
+
+Initial project structure
+```
+├── LICENSE                                 
+├── README.md                <- The top-level README.
+├── data                     <- The original, immutable data dump.
+├── output             
+|   ├── models               <- Serialized models, predictions, model summaries.
+|   └── figures              <- Graphics created during analysis.
+├── paper                    <- Generated analysis as PDF, LaTeX.
+│   ├── paper.tex
+|   └── referenced.bib
+└── src                      <- R source code for this project.
+    ├── notebooks            <- RMarkdown notebooks.
+    ├── get_data.sh          <- Script for downloading the original data dump.
+    ├── models.py            <- Script defining models.
+    ├── predict.py           <- Script for generating model predictions.
+    └── evaluate_model.py    <- Script for generating model evaluation plots.
+```
+
+### Getting data
+
+Your workflow should automate downloading or generating data to ensure that it uses the correct,
+up-to-date version of the data. In this example, you can download data with a 
+simple shell script:
+
+```sh
+#!/bin/sh
+cd $1
+
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/test_set_features.csv" --no-check-certificate
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_labels.csv" --no-check-certificate
+wget "https://s3.amazonaws.com/drivendata-prod/data/66/public/training_set_features.csv" --no-check-certificate
+
+echo "Files downloaded: $(ls)"
+```
+
+Now, wrap this step using a Popper workflow. In a new file `wf.yml` at the root 
+of the folder,
+
+```yaml
+steps:
+- id: "dataset"
+  uses: "docker://jacobcarlborg/docker-alpine-wget"
+  args: ["src/get_data.sh", "data"]
+```
+
+Notes:
+- pick a Docker image that contains the necessary utilities. 
+For instance, a default Alpine image does not include `wget`.
+
+### Using RStudio Server
+
+This sections explains how to use Popper to launch RStudio Server, which provides
+a convenient environment for exploratory work.
+Refactoring successful experiments into your final workflow is easier if you keep
+the software environment consistent between both. Thus, you should do both your 
+exploratory and "canonical" work in the same container.
+
+To run RStudio Server, first add a new step to your workflow in `wf.yml`
+```yaml
+- id: "rstudio"
+  uses: "getpopper/r/verse:3.6.2"
+  runs: ["r", "--version"]
+  options:
+    ports:
+      8787: 8787
+```
+This step uses the `getpopper/r/verse` image. `getpopper` on Dockerhub hosts a library
+of Docker images configured to work well with Popper and RStudio.
+Notes:
+- `ports` is set to `{8787: 8787}` which is necessary for the host machine to connect
+- the container is based by default on the Rocker `verse` image, which includes the 
+`tidyverse` libraries and `latex`. If you do not plan on using `tidyverse` or Latex,
+ using the `getpopper/R/rstudio` image (based on `rocker/rstudio`) will make for smaller 
+ images sizes
+
+Go to `localhost:8787` in your browser to access RStudio Server. Log in with username
+and password `rstudio`.
+
+
+### Package and image management
+
+To manage project dependencies, you should use a fully container-based apporach. 
+R provides a default dependency management throughs its packaging features, but are not
+well suited to pinning exact dependencies. While more modern alternatives exist 
+(`packrat` and `renv`), both make assumptions that fit poorly into Popper workflows if you 
+also want to use RStudio.
+
+Instead, you should use [containerit](https://o2r.info/containerit/), 
+a R package which automatically builds 
+a Dockerfile from the packages loaded in the current environment.
+
+For instance, this workflow uses the `tidyverse` and `tidymodels` libraries. 
+The base Docker image used in the following does not include `tidymodels`, so 
+it needs to be installed. In the RStudio Server prompt,
+```R
+install.packages("tidymodels")
+```
+Furthermore, this workflow uses an optional `tidymodels` dependencies, `glmnet`,
+for fitting a regularized logistic regress
+```R
+install.packages("glmnet")
+```
+Load containerit:
+```R
+library(containerit)
+```
+Create a Dockerfile from the current R session
+```R
+library(tidymodels)
+library(tidyverse)
+library(glmnet)
+my_dockerfile <- containerit::dockerfile(
+  image = "getpopper/r/verse:3.6.2", 
+  maintainer = "apoirel@ucsc.edu",
+  container_workdir = NULL
+)
+```
+
+Alternatively, if `src/` were already populated with the 
+souce code for the project, it would be possible to create a 
+Dockerfile for a set of files: 
+```R
+my_dockerfile <- containerit::dockerfile(from = "./src",
+  image = "getpopper/r/verse:3.6.2", 
+  maintainer = "apoirel@ucsc.edu",
+  container_workdir = NULL
+)
+```
+
+Write the Dockerfile:
+```R
+containerit::write(my_dockerfile)
+```
+This is the generated Dockerfile:
+```Dockerfile
+FROM getpopper/verse:3.6.2
+LABEL maintainer="apoirel@ucsc.edu"
+RUN ["install2.r", "dplyr", "forcats", "ggplot2", "purrr", "readr", "stringr", "tibble", "tidyr", "tidyverse", "rsample", "parsnip", "recipes", "workflows", "tune", "yardstick", "broom", "dials", "tidymodels", "glmnet"]
+EXPOSE 8787
+CMD ["R"]
+```
+At this point, you should change your workflow to use this Dockerfile with other steps 
+using R. (`uses: ./`)
+
+### Models and visualization
+
+Following the above, automate the other steps in your workflow using Popper.
+This section shows examples for:
+- fitting a model to data
+- generating model evaluation plots
+- using the model to make predictions on a hold-out dataset
+
+
+In this example, modeling is done using the `tidymodels` libraries.
+
+A first file, `src/models.py` defines the data pre-processing steps 
+the model will use:
+```R
+library(tidyverse)
+library(tidymodels)
+
+get_preprocessor <- function(df_train, target, ignored) {
+    df_train <- df_train %>% select(!ignored)
+    rec <-
+        recipe(as.formula(paste(target, "~ .")), data = df_train) %>% 
+        step_medianimpute(all_numeric()) %>% 
+        step_normalize(all_numeric(), -all_outcomes()) %>% 
+        step_unknown(all_nominal()) %>% 
+        step_dummy(all_nominal()) %>% 
+        step_num2factor(
+          target, 
+          transform = function(x) as.integer(x + 1), 
+          levels = c("0", "1"),
+          skip=TRUE
+        )
+    return(rec)
+}
+```
+
+A second script, `src/predict.R`, uses this to generate the predictions on the 
+hold-out dataset
+
+```R
+library(tidyverse)
+library(tidymodels)
+
+DATA_PATH = "data"
+OUTPUT_PATH = "output"
+
+source("src/models.R")
+
+df_train <- read_csv(paste(DATA_PATH, "training_set_features.csv", sep = "/"))
+y_train <- read_csv(paste(DATA_PATH, "training_set_labels.csv", sep = "/"))
+df_test <- read_csv(paste(DATA_PATH, "test_set_features.csv", sep = "/"))
+df_submission <- read_csv(paste(DATA_PATH, "submission_format.csv", sep = "/"))
+
+df_train <- 
+    left_join(df_train, y_train, on = "respondent_id", keep = FALSE) %>% 
+    select(!"respondent_id")
+
+get_predictions <- function(target, ignored, df_train, df_test) {
+    lr_model <- 
+        logistic_reg(penalty = 0.01, mixture = 1) %>% 
+        set_engine("glmnet")
+    
+    predictions <-
+        workflow() %>%
+        add_recipe(get_preprocessor(df_train, target, ignored)) %>%
+        add_model(lr_model) %>%
+        fit(data = df_train) %>%
+        predict(df_test, type = "prob") %>% # targets are probabilities
+        pull(".pred_1") # we want the probability *being* vaccinated
+
+    return(predictions)
+}
+
+preds_seasonal <- 
+    get_predictions("seasonal_vaccine", "h1n1_vaccine", df_train, df_test)
+
+preds_h1n1 <- 
+    get_predictions("h1n1_vaccine", "seasonal_vaccine", df_train, df_test)
+
+# save predictions to submission file
+df_submission %>%
+    mutate(h1n1_vaccine = preds_h1n1) %>%
+    mutate(seasonal_vaccine = preds_seasonal) %>%
+    write_csv(paste(OUTPUT_PATH, "submission.csv", sep = "/"))
+```
+
+As this as a set in the Popper workflow. This must come after the `get_data` step
+```yaml
+- id: "predict"
+  uses: "./"
+  args: ["Rscript", "predict.R"]
+```
+
+Notes:
+- This use the same container as in the `rstudio` step. Again, the final, 'canonical' 
+analysis should be developed in the same environment as exploratory code.
+
+Similarly, add the `src/evaluate_model.py`, which generates model plots, to
+the workflow.
+
+Similary, add `src/evaluate_model.R`, which generates model performance plots, 
+to the workflow 
+
+```R
+library(tidyverse)
+library(tidymodels)
+
+DATA_PATH = "data"
+OUTPUT_PATH = "output"
+
+source("src/models.R")
+
+df_train <- read_csv(paste(DATA_PATH, "training_set_features.csv", sep = "/"))
+y_train <- read_csv(paste(DATA_PATH, "training_set_labels.csv", sep = "/"))
+
+df_train <- 
+    left_join(df_train, y_train, on = "respondent_id", keep = FALSE) %>% 
+    select(!"respondent_id")
+
+get_cv_results <- function(df_train, target, ignored) {
+
+    # define model
+    lr_model <-
+        logistic_reg(penalty = tune(), mixture = 1) %>%
+        set_engine("glmnet")
+
+    wf <-
+        workflow() %>%
+        add_recipe(get_preprocessor(df_train, target, ignored)) %>% 
+        add_model(lr_model) 
+
+    # cv parameters
+    folds <- df_train %>% vfold_cv(v = 5)
+    lr_grid <- 
+        grid_regular(
+            penalty(range = c(-2,1), trans = log10_trans()), 
+            levels = 10
+        )
+
+    # collect cv results
+    cv_res <- 
+        wf %>%
+        tune_grid(
+            resamples = folds,
+            grid = lr_grid,
+            metric = metric_set(roc_auc)
+        ) %>%
+        collect_metrics()
+
+    # plot_results
+    cv_res %>%
+    ggplot(aes(penalty, mean)) +
+    geom_line(size = 1.2, color = "red", alpha = 0.5) + 
+    geom_point(color = "red") + 
+    scale_x_log10(labels = scales::label_number()) +
+    scale_color_manual(values = c("#CC6666")) +
+    ggtitle(expression(paste("AUC for different ", L[1], " penalties")))
+
+    ggsave(
+        paste("cv_", target, ".png", sep = ""), 
+        path = paste(OUTPUT_PATH, "figures", sep = "/")
+    )
+}
+
+get_cv_results(df_train, "h1n1_vaccine", "seasonal_vaccine")
+get_cv_results(df_train, "seasonal_vaccine", "h1n1_vaccine")    
+```
+
+```yaml
+- id: "figures"
+  uses: "./"
+  args: ["Rscript", "evaluate_model.R"]
+```
+
+Note that these steps each read data from `data/` and output to `output/`.
+It is good practice to keep the input and outputs of a workflow separate
+to avoid accidently modifying the original data, which is considered immutable.
+
+### Building a PDF paper
+
+Wrap the build of the final paper or report in your Popper workflow.
+This is useful to ensure that the pdf is always built with the most up-to-date data 
+and figures.
+
+#### Latex
+
+This is the step for building a LaTeX paper. Note we use the same image 
+as in previous steps since `rocker/verse` includes a full LaTeX installation.
+
+```yml
+- id: "paper"
+  uses: "./"
+  args: ["latexmk", "-pdf", "paper.tex"]
+  dir: "/workspace/paper"
+```
+
+#### RMarkdown
+
+Many R users find it more convenient to write up the final analysis directly in 
+RMarkdown and then knit the document to HTML or pdf. You can easily modify the above
+ step to support this workflow.
+
+```yml
+- id: "paper"
+  uses: "./"
+  args: ["R", "-e", "library(rmarkdown);rmarkdown::render("paper/paper.Rmd", output_format="all")"]
+  dir: "/workspace/paper"
+```
+
+### Conclusion
+
+This is the final workflow, assuming the paper is written in LaTeX
+```yml
+steps:
+- id: "dataset"
+  uses: "docker://jacobcarlborg/docker-alpine-wget"
+  args: ["sh", "src/get_data.sh", "data"]
+
+- id: "rstudio"
+  uses: "./"
+  args: ["rstudio-server", "start"]
+  options:
+    ports:
+      8787: 8787
+    
+- id: "figures"
+  uses: "./"
+  args: ["Rscript", "evaluate_model.R"]
+
+- id: "predict"
+  uses: "./"
+  args: ["Rscript", "predict.R"]
+
+- id: "paper"
+  uses: "./" 
+  args: ["latexmk", "-pdf", "paper.tex"]
+  dir: "/workspace/paper"
+```
+
+And this is is the final project structure
+```
+├── LICENSE                                 
+├── README.md                <- The top-level README.
+├── wf.yml                   <- Definition of the workflow.
+├── Dockerfile               <- Dockerfile used by the workflow.
+├── data                     <- The original, immutable data dump.
+├── output             
+|   ├── models               <- Serialized models, predictions, model summaries.
+|   └── figures              <- Graphics created during analysis.
+├── paper                    <- Generated analysis as PDF, LaTeX.
+│   ├── paper.tex            <- LaTeX source for the paper. 
+|   └── referenced.bib
+└── R                        <- R source code for this project.
+    ├── notebooks            <- Exploratory Rmarkdown notebooks.
+    ├── get_data.sh          <- Script for downloading the original data dump.
+    ├── models.R             <- Script defining models.
+    ├── predict.R            <- Script for generating model predictions.
+    └── evaluate_model.R     <- Script for generating model evaluation plots.
 ```
