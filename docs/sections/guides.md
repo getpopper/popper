@@ -246,7 +246,7 @@ Code Ocean for reproducible computational research.
 
 ### Pre-requisites
 
-You should have basic knowledge of git, the command line and Python
+You should have basic knowledge of git, the command line and Python.
 
 In addition, you should be familiar with the concepts introduced in the 
 [Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
@@ -746,7 +746,7 @@ Code Ocean for reproducible computational research.
 ### Pre-requisites
 
 You should have basic knowledge of git, the command line and R 
-(code snippets in this guide use the [tidyverse](https://www.tidyverse.org/) libraries)
+(code snippets in this guide use the [tidyverse](https://www.tidyverse.org/) libraries).
 
 In addition, you should be familiar with the concepts introduced in the 
 [Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
