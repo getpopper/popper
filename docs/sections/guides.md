@@ -129,7 +129,7 @@ In this particular example, these scripts depend on CURL and Python.
 Thankfully, docker images for these already exist, so we can make use 
 of them as follows:
 
-```hcl
+```yaml
 - uses: docker://byrnedo/alpine-curl:0.1.8
   args: ["scripts/download-data.sh"]
 
@@ -149,6 +149,84 @@ run.
 [search]: https://hub.docker.com
 [create]: https://docs.docker.com/get-started/part2/
 
+## Building images using BuildKit
+
+[BuildKit](https://github.com/moby/buildkit) can be used as part of a workflow 
+to build a container image:
+
+```yaml
+steps:
+- id: build image using buildkit
+  uses: docker://moby/buildkit:rootless
+  runs: [buildctl-daemonless.sh]
+  options:
+    volumes:
+    - $_DOCKER_CONFIG_DIR:/root/.docker/
+  env:
+    BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+  args:
+  - |
+    build \
+      --frontend dockerfile.v0 \
+      --local context=/workspace/ \
+      --local dockerfile=/workspace/my_container/Dockerfile \
+      --import-cache type=registry,ref=docker.io/myrepo/myimg \
+      --output type=image,name=docker.io/myrepo/myimg,push=true \
+      --export-cache type=inline
+```
+
+The above uses BuildKit to build a container image from the 
+`/workspace/my_container/Dockerfile` file and using `/workspace` as the build 
+context. The `$_DOCKER_CONFIG_DIR` substitution is used to point to the 
+directory where `buildctl` can find authentication credentials in order to pull 
+the container images used as cache, as well as pushing the image produced by 
+this step.
+
+And the above workflow is executed by running:
+
+```bash
+popper run -f wf.yml -s _DOCKER_CONFIG_DIR=$HOME/.docker/
+```
+
+If credentials need to be generated as part of the execution of the workflow, 
+the following step can be executed prior to running the BuildKit step:
+
+```yaml
+- id: dockerhub login
+  uses: docker://docker:19.03
+  secrets: [DOCKERHUB_USERNAME, DOCKERHUB_PASSWORD]
+  runs: [sh, -ec]
+  options:
+    volumes:
+    - $_DOCKER_CONFIG_DIR:/root/.docker/
+  args:
+  - |
+    docker login -u $DOCKERHUB_USERNAME -p $DOCKERHUB_PASSWORD
+```
+
+The above expects `DOCKERHUB_USERNAME` and `DOCKERHUB_PASSWORD` environment 
+variables. Alternatively, these can be defined as substitutions:
+
+```yaml
+- id: dockerhub login
+  uses: docker://docker:19.03
+  runs: [sh, -ec]
+  options:
+    volumes:
+    - $_DOCKER_CONFIG_DIR:/root/.docker/
+  args:
+  - |
+    docker login -u $_DOCKERHUB_USERNAME -p $_DOCKERHUB_PASSWORD
+```
+
+And executed as:
+
+```bash
+popper run -f wf.yml \
+  -s _DOCKER_CONFIG_DIR=$PWD/docker-config/ \
+  -s _DOCKERHUB_USERNAME=myuser \
+  -s _DOCKERHUB_PASSWORD=mypass
+```
 
 ## Computational research with Python and JupyterLab
 
