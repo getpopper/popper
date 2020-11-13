@@ -137,7 +137,7 @@ of them as follows:
   args: ["./scripts/get_mean_by_group.py", "5"]
 
 - uses: docker://python:3.7
-  args [
+  args: [
     "./scripts/validate_output.py",
     "./data/global_per_capita_mean.csv"
   ]
@@ -246,10 +246,7 @@ Code Ocean for reproducible computational research.
 
 ### Pre-requisites
 
-You should have basic knowledge of:
-- git
-- command line 
-- Python
+You should have basic knowledge of git, the command line and Python
 
 In addition, you should be familiar with the concepts introduced in the 
 [Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
@@ -324,9 +321,10 @@ steps:
   uses: "docker://jacobcarlborg/docker-alpine-wget"
   args: ["src/get_data.sh", "data"]
 ```
-Notes:
-- pick a Docker image that contains the necessary utilities. 
-For instance, a default Alpine image does not include `wget`.
+
+> Notes:
+> - pick a Docker image that contains the necessary utilities. 
+> For instance, a default Alpine image does not include `wget`.
 
 
 ### Using JupyterLab
@@ -392,12 +390,12 @@ jupyter lab --ip 0.0.0.0 --no-browser --allow-root
 ```
 Skip this second step if you only need the shell interface.
 
-Notes:
-- `--ip 0.0.0.0` allows the user to access JupyterLab from outside the container (by default, 
-Jupyter only allows access from `localhost`).
-- `--no-browser` tells jupyter to not expect to find a browser in the docker container.
-- `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker
- containers), which is not enabled by default.
+> Notes:
+> - `--ip 0.0.0.0` allows the user to access JupyterLab from outside the container (by default, 
+> Jupyter only allows access from `localhost`).
+> - `--no-browser` tells jupyter to not expect to find a browser in the docker container.
+> - `--allow-root` runs JupyterLab as a root user (the recommended method for running Docker
+> containers), which is not enabled by default.
 
 Open the generated link in a browser to access JupyterLab.
 
@@ -572,9 +570,9 @@ step
   args: ["python", "src/predict.py"]
 ```
 
-Notes:
-- This use the same container as in the `notebook` step. Again, the final, 'canonical' 
-analysis should be developed in the same environment as exploratory code.
+> Notes:
+> - This use the same container as in the `notebook` step. Again, the final, 'canonical' 
+> analysis should be developed in the same environment as exploratory code.
 
 Similarly, add `src/evaluate_model.py`, which generates model performance plots, to
 the workflow.
@@ -645,9 +643,11 @@ Use a similar step to the previous one:
   args: ["python, src/evaluate_model.py"]
 ```
 
-Note that these steps each read data from `data/` and output to `results/`.
-It is good practice to keep the input and outputs of a workflow separate
-to avoid accidently modifying the original data, which is considered immutable.
+> Notes:
+>
+> These steps each read data from `data/` and output to `results/`.
+> It is good practice to keep the input and outputs of a workflow separate
+> to avoid accidently modifying the original data, which is considered immutable.
 
 ### Building a LaTeX paper
 
@@ -662,10 +662,10 @@ and figures.
   dir: "/workspace/paper"
 ```
 
-Notes:
-- This step uses a basic LaTeX installation. For more sophisticated needs,
-use a [full TexLive image](https://hub.docker.com/r/blang/latex/tags) 
-- `dir` is set to `workspace/paper` so that Popper looks for and outputs files in the `paper/` folder
+> Notes:
+> - This step uses a basic LaTeX installation. For more sophisticated needs,
+> use a [full TexLive image](https://hub.docker.com/r/blang/latex/tags) 
+> - `dir` is set to `workspace/paper` so that Popper looks for and outputs files in the `paper/` folder
 
 
 ### Conclusion
@@ -745,10 +745,8 @@ Code Ocean for reproducible computational research.
 
 ### Pre-requisites
 
-You should have basic knowledge of:
-- git
-- command line 
-- R (code snippets in this guide use the [tidyverse](https://www.tidyverse.org/) libraries)
+You should have basic knowledge of git, the command line and R 
+(code snippets in this guide use the [tidyverse](https://www.tidyverse.org/) libraries)
 
 In addition, you should be familiar with the concepts introduced in the 
 [Getting Started](https://popper.readthedocs.io/en/latest/sections/getting_started.html)
@@ -824,9 +822,9 @@ steps:
   args: ["src/get_data.sh", "data"]
 ```
 
-Notes:
-- pick a Docker image that contains the necessary utilities. 
-For instance, a default Alpine image does not include `wget`.
+> Notes:
+> - pick a Docker image that contains the necessary utilities. 
+> For instance, a default Alpine image does not include `wget`.
 
 ### Using RStudio Server
 
@@ -847,16 +845,26 @@ To run RStudio Server, first add a new step to your workflow in `wf.yml`
 ```
 This step uses the `getpopper/r/verse` image. `getpopper` on Dockerhub hosts a library
 of Docker images configured to work well with Popper and RStudio.
-Notes:
-- `ports` is set to `{8787: 8787}` which is necessary for the host machine to connect
-- the container is based by default on the Rocker `verse` image, which includes the 
-`tidyverse` libraries and `latex`. If you do not plan on using `tidyverse` or Latex,
- using the `getpopper/R/rstudio` image (based on `rocker/rstudio`) will make for smaller 
- images sizes
+
+> Notes:
+> - `ports` is set to `{8787: 8787}` which is necessary for the host machine to connect
+> - the container is based by default on the Rocker `verse` image, which includes the 
+> `tidyverse` libraries and `latex`. If you do not plan on using `tidyverse` or Latex,
+> using the `getpopper/R/rstudio` image (based on `rocker/rstudio`) will make for smaller 
+> images sizes
 
 Go to `localhost:8787` in your browser to access RStudio Server. Log in with username
 and password `rstudio`.
 
+#### Using other container engines
+
+The above steps are for Docker. If you use Singularity, omit 
+```yaml
+options:
+  ports:
+    8787/tcp: 8787
+```
+Which is not needed because Singularity has no network isolation.
 
 ### Package and image management
 
@@ -1015,12 +1023,9 @@ As this as a set in the Popper workflow. This must come after the `get_data` ste
   args: ["Rscript", "predict.R"]
 ```
 
-Notes:
-- This use the same container as in the `rstudio` step. Again, the final, 'canonical' 
-analysis should be developed in the same environment as exploratory code.
-
-Similarly, add the `src/evaluate_model.py`, which generates model plots, to
-the workflow.
+> Notes:
+> - This use the same container as in the `rstudio` step. Again, the final, 'canonical' 
+> analysis should be developed in the same environment as exploratory code.
 
 Similary, add `src/evaluate_model.R`, which generates model performance plots, 
 to the workflow 
