@@ -939,7 +939,6 @@ This section shows examples for:
 - generating model evaluation plots
 - using the model to make predictions on a hold-out dataset
 
-
 In this example, modeling is done using the `tidymodels` libraries.
 
 A first file, `src/models.py` defines the data pre-processing steps 
