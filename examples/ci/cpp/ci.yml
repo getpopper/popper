@@ -1,0 +1,17 @@
+steps:
+- id: dev-init
+  uses: docker://rikorose/gcc-cmake:gcc-9
+  runs: [sh, -uexc]
+  args:
+  - |
+    rm -rf build/
+    cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
+
+- id: build
+  uses: docker://rikorose/gcc-cmake:gcc-9
+  runs: [cmake, --build, build/, --parallel, '4']
+
+- id: test
+  uses: docker://rikorose/gcc-cmake:gcc-9
+  dir: /workspace/build/
+  runs: [ctest]
