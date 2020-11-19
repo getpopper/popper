@@ -1,0 +1,25 @@
+steps:
+- id: install dependencies
+  uses: docker://python:3.8
+  runs: [bash, -uexc]
+  args:
+  - |
+    python -mvenv venv/
+    source venv/bin/activate
+    pip install -e .
+
+- id: run linter
+  uses: docker://python:3.8
+  runs: [bash, -uexc]
+  args:
+  - |
+    source venv/bin/activate
+    black mypackage/
+
+- id: run tests
+  uses: docker://python:3.8
+  runs: [bash, -uexc]
+  args:
+  - |
+    source venv/bin/activate
+    pytest
