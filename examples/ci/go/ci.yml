@@ -1,3 +1,7 @@
+options:
+  env:
+    GOPATH: /workspace/build/gopath
+
 steps:
 - id: get deps
   uses: docker://golang:1.14.4-alpine3.11
