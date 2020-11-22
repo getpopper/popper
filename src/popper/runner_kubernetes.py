@@ -263,16 +263,22 @@ class KubernetesRunner(StepRunner):
     def _vol_create(self, volume_name):
         """Create a default PersistentVolume of hostPath type.
         """
+        hostpathvol_path = "/tmp"
+        hostpathvol_size = "1Gi"
+        if self._config.resman_opts.get("hostpathvol_path", None):
+            hostpathvol_path = self._config.resman_opts.hostpathvol_path
+        if self._config.resman_opts.get("hostpathvol_size", None):
+            hostpathvol_size = self._config.resman_opts.hostpathvol_size
         vol_conf = {
             "kind": "PersistentVolume",
             "apiVersion": "v1",
-            "metadata": {"name": volume_name, "labels": {"type": "host"},},
+            "metadata": {"name": volume_name, "labels": {"type": "host"}},
             "spec": {
                 "persistentVolumeReclaimPolicy": "Recycle",
                 "storageClassName": "manual",
-                "capacity": {"storage": "1Gi",},
+                "capacity": {"storage": hostpathvol_size,},
                 "accessModes": ["ReadWriteMany"],
-                "hostPath": {"path": "/tmp"},
+                "hostPath": {"path": hostpathvol_path},
             },
         }
 

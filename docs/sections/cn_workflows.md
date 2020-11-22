@@ -440,6 +440,10 @@ All the available configuration options have been described below:
   If this option is not provided, Popper will leave the task of scheduling the pods upon Kubernetes. 
   The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a pod and schedule all the pods (init-pods + step-pods) on that node to use the `HostPath` persistent volume of 1GB which will be automatically created.
 
+* `hostpathvol_path`: The path to use for creating a HostPath volume. If not provided, /tmp will be used.
+
+* `hostpathvol_size`: The size of the HostPath volume. If not provided, 1GB will be used.
+
 To run workflows on Kubernetes:
 
 ```bash
