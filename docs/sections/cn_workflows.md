@@ -47,6 +47,26 @@ attribute.
 | `dir`       | **optional** A string representing an absolute path inside the container to use as the<br>working directory. By default, this is `/workspace`. |
 | `options`   | **optional** Container configuration options. For instance:<br>`options: {ports: {8888:8888}, interactive: True, tty: True}`. Currently only<br> supported for the docker runtime. See the parameters of `client.containers.runs()`<br> in the [Docker Python SDK](https://docker-py.readthedocs.io/en/stable/containers.html?highlight=inspect) for the full list of options |
 
+### Life of a Workflow Execution
+
+List the 4 steps that Popper uses to execute a workflow For each of
+these steps, we provide an example of how it was executed. We use
+https://github.com/getpopper/popper/blob/master/docs/sections/getting_started.md
+as the example
+
+Popper executes a workflow using the following steps.
+
+<ol>
+  <li>Look at `uses` attribute and pull/build image</li>
+  Explanation
+  Ex. [download] docker pull byrnedo/alpine-curl:0.1.8
+  <li>Configure and create container</li>
+  Explanation
+  Ex.[download] docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
+  <li>Launch container, wait for it to be done</li>
+  <li>Move on to next step</li>
+</ol>
+
 ### Referencing images in a step
 
 A step in a workflow can reference a container image defined in a 
