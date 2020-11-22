@@ -164,6 +164,22 @@ class WorkflowRunner(object):
                 break
 
         log.info("Workflow finished successfully.")
+        
+        from random import Random
+        #User has a one-in-five chance of getting this message
+        If (Random.randint() % 5 and self._config.survey)
+            log.info("If you enjoy using popper, please leave us a star at https://github.com/getpopper/popper!")
+            log.info("If you have encountered any bugs or issues, please start a discussion at the github repository")
+            log.info("or discuss Popper with us in our slack at the following link:")
+            log.info("https://join.slack.com/t/getpopper/shared_invite/zt-dtn0se2s-c50myMHNpeoikQXDeNbPew.")
+            log.info("Finally, please give us your feedback using this survey! <Survey>")
+            
+            log.info("If you don't want to see this message in the future,")
+            userInput = input("please type \"stop\".")
+            if userInput == "stop"
+                # this is incomplete. Need to write to config file
+                self._config.survey = False
+
 
     def _step_runner(self, engine_name, step):
         """Factory of singleton runners."""
