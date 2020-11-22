@@ -110,10 +110,19 @@ class KubernetesRunner(StepRunner):
             pod_host_node = self._config.resman_opts.pod_host_node
 
         elif not self._config.resman_opts.get("persistent_volume_name", None):
-            nodes = [
-                node.metadata.labels["kubernetes.io/hostname"]
-                for node in self._kclient.list_node().items
-            ]
+            nodes = []
+
+            for node in self._kclient.list_node().items:
+                node_role = ""
+                if node.spec.taints and len(node.spec.taints) > 0:
+                    node_role = node.spec.taints[0].key
+                if node_role != "node-role.kubernetes.io/master" and node_role != "node-role.kubernetes.io/unreachable":
+                    nodes.insert(0, node.metadata.labels["kubernetes.io/hostname"])
+                else:
+                    nodes.insert(
+                        len(nodes), node.metadata.labels["kubernetes.io/hostname"]
+                    )
+
             for node in nodes:
                 log.debug(f"trying to schedule init pod on {node}")
                 e = self._init_pod_create(node)
