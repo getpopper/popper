@@ -178,9 +178,7 @@ class WorkflowRunner(object):
             userInput = input("please type \"stop\".")
             if userInput == "stop"
                 # this is incomplete. Need to write to config file
-                # Consider creating a "survey" file.
                 self._config.survey = False
-
 
 
     def _step_runner(self, engine_name, step):
