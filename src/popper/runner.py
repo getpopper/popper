@@ -164,7 +164,7 @@ class WorkflowRunner(object):
                 break
 
         log.info("Workflow finished successfully.")
-        
+                
         from random import Random
         #User has a one-in-five chance of getting this message
         If (Random.randint() % 5 and self._config.survey)
@@ -180,8 +180,6 @@ class WorkflowRunner(object):
                 # this is incomplete. Need to write to config file
                 # Consider creating a "survey" file.
                 self._config.survey = False
-
-
 
     def _step_runner(self, engine_name, step):
         """Factory of singleton runners."""
