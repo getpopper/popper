@@ -172,7 +172,7 @@ class WorkflowRunner(object):
             log.info("If you have encountered any bugs or issues, please start a discussion at the github repository")
             log.info("or discuss Popper with us in our slack at the following link:")
             log.info("https://join.slack.com/t/getpopper/shared_invite/zt-dtn0se2s-c50myMHNpeoikQXDeNbPew.")
-            log.info("Finally, please give us your feedback using this survey! <Survey>")
+            log.info("Finally, please give us your feedback using this survey! https://forms.gle/h1geK98fDboEhMXL6")
             
             log.info("If you don't want to see this message in the future,")
             userInput = input("please type \"stop\".")
