@@ -20,21 +20,17 @@ def cli(ctx, subcommand):
     else:
         log.info(popper_cli.get_help(click.Context(popper_cli)))
 
-    # This message may be randomly assigned. (change this check!)
-    if True:
-        log.info("")
-        log.info(
-            "If you enjoy using popper, please leave us a star at https://github.com/getpopper/popper!"
-        )
-        log.info("")
-        log.info(
-            "If you have encountered any bugs or issues, please start a discussion at the github repository"
-        )
-        log.info("or discuss Popper with us in our slack at the following link:")
-        log.info(
-            "https://join.slack.com/t/getpopper/shared_invite/zt-dtn0se2s-c50myMHNpeoikQXDeNbPew."
-        )
-        log.info("")
-        log.info(
-            "Finally, please give us your feedback using this survey! https://forms.gle/h1geK98fDboEhMXL6"
-        )
+    log.info("")
+    log.info(
+        "If you enjoy using popper, please leave us a star at https://github.com/getpopper/popper!"
+    )
+    log.info("")
+    log.info(
+        "If you have encountered any bugs or issues, please start a discussion at the github repository"
+    )
+    log.info("or discuss Popper with us in our slack at the following link:")
+    log.info("https://bit.ly/join-popper-slack")
+    log.info("")
+    log.info(
+        "Finally, please give us your feedback using this survey! https://bit.ly/popper-survey"
+    )
