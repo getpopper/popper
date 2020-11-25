@@ -21,6 +21,7 @@ install_system_wide() {
     fi
   fi
   echo
+  
   echo "Popper is now available for all users in this system!"
 }
 
