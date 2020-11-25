@@ -24,8 +24,7 @@ class ConfigLoader(object):
         pty=False,
         allow_undefined_secrets_in_ci=False,
     ):
-        """Loads and creates a configuration, represented by a frozen Box
-        """
+        """Loads and creates a configuration, represented by a frozen Box"""
         workspace_dir = os.path.realpath(workspace_dir)
         repo = scm.new_repo(workspace_dir)
 

@@ -7,7 +7,9 @@ from popper.exporter import WorkflowExporter
 
 @click.command("ci", short_help="Generate CI service configuration files.")
 @click.argument(
-    "service", type=click.Choice(["travis"]), required=True,
+    "service",
+    type=click.Choice(["travis"]),
+    required=True,
 )
 @click.option(
     "-f",
