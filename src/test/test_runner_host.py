@@ -31,13 +31,7 @@ class TestHostHostRunner(PopperTest):
 
         with WorkflowRunner(conf) as r:
             wf_data = {
-                "steps": [
-                    {
-                        "uses": "sh",
-                        "runs": ["cat"],
-                        "args": ["README.md"],
-                    }
-                ]
+                "steps": [{"uses": "sh", "runs": ["cat"], "args": ["README.md"],}]
             }
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
@@ -178,14 +172,7 @@ class TestHostDockerRunner(PopperTest):
         test_string = "STEP_INFO:popper:Successfully tagged popperized/bin:master"
 
         with WorkflowRunner(conf) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "args": ["ls"],
-                    }
-                ]
-            }
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
             self.assertTrue(test_string in cm.output, f"Got cmd output: {cm.output}")
@@ -215,14 +202,7 @@ class TestHostDockerRunner(PopperTest):
 
         conf = ConfigLoader.load(workspace_dir=repo.working_dir, quiet=True)
         with WorkflowRunner(conf) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "args": ["ls"],
-                    }
-                ]
-            }
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             with self.assertLogs(log, level="STEP_INFO") as cm:
                 r.run(WorkflowParser.parse(wf_data=wf_data))
             self.assertTrue(test_string not in cm.output)
@@ -240,8 +220,7 @@ class TestHostPodmanRunner(PopperTest):
         with PodmanRunner() as pr:
             cmd = ["podman", "run", "-d", "-q"]
             _, _, c1 = HostRunner._exec_cmd(
-                cmd + ["debian:buster-slim", "sleep", "20000"],
-                logging=False,
+                cmd + ["debian:buster-slim", "sleep", "20000"], logging=False,
             )
             _, _, c2 = HostRunner._exec_cmd(
                 cmd + ["alpine:3.9", "sleep", "10000"], logging=False
@@ -340,14 +319,7 @@ class TestHostPodmanRunner(PopperTest):
         conf = ConfigLoader.load(engine_name="podman", workspace_dir=repo.working_dir)
 
         with WorkflowRunner(conf) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "args": ["ls"],
-                    }
-                ]
-            }
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
             wf_data = {
@@ -576,14 +548,7 @@ exec /bin/bash "$@"''',
             self.assertNotEqual(sr._singularity_start(step, cid), 0)
 
         with WorkflowRunner(conf) as r:
-            wf_data = {
-                "steps": [
-                    {
-                        "uses": "popperized/bin/sh@master",
-                        "args": ["ls"],
-                    }
-                ]
-            }
+            wf_data = {"steps": [{"uses": "popperized/bin/sh@master", "args": ["ls"],}]}
             r.run(WorkflowParser.parse(wf_data=wf_data))
 
             wf_data = {
