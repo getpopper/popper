@@ -209,19 +209,14 @@ class KubernetesRunner(StepRunner):
                         "workingDir": "/workspace",
                         "command": ["sleep", "infinity"],
                         "volumeMounts": [
-                            {
-                                "name": ws_vol_mount,
-                                "mountPath": "/workspace",
-                            }
+                            {"name": ws_vol_mount, "mountPath": "/workspace",}
                         ],
                     }
                 ],
                 "volumes": [
                     {
                         "name": ws_vol_mount,
-                        "persistentVolumeClaim": {
-                            "claimName": self._vol_claim_name,
-                        },
+                        "persistentVolumeClaim": {"claimName": self._vol_claim_name,},
                     }
                 ],
             },
@@ -269,16 +264,11 @@ class KubernetesRunner(StepRunner):
         vol_conf = {
             "kind": "PersistentVolume",
             "apiVersion": "v1",
-            "metadata": {
-                "name": volume_name,
-                "labels": {"type": "host"},
-            },
+            "metadata": {"name": volume_name, "labels": {"type": "host"},},
             "spec": {
                 "persistentVolumeReclaimPolicy": "Recycle",
                 "storageClassName": "manual",
-                "capacity": {
-                    "storage": "1Gi",
-                },
+                "capacity": {"storage": "1Gi",},
                 "accessModes": ["ReadWriteMany"],
                 "hostPath": {"path": "/tmp"},
             },
@@ -394,19 +384,14 @@ class KubernetesRunner(StepRunner):
                         "name": f"{step.id}",
                         "workingDir": "/workspace",
                         "volumeMounts": [
-                            {
-                                "name": ws_vol_mount,
-                                "mountPath": "/workspace",
-                            }
+                            {"name": ws_vol_mount, "mountPath": "/workspace",}
                         ],
                     }
                 ],
                 "volumes": [
                     {
                         "name": ws_vol_mount,
-                        "persistentVolumeClaim": {
-                            "claimName": self._vol_claim_name,
-                        },
+                        "persistentVolumeClaim": {"claimName": self._vol_claim_name,},
                     }
                 ],
             },

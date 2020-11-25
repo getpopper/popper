@@ -141,11 +141,7 @@ class TestStepRunner(PopperTest):
 
     def test_get_build_info(self):
         step = Box(
-            {
-                "uses": "popperized/bin/sh@master",
-                "args": ["ls"],
-                "id": "one",
-            },
+            {"uses": "popperized/bin/sh@master", "args": ["ls"], "id": "one",},
             default_box=True,
         )
         with StepRunner() as r:
@@ -172,14 +168,7 @@ class TestStepRunner(PopperTest):
             self.assertEqual(tag, "3.9")
             self.assertEqual(build_sources, None)
 
-        step = Box(
-            {
-                "uses": "./",
-                "args": ["ls"],
-                "id": "one",
-            },
-            default_box=True,
-        )
+        step = Box({"uses": "./", "args": ["ls"], "id": "one",}, default_box=True,)
         conf = ConfigLoader.load(workspace_dir="/tmp")
         with StepRunner(config=conf) as r:
             build, _, img, tag, build_ctx_path = r._get_build_info(step)
