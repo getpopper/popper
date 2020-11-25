@@ -4,7 +4,7 @@ COPY . /popper
 
 RUN apk --no-cache add git && \
     apk --no-cache add gcc && \
-    apk --no-cache add py-configobj linux-headers musl-dev libffi-dev && \
+    apk --no-cache add make linux-headers musl-dev python3-dev libffi-dev openssl-dev && \
     pip install --no-cache-dir /popper && \
     rm -r /popper
 
