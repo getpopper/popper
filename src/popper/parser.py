@@ -201,7 +201,7 @@ class WorkflowParser(object):
 
     @staticmethod
     def substitution_to_tuple(substitution):
-        """given a substitution string of the form ``_KEY=SOME VALUE``, it 
+        """given a substitution string of the form ``_KEY=SOME VALUE``, it
         obtains a 2-tuple of strings of the form ``("_KEY", "SOME VALUE")``.
         """
         item = substitution.split("=", 1)

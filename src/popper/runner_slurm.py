@@ -169,7 +169,13 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
             recipefile = self._get_recipe_file(build_ctx_path, cid)
             log.info(f"[{step.id}] srun singularity build {self._container}")
             self._exec_srun(
-                ["singularity", "build", "--fakeroot", self._container, recipefile,],
+                [
+                    "singularity",
+                    "build",
+                    "--fakeroot",
+                    self._container,
+                    recipefile,
+                ],
                 step,
                 cwd=os.path.dirname(recipefile),
             )

@@ -13,8 +13,7 @@ popper_cli = PopperCLI()
 )
 @pass_context
 def cli(ctx, subcommand):
-    """ Display help for a given command or popper default help
-    """
+    """Display help for a given command or popper default help"""
     if subcommand:
         target_command = popper_cli.get_command(ctx, subcommand)
         log.info(target_command.get_help(click.Context(popper_cli)))
