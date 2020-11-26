@@ -2,6 +2,7 @@ import os
 import shutil
 import time
 import unittest
+import subprocess
 
 import popper.scm as scm
 import popper.utils as pu
@@ -152,3 +153,32 @@ class TestKubernetesRunner(PopperTest):
                 self._kclient.read_namespaced_pod,
                 **{"name": kr._pod_name, "namespace": "default"},
             )
+
+    def test_buildkit(self):
+        content="""steps:
+        - id: build image using buildkit
+          uses: docker://moby/buildkit:rootless
+          runs: [buildctl-daemonless.sh]
+          options:
+            volumes:
+            - $_DOCKER_CONFIG_DIR:/root/.docker/
+          env:
+            BUILDKITD_FLAGS: --oci-worker-no-process-sandbox
+          args:
+          - |
+            build \
+              --frontend dockerfile.v0 \
+              --local context=/workspace/ \
+              --local dockerfile=/workspace/my_container/Dockerfile \
+              --import-cache type=registry,ref=docker.io/myrepo/myimg \
+              --output type=image,name=docker.io/myrepo/myimg,push=true \
+              --export-cache type=inline"""
+        f = open("tmp.yml", "w")
+        f.write(content)
+        f.close()
+        try:
+            subprocess.check_output("popper run -f wf.yml -s _DOCKER_CONFIG_DIR=$HOME/.docker/", shell=True)
+        except subprocess.CalledProcessError as e:
+            raise Exception(e)
+        finally:
+            os.remove("tmp.yml")
