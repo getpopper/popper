@@ -359,12 +359,10 @@ popper run --engine singularity
 
 ### Host
 
-There are situations where a container runtime is not available and 
-cannot be installed. In these cases, a step can be executed directly 
-on the host, that is, on the same environment where the `popper` 
+There are situations when executing a command directly on the host where the `popper` 
 command is running. This is done by making use of the special `sh` 
 value for the `uses` attribute. This value instructs Popper to execute 
-the command or script given in the `runs` attribute. For example:
+the command or script given in the `runs` attribute directly on the host. For example:
 
 ```yaml
 steps:
@@ -405,14 +403,12 @@ question (see [here][engconf] for more).
 Alternatively, to restrict a configuration to a specific step in a workflow, set the desired parameters in the step's `options`
 **Note**: this is currently only supported for the Docker runtime 
 
-
 ## Resource Managers
 
-Popper can execute steps in a workflow through other resource managers
-like SLURM besides the host machine. The resource manager can be specified 
-either through the `--resource-manager/-r` option or through the config file.
-If neither of them are provided, the steps are run in the host machine 
-by default. 
+By default, workflows are executed locally on the host where Popper is executed from.
+In addition, workflows can also be executed through other resource managers.
+The resource manager can be specified either through the `--resource-manager/-r` option, or specified in the configuration file given via the `--config/-c` flag.
+If neither of them are provided, the steps are run in the host machine by default. 
 
 ### Kubernetes
 
@@ -510,14 +506,3 @@ This runs the step `one` locally in the host and step `two` through SLURM on any
 If `singularity` is used as the container engine, then by default the steps would run using MPI
 as SLURM jobs. This behaviour can be overriden by passing `mpi: false` in the configuration of the
 step for which MPI is not required.
-
-#### Host
-
-Popper executes the workflows by default using the `host` machine as the resource manager. So, when no resource manager is provided like the example below, the workflow runs on the local machine.
-
-```bash
-popper run -f sample.yml
-```
-
-The above assumes `docker` as the container engine and `host` as the resource manager to be
-used.
