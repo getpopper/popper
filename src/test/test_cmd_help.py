@@ -24,10 +24,6 @@ class TestCommandHelp(PopperTest):
                 help_texts.append(target_command.get_help(click.Context(popper_cli)))
 
         for command_output, test_output in zip(help_texts, test.output):
-            print("Printing command output\n")
-            print(command_output)
-            print("Printing test output\n")
-            print(test_output)
             self.assertIn(
                 command_output.replace(" ", "").replace("\n", ""),
                 test_output.replace(" ", "").replace("\n", ""),
