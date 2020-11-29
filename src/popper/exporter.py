@@ -26,9 +26,9 @@ class WorkflowExporter(object):
 
     @staticmethod
     def _get_matrix_variables(substitution=[]):
-        """Given a list of substitutions, where one key can appear multiple
-        times, this function obtains a dictionary with each key corresponding to
-        a key in the substitutions list, and its values being the distinct
+        """Given a list of substitutions, where one key can appear multiple 
+        times, this function obtains a dictionary with each key corresponding to 
+        a key in the substitutions list, and its values being the distinct 
         values that are specified for it. For example, given substitution list:
 
             ["_A=a1", "_A=a2", "_B=b1", "_B=b2", "_B=b3", "_C=c1"]
@@ -57,9 +57,9 @@ class WorkflowExporter(object):
 
     @staticmethod
     def _get_matrix(matrix_variables={}):
-        """Returns an iterator of matrix elements. Each element in the matrix is
-        a dictionary, with keys corresponding to the name of the variable, and
-        the (single) value associated to the key representing the value that
+        """Returns an iterator of matrix elements. Each element in the matrix is 
+        a dictionary, with keys corresponding to the name of the variable, and 
+        the (single) value associated to the key representing the value that 
         this variable takes. For example, given the variables:
 
             {
