@@ -192,7 +192,7 @@ class KubernetesRunner(StepRunner):
         log.debug(response)
 
     def _init_pod_create(self, pod_host_node=None):
-        """Create a init Pod mounted on a volume with alpine image so that
+        """Create a init Pod mounted on a volume with alpine image so that 
         the `tar` utility is available by default and the workflow context 
         can be copied from the local machine into the volume.
         """
@@ -293,7 +293,7 @@ class KubernetesRunner(StepRunner):
             counter += 1
 
     def _vol_claim_create(self):
-        """Create a PersistentVolumeClaim to claim usable storage space
+        """Create a PersistentVolumeClaim to claim usable storage space 
         from a previously created PersistentVolume.
         """
         if self._config.resman_opts.get("persistent_volume_name", None):
