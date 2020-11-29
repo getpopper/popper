@@ -1,0 +1,21 @@
+# Life of a Workflow
+
+This section explans what popper does when it executes a workflow.
+
+List the 4 steps that Popper uses to execute a workflow For each of
+these steps, we provide an example of how it was executed. We use
+https://github.com/getpopper/popper/blob/master/docs/sections/getting_started.md
+as the example
+
+Popper executes a workflow using the following steps.
+
+<ol>
+  <li>Look at `uses` attribute and pull/build image</li>
+  Explanation
+  Ex. [download] docker pull byrnedo/alpine-curl:0.1.8
+  <li>Configure and create container</li>
+  Explanation
+  Ex.[download] docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
+  <li>Launch container, wait for it to be done</li>
+  <li>Move on to next step</li>
+</ol>
