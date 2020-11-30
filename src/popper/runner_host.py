@@ -116,7 +116,7 @@ class DockerRunner(StepRunner):
             return
 
         docker_executables = ["docker"]
-        for exe in singularity_executables:
+        for exe in docker_executables:
             assert_executable_exists(exe)
 
         try:
