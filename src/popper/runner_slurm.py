@@ -8,7 +8,7 @@ from popper import utils as pu
 from popper.cli import log as log
 from popper.runner_host import HostRunner
 from popper.runner_host import SingularityRunner as HostSingularityRunner
-from utils import assert_executable_exists
+from popper.utils import assert_executable_exists
 
 
 class SlurmRunner(HostRunner):
