@@ -22,6 +22,13 @@ install_system_wide() {
   fi
   echo
   echo "Popper is now available for all users in this system!"
+  echo "  ____   __  ____  ____  ____  ____ "
+  echo " (  _ \ /  \(  _ \(  _ \(  __)(  _ \ "
+  echo "  ) __/(  O )) __/ ) __/ ) _)  )   / "
+  echo " (__)   \__/(__)  (__)  (____)(__\_) "
+  echo "Join us on slack https://bit.ly/join-popper-slack!"
+  echo "If you find Popper useful, give us a star on github."
+  echo "If you would like to support the project, consider filling out this survey: https://bit.ly/popper-survey"
 }
 
 POPPER_VERSION="v2020.09.1"
