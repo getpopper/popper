@@ -115,6 +115,10 @@ class DockerRunner(StepRunner):
         if not init_docker_client:
             return
 
+        docker_executables = ["docker"]
+        for exe in singularity_executables:
+            assert_executable_exists(exe)
+
         try:
             self._d = docker.from_env()
             self._d.version()
@@ -244,6 +248,10 @@ class PodmanRunner(StepRunner):
 
         if not init_podman_client:
             return
+
+        podman_executables = ["podman"]
+        for exe in podman_executables:
+            assert_executable_exists(exe)
 
         try:
             _, _, self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
@@ -420,6 +428,10 @@ class SingularityRunner(StepRunner):
 
         if not init_spython_client:
             return
+
+        singularity_executables = ["singularity"]
+        for exe in singularity_executables:
+            assert_executable_exists(exe)
 
         self._s = spython.main.Client
         self._s.quiet = True

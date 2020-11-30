@@ -15,6 +15,10 @@ class SlurmRunner(HostRunner):
         super(SlurmRunner, self).__init__(**kw)
         self._spawned_jobs = set()
 
+        slurm_executables = ["sbatch", "srun", "scancel", "mpirun"]
+        for exe in slurm_executables:
+            assert_executable_exists(exe)
+
     def __exit__(self, exc_type, exc, traceback):
         self._spawned_jobs = set()
 
@@ -147,6 +151,10 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         super(SingularityRunner, self).__init__(init_spython_client=False, **kw)
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
+
+        singularity_executables = ["singularity"]
+        for exe in singularity_executables:
+            assert_executable_exists(exe)
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         pass
