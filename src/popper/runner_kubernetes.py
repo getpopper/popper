@@ -132,10 +132,17 @@ class KubernetesRunner(StepRunner):
         """Tar up the workspace context and copy the tar file into
         the PersistentVolume in the Pod.
         """
+        source_dir = os.path.join(self._config.cache_dir, "kubernetes")
+        if not os.path.exists(source_dir):
+            os.makedirs(source_dir)
+
+        target_file = "ctx_" + str(self._config.wid) + ".tar.gz"
+        source_file = os.path.join(source_dir, target_file)
+        destination_file = "/workspace/" + target_file
+
         files = os.listdir(self._config.workspace_dir)
-        with tarfile.open(
-            os.path.join(self._config.workspace_dir, "ctx.tar.gz"), mode="w:gz"
-        ) as archive:
+
+        with tarfile.open(source_file, mode="w:gz") as archive:
             for f in files:
                 archive.add(f)
 
@@ -151,9 +158,6 @@ class KubernetesRunner(StepRunner):
             tty=False,
             _preload_content=False,
         )
-
-        source_file = os.path.join(self._config.workspace_dir, "ctx.tar.gz")
-        destination_file = "/workspace/ctx.tar.gz"
 
         with open(source_file, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
@@ -177,7 +181,7 @@ class KubernetesRunner(StepRunner):
         response.close()
 
         # extract the archive inside the pod
-        exec_command = ["tar", "-zxvf", "/workspace/ctx.tar.gz"]
+        exec_command = ["tar", "-zxvf", destination_file]
         response = stream(
             self._kclient.connect_get_namespaced_pod_exec,
             self._init_pod_name,
