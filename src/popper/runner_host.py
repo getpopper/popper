@@ -14,6 +14,7 @@ from spython.main.parse.writers import SingularityWriter
 from popper import utils as pu
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
+from utils import assert_executable_exists
 
 
 class HostRunner(StepRunner):
