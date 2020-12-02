@@ -193,7 +193,6 @@ class DockerRunner(StepRunner):
         elif not self._config.skip_pull and not step.skip_pull:
             log.info(f"[{step.id}] docker pull {img}:{tag}")
             if not self._config.dry_run:
-                #self._d.images.pull(repository=f"{img}:{tag}")
                 streamer = self._d.api.pull(
                     repository=f"{img}:{tag}", decode=True,
                 )
@@ -202,7 +201,6 @@ class DockerRunner(StepRunner):
                     if self._config.quiet:
                         continue
                     chunk = chunk.strip()
-                    #print("chunk", chunk)
                     if chunk:
                         import json
                         chunk = json.loads(chunk)
