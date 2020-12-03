@@ -10,4 +10,7 @@ echo "deb https://download.opensuse.org/repositories/devel:/kubic:/libcontainers
 curl -L https://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/testing/xUbuntu_${VERSION_ID}/Release.key | sudo apt-key add -
 sudo apt-get update -qq
 sudo apt-get -qq -y install podman uidmap slirp4netns
+
+# workaround for https://github.com/containers/podman/issues/8539
+ln -s /tmp/podman-run-$UID /tmp/run-$UID
 podman version
