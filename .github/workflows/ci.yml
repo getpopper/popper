@@ -7,7 +7,7 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.8]
         engine: [docker, singularity, podman]
     steps:
     - uses: actions/checkout@v2
@@ -28,6 +28,9 @@ jobs:
 
     - name: install
       run: |
+        src/scripts/install_kind.sh
+        src/scripts/install_podman.sh
+        src/scripts/install_singularity.sh
         python -m pip install --upgrade pip
         pip install coverage
         pip install -e src/[dev]
