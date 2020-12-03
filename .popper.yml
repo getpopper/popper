@@ -2,16 +2,16 @@ steps:
 - id: filter build
   uses: docker://docker:19.03.3
   runs: [sh, -exc]
-  secrets: [ENGINE, TRAVIS_PYTHON_VERSION, TRAVIS_PULL_REQUEST]
+  secrets: [ENGINE, PYTHON_VERSION, IS_PULL_REQUEST]
   args:
   - |
-    # build does not correspond to the docker,python-3.7 element of the matrix
-    if [[ "$ENGINE" != "docker" || "$TRAVIS_PYTHON_VERSION" != "3.7" ]]; then
+    # build does not correspond to the docker,python-3.8 element of the matrix
+    if [[ "$ENGINE" != "docker" || "$PYTHON_VERSION" != "3.8" ]]; then
       exit 78
     fi
 
-    # it's a build for a PR
-    if [[ "$TRAVIS_PULL_REQUEST" != "false" ]]; then
+    # a build for a PR
+    if [[ "$IS_PULL_REQUEST" == "true" ]]; then
       exit 78
     fi
 
