@@ -14,11 +14,11 @@ jobs:
 
     - name: set env variables
       run: |
-        echo "::set-env name=PYTHON_VERSION::${{ matrix.python-version }}"
-        echo "::set-env name=ENGINE::${{ matrix.engine }}"
+        echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
+        echo "ENGINE=${{ matrix.engine }}" >> $GITHUB_ENV
         if [[ "${{ matrix.engine }}" == "docker" ]]; then
-          echo "::set-env name=ENABLE_SLURM_RUNNER_TESTS::1"
-          echo "::set-env name=ENABLE_K8S_RUNNER_TESTS::1"
+          echo "ENABLE_SLURM_RUNNER_TESTS=1" >> $GITHUB_ENV
+          echo "ENABLE_K8S_RUNNER_TESTS=1" >> $GITHUB_ENV
         fi
 
     - name: set up python ${{ matrix.python-version }}
