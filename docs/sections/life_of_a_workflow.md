@@ -6,17 +6,19 @@ Each step of a workflow has the following stages:
 
 ## 1. Look at `uses` attribute and pull/build image
 
-Each step of a workflow must specify the `DockerFile` images it requires with a `uses` line. For example, the first step of our example workflow contains the following line:
+Each step of a workflow must specify the `DockerFile` or Docker image it will use to create a container with a `uses` line. For example, the first step of our example workflow contains the following line:
 ```
 uses: docker://byrnedo/alpine-curl:0.1.8
 ```
-These statements may refer to a `Dockerfile` inside the same repository as the workflow, or to a `Dockerfile` inside an external, public repository or container registry.
+These statements may refer to a `Dockerfile` inside the same repository as the workflow; a `Dockerfile` inside an external, public repository or container registry; or an image in a registry.
 
 The example `uses` line above would result in the following output from Popper:
 ```
 [download] docker pull byrnedo/alpine-curl:0.1.8
 ```
-This line indicates that the necessary image was successfully pulled and built by docker. The workings and limitations of `uses` and other possible attributes for a workflow are outlined [here](cn_workflows.md).
+This line indicates that the necessary image was successfully pulled by docker. If the image needs to be built from a Dockerfile, it will do so at this stage. 
+
+The workings and limitations of `uses` and other possible attributes for a workflow are outlined [here](cn_workflows.md).
 
 ## 2. Configure and create container
 
