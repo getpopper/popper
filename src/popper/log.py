@@ -36,8 +36,8 @@ class PopperFormatter(logging.Formatter):
 
     log_format = {
         "DEBUG": f"{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}",
-        "STEP_INFO": "%(msg)s",
-        "INFO": "%(msg)s",
+        "STEP_INFO": f"{BOLD_CYAN}%(pretag)s{RESET} %(msg)s",
+        "INFO": f"{BOLD_CYAN}%(pretag)s{RESET} %(msg)s",
         "WARNING": f"{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}",
         "ERROR": f"{BOLD_RED}%(levelname)s: %(msg)s{RESET}",
         "CRITICAL": f"{BOLD_RED}%(levelname)s: %(msg)s{RESET}",
@@ -45,8 +45,8 @@ class PopperFormatter(logging.Formatter):
 
     log_format_no_colors = {
         "DEBUG": "%(levelname)s: %(msg)s ",
-        "STEP_INFO": "%(msg)s",
-        "INFO": "%(msg)s",
+        "STEP_INFO": "%(pretag)s %(msg)s",
+        "INFO": "%(pretag)s %(msg)s",
         "WARNING": "%(levelname)s: %(msg)s",
         "ERROR": "%(levelname)s: %(msg)s",
         "CRITICAL": "%(levelname)s: %(msg)s",
@@ -183,6 +183,8 @@ class LevelFilter(logging.Filter):
           bool : True/False according to values of pass levels and level number
                 of the record.
         """
+        if not hasattr(record, 'pretag'):
+          record.pretag = ""
         if self.reject:
             return record.levelno not in self.passlevels
         else:

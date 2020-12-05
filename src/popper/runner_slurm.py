@@ -167,24 +167,24 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
         if build:
             recipefile = self._get_recipe_file(build_ctx_path, cid)
-            log.info(f"[{step.id}] srun singularity build {self._container}")
+            log.info(f"srun singularity build {self._container}", extra={'pretag':f"[{step.id}]"})
             self._exec_srun(
                 ["singularity", "build", "--fakeroot", self._container, recipefile,],
                 step,
                 cwd=os.path.dirname(recipefile),
             )
         else:
-            log.info(f"[{step.id}] srun singularity pull {self._container}")
+            log.info(f"srun singularity pull {self._container}", extra={'pretag':f"[{step.id}]"})
             self._exec_srun(["singularity", "pull", self._container, img], step)
 
         cmd = self._create_cmd(step, cid)
         self._spawned_containers.add(cid)
 
         if self._config.resman_opts.get(step.id, {}).get("mpi", True):
-            log.info(f'[{step.id}] sbatch {" ".join(cmd)}')
+            log.info(f"sbatch {" ".join(cmd)}", extra={'pretag':f"[{step.id}]"})
             ecode = self._exec_mpi(cmd, step)
         else:
-            log.info(f'[{step.id}] srun {" ".join(cmd)}')
+            log.info(f"srun {" ".join(cmd)}", extra={'pretag':f"[{step.id}]"})
             ecode = self._exec_srun(cmd, step, logging=True)
 
         self._spawned_containers.remove(cid)
