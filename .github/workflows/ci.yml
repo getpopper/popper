@@ -8,7 +8,9 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        engine: [docker]
+        engine: [singularity]
+        # podman disabled (https://github.com/containers/podman/issues/8539)
+        # engine: [docker, singularity, podman]
     steps:
     - uses: actions/checkout@v2
 
