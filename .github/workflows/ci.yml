@@ -7,10 +7,9 @@ jobs:
     runs-on: ubuntu-20.04
     strategy:
       matrix:
-        python-version: [3.9]
-        engine: [singularity]
-        # podman disabled (https://github.com/containers/podman/issues/8539)
-        # engine: [docker, singularity, podman]
+        python-version: [3.7, 3.8, 3.9]
+        # podman disabled due to https://github.com/containers/podman/issues/8539
+        engine: [docker, singularity]
     steps:
     - uses: actions/checkout@v2
 
