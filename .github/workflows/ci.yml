@@ -45,6 +45,11 @@ jobs:
         coverage run -m unittest src/test/test_*
 
     - name: package
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
       run: |
         # obtain version (generate src/popper/_version.py)
         popper version
