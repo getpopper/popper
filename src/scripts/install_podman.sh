@@ -12,7 +12,7 @@ sudo apt-get update -qq
 sudo apt-get -qq -y install podman uidmap slirp4netns
 
 # workaround for https://github.com/containers/podman/issues/8539
-mkdir -p $HOME/rundir/libpod /tmp/run-$UID
+mkdir -p $HOME/rundir/libpod /tmp/run-$UID/libpod
 ln -s /tmp/podman-run-$UID /tmp/run-$UID
 
 podman version
