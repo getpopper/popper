@@ -8,7 +8,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.8]
-        engine: [docker, singularity, podman]
+        engine: [podman]
     steps:
     - uses: actions/checkout@v2
 
