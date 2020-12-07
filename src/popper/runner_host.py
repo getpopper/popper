@@ -205,11 +205,9 @@ class DockerRunner(StepRunner):
                         import json
                         chunk = json.loads(chunk)
                         if 'id' in chunk:
-                            log.step_info(f"[{step.id}] " + chunk['id'] + ': ' + chunk['status'])
+                            log.step_info(chunk['id'] + ': ' + chunk['status'])
                         else:
-                            log.step_info(f"[{step.id}] " + chunk['status'])
-                log.step_info(f"[{step.id}] {img}:{tag}")
-
+                            log.step_info(chunk['status'])
 
         if self._config.dry_run:
             return
