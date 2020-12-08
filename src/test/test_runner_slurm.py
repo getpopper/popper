@@ -42,7 +42,9 @@ class TestSlurmSlurmRunner(PopperTest):
         self.Popen = MockPopen()
         replacer = Replacer()
         replacer.replace("popper.runner_host.Popen", self.Popen)
-        replacer.replace("popper.utils.pu.assert_executable_exists", mock_assert_executable_exists)
+        replacer.replace(
+            "popper.utils.pu.assert_executable_exists", mock_assert_executable_exists
+        )
         self.addCleanup(replacer.restore)
 
     def tearDown(self):
