@@ -28,6 +28,10 @@ def mock_kill(pid, sig):
     return 0
 
 
+def mock_assert_executable_exists(exe):
+    return None
+
+
 @unittest.skipIf(
     os.environ.get("ENABLE_SLURM_RUNNER_TESTS", "0") != "1",
     "Kubernetes runner tests not enabled.",
@@ -40,20 +44,18 @@ class TestSlurmSlurmRunner(PopperTest):
         replacer.replace("popper.runner_host.Popen", self.Popen)
         self.addCleanup(replacer.restore)
 
-        self.assert_exec_patcher = patch("popper.utils.assert_executable_exists")
-        self.mock_assert_executable_exists = self.assert_exec_patcher.start()
-        self.mock_assert_executable_exists.return_value = None
-
     def tearDown(self):
         log.setLevel("NOTSET")
         self.assert_exec_patcher.stop()
 
+    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_tail_output(self):
         self.Popen.set_command("tail -f slurm-x.out", returncode=0)
         with SlurmRunner(config=ConfigLoader.load()) as sr:
             self.assertEqual(sr._tail_output("slurm-x.out"), 0)
             self.assertEqual(len(sr._out_stream_pid), 1)
 
+    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_stop_running_tasks(self):
         self.Popen.set_command("scancel --name job_a", returncode=0)
         with SlurmRunner(config=ConfigLoader.load()) as sr:
@@ -73,6 +75,7 @@ class TestSlurmSlurmRunner(PopperTest):
             )
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
+    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_exec_srun(self, mock_kill):
         config_dict = {
             "engine": {"name": "singularity", "options": {},},
@@ -118,6 +121,7 @@ class TestSlurmSlurmRunner(PopperTest):
         self.assertEqual(call_srun in self.Popen.all_calls, True)
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
+    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_exec_mpi(self, mock_kill):
         config_dict = {
             "engine": {"name": "singularity", "options": {},},
