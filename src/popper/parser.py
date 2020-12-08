@@ -25,6 +25,24 @@ class WorkflowParser(object):
                         "mapping": {
                             "uses": {"type": "str", "required": True},
                             "id": {"type": "str"},
+                            "image": {
+                                "type": "map",
+                                "mapping": {
+                                    "name": {"type": "str", "required": True},
+                                    "tags": {"type": "seq", "sequence": [{"type": "str"}]},
+                                    "dockerfile": {"type": "str", "required": True},
+                                    "context": {"type": "str", "required": True},
+                                    "build_args": {
+                                        "type": "map",
+                                        "ARG1": {"type": "str", "required": True},
+                                        "ARG2": {"type": "str", "required": True},
+                                    },
+                                    "push": {"type": "bool", "required": True},
+                                    "import_cache": {"type": "str", "required": True},
+                                    "export_cache": {"type": "str", "required": True},
+                                }
+                            },
+
                             "args": {"type": "seq", "sequence": [{"type": "str"}]},
                             "runs": {"type": "seq", "sequence": [{"type": "str"}]},
                             "secrets": {"type": "seq", "sequence": [{"type": "str"}]},
