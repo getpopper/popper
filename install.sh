@@ -24,7 +24,7 @@ install_system_wide() {
   echo "Popper is now available for all users in this system!"
   echo "You can discuss Popper in our slack using the following link:"
   echo "https://bit.ly/join-popper-slack"
-  echo "Also, please give us your feedback using this survey! https://bit.ly/popper-survey"
+  echo "Also, please give us your feedback via this two-minute survey! https://bit.ly/popper-survey"
   echo "Finally, if you encounter issues or have suggestions for features,"
   echo "consider contributing to Popper at https://github.com/getpopper/popper."
   echo "If you enjoy using Popper, feel free to leave us a star while you're there!"
