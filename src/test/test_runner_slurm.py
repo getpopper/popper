@@ -285,6 +285,7 @@ class TestSlurmSingularityRunner(unittest.TestCase):
         self.Popen = MockPopen()
         replacer = Replacer()
         replacer.replace("popper.runner_host.Popen", self.Popen)
+        assert_replacer = Replacer()
         assert_replacer.replace(
             "popper.runner_slurm.assert_executable_exists",
             mock_assert_executable_exists,
