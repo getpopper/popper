@@ -45,7 +45,8 @@ class TestSlurmSlurmRunner(PopperTest):
 
         assert_replacer = Replacer()
         assert_replacer.replace(
-            "popper.utils.assert_executable_exists", mock_assert_executable_exists
+            "popper.runner_slurm.assert_executable_exists",
+            mock_assert_executable_exists,
         )
         self.addCleanup(replacer.restore)
         self.addCleanup(assert_replacer.restore)
