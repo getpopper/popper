@@ -116,10 +116,6 @@ class DockerRunner(StepRunner):
         if not init_docker_client:
             return
 
-        docker_executables = ["docker"]
-        for exe in docker_executables:
-            assert_executable_exists(exe)
-
         try:
             self._d = docker.from_env()
             self._d.version()

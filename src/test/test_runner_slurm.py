@@ -2,6 +2,7 @@ import os
 import unittest
 import tempfile
 
+from unittest.mock import patch
 from testfixtures import compare, Replacer, replace
 from testfixtures.popen import MockPopen
 from testfixtures.mock import call
@@ -39,8 +40,13 @@ class TestSlurmSlurmRunner(PopperTest):
         replacer.replace("popper.runner_host.Popen", self.Popen)
         self.addCleanup(replacer.restore)
 
+        self.assert_exec_patcher = patch("popper.utils.assert_executable_exists")
+        self.mock_assert_executable_exists = self.assert_exec_patcher.start()
+        self.mock_assert_executable_exists.return_value = None
+
     def tearDown(self):
         log.setLevel("NOTSET")
+        self.assert_exec_patcher.stop()
 
     def test_tail_output(self):
         self.Popen.set_command("tail -f slurm-x.out", returncode=0)
