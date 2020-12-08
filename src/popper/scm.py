@@ -112,7 +112,7 @@ def clone(url, org, repo, repo_dir, version=None):
 
 
 def parse(url):
-    """Method to parse the git url. If a URL schema and hostname are not
+    """Method to parse the git url. If a URL schema and hostname are not 
     included, it assumes ``https://github.com``.
 
     Args:
