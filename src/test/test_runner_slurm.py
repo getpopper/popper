@@ -42,20 +42,18 @@ class TestSlurmSlurmRunner(PopperTest):
         self.Popen = MockPopen()
         replacer = Replacer()
         replacer.replace("popper.runner_host.Popen", self.Popen)
+        replacer.replace("popper.utils.pu.assert_executable_exists", mock_assert_executable_exists)
         self.addCleanup(replacer.restore)
 
     def tearDown(self):
         log.setLevel("NOTSET")
-        self.assert_exec_patcher.stop()
 
-    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_tail_output(self):
         self.Popen.set_command("tail -f slurm-x.out", returncode=0)
         with SlurmRunner(config=ConfigLoader.load()) as sr:
             self.assertEqual(sr._tail_output("slurm-x.out"), 0)
             self.assertEqual(len(sr._out_stream_pid), 1)
 
-    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_stop_running_tasks(self):
         self.Popen.set_command("scancel --name job_a", returncode=0)
         with SlurmRunner(config=ConfigLoader.load()) as sr:
@@ -75,7 +73,6 @@ class TestSlurmSlurmRunner(PopperTest):
             )
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
-    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_exec_srun(self, mock_kill):
         config_dict = {
             "engine": {"name": "singularity", "options": {},},
@@ -121,7 +118,6 @@ class TestSlurmSlurmRunner(PopperTest):
         self.assertEqual(call_srun in self.Popen.all_calls, True)
 
     @replace("popper.runner_slurm.os.kill", mock_kill)
-    @replace("popper.utils.assert_executable_exists", mock_assert_executable_exists)
     def test_exec_mpi(self, mock_kill):
         config_dict = {
             "engine": {"name": "singularity", "options": {},},

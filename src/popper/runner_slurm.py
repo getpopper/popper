@@ -8,7 +8,6 @@ from popper import utils as pu
 from popper.cli import log as log
 from popper.runner_host import HostRunner
 from popper.runner_host import SingularityRunner as HostSingularityRunner
-from popper.utils import assert_executable_exists
 
 
 class SlurmRunner(HostRunner):
@@ -18,7 +17,7 @@ class SlurmRunner(HostRunner):
 
         slurm_executables = ["sbatch", "srun", "scancel", "mpirun"]
         for exe in slurm_executables:
-            assert_executable_exists(exe)
+            pu.assert_executable_exists(exe)
 
     def __exit__(self, exc_type, exc, traceback):
         self._spawned_jobs = set()
@@ -155,7 +154,7 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
         singularity_executables = ["singularity"]
         for exe in singularity_executables:
-            assert_executable_exists(exe)
+            pu.assert_executable_exists(exe)
 
     def __exit__(self, exc_type, exc_value, exc_traceback):
         pass
