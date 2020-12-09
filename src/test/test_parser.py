@@ -28,6 +28,19 @@ class TestWorkflow(unittest.TestCase):
                 {
                     "uses": "foo",
                     "id": "step",
+
+                    "image":
+                        {
+                            "name": "myregistry.io/myorg/myrepo",
+                            "tags": ["tag1", "tag2"],
+                            "dockerfile": "path/to/dockerfile/Dockerfile.foo",
+                            "context": "./",
+                            "build_args": {"ARG1": "v14.2.9", "ARG2": "another arg"},
+                            "push": True,
+                            "import_cache": "docker.io/another/img:tag",
+                            "export_cache": "docker.io/an-image/toexport:tag",
+                        },
+                    
                     "env": {"EN": "EE"},
                     "secrets": ["S"],
                     "dir": "/path/to/",
@@ -35,6 +48,9 @@ class TestWorkflow(unittest.TestCase):
                 },
                 {"uses": "bar", "runs": ["a", "b"], "args": ["c"], "skip_pull": True},
             ],
+            
+
+
             "options": {"env": {"FOO": "bar"}, "secrets": ["Z"],},
         }
         wf = WorkflowParser.parse(wf_data=wf_data)
@@ -42,6 +58,21 @@ class TestWorkflow(unittest.TestCase):
         step = wf.steps[0]
         self.assertEqual("step", step.id)
         self.assertEqual("foo", step.uses)
+
+
+        # added tests for image attribute
+        self.assertEqual("myregistry.io/myorg/myrepo", step.image.name)
+        self.assertEqual(("tag1", "tag2"), step.image.tags)
+        self.assertEqual("path/to/dockerfile/Dockerfile.foo", step.image.dockerfile)
+        self.assertEqual("./", step.image.context)
+        self.assertEqual({"ARG1": "v14.2.9", "ARG2": "another arg"}, step.image.build_args)
+        self.assertEqual(True, step.image.push)
+        self.assertEqual("docker.io/another/img:tag", step.image.import_cache)
+        self.assertEqual("docker.io/an-image/toexport:tag", step.image.export_cache)
+
+
+
+
         self.assertEqual(("Z", "S"), step.secrets)
         self.assertEqual({"EN": "EE", "FOO": "bar"}, step.env)
         self.assertEqual("/path/to/", step.dir)
