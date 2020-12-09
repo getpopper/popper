@@ -14,6 +14,7 @@ from spython.main.parse.writers import SingularityWriter
 from popper import utils as pu
 from popper.cli import log as log
 from popper.runner import StepRunner as StepRunner
+from popper.utils import assert_executable_exists
 
 
 class HostRunner(StepRunner):
@@ -245,6 +246,10 @@ class PodmanRunner(StepRunner):
         if not init_podman_client:
             return
 
+        podman_executables = ["podman"]
+        for exe in podman_executables:
+            assert_executable_exists(exe)
+
         try:
             _, _, self._p_info = HostRunner._exec_cmd(["podman", "info"], logging=False)
             self._p_version = HostRunner._exec_cmd(["podman", "version"], logging=False)
@@ -420,6 +425,10 @@ class SingularityRunner(StepRunner):
 
         if not init_spython_client:
             return
+
+        singularity_executables = ["singularity"]
+        for exe in singularity_executables:
+            assert_executable_exists(exe)
 
         self._s = spython.main.Client
         self._s.quiet = True

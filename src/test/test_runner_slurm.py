@@ -2,6 +2,7 @@ import os
 import unittest
 import tempfile
 
+from unittest.mock import patch
 from testfixtures import compare, Replacer, replace
 from testfixtures.popen import MockPopen
 from testfixtures.mock import call
@@ -27,6 +28,10 @@ def mock_kill(pid, sig):
     return 0
 
 
+def mock_assert_executable_exists(exe):
+    return None
+
+
 @unittest.skipIf(
     os.environ.get("ENABLE_SLURM_RUNNER_TESTS", "0") != "1",
     "Kubernetes runner tests not enabled.",
@@ -37,7 +42,14 @@ class TestSlurmSlurmRunner(PopperTest):
         self.Popen = MockPopen()
         replacer = Replacer()
         replacer.replace("popper.runner_host.Popen", self.Popen)
+
+        assert_replacer = Replacer()
+        assert_replacer.replace(
+            "popper.runner_slurm.assert_executable_exists",
+            mock_assert_executable_exists,
+        )
         self.addCleanup(replacer.restore)
+        self.addCleanup(assert_replacer.restore)
 
     def tearDown(self):
         log.setLevel("NOTSET")
@@ -273,7 +285,13 @@ class TestSlurmSingularityRunner(unittest.TestCase):
         self.Popen = MockPopen()
         replacer = Replacer()
         replacer.replace("popper.runner_host.Popen", self.Popen)
+        assert_replacer = Replacer()
+        assert_replacer.replace(
+            "popper.runner_slurm.assert_executable_exists",
+            mock_assert_executable_exists,
+        )
         self.addCleanup(replacer.restore)
+        self.addCleanup(assert_replacer.restore)
 
     def tearDown(self):
         log.setLevel("NOTSET")
