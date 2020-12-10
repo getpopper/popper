@@ -116,7 +116,10 @@ class KubernetesRunner(StepRunner):
                 node_role = ""
                 if node.spec.taints and len(node.spec.taints) > 0:
                     node_role = node.spec.taints[0].key
-                if node_role != "node-role.kubernetes.io/master" and node_role != "node-role.kubernetes.io/unreachable":
+                if (
+                    node_role != "node-role.kubernetes.io/master"
+                    and node_role != "node-role.kubernetes.io/unreachable"
+                ):
                     nodes.insert(0, node.metadata.labels["kubernetes.io/hostname"])
                 else:
                     nodes.insert(
