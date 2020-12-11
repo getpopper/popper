@@ -626,13 +626,21 @@ Hopefully this section has clarified how a Popper workflow iterates through its 
 ```
 docker pull byrnedo/alpine-curl:0.1.8
 ```
+
 2. Building the downloaded Alpine Curl image
 ```
 docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
 ```
+```
+singularity build alpine-curl.simg docker://byrnedo/alpine-curl:0.1.8
+```
+
 3. Downloading the dataset from the repository
 ```
 docker start
+```
+```
+singularity run alpine-curl.simg
 ```
 4. Downloading the needed image of csvtools
 ```
