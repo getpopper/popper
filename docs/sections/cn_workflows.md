@@ -524,7 +524,20 @@ used.
 
 ## Life of a Workflow
 
-This section explains what popper does when it executes a workflow. We will break down what popper does behind the scenes when executing the sample workflow described [here](https://github.com/getpopper/popper/blob/master/docs/sections/getting_started.md).
+This section explains what popper does when it executes a workflow. We will break down what popper does behind the scenes when executing the following sample workflow, which can be found [here](getting_started.md):
+
+```
+steps:
+# download CSV file with data on global CO2 emissions
+- id: download
+  uses: docker://byrnedo/alpine-curl:0.1.8
+  args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
+
+# obtain the transpose of the global CO2 emissions table
+- id: get-transpose
+  uses: docker://getpopper/csvtool:2.4
+  args: [transpose, global.csv, -o, global_transposed.csv]
+```
 
 Each step of a workflow has the following stages:
 
