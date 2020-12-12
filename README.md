@@ -7,10 +7,9 @@
 [![slack](https://img.shields.io/badge/chat-on_slack-C03C20.svg?logo=slack)](https://join.slack.com/t/getpopper/shared_invite/zt-dtn0se2s-c50myMHNpeoikQXDeNbPew)
 [![CROSS](https://img.shields.io/badge/supported%20by-CROSS-green)](https://cross.ucsc.edu)
 
-Popper is a tool for defining and executing container-native testing 
-workflows in Docker. With Popper, you define a workflow in a YAML 
-file, and then execute it with a single command. A workflow file looks 
-like this:
+Popper is a tool for defining and executing container-native testing workflows in Docker. 
+With Popper, you define a workflow in a YAML file, and then execute it with a single command. 
+A workflow file looks like this:
 
 ```yaml
 steps:
@@ -32,8 +31,7 @@ steps:
   runs: [ctest]
 ```
 
-Assuming the above is stored in a `ci.yml` file in the root of your 
-project folder, this entire workflow gets executed by running:
+Assuming the above is stored in a `ci.yml` file in the root of the (C++) project, this entire workflow gets executed by running:
 
 ```bash
 popper run -f ci.yml
@@ -57,9 +55,7 @@ Running on another engine (Podman):
 popper run -f ci.yml -e podman build
 ```
 
-See the [`examples/`](./examples) folder for examples for tests for 
-other languages, as well as other types of tests (integration, 
-regresssion, etc.).
+The [`examples/`](./examples) folder contains workflow starters for other languages, as well as other types of tests (integration, regression, enduring, etc.).
 
 ## Installation
 
