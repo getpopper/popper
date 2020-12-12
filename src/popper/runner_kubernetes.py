@@ -61,8 +61,8 @@ class KubernetesRunner(StepRunner):
 
         image = f"{img}:{tag}"
 
-        m = f"[{step.id}] kubernetes run {self._namespace}.{self._pod_name}"
-        log.info(m)
+        m = f"kubernetes run {self._namespace}.{self._pod_name}"
+        log.info(m, extra={"pretag": f"[{step.id}]"})
 
         if self._config.dry_run:
             return 0

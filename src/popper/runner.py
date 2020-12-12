@@ -126,12 +126,12 @@ class WorkflowRunner(object):
                 continue
 
             if not infoed:
-                log.info("Cloning step repositories", extra={'pretag':"[popper]"})
+                log.info("Cloning step repositories", extra={"pretag": "[popper]"})
                 infoed = True
 
             if f"{user}/{repo}" in cloned:
                 continue
-            log.info(f"- {url}/{user}/{repo}@{version}", extra={'pretag':"[popper]"})
+            log.info(f"- {url}/{user}/{repo}@{version}", extra={"pretag": "[popper]"})
             scm.clone(url, user, repo, repo_dir, version)
             cloned.add(f"{user}/{repo}")
 

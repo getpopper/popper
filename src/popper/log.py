@@ -55,6 +55,7 @@ class PopperFormatter(logging.Formatter):
     def __init__(self, colors=True):
         super(PopperFormatter, self).__init__(fmt="%(levelname)s: %(msg)s")
         self.log_fmt = self.log_format if colors else self.log_format_no_colors
+        self.colors = colors
 
     def format(self, record):
         """
@@ -72,7 +73,11 @@ class PopperFormatter(logging.Formatter):
             self._fmt = fmt
         else:
             self._style._fmt = fmt
-        result = f"{msg_prefix}{logging.Formatter.format(self, record)}"
+
+        if self.colors:
+            result = f"{self.BOLD_CYAN}{msg_prefix}{self.RESET}{logging.Formatter.format(self, record)}"
+        else:
+            result = f"{msg_prefix}{logging.Formatter.format(self, record)}"
         return result
 
 
@@ -183,8 +188,8 @@ class LevelFilter(logging.Filter):
           bool : True/False according to values of pass levels and level number
                 of the record.
         """
-        if not hasattr(record, 'pretag'):
-          record.pretag = ""
+        if not hasattr(record, "pretag"):
+            record.pretag = ""
         if self.reject:
             return record.levelno not in self.passlevels
         else:
