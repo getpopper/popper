@@ -4,7 +4,12 @@ import os
 
 STEP_INFO = 15
 logging.addLevelName(STEP_INFO, "STEP_INFO")
-
+BOLD_CYAN = "[01;36m"
+RESET = "[0m"
+BOLD_YELLOW = "[01;33m"
+BOLD_RED = "[01;31m"
+# Added coloring to msg_prefix string
+msg_prefix = f"{BOLD_RED}%(pretag)s{RESET} %(msg)s"
 
 
 class PopperFormatter(logging.Formatter):
@@ -26,14 +31,6 @@ class PopperFormatter(logging.Formatter):
     In order of Level. The format of the logs is given in log_format dict.
     The log colors used are based on ANSI Escape Codes
     """
-
-    # Log Colors
-    BOLD_CYAN = "[01;36m"
-    RESET = "[0m"
-    BOLD_YELLOW = "[01;33m"
-    BOLD_RED = "[01;31m"
-    # Added coloring to msg_prefix string
-    msg_prefix = f"{BOLD_RED}%(pretag)s{RESET} %(msg)s"
 
     log_format = {
         "DEBUG": f"{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}",
