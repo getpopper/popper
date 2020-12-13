@@ -7,44 +7,59 @@
 [![slack](https://img.shields.io/badge/chat-on_slack-C03C20.svg?logo=slack)](https://join.slack.com/t/getpopper/shared_invite/zt-dtn0se2s-c50myMHNpeoikQXDeNbPew)
 [![CROSS](https://img.shields.io/badge/supported%20by-CROSS-green)](https://cross.ucsc.edu)
 
-Popper is a tool for defining and executing container-native workflows 
-in Docker, as well as other container engines. With Popper, you define 
-a workflow in a YAML file, and then execute it with a single command. 
-A workflow file looks like this:
+Popper is a tool for defining and executing container-native testing 
+workflows in Docker. With Popper, you define a workflow in a YAML 
+file, and then execute it with a single command. A workflow file looks 
+like this:
 
 ```yaml
 steps:
-# download CSV file with data on global CO2 emissions
-- id: download
-  uses: docker://byrnedo/alpine-curl:0.1.8
-  args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
+- id: dev-init
+  uses: docker://rikorose/gcc-cmake:gcc-9
+  runs: [sh, -uexc]
+  args:
+  - |
+    rm -rf build/
+    cmake -DCMAKE_BUILD_TYPE=Release -S . -B build
 
-# obtain the transpose of the global CO2 emissions table
-- id: get-transpose
-  uses: docker://getpopper/csvtool:2.4
-  args: [transpose, global.csv, -o, global_transposed.csv]
+- id: build
+  uses: docker://rikorose/gcc-cmake:gcc-9
+  runs: [cmake, --build, build/, --parallel, '4']
+
+- id: test
+  uses: docker://rikorose/gcc-cmake:gcc-9
+  dir: /workspace/build/
+  runs: [ctest]
 ```
 
-Assuming the above is stored in a `.popper.yml` file in your project 
-folder, this entire workflow gets executed by running:
+Assuming the above is stored in a `ci.yml` file in the root of your 
+project folder, this entire workflow gets executed by running:
 
 ```bash
-cd /path/to/my/project/
-
-popper run
+popper run -f ci.yml
 ```
 
 Running a single step:
 
 ```bash
-popper run get-transpose
+popper run -f ci.yml build
 ```
 
-Starting a shell inside the `get-transpose` step container:
+Starting a shell inside the `build` step container:
 
 ```bash
-popper sh get-transpose
+popper run -f ci.yml build
 ```
+
+Running on another engine (Podman):
+
+```bash
+popper run -f ci.yml -e podman build
+```
+
+See the [`examples/`](./examples) folder for examples for tests for 
+other languages, as well as other types of tests (integration, 
+regresssion, etc.).
 
 ## Installation
 
@@ -56,9 +71,10 @@ curl -sSfL https://raw.githubusercontent.com/getpopper/popper/master/install.sh 
 
 [Docker][docker] is required to run Popper and the installer will 
 abort if the `docker` command cannot be invoked from your shell. For 
-other installation options, including installing for use with 
-Singularity or for setting up a developing environment for Popper, 
-[read the complete installation instructions][installation].
+other installation options, including installing for use with the 
+other supported engines (Singularity and Podman), or for setting up a 
+developing environment for Popper, [read the complete installation 
+instructions][installation].
 
 Once installed, you can get an overview and list of available 
 commands:
@@ -74,48 +90,54 @@ how to use Popper. Or browse the [Official documentation][docs].
 
   * **Lightweight workflow and task automation syntax.** Defining a list of 
     steps is as simple as writing file in a [lightweight YAML syntax][cnwf] and 
-    invoking `popper run` (see demo above). If you're familiar with [Docker 
-    Compose][compose], you can think of Popper as Compose but for workflows 
-    instead of services.
+    invoking `popper run` (see demo above). If you're familiar with 
+    [Docker Compose][compose], you can think of Popper as Compose but 
+    for end-to-end tasks instead of services.
 
   * **An abstraction over container runtimes**. In addition to Docker, 
     Popper can seamlessly execute workflows in other runtimes by 
     interacting with distinct container engines. Popper currently 
-    supports [Singularity][sylabs] and we are working on adding 
+    supports [Docker][docker], [Singularity][sylabs] and 
     [Podman][podman].
-
-  * **An abstraction over resource managers**. Popper can also execute workflows on 
-    a variety of resource managers and schedulers such as Kubernetes and SLURM, 
-    without requiring any modifications to a workflow YAML file. We currently 
-    support SLURM and are working on adding support for Kubernetes.
 
   * **An abstraction over CI services**. Define a pipeline once and 
     then instruct Popper to generate configuration files for distinct 
     CI services, allowing users to run the exact same workflows they 
     run locally on Travis, Jenkins, Gitlab, Circle and others. See the 
-    [`examples/`](./examples/ci/) folder for examples on how to 
-    automate CI tasks for multiple projects (Go, C++, Node, etc.).
+    [`examples/`](./examples/) folder for examples on how to automate 
+    CI tasks for multiple projects (Go, C++, Node, etc.).
+
+  * **An abstraction over resource managers**. Popper can also execute 
+    workflows on a variety of resource managers and schedulers such as 
+    Kubernetes and SLURM, without requiring any modifications to a 
+    workflow YAML file. We currently support SLURM and are working on 
+    adding support for Kubernetes.
 
   * **Aid in workflow development**. Aid in the implementation and 
     [debugging][pp-sh] of workflows, and provide with an extensive 
-    list of [example workflows](https://github.com/popperized) that 
-    can serve as a starting point.
+    list of [example 
+    workflows](https://github.com/getpopper/popper-examples) that can 
+    serve as a starting point.
 
 ## What Problem Does Popper Solve?
 
 Popper is a container-native workflow execution and task automation 
-engine. In practice, when we work following the container-native 
-paradigm, we end up interactively executing multiple `docker 
-pull|build|run` commands in order to build containers, compile code, 
-test applications, deploy software, etc. Keeping track of which 
-`docker` commands we have executed, in which order, and which flags 
-were passed to each, can quickly become unmanageable, difficult to 
-document (think of outdated README instructions) and error prone.
+engine. In practice, when we work following the 
+[container-native](docs/sections/concepts.md) paradigm, we end up 
+interactively executing multiple Docker commands (`docker pull`, 
+`docker build`, `docker run`, etc.) so that we can build containers, 
+compile code, test applications, deploy software, among others. 
+Keeping track of which `docker` commands we have executed, in which 
+order, and which flags were passed to each, can quickly become 
+unmanageable, difficult to document (think of outdated README 
+instructions) and error prone.
 
-The goal of Popper is to bring order to this chaotic scenario by 
-providing a framework for clearly and explicitly defining 
-container-native tasks. You can think of Popper as tool for wrapping 
-all these manual tasks in a lightweight, machine-readable, 
+On top of this, having the same workflow work in other environments 
+(CI, K8S, etc.) is time-consuming and defeats the purpose of using 
+containers (portability). The goal of Popper is to bring order to this 
+chaotic scenario by providing a framework for clearly and explicitly 
+defining container-native tasks. You can think of Popper as tool for 
+wrapping all these manual tasks in a lightweight, machine-readable, 
 self-documented format (YAML).
 
 While this sounds simple at first, it has significant implications: 

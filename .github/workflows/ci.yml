@@ -1,0 +1,61 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    if: "! contains(toJSON(github.event.commits.*.message), '[skip ci]')"
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+        # podman disabled due to https://github.com/containers/podman/issues/8539
+        engine: [docker, singularity]
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: set env variables
+      run: |
+        echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
+        echo "ENGINE=${{ matrix.engine }}" >> $GITHUB_ENV
+        if [[ "${{ matrix.engine }}" == "docker" ]]; then
+          echo "ENABLE_SLURM_RUNNER_TESTS=1" >> $GITHUB_ENV
+          echo "ENABLE_K8S_RUNNER_TESTS=1" >> $GITHUB_ENV
+        fi
+
+    - name: set up python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: install
+      run: |
+        src/scripts/install_kind.sh
+        src/scripts/install_podman.sh
+        src/scripts/install_singularity.sh
+        python -m pip install --upgrade pip
+        pip install coverage
+        pip install -e src/[dev]
+
+    - name: lint
+      run: black --check --diff .
+
+    - name: test
+      run: |
+        # run tests
+        coverage run -m unittest src/test/test_*
+
+    - name: package
+      env:
+        DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        DOCKERHUB_PASSWORD: ${{ secrets.DOCKERHUB_PASSWORD }}
+        PYPI_USERNAME: ${{ secrets.PYPI_USERNAME }}
+        PYPI_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
+      run: |
+        # obtain version (generate src/popper/_version.py)
+        popper version
+        # run release pipeline
+        popper run --allow-undefined-secrets-in-ci
+
+    - name: upload coverage results
+      run: bash <(curl -s https://codecov.io/bash)
