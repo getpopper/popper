@@ -186,7 +186,6 @@ class LevelFilter(logging.Filter):
           bool : True/False according to values of pass levels and level number
                 of the record.
         """
-        
         if self.reject:
             return record.levelno not in self.passlevels
         else:
