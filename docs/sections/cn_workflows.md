@@ -594,7 +594,7 @@ In the example workflow, the first step is run with the following commands when 
 docker start
 ```
 ```
-singularity run popper_download_f20ab8c9.sif [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
+singularity run popper_download_f20ab8c9.sif (-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv)
 ```
 This produces the following output:
 ```
