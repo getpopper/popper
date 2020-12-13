@@ -5,7 +5,6 @@ import os
 STEP_INFO = 15
 logging.addLevelName(STEP_INFO, "STEP_INFO")
 
-msg_prefix = ""
 
 
 class PopperFormatter(logging.Formatter):
@@ -33,11 +32,14 @@ class PopperFormatter(logging.Formatter):
     RESET = "[0m"
     BOLD_YELLOW = "[01;33m"
     BOLD_RED = "[01;31m"
+    # Added coloring to msg_prefix string
+    msg_prefix = f"{BOLD_RED}%(pretag)s{RESET} %(msg)s"
 
     log_format = {
         "DEBUG": f"{BOLD_CYAN}%(levelname)s: %(msg)s {RESET}",
-        "STEP_INFO": "%(msg)s",
-        "INFO": "%(msg)s",
+        # 41 and 42
+        "STEP_INFO": f"{BOLD_RED}%(levelname)s{RESET} %(msg)s",
+        "INFO": f"{BOLD_RED}%(levelname)s{RESET} %(msg)s",
         "WARNING": f"{BOLD_YELLOW}%(levelname)s: %(msg)s{RESET}",
         "ERROR": f"{BOLD_RED}%(levelname)s: %(msg)s{RESET}",
         "CRITICAL": f"{BOLD_RED}%(levelname)s: %(msg)s{RESET}",
@@ -45,8 +47,9 @@ class PopperFormatter(logging.Formatter):
 
     log_format_no_colors = {
         "DEBUG": "%(levelname)s: %(msg)s ",
-        "STEP_INFO": "%(msg)s",
-        "INFO": "%(msg)s",
+        # 51 and 52
+        "STEP_INFO": "%(levelname)s %(msg)s",
+        "INFO": "%(levelname)s %(msg)s",
         "WARNING": "%(levelname)s: %(msg)s",
         "ERROR": "%(levelname)s: %(msg)s",
         "CRITICAL": "%(levelname)s: %(msg)s",
@@ -183,6 +186,7 @@ class LevelFilter(logging.Filter):
           bool : True/False according to values of pass levels and level number
                 of the record.
         """
+        
         if self.reject:
             return record.levelno not in self.passlevels
         else:
