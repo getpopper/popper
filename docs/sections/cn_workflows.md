@@ -555,6 +555,16 @@ The example `uses` line above would result in the following output from Popper:
 ```
 This line indicates that the necessary image was successfully pulled by docker. If the image needs to be built from a Dockerfile, it will do so at this stage. 
 
+Popper would run this command under the hood if the engine used is Docker:
+```
+docker pull byrnedo/alpine-curl:0.1.8
+```
+
+and it would run this command if the engine is singularity:
+```
+singularity pull popper_download_f20ab8c9.sif docker://byrnedo/alpine-curl:0.1.8
+```
+
 The workings and limitations of `uses` and other possible attributes for a workflow are outlined [here](cn_workflows.md).
 
 ### 2. Configure and create container
@@ -569,9 +579,9 @@ id: download
 ```
 args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 ```
-Using these inputs, Popper executes the following command:
+Using these inputs, Popper executes the following command for a Docker build:
 ```
-[download] docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
+docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
 ```
 This creates a docker container from the image given by the `uses` line with inputs from the `args` line, and with a name created using the id given in the `id` line and the id number of our specific workflow.
 
@@ -579,7 +589,14 @@ This creates a docker container from the image given by the `uses` line with inp
 
 Popper launches the container, waits for it to be done, and then prints the resulting output.
 
-In the example workflow, the first step produces the following output:
+In the example workflow, the first step is run with the following commands when running in Docker and Singularity engines, respectively:
+```
+docker start
+```
+```
+singularity run popper_download_f20ab8c9.sif [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
+```
+This produces the following output:
 ```
 [download] docker start
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
@@ -620,46 +637,7 @@ Once the workflow has executed all of its outlined steps, its lifecycle is compl
 
 ### Conclusion
 
-Hopefully this section has clarified how a Popper workflow iterates through its steps to simplify any workflow into a simple `popper run` call. Even our simple example workflow would have required the following commands be typed manually:
-
-1. Downloading the needed image of Alpine Curl
-```
-docker pull byrnedo/alpine-curl:0.1.8
-```
-```
-singularity pull popper_download_f20ab8c9.sif docker://byrnedo/alpine-curl:0.1.8
-```
-
-2. Building the downloaded Alpine Curl image
-```
-docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
-```
-
-3. Downloading the dataset from the repository
-```
-docker start
-```
-```
-singularity run popper_download_f20ab8c9.sif [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
-```
-4. Downloading the needed image of csvtools
-```
-docker pull getpopper/csvtool:2.4
-```
-```
-singularity pull popper_get-transpose_f20ab8c9.sif docker://getpopper/csvtool:2.4
-```
-5. Building the downloaded image of csvtools
-```
-docker create name=popper_get-transpose_f20ab8c9 image=getpopper/csvtool:2.4 command=['transpose', 'global.csv', '-o', 'global_transposed.csv']
-```
-6. Performing the command to transpose the earlier downloaded dataset
-```
-docker start
-```
-```
-singularity run popper_get-transpose_f20ab8c9.sif [transpose, global.csv, -o, global_transposed.csv]
-```
+Hopefully this section has clarified how a Popper workflow iterates through its steps to simplify any workflow into a simple `popper run` call. Not only does it allow you to run fewer commands per run, it also runs the correct commands for different engines based on whether you're using Docker or Singularity.
 
 Thus, Popper can be a useful tool for increasing efficiency on any workflow-heavy project!
 
