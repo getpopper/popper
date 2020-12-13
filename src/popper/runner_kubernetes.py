@@ -110,10 +110,22 @@ class KubernetesRunner(StepRunner):
             pod_host_node = self._config.resman_opts.pod_host_node
 
         elif not self._config.resman_opts.get("persistent_volume_name", None):
-            nodes = [
-                node.metadata.labels["kubernetes.io/hostname"]
-                for node in self._kclient.list_node().items
-            ]
+            nodes = []
+
+            for node in self._kclient.list_node().items:
+                node_role = ""
+                if node.spec.taints and len(node.spec.taints) > 0:
+                    node_role = node.spec.taints[0].key
+                if (
+                    node_role != "node-role.kubernetes.io/master"
+                    and node_role != "node-role.kubernetes.io/unreachable"
+                ):
+                    nodes.insert(0, node.metadata.labels["kubernetes.io/hostname"])
+                else:
+                    nodes.insert(
+                        len(nodes), node.metadata.labels["kubernetes.io/hostname"]
+                    )
+
             for node in nodes:
                 log.debug(f"trying to schedule init pod on {node}")
                 e = self._init_pod_create(node)
@@ -132,10 +144,17 @@ class KubernetesRunner(StepRunner):
         """Tar up the workspace context and copy the tar file into
         the PersistentVolume in the Pod.
         """
+        source_dir = os.path.join(self._config.cache_dir, "kubernetes")
+        if not os.path.exists(source_dir):
+            os.makedirs(source_dir)
+
+        target_file = "ctx_" + str(self._config.wid) + ".tar.gz"
+        source_file = os.path.join(source_dir, target_file)
+        destination_file = "/workspace/" + target_file
+
         files = os.listdir(self._config.workspace_dir)
-        with tarfile.open(
-            os.path.join(self._config.workspace_dir, "ctx.tar.gz"), mode="w:gz"
-        ) as archive:
+
+        with tarfile.open(source_file, mode="w:gz") as archive:
             for f in files:
                 archive.add(f)
 
@@ -151,9 +170,6 @@ class KubernetesRunner(StepRunner):
             tty=False,
             _preload_content=False,
         )
-
-        source_file = os.path.join(self._config.workspace_dir, "ctx.tar.gz")
-        destination_file = "/workspace/ctx.tar.gz"
 
         with open(source_file, "rb") as image_file:
             encoded_string = base64.b64encode(image_file.read())
@@ -177,7 +193,7 @@ class KubernetesRunner(StepRunner):
         response.close()
 
         # extract the archive inside the pod
-        exec_command = ["tar", "-zxvf", "/workspace/ctx.tar.gz"]
+        exec_command = ["tar", "-zxvf", destination_file]
         response = stream(
             self._kclient.connect_get_namespaced_pod_exec,
             self._init_pod_name,
@@ -263,16 +279,22 @@ class KubernetesRunner(StepRunner):
     def _vol_create(self, volume_name):
         """Create a default PersistentVolume of hostPath type.
         """
+        hostpathvol_path = "/tmp"
+        hostpathvol_size = "1Gi"
+        if self._config.resman_opts.get("hostpathvol_path", None):
+            hostpathvol_path = self._config.resman_opts.hostpathvol_path
+        if self._config.resman_opts.get("hostpathvol_size", None):
+            hostpathvol_size = self._config.resman_opts.hostpathvol_size
         vol_conf = {
             "kind": "PersistentVolume",
             "apiVersion": "v1",
-            "metadata": {"name": volume_name, "labels": {"type": "host"},},
+            "metadata": {"name": volume_name, "labels": {"type": "host"}},
             "spec": {
                 "persistentVolumeReclaimPolicy": "Recycle",
                 "storageClassName": "manual",
-                "capacity": {"storage": "1Gi",},
+                "capacity": {"storage": hostpathvol_size,},
                 "accessModes": ["ReadWriteMany"],
-                "hostPath": {"path": "/tmp"},
+                "hostPath": {"path": hostpathvol_path},
             },
         }
 

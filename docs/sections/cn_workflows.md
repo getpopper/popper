@@ -342,6 +342,24 @@ engine-specific configuration options via the `--conf` flag.
 
 Docker is the default engine used by the `popper run`. All the 
 container configuration for the docker engine is supported by Popper.
+Popper also supports running workflows on remote docker daemons by use 
+of the `DOCKER_HOST`, `DOCKER_TLS_VERIFY` and `DOCKER_CERT_PATH` 
+variables, as explained in [the official 
+documentation][docker-remote]. For example:
+
+```bash
+export DOCKER_HOST="ssh://myuser@hostname"
+popper run -f wf.yml
+```
+
+The above runs the workflow on the `hostname` machine instead of 
+locally. It assumes the following:
+
+ 1. `myuser` has passwordless access to `hostname`, otherwise the 
+    password to the machine is requested.
+ 2. The `myuser` account can run `docker` on the remote machine.
+
+[docker-remote]: https://docs.docker.com/engine/reference/commandline/dockerd
 
 ### Singularity
 
@@ -359,12 +377,10 @@ popper run --engine singularity
 
 ### Host
 
-There are situations where a container runtime is not available and 
-cannot be installed. In these cases, a step can be executed directly 
-on the host, that is, on the same environment where the `popper` 
+There are situations when executing a command directly on the host where the `popper` 
 command is running. This is done by making use of the special `sh` 
 value for the `uses` attribute. This value instructs Popper to execute 
-the command or script given in the `runs` attribute. For example:
+the command or script given in the `runs` attribute directly on the host. For example:
 
 ```yaml
 steps:
@@ -405,14 +421,12 @@ question (see [here][engconf] for more).
 Alternatively, to restrict a configuration to a specific step in a workflow, set the desired parameters in the step's `options`
 **Note**: this is currently only supported for the Docker runtime 
 
-
 ## Resource Managers
 
-Popper can execute steps in a workflow through other resource managers
-like SLURM besides the host machine. The resource manager can be specified 
-either through the `--resource-manager/-r` option or through the config file.
-If neither of them are provided, the steps are run in the host machine 
-by default. 
+By default, workflows are executed locally on the host where Popper is executed from.
+In addition, workflows can also be executed through other resource managers.
+The resource manager can be specified either through the `--resource-manager/-r` option, or specified in the configuration file given via the `--config/-c` flag.
+If neither of them are provided, the steps are run in the host machine by default. 
 
 ### Kubernetes
 
@@ -439,6 +453,10 @@ All the available configuration options have been described below:
   In this case, users need to restrict all the pods to a particular node. 
   If this option is not provided, Popper will leave the task of scheduling the pods upon Kubernetes. 
   The exception to this is, when both the `pod_host_node` and `persistent_volume_name` options are not provided, Popper will try to find out a pod and schedule all the pods (init-pods + step-pods) on that node to use the `HostPath` persistent volume of 1GB which will be automatically created.
+
+* `hostpathvol_path`: The path to use for creating a HostPath volume. If not provided, /tmp will be used.
+
+* `hostpathvol_size`: The size of the HostPath volume. If not provided, 1GB will be used.
 
 To run workflows on Kubernetes:
 
@@ -640,4 +658,3 @@ Once the workflow has executed all of its outlined steps, its lifecycle is compl
 Hopefully this section has clarified how a Popper workflow iterates through its steps to simplify any workflow into a simple `popper run` call. Not only does it allow you to run fewer commands per run, it also runs the correct commands for different engines based on whether you're using Docker or Singularity.
 
 Thus, Popper can be a useful tool for increasing efficiency on any workflow-heavy project!
-
