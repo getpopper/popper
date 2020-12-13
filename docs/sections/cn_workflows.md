@@ -626,13 +626,13 @@ Hopefully this section has clarified how a Popper workflow iterates through its 
 ```
 docker pull byrnedo/alpine-curl:0.1.8
 ```
+```
+singularity pull popper_download_f20ab8c9.sif docker://byrnedo/alpine-curl:0.1.8
+```
 
 2. Building the downloaded Alpine Curl image
 ```
 docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
-```
-```
-singularity build alpine-curl.simg docker://byrnedo/alpine-curl:0.1.8
 ```
 
 3. Downloading the dataset from the repository
@@ -640,11 +640,14 @@ singularity build alpine-curl.simg docker://byrnedo/alpine-curl:0.1.8
 docker start
 ```
 ```
-singularity run alpine-curl.simg
+singularity run popper_download_f20ab8c9.sif [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 ```
 4. Downloading the needed image of csvtools
 ```
 docker pull getpopper/csvtool:2.4
+```
+```
+singularity pull popper_get-transpose_f20ab8c9.sif docker://getpopper/csvtool:2.4
 ```
 5. Building the downloaded image of csvtools
 ```
@@ -653,6 +656,9 @@ docker create name=popper_get-transpose_f20ab8c9 image=getpopper/csvtool:2.4 com
 6. Performing the command to transpose the earlier downloaded dataset
 ```
 docker start
+```
+```
+singularity run popper_get-transpose_f20ab8c9.sif [transpose, global.csv, -o, global_transposed.csv]
 ```
 
 Thus, Popper can be a useful tool for increasing efficiency on any workflow-heavy project!
