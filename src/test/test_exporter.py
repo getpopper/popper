@@ -66,3 +66,32 @@ class TestExporter(PopperTest):
             self.assertTrue(f"getpopper/popper:v{__version__}" in content)
 
         os.chdir(pwd)
+
+    def test_gitlab_ci(self):
+        subs = ["_A=a1", "_A=a2", "_B=b1", "_B=b2", "_B=b3", "_C=c1"]
+        repo = self.mk_repo()
+        pwd = os.getcwd()
+        os.chdir(repo.working_dir)
+        e = WorkflowExporter.get_exporter("gitlab-ci")
+        e.export("wf.yml", subs)
+        self.assertTrue(os.path.isfile(".gitlab-ci.yml"))
+
+        expected_env_items = [
+            "A=a1 B=b1 C=c1",
+            "A=a1 B=b2 C=c1",
+            "A=a1 B=b3 C=c1",
+            "A=a2 B=b1 C=c1",
+            "A=a2 B=b2 C=c1",
+            "A=a2 B=b3 C=c1",
+        ]
+
+        with open(".gitlab-ci.yml", "r") as f:
+            content = f.read()
+            for e in expected_env_items:
+                self.assertTrue(e in content)
+
+            self.assertTrue("-s _A=$A -s _B=$B -s _C=$C" in content)
+
+            self.assertTrue(f"getpopper/popper:v{__version__}" in content)
+
+        os.chdir(pwd)
