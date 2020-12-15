@@ -529,17 +529,6 @@ If `singularity` is used as the container engine, then by default the steps woul
 as SLURM jobs. This behaviour can be overriden by passing `mpi: false` in the configuration of the
 step for which MPI is not required.
 
-#### Host
-
-Popper executes the workflows by default using the `host` machine as the resource manager. So, when no resource manager is provided like the example below, the workflow runs on the local machine.
-
-```bash
-popper run -f sample.yml
-```
-
-The above assumes `docker` as the container engine and `host` as the resource manager to be
-used.
-
 ## Life of a Workflow
 
 This section explains what popper does when it executes a workflow. We will break down what popper does behind the scenes when executing the following sample workflow, which can be found [here](getting_started.md):
@@ -599,7 +588,7 @@ args: [-LO, https://github.com/datasets/co2-fossil-global/raw/master/global.csv]
 ```
 Using these inputs, Popper executes the following command for a Docker build:
 ```
-docker create name=popper_download_f20ab8c9 image=byrnedo/alpine-curl:0.1.8 command=['-LO', 'https://github.com/datasets/co2-fossil-global/raw/master/global.csv']
+docker create name=popper_download_f20ab8c9 byrnedo/alpine-curl:0.1.8 -LO https://github.com/datasets/co2-fossil-global/raw/master/global.csv
 ```
 This creates a docker container from the image given by the `uses` line with inputs from the `args` line, and with a name created using the id given in the `id` line and the id number of our specific workflow.
 
