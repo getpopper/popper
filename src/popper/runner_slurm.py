@@ -167,14 +167,26 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
 
         if build:
             recipefile = self._get_recipe_file(build_ctx_path, cid)
-            log.info(f"srun singularity build {self._container}", extra={"pretag": f"[{step.id}]"})
+            log.info(
+                f"srun singularity build {self._container}",
+                extra={"pretag": f"[{step.id}]"},
+            )
             self._exec_srun(
-                ["singularity", "build", "--fakeroot", self._container, recipefile,],
+                [
+                    "singularity",
+                    "build",
+                    "--fakeroot",
+                    self._container,
+                    recipefile,
+                ],
                 step,
                 cwd=os.path.dirname(recipefile),
             )
         else:
-            log.info(f"srun singularity pull {self._container}", extra={"pretag": f"[{step.id}]"})
+            log.info(
+                f"srun singularity pull {self._container}",
+                extra={"pretag": f"[{step.id}]"},
+            )
             self._exec_srun(["singularity", "pull", self._container, img], step)
 
         cmd = self._create_cmd(step, cid)
