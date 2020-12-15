@@ -147,7 +147,7 @@ class DockerRunner(StepRunner):
         if not container and not self._config.reuse:
             container = self._create_container(cid, step)
 
-        log.step_info(f"[{step.id}] docker start")
+        log.info(f"[{step.id}] docker start")
 
         if self._config.dry_run:
             return 0
@@ -178,7 +178,7 @@ class DockerRunner(StepRunner):
         build, _, img, tag, build_ctx_path = self._get_build_info(step)
 
         if build:
-            log.step_info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
+            log.info(f"[{step.id}] docker build {img}:{tag} {build_ctx_path}")
             if not self._config.dry_run:
                 streamer = self._d.api.build(
                     decode=True, path=build_ctx_path, tag=f"{img}:{tag}", rm=True,
@@ -192,7 +192,7 @@ class DockerRunner(StepRunner):
                             log.step_info(line.strip())
 
         elif not self._config.skip_pull and not step.skip_pull:
-            log.step_info(f"[{step.id}] docker pull {img}:{tag}")
+            log.info(f"[{step.id}] docker pull {img}:{tag}")
             if not self._config.dry_run:
                 self._d.images.pull(repository=f"{img}:{tag}")
 
@@ -216,7 +216,7 @@ class DockerRunner(StepRunner):
             msg += f' entrypoint={container_args["entrypoint"]}'
         if container_args["command"]:
             msg += f' command={container_args["command"]}'
-        log.step_info(msg)
+        log.info(msg)
 
         container = self._d.containers.create(**container_args)
 
@@ -342,7 +342,7 @@ class PodmanRunner(StepRunner):
         msg.append(f"image={container_args.get('image')}")
         msg.append(f"entrypoint={container_args.get('entrypoint')}" or "")
         msg.append(f"command={container_args.get('command')}" or "")
-        log.step_info(msg)
+        log.info(msg)
 
         cmd = ["podman", "create"]
 
@@ -490,7 +490,7 @@ class SingularityRunner(StepRunner):
             image=cid,
             build_folder=build_dest,
             force=True,
-            quiet=self._s.quiet,
+            quiet=self._config.quiet,
         )
         os.chdir(pwd)
         SingularityRunner.lock.release()
@@ -532,11 +532,11 @@ class SingularityRunner(StepRunner):
             build_ctx_path = None
 
         if build:
-            log.step_info(f"[{step.id}] singularity build {cid} {build_ctx_path}")
+            log.info(f"[{step.id}] singularity build {cid} {build_ctx_path}")
             if not self._config.dry_run:
                 self._build_from_recipe(build_ctx_path, self._singularity_cache, cid)
         elif not self._config.skip_pull and not step.skip_pull:
-            log.step_info(f"[{step.id}] singularity pull {cid} {image}")
+            log.info(f"[{step.id}] singularity pull {cid} {image}")
             if not self._config.dry_run:
                 self._s.pull(image=image, name=cid, pull_folder=self._singularity_cache)
 
