@@ -21,8 +21,8 @@ class WorkflowExporter(object):
     def get_exporter(service_name):
         if service_name == "travis":
             return TravisExporter()
-        elif service_name == "gitlab-ci":
-            return GitlabCIExporter()
+        elif service_name == "gitlab":
+            return GitlabExporter()
         else:
             raise Exception(f"Unknown service {service_name}")
 
@@ -138,20 +138,18 @@ script: |
             )
 
 
-class GitlabCIExporter(WorkflowExporter):
+class GitlabExporter(WorkflowExporter):
     path = ".gitlab-ci.yml"
     template = """
 image: docker:stable
 
-variables:
-DOCKER_DRIVER: overlay
-
 services:
 - docker:dind
 
-environment: {jobs}
-
 popper:
+  parallel:
+    matrix: {jobs}
+
   script: |
     printenv > /tmp/.envfile
     docker run --rm -ti \\
@@ -161,32 +159,27 @@ popper:
       --workdir "$PWD" \\
       --env-file /tmp/.envfile \\
       getpopper/popper:v{version} run -f {file} {substitution_flags}
+
 """
 
     def __init__(self, **kw):
-        super(GitlabCIExporter, self).__init__(**kw)
+        super(GitlabExporter, self).__init__(**kw)
 
     def export(self, file, substitution=[]):
 
         matrix_variables = WorkflowExporter._get_matrix_variables(substitution)
-        matrix = WorkflowExporter._get_matrix(matrix_variables)
 
-        # generate env list from matrix
-        jobs = []
-        for e in matrix:
-            job = []
-            for k, v in e.items():
-                job.append(f"{k}={v}")
-            jobs.append(" ".join(job))
+        # generate list with matrix
+        jobs = [matrix_variables]
 
         # get the substitution flags for popper run
         substitution_flags = []
         for k in matrix_variables.keys():
             substitution_flags.extend(["-s", f"_{k}=${k}"])
 
-        with open(GitlabCIExporter.path, "w") as f:
+        with open(GitlabExporter.path, "w") as f:
             f.write(
-                GitlabCIExporter.template.format(
+                GitlabExporter.template.format(
                     file=file,
                     version=__version__,
                     jobs=jobs,
