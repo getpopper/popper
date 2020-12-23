@@ -498,7 +498,13 @@ class SingularityRunner(StepRunner):
         pwd = os.getcwd()
         os.chdir(build_ctx_path)
         recipefile = SingularityRunner._get_recipe_file(build_ctx_path, cid)
-        self._s.build(recipe=recipefile, image=cid, build_folder=build_dest, force=True)
+        self._s.build(
+            recipe=recipefile,
+            image=cid,
+            build_folder=build_dest,
+            force=True,
+            quiet=self._config.quiet,
+        )
         os.chdir(pwd)
         SingularityRunner.lock.release()
 
