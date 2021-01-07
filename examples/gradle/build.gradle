@@ -1,0 +1,19 @@
+apply plugin: 'java'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    testImplementation('junit:junit:4.13')
+}
+
+jar {
+    archiveBaseName = 'StringApp'
+    archiveVersion =  '0.1.0'
+      manifest {
+    attributes(
+      'Main-Class': 'StringApp'
+    )
+  }
+}

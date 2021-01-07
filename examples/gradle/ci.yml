@@ -1,0 +1,8 @@
+steps:
+- id: assemble
+  uses: docker://gradle:openj9
+  runs: [gradle, assemble]
+
+- id: test
+  uses: docker://gradle:openj9
+  runs: [gradle, test]
