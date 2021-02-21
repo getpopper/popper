@@ -171,9 +171,7 @@ class TestWorkflow(unittest.TestCase):
                     "id": "some other $_SUB2",
                     "env": {"FOO": "env_$_SUB3"},
                     "secrets": ["secret_$_SUB4"],
-                    "options": {
-                        "labels": {"timestamp": "$_TIMESTAMP"}
-                    },
+                    "options": {"labels": {"timestamp": "$_TIMESTAMP"}},
                 }
             ]
         }
@@ -184,9 +182,7 @@ class TestWorkflow(unittest.TestCase):
             "_SUB3=THREE",
             "_SUB4=4",
         ]
-        wf = WorkflowParser.parse(
-            wf_data=wf_data, substitutions=substitutions,
-        )
+        wf = WorkflowParser.parse(wf_data=wf_data, substitutions=substitutions)
         step = wf.steps[0]
         self.assertEqual("some_ONE", step.uses)
         self.assertEqual("some other TWO", step.id)
