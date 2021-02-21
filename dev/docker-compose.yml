@@ -1,0 +1,15 @@
+version: '3.7'
+services:
+  popper-dev:
+    image: popper-dev
+    container_name: popper-dev
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    build:
+      context: .
+    command:
+      - bash
+    volumes:
+      - ${PWD}/..:/workspace
+      - ${PWD}/venv:/venv
+    working_dir: /workspace
