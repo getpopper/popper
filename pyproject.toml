@@ -1,0 +1,4 @@
+[tool.black]
+exclude='''
+/dev
+'''
