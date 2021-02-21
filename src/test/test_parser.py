@@ -163,6 +163,37 @@ class TestWorkflow(unittest.TestCase):
             **{"wf_data": wf_data, "substitutions": substitutions}
         )
 
+        # substitute nested
+        wf_data = {
+            "steps": [
+                {
+                    "uses": "some_$_SUB1",
+                    "id": "some other $_SUB2",
+                    "env": {"FOO": "env_$_SUB3"},
+                    "secrets": ["secret_$_SUB4"],
+                    "options": {
+                        "labels": {"timestamp": "$_TIMESTAMP"}
+                    },
+                }
+            ]
+        }
+        substitutions = [
+            "_TIMESTAMP=1613916937",
+            "_SUB1=ONE",
+            "_SUB2=TWO",
+            "_SUB3=THREE",
+            "_SUB4=4",
+        ]
+        wf = WorkflowParser.parse(
+            wf_data=wf_data, substitutions=substitutions,
+        )
+        step = wf.steps[0]
+        self.assertEqual("some_ONE", step.uses)
+        self.assertEqual("some other TWO", step.id)
+        self.assertEqual("env_THREE", step.env["FOO"])
+        self.assertEqual(("secret_4",), step.secrets)
+        self.assertEqual({"timestamp": "1613916937"}, step.options.labels)
+
         # allow loose substitutions
         wf = WorkflowParser.parse(
             wf_data=wf_data, substitutions=substitutions, allow_loose=True
