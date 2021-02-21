@@ -139,6 +139,31 @@ class TestWorkflow(unittest.TestCase):
             **{"wf_data": wf_data, "substitutions": ["SUB1=WRONG"]}
         )
 
+        # allow non-str values
+        wf_data = {
+            "steps": [
+                {
+                    "uses": "some_image",
+                    "id": "some_$_DUMMY",
+                    "env": {"FOO": "BAR"},
+                    "secrets": ["a-secret"],
+                    "options": {"auto_remove": True},
+                }
+            ]
+        }
+        substitutions = [
+            "_DUMMY=dummy",
+        ]
+        wf = WorkflowParser.parse(
+            wf_data=wf_data, substitutions=substitutions, allow_loose=True
+        )
+        step = wf.steps[0]
+        self.assertEqual("some_image", step.uses)
+        self.assertEqual("some_dummy", step.id)
+        self.assertEqual("BAR", step.env["FOO"])
+        self.assertEqual(("a-secret",), step.secrets)
+        self.assertEqual({"auto_remove": True}, step.options)
+
         # expect error when not all given subs are used
         wf_data = {
             "steps": [

@@ -137,13 +137,14 @@ class WorkflowParser(object):
                     used_registry[k] = 1
 
         elif isinstance(wf_element, dict):
-            # we assume map of strings
             for ek in wf_element:
                 if k in ek:
                     log.fail("Substitutions not allowed on dictionary keys")
-                if k in wf_element[ek]:
+                if type(wf_element[ek]) == str and k in wf_element[ek]:
                     log.debug(f"Applying substitution to value associated to key {k}")
-                    wf_element[ek] = wf_element[ek].replace(k, v)
+                    wf_element[ek] = WorkflowParser.__apply_substitution(
+                        wf_element[ek], k, v, used_registry
+                    )
                     used_registry[k] = 1
 
         return wf_element
