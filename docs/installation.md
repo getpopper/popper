@@ -137,5 +137,7 @@ the above approach you have both (1) popper installed in your machine
 and (2) an environment where you can modify popper and test the 
 results of such modifications.
 
+To create a containerized development environment, e.g. for running tests, see `dev/README.md`.
+
 [venv]: https://virtualenv.pypa.io/en/latest/
 [venv-install]: https://packaging.python.org/guides/installing-using-pip-and-virtual-environments/#installing-virtualenv
