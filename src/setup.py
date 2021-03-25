@@ -25,7 +25,7 @@ setup(
         "paramiko==2.7.2",
         "pykwalify==1.7.0",
         "python-box==5.1.1",
-        "pyyaml==5.3.1",
+        "pyyaml==5.4",
         "spython==0.0.79",
         "kubernetes==11.0.0",
     ],
