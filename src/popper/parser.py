@@ -142,10 +142,12 @@ class WorkflowParser(object):
                     log.fail("Substitutions not allowed on dictionary keys")
                 if type(wf_element[ek]) == str and k in wf_element[ek]:
                     log.debug(f"Applying substitution to value associated to key {k}")
+                    wf_element[ek] = wf_element[ek].replace(k, v)
+                    used_registry[k] = 1
+                else:
                     wf_element[ek] = WorkflowParser.__apply_substitution(
                         wf_element[ek], k, v, used_registry
                     )
-                    used_registry[k] = 1
 
         return wf_element
 
