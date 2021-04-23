@@ -152,6 +152,8 @@ class SingularityRunner(SlurmRunner, HostSingularityRunner):
         super(SingularityRunner, self).__init__(init_spython_client=False, **kw)
         if self._config.reuse:
             log.fail("Reuse not supported for SingularityRunner.")
+        if self._config.remove:
+            log.fail("Remove not supported for SingularityRunner.")
 
         singularity_executables = ["singularity"]
         for exe in singularity_executables:

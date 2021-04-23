@@ -28,6 +28,9 @@ class HostRunner(StepRunner):
         if self._config.reuse:
             log.warning("Reuse not supported for HostRunner.")
 
+        if self._config.remove:
+            log.warning("Remove not supported for HostRunner.")
+
     def __enter__(self):
         return self
 
@@ -165,6 +168,9 @@ class DockerRunner(StepRunner):
                     log.step_info(line.decode().rstrip())
 
             e = container.wait()["StatusCode"]
+
+            if self._config.remove:
+                container.remove(force=True)
         except Exception as exc:
             log.fail(exc)
         return e
@@ -253,6 +259,9 @@ class PodmanRunner(StepRunner):
 
     def __init__(self, init_podman_client=True, **kw):
         super(PodmanRunner, self).__init__(**kw)
+
+        if self._config.remove:
+            log.warning("Remove not supported for PodmanRunner.")
 
         self._spawned_containers = set()
 

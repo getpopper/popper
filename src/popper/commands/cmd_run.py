@@ -50,6 +50,12 @@ from popper.runner import WorkflowRunner
     is_flag=True,
 )
 @click.option(
+    "--remove",
+    help="Remove containers after execution.",
+    required=False,
+    is_flag=True,
+)
+@click.option(
     "-e",
     "--engine",
     help="Specify container engine used to execute workflow steps.",
@@ -127,6 +133,7 @@ def cli(
     log_file,
     quiet,
     reuse,
+    remove,
     engine,
     resource_manager,
     skip,
@@ -184,6 +191,7 @@ def cli(
         resman_name=resource_manager,
         config_file=conf,
         reuse=reuse,
+        remove=remove,
         dry_run=dry_run,
         skip_pull=skip_pull,
         skip_clone=skip_clone,

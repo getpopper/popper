@@ -17,6 +17,7 @@ class ConfigLoader(object):
         config_file=None,
         workspace_dir=os.getcwd(),
         reuse=False,
+        remove=False,
         dry_run=False,
         quiet=False,
         skip_pull=False,
@@ -44,6 +45,7 @@ class ConfigLoader(object):
         pp_config = {
             "workspace_dir": workspace_dir,
             "reuse": reuse,
+            "remove": remove,
             "dry_run": dry_run,
             "quiet": quiet,
             "skip_pull": skip_pull,

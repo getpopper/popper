@@ -30,6 +30,7 @@ class TestPopperConfig(PopperTest):
                 "workspace_dir": os.getcwd(),
                 "quiet": False,
                 "reuse": False,
+                "remove": False,
                 "pty": False,
                 "allow_undefined_secrets_in_ci": False,
             },
@@ -46,6 +47,7 @@ class TestPopperConfig(PopperTest):
             "workspace_dir": os.path.realpath("/tmp/foo"),
             "quiet": True,
             "reuse": True,
+            "remove": True,
             "pty": True,
             "allow_undefined_secrets_in_ci": True,
         }
