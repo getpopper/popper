@@ -11,6 +11,14 @@ from popper.translators.translater import WorkflowTranslator
     short_help="Translate workflow configuration files of different runners.",
 )
 @click.option(
+    "infmt",
+    "--from",
+    help="Format of the input file.",
+    type=click.Choice(["popper"]),
+    default="popper",
+)
+@click.option(
+    "infile",
     "--file",
     "-f",
     help="File containing the definition of the workflow.",
@@ -18,8 +26,8 @@ from popper.translators.translater import WorkflowTranslator
     default=".popper.yml",
 )
 @click.option(
-    "fmt",
-    "--format",
+    "outfmt",
+    "--to",
     help="Format of the output file.",
     type=click.Choice(["drone"]),
     default="drone",
@@ -31,13 +39,13 @@ from popper.translators.translater import WorkflowTranslator
     required=False,
 )
 @pass_context
-def cli(ctx, file, fmt, outfile):
+def cli(ctx, infmt, infile, outfmt, outfile):
     if outfile is None:
-        if fmt == "drone":
+        if outfmt == "drone":
             outfile = ".drone.yml"
-    translator = WorkflowTranslator.get_translator(fmt)
-    wf = WorkflowParser.parse(file=file)
+    translator = WorkflowTranslator.get_translator(outfmt)
+    wf = WorkflowParser.parse(file=infile)
     translated = translator.translate(wf)
     with open(outfile, "w") as f:
         f.write(translated)
-    log.info(f"Translated to {fmt} configuration successfully.")
+    log.info(f"Translated to {outfmt} configuration successfully.")
