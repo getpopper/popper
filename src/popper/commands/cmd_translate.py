@@ -33,10 +33,7 @@ from popper.translators.translater import WorkflowTranslator
     default="drone",
 )
 @click.option(
-    "outfile",
-    "--out",
-    help="Name of the output file.",
-    required=False,
+    "outfile", "--out", help="Name of the output file.", required=False,
 )
 @pass_context
 def cli(ctx, infmt, infile, outfmt, outfile):

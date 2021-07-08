@@ -10,6 +10,7 @@ class WorkflowTranslator(object):
     @staticmethod
     def get_translator(service_name):
         from popper.translators.translator_drone import DroneTranslator
+
         if service_name == "drone":
             return DroneTranslator()
         else:
