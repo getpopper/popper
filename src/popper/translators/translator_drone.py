@@ -1,5 +1,5 @@
 from box.box import Box
-from popper.translators.translater import WorkflowTranslator
+from popper.translators.translator import WorkflowTranslator
 
 
 class DroneTranslator(WorkflowTranslator):
