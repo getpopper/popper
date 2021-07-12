@@ -8,19 +8,13 @@ class DroneTranslator(WorkflowTranslator):
 
     def translate(self, wf):
         box = Box(kind="pipeline", type="docker", name="default")
-        box["steps"] = [
-            self._translate_step(step, i + 1) for i, step in enumerate(wf["steps"])
-        ]
+        box["steps"] = [self._translate_step(step) for step in wf["steps"]]
         return box.to_yaml()
 
-    def _translate_step(self, popper_step, i):
+    def _translate_step(self, popper_step):
         drone_step = Box()
         drone_step["image"] = self._translate_uses(popper_step["uses"])
-        if "id" in popper_step:
-            drone_step["name"] = popper_step["id"]
-        else:
-            drone_step["name"] = "Step {}".format(i)
-
+        drone_step["name"] = popper_step["id"]
         if "args" in popper_step:
             drone_step["command"] = list(popper_step["args"])
         if "runs" in popper_step:
