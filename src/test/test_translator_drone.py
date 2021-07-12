@@ -87,13 +87,7 @@ class TestDroneTranslator(PopperTest):
         )
         drone_step = dt._translate_step(popper_step)
         self.assertEqual(
-            drone_step,
-            Box(
-                {
-                    "name": "1",
-                    "image": "byrnedo/alpine-curl:0.1.8",
-                }
-            ),
+            drone_step, Box({"name": "1", "image": "byrnedo/alpine-curl:0.1.8",}),
         )
 
     def test_uses_non_docker(self):
