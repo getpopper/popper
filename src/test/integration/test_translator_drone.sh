@@ -1,6 +1,10 @@
 #!/bin/bash
 set -ex
 
+if [[ -z $ENABLE_DRONE_TRANSLATOR_TESTS ]]; then
+  exit 0
+fi
+
 marker="POPPER-DRONE-TRANSLATION"
 filename="out.txt"
 
