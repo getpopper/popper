@@ -1,4 +1,5 @@
 #!/bin/bash
+set -ex
 
 marker="POPPER-DRONE-TRANSLATION"
 filename="out.txt"
