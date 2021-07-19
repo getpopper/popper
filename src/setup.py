@@ -15,7 +15,7 @@ setup(
     author_email="ivotron@ucsc.edu",
     url="https://getpopper.io",
     description="Popper CLI tool to generate reproducible papers.",
-    packages=["popper", "popper.commands"],
+    packages=["popper", "popper.commands", "popper.translators"],
     include_package_data=True,
     install_requires=[
         "click==7.1.2",
