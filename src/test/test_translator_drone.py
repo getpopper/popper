@@ -13,6 +13,7 @@ class TestDroneTranslator(PopperTest):
         dt = DroneTranslator()
         popper_wf = Box(
             {
+                "options": {"env": {"FOO": "var1", "BAR": "var2",}},
                 "steps": [
                     {
                         "id": "download",
@@ -21,8 +22,9 @@ class TestDroneTranslator(PopperTest):
                             "-LO",
                             "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
                         ],
+                        "env": {"BAZ": "var3"},
                     }
-                ]
+                ],
             }
         )
         drone_wf = dt.translate(popper_wf)
@@ -41,9 +43,30 @@ class TestDroneTranslator(PopperTest):
                                 "-LO",
                                 "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
                             ],
+                            "environment": {
+                                "GIT_COMMIT": "${DRONE_COMMIT_SHA}",
+                                "GIT_BRANCH": "${DRONE_COMMIT_BRANCH}",
+                                "GIT_SHA_SHORT": "${DRONE_COMMIT_SHA:0:7}",
+                                "GIT_REMOTE_ORIGIN_URL": "${DRONE_GIT_HTTP_URL}",
+                                "GIT_TAG": "${DRONE_TAG}",
+                                "FOO": "var1",
+                                "BAR": "var2",
+                                "BAZ": "var3",
+                            },
                         }
                     ],
                 }
+            ),
+        )
+
+    def test_translate_optional(self):
+        dt = DroneTranslator()
+        popper_wf = Box({"steps": []})
+        drone_wf = dt.translate(popper_wf)
+        self.assertEqual(
+            Box.from_yaml(drone_wf),
+            Box(
+                {"kind": "pipeline", "type": "docker", "name": "default", "steps": [],}
             ),
         )
 
@@ -58,9 +81,11 @@ class TestDroneTranslator(PopperTest):
                     "-LO",
                     "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
                 ],
+                "env": {"foo": "variable 1", "var": "variable 2",},
             }
         )
-        drone_step = dt._translate_step(popper_step)
+        wf_env = {"baz": "variable 3"}
+        drone_step = dt._translate_step(popper_step, wf_env)
         self.assertEqual(
             drone_step,
             Box(
@@ -72,6 +97,11 @@ class TestDroneTranslator(PopperTest):
                         "-LO",
                         "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
                     ],
+                    "environment": {
+                        "foo": "variable 1",
+                        "var": "variable 2",
+                        "baz": "variable 3",
+                    },
                 }
             ),
         )
@@ -85,9 +115,16 @@ class TestDroneTranslator(PopperTest):
                 "uses": "docker://byrnedo/alpine-curl:0.1.8",
             }
         )
-        drone_step = dt._translate_step(popper_step)
+        drone_step = dt._translate_step(popper_step, {"foo": "var1"})
         self.assertEqual(
-            drone_step, Box({"name": "1", "image": "byrnedo/alpine-curl:0.1.8",}),
+            drone_step,
+            Box(
+                {
+                    "name": "1",
+                    "image": "byrnedo/alpine-curl:0.1.8",
+                    "environment": {"foo": "var1"},
+                }
+            ),
         )
 
     def test_uses_non_docker(self):
