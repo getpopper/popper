@@ -1,5 +1,6 @@
 import click
 import os
+import traceback
 
 from popper.cli import pass_context, log
 from popper.parser import WorkflowParser
@@ -38,7 +39,11 @@ def cli(ctx, from_fmt, file, to_fmt):
         outfile = ".drone.yml"
     translator = WorkflowTranslator.get_translator(to_fmt)
     wf = WorkflowParser.parse(file=file)
-    translated = translator.translate(wf)
+    try:
+        translated = translator.translate(wf)
+    except Exception as e:
+        log.debug(traceback.format_exc())
+        log.fail(e)
     with open(outfile, "w") as f:
         f.write(translated)
     log.info(f"Translated to {to_fmt} configuration successfully.")
