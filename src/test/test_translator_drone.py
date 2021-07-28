@@ -9,7 +9,103 @@ from .test_common import PopperTest
 
 
 class TestDroneTranslator(PopperTest):
-    def test_translate(self):
+    def test_detect_type(self):
+        dt = DroneTranslator()
+        # can detect docker pipeline
+        self.assertEqual(
+            dt._detect_type(
+                Box(
+                    {
+                        "steps": [
+                            {
+                                "id": "1",
+                                "uses": "docker://alpine",
+                                "runs": ["echo"],
+                                "args": ["step 1"],
+                            },
+                            {
+                                "id": "2",
+                                "uses": "docker://alpine",
+                                "runs": ["echo"],
+                                "args": ["step 2"],
+                            },
+                        ]
+                    }
+                )
+            ),
+            "docker",
+        )
+
+        # can detect exec pipeline
+        self.assertEqual(
+            dt._detect_type(
+                Box(
+                    {
+                        "steps": [
+                            {
+                                "id": "1",
+                                "uses": "sh",
+                                "runs": ["echo"],
+                                "args": ["step 1"],
+                            },
+                            {
+                                "id": "2",
+                                "uses": "sh",
+                                "runs": ["echo"],
+                                "args": ["step 2"],
+                            },
+                        ]
+                    }
+                )
+            ),
+            "exec",
+        )
+
+        # raise exception for empty steps
+        with self.assertRaises(AttributeError):
+            dt._detect_type(Box({"steps": []}))
+
+        # raise exception for unknown type
+        with self.assertRaises(AttributeError):
+            dt._detect_type(
+                Box(
+                    {
+                        "steps": [
+                            {
+                                "id": "1",
+                                "uses": "UNKNOWN_TYPE",
+                                "runs": ["echo"],
+                                "args": ["step 1"],
+                            }
+                        ]
+                    }
+                )
+            )
+
+        # raise exception for mixed types
+        with self.assertRaises(AttributeError):
+            dt._detect_type(
+                Box(
+                    {
+                        "steps": [
+                            {
+                                "id": "1",
+                                "uses": "docker://alpine",
+                                "runs": ["echo"],
+                                "args": ["step 1"],
+                            },
+                            {
+                                "id": "2",
+                                "uses": "sh",
+                                "runs": ["echo"],
+                                "args": ["step 2"],
+                            },
+                        ]
+                    }
+                )
+            )
+
+    def test_translate_docker(self):
         dt = DroneTranslator()
         popper_wf = Box(
             {
@@ -48,7 +144,56 @@ class TestDroneTranslator(PopperTest):
                                 "GIT_BRANCH": "${DRONE_COMMIT_BRANCH}",
                                 "GIT_SHA_SHORT": "${DRONE_COMMIT_SHA:0:7}",
                                 "GIT_REMOTE_ORIGIN_URL": "${DRONE_GIT_HTTP_URL}",
-                                "GIT_TAG": "${DRONE_TAG}",
+                                "GIT_TAG": "${DRONE_TAG}:-''",
+                                "FOO": "var1",
+                                "BAR": "var2",
+                                "BAZ": "var3",
+                            },
+                        }
+                    ],
+                }
+            ),
+        )
+
+    def test_translate_exec(self):
+        dt = DroneTranslator()
+        popper_wf = Box(
+            {
+                "options": {"env": {"FOO": "var1", "BAR": "var2",}},
+                "steps": [
+                    {
+                        "id": "download",
+                        "uses": "sh",
+                        "runs": ["curl"],
+                        "args": [
+                            "-LO",
+                            "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
+                        ],
+                        "env": {"BAZ": "var3"},
+                    }
+                ],
+            }
+        )
+        drone_wf = dt.translate(popper_wf)
+        self.assertEqual(
+            Box.from_yaml(drone_wf),
+            Box(
+                {
+                    "kind": "pipeline",
+                    "type": "exec",
+                    "name": "default",
+                    "steps": [
+                        {
+                            "name": "download",
+                            "commands": [
+                                "curl -LO https://github.com/datasets/co2-fossil-global/raw/master/global.csv"
+                            ],
+                            "environment": {
+                                "GIT_COMMIT": "${DRONE_COMMIT_SHA}",
+                                "GIT_BRANCH": "${DRONE_COMMIT_BRANCH}",
+                                "GIT_SHA_SHORT": "${DRONE_COMMIT_SHA:0:7}",
+                                "GIT_REMOTE_ORIGIN_URL": "${DRONE_GIT_HTTP_URL}",
+                                "GIT_TAG": "${DRONE_TAG}:-''",
                                 "FOO": "var1",
                                 "BAR": "var2",
                                 "BAZ": "var3",
@@ -61,16 +206,33 @@ class TestDroneTranslator(PopperTest):
 
     def test_translate_optional(self):
         dt = DroneTranslator()
-        popper_wf = Box({"steps": []})
+        popper_wf = Box({"steps": [{"id": "sample", "uses": "docker://alpine",}]})
         drone_wf = dt.translate(popper_wf)
         self.assertEqual(
             Box.from_yaml(drone_wf),
             Box(
-                {"kind": "pipeline", "type": "docker", "name": "default", "steps": [],}
+                {
+                    "kind": "pipeline",
+                    "type": "docker",
+                    "name": "default",
+                    "steps": [
+                        {
+                            "name": "sample",
+                            "image": "alpine",
+                            "environment": {
+                                "GIT_COMMIT": "${DRONE_COMMIT_SHA}",
+                                "GIT_BRANCH": "${DRONE_COMMIT_BRANCH}",
+                                "GIT_SHA_SHORT": "${DRONE_COMMIT_SHA:0:7}",
+                                "GIT_REMOTE_ORIGIN_URL": "${DRONE_GIT_HTTP_URL}",
+                                "GIT_TAG": "${DRONE_TAG}:-''",
+                            },
+                        }
+                    ],
+                }
             ),
         )
 
-    def test_translate_step(self):
+    def test_translate_step_docker(self):
         dt = DroneTranslator()
         popper_step = Box(
             {
@@ -85,7 +247,7 @@ class TestDroneTranslator(PopperTest):
             }
         )
         wf_env = {"baz": "variable 3"}
-        drone_step = dt._translate_step(popper_step, wf_env)
+        drone_step = dt._translate_step(popper_step, "docker", wf_env)
         self.assertEqual(
             drone_step,
             Box(
@@ -106,6 +268,50 @@ class TestDroneTranslator(PopperTest):
             ),
         )
 
+    def test_translate_step_exec(self):
+        dt = DroneTranslator()
+        popper_step = Box(
+            {
+                "id": "download",
+                "uses": "sh",
+                "runs": ["curl"],
+                "args": [
+                    "-LO",
+                    "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
+                ],
+                "env": {"foo": "variable 1", "var": "variable 2",},
+            }
+        )
+        wf_env = {"baz": "variable 3"}
+        drone_step = dt._translate_step(popper_step, "exec", wf_env)
+        self.assertEqual(
+            drone_step,
+            Box(
+                {
+                    "name": "download",
+                    "commands": [
+                        "curl -LO https://github.com/datasets/co2-fossil-global/raw/master/global.csv"
+                    ],
+                    "environment": {
+                        "foo": "variable 1",
+                        "var": "variable 2",
+                        "baz": "variable 3",
+                    },
+                }
+            ),
+        )
+
+        popper_step_empty_runs = Box(
+            {
+                "id": "1",
+                "uses": "sh",
+                "runs": [],  # parser will create an empty array if `runs` is not specified
+            }
+        )
+        with self.assertRaises(AttributeError):
+            # raise an error if `runs` is empty
+            dt._translate_step(popper_step_empty_runs, "exec", wf_env)
+
     def test_translate_step_optional(self):
         dt = DroneTranslator()
         # only "uses" attribute is required in Popper
@@ -115,7 +321,7 @@ class TestDroneTranslator(PopperTest):
                 "uses": "docker://byrnedo/alpine-curl:0.1.8",
             }
         )
-        drone_step = dt._translate_step(popper_step, {"foo": "var1"})
+        drone_step = dt._translate_step(popper_step, "docker", {"foo": "var1"})
         self.assertEqual(
             drone_step,
             Box(
