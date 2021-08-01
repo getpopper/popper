@@ -1,6 +1,6 @@
 from box.box import Box
 from popper.translators.translator import WorkflowTranslator
-import shlex
+from shlex import quote
 
 
 class DroneTranslator(WorkflowTranslator):
@@ -74,7 +74,10 @@ class DroneTranslator(WorkflowTranslator):
                     # cd into the specified directory
                     f"cd {popper_step['dir']}",
                     # run the command
-                    shlex.join(list(popper_step["runs"]) + list(popper_step["args"])),
+                    " ".join(
+                        quote(arg)
+                        for arg in list(popper_step["runs"]) + list(popper_step["args"])
+                    ),
                 ]
             # translate args and runs without modifications
             else:
@@ -88,7 +91,10 @@ class DroneTranslator(WorkflowTranslator):
 
             # `commands` is an array of strings. Construct the command by concatenating `runs` and `args` and use it as the first and only element
             drone_step["commands"] = [
-                shlex.join(list(popper_step["runs"]) + list(popper_step["args"]))
+                " ".join(
+                    quote(arg)
+                    for arg in list(popper_step["runs"]) + list(popper_step["args"])
+                )
             ]
 
         # because Drone only supports environment variables per pipeline in Docker pipelines, set variables in each step
