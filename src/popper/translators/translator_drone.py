@@ -1,5 +1,6 @@
 from box.box import Box
 from popper.translators.translator import WorkflowTranslator
+import shlex
 
 
 class DroneTranslator(WorkflowTranslator):
@@ -57,18 +58,37 @@ class DroneTranslator(WorkflowTranslator):
         drone_step = Box()
         drone_step["name"] = popper_step["id"]
         if wf_type == "docker":
+            # set docker image
             drone_step["image"] = self._translate_uses(popper_step["uses"])
-            if "args" in popper_step:
-                drone_step["command"] = list(popper_step["args"])
-            if "runs" in popper_step:
-                drone_step["entrypoint"] = list(popper_step["runs"])
+
+            # handle `dir` option
+            # only with docker pipeline as `popper exec` does not respect this option with `uses: sh`
+            if "dir" in popper_step:
+                if not popper_step["runs"]:
+                    raise AttributeError(
+                        "Workflow with `dir` must specify `runs` to translation"
+                    )
+                drone_step["commands"] = [
+                    # create a symbolic link to create the same the directry structure in Drone
+                    "ln -s /drone/src /workspace",
+                    # cd into the specified directory
+                    f"cd {popper_step['dir']}",
+                    # run the command
+                    shlex.join(list(popper_step["runs"]) + list(popper_step["args"])),
+                ]
+            # translate args and runs without modifications
+            else:
+                if "args" in popper_step:
+                    drone_step["command"] = list(popper_step["args"])
+                if "runs" in popper_step:
+                    drone_step["entrypoint"] = list(popper_step["runs"])
         if wf_type == "exec":
             if not popper_step["runs"]:
                 raise AttributeError("You must specify `runs` attribute for steps")
 
             # `commands` is an array of strings. Construct the command by concatenating `runs` and `args` and use it as the first and only element
             drone_step["commands"] = [
-                " ".join(list(popper_step["runs"]) + list(popper_step["args"]))
+                shlex.join(list(popper_step["runs"]) + list(popper_step["args"]))
             ]
 
         # because Drone only supports environment variables per pipeline in Docker pipelines, set variables in each step
