@@ -268,6 +268,46 @@ class TestDroneTranslator(PopperTest):
             ),
         )
 
+    def test_translate_step_dir(self):
+        dt = DroneTranslator()
+        popper_step = Box(
+            {
+                "id": "download",
+                "uses": "docker://alpine",
+                "dir": "/tmp",
+                "runs": ["touch"],
+                "args": ["file1", "file2"],
+            }
+        )
+        drone_step = dt._translate_step(popper_step, "docker", {})
+        self.assertEqual(
+            drone_step,
+            Box(
+                {
+                    "name": "download",
+                    "image": "alpine",
+                    "commands": [
+                        "ln -s /drone/src /workspace",
+                        "cd /tmp",
+                        "touch file1 file2",
+                    ],
+                    "environment": {},
+                }
+            ),
+        )
+
+        popper_step_dir_without_runs = Box(
+            {
+                "id": "download",
+                "uses": "docker://alpine",
+                "dir": "/tmp",
+                "args": ["echo", "missing runs"],
+            }
+        )
+        with self.assertRaises(AttributeError):
+            # raise an error if `runs` is empty
+            dt._translate_step(popper_step_dir_without_runs, "docker", {})
+
     def test_translate_step_exec(self):
         dt = DroneTranslator()
         popper_step = Box(
