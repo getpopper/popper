@@ -30,13 +30,15 @@ from popper.translators.translator import WorkflowTranslator
     "to_fmt",
     "--to",
     help="Format of the output file.",
-    type=click.Choice(["drone"]),
+    type=click.Choice(["drone", "task"]),
     default="drone",
 )
 @pass_context
 def cli(ctx, from_fmt, file, to_fmt):
     if to_fmt == "drone":
         outfile = ".drone.yml"
+    elif to_fmt == "task":
+        outfile = "Taskfile.yml"
     translator = WorkflowTranslator.get_translator(to_fmt)
     wf = WorkflowParser.parse(file=file)
     try:
