@@ -1,5 +1,6 @@
 class WorkflowTranslator(object):
     """Base class for translators."""
+
     def __init__(self):
         pass
 

@@ -20,9 +20,9 @@ class TaskTranslator(WorkflowTranslator):
             box["tasks"][step["id"]] = self._translate_step(step)
 
         # call steps in order from default task
-        box["tasks"]["default"] = [{
-            "task": step["id"]
-        } for step in wf["steps"]]
+        box["tasks"]["default"] = {
+            "cmds": [{"task": step["id"]} for step in wf["steps"]]
+        }
 
         return box.to_yaml()
 
@@ -40,13 +40,15 @@ class TaskTranslator(WorkflowTranslator):
             return "docker"
         if uses == "sh":
             return "sh"
-        raise AttributeError(
-            f"Unexpected value {uses} found in `uses` attribute")
+        raise AttributeError(f"Unexpected value {uses} found in `uses` attribute")
 
     # translate Popper steps to be executed on host
     def _translate_sh_step(self, step):
         task = Box()
-        task["cmds"] = [join(step["runs"] + step["args"])]
+        if "runs" not in step:
+            # sh steps require `runs` attribute
+            raise AttributeError("Expecting 'runs' attribute in step.")
+        task["cmds"] = [join(step["runs"] + (step["args"] if "args" in step else []))]
         return task
 
     def _translate_docker_step(self, step):
@@ -58,26 +60,33 @@ class TaskTranslator(WorkflowTranslator):
         # if `runs` is specified, override the entrypoint
         # --entrypoint can only take one component. append the rest to command_args
         # if not specified, set to None
-        entrypoint = f"--entrypoint {quote(step['runs'][0])}" if step[
-            "runs"] else None
+        entrypoint = (
+            f"--entrypoint {quote(step['runs'][0])}" if "runs" in step else None
+        )
 
         # [COMMAND] [ARG]...
         command_args = []
-        if step["runs"]:
+        if "runs" in step:
             # if `runs` is specified, take the second and later arguments
-            command_args = command_args + list(step['runs'][1:])
-        if step["args"]:
+            command_args = command_args + list(step["runs"][1:])
+        if "args" in step:
             # if `args` is specified, append to the list
-            command_args = command_args + list(step['args'])
+            command_args = command_args + list(step["args"])
 
         # use specified value or default value
-        workdir = step["dir"] if step["dir"] else "/workspace"
+        workdir = step["dir"] if "dir" in step else "/workspace"
 
         # Falsy values (e.g. None, []) will be omitted
         command = [
-            "docker", "run", "--rm", "-i", "--volume {{.PWD}}:/workspace",
-            f"--workdir {workdir}", entrypoint, image,
-            join(command_args)
+            "docker",
+            "run",
+            "--rm",
+            "-i",
+            "--volume {{.PWD}}:/workspace",
+            f"--workdir {workdir}",
+            entrypoint,
+            image,
+            join(command_args),
         ]
 
         # omit falsy values and join without escapes
