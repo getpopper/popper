@@ -4,7 +4,7 @@ from shlex import quote
 
 
 # helper function to quote and join strings
-def join(lst):
+def quoteJoin(lst):
     return " ".join(quote(arg) for arg in lst)
 
 
@@ -48,7 +48,9 @@ class TaskTranslator(WorkflowTranslator):
         if "runs" not in step:
             # sh steps require `runs` attribute
             raise AttributeError("Expecting 'runs' attribute in step.")
-        task["cmds"] = [join(step["runs"] + (step["args"] if "args" in step else []))]
+        task["cmds"] = [
+            quoteJoin(step["runs"] + (step["args"] if "args" in step else []))
+        ]
         return task
 
     def _translate_docker_step(self, step):
@@ -86,7 +88,7 @@ class TaskTranslator(WorkflowTranslator):
             f"--workdir {workdir}",
             entrypoint,
             image,
-            join(command_args),
+            quoteJoin(command_args),
         ]
 
         # omit falsy values and join without escapes
