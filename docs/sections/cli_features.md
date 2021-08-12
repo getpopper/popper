@@ -270,7 +270,7 @@ The `translate` subcommand generates configuration files for other CI systems. T
 popper translate --file wf.yml --to <service-name>
 ```
 
-Where `<service-name` is the name of the CI system (see `popper translate --help` to get a list of supported systems).
+Where `<service-name>` is the name of the CI system (see `popper translate --help` to get a list of supported systems).
 
 ### Drone
 
