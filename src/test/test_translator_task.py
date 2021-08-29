@@ -6,13 +6,13 @@ from .test_common import PopperTest
 
 class TestTaskTranslator(PopperTest):
     GIT_VARS = {
-        "GIT_COMMIT": {"sh": "git rev-parse HEAD"},
-        "GIT_BRANCH": {"sh": "git branch --show-current"},
-        "GIT_SHA_SHORT": {"sh": "git rev-parse --short HEAD"},
+        "GIT_COMMIT": {"sh": 'git rev-parse HEAD || echo ""'},
+        "GIT_BRANCH": {"sh": 'git branch --show-current 2>/dev/null || echo ""'},
+        "GIT_SHA_SHORT": {"sh": 'git rev-parse --short HEAD 2>/dev/null || echo ""'},
         "GIT_REMOTE_ORIGIN_URL": {
             "sh": 'git config --get remote.origin.url || echo ""'
         },
-        "GIT_TAG": {"sh": "git tag -l --contains HEAD | head -n 1"},
+        "GIT_TAG": {"sh": "git tag -l --contains HEAD 2>/dev/null | head -n 1"},
     }
     GIT_ENV = {
         "GIT_COMMIT": "{{.GIT_COMMIT}}",
@@ -110,7 +110,7 @@ class TestTaskTranslator(PopperTest):
                     }
                 ),
                 TestTaskTranslator.GIT_ENV,
-            ).to_dict(),
+            ),
             Box(
                 {
                     "cmds": [
@@ -118,7 +118,7 @@ class TestTaskTranslator(PopperTest):
                     ],
                     "env": {"FOO": "foo", "BAR": "bar"},
                 }
-            ).to_dict(),
+            ),
         )
         # runs
         self.assertEqual(

@@ -17,15 +17,19 @@ class TaskTranslator(WorkflowTranslator):
 
         box["vars"] = {
             "PWD": {"sh": "pwd"},
-            "GIT_COMMIT": {"sh": "git rev-parse HEAD"},
-            "GIT_BRANCH": {"sh": "git branch --show-current"},
-            "GIT_SHA_SHORT": {"sh": "git rev-parse --short HEAD"},
+            # redirect stderr to /dev/null to supress warning if the directory is not a git repo
+            "GIT_COMMIT": {"sh": 'git rev-parse HEAD || echo ""'},
+            "GIT_BRANCH": {"sh": 'git branch --show-current 2>/dev/null || echo ""'},
+            "GIT_SHA_SHORT": {
+                "sh": 'git rev-parse --short HEAD 2>/dev/null || echo ""'
+            },
             "GIT_REMOTE_ORIGIN_URL": {
                 # git config --get exists with non-zero code if the config is not set.
                 # if the remote origin url is not set, set the empty string
+                # no need for redirect since it doesn't generate an error message
                 "sh": 'git config --get remote.origin.url || echo ""'
             },
-            "GIT_TAG": {"sh": "git tag -l --contains HEAD | head -n 1"},
+            "GIT_TAG": {"sh": "git tag -l --contains HEAD 2>/dev/null | head -n 1"},
         }
 
         box["env"] = {
