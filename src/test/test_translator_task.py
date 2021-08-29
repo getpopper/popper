@@ -33,6 +33,7 @@ class TestTaskTranslator(PopperTest):
 
     def test_translate_sh_step(self):
         tt = TaskTranslator()
+        # basic
         self.assertEqual(
             tt._translate_sh_step(
                 Box(
@@ -45,6 +46,21 @@ class TestTaskTranslator(PopperTest):
                 )
             ),
             Box({"cmds": ["echo 'hello world'"]}),
+        )
+        # with env
+        self.assertEqual(
+            tt._translate_sh_step(
+                Box(
+                    {
+                        "id": "id",
+                        "uses": "sh",
+                        "runs": ["echo"],
+                        "args": ["hello world"],
+                        "env": {"FOO": "foo", "BAR": "bar"},
+                    }
+                )
+            ),
+            Box({"cmds": ["echo 'hello world'"], "env": {"FOO": "foo", "BAR": "bar"},}),
         )
         # missing `runs`
         with self.assertRaises(AttributeError):
@@ -82,18 +98,27 @@ class TestTaskTranslator(PopperTest):
                 }
             ),
         )
-        # args
+        # args + env
         self.assertEqual(
             tt._translate_docker_step(
-                Box({"id": "id", "uses": "docker://node:14", "args": ["index.js"]}), {}
-            ),
+                Box(
+                    {
+                        "id": "id",
+                        "uses": "docker://node:14",
+                        "args": ["index.js"],
+                        "env": {"FOO": "foo", "BAR": "bar"},
+                    }
+                ),
+                TestTaskTranslator.GIT_ENV,
+            ).to_dict(),
             Box(
                 {
                     "cmds": [
-                        "docker run --rm -i --volume {{.PWD}}:/workspace --workdir /workspace node:14 index.js"
+                        f"docker run --env BAR --env FOO {TestTaskTranslator.GIT_ENV_FLAGS} --rm -i --volume {{{{.PWD}}}}:/workspace --workdir /workspace node:14 index.js"
                     ],
+                    "env": {"FOO": "foo", "BAR": "bar"},
                 }
-            ),
+            ).to_dict(),
         )
         # runs
         self.assertEqual(

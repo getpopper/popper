@@ -72,6 +72,8 @@ class TaskTranslator(WorkflowTranslator):
         task["cmds"] = [
             quoteJoin(step["runs"] + (step["args"] if "args" in step else []))
         ]
+        if "env" in step:
+            task["env"] = step["env"]
         return task
 
     def _translate_docker_step(self, step, env):
