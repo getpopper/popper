@@ -98,12 +98,13 @@ class TaskTranslator(WorkflowTranslator):
 
         # get environment variables available in this step
         # both workflow-wide variables and step-specific variables are available thanks to the parser
-        step_env = step["env"]
+        step_env = step["env"] if "env" in step else {}
 
         # a list of environment variables available in this context
-        env_list = ({**step_env, **env}).keys()
+        # sort the keys for readability and testability
+        env_list = sorted(({**step_env, **env}).keys())
         # --env flags that make environment variables in Docker
-        env_opt = " ".join(map(lambda varname: f"--env {varname}", env_list))
+        env_opt = " ".join([f"--env {varname}" for varname in env_list])
 
         # use specified value or default value
         workdir = step["dir"] if "dir" in step else "/workspace"
@@ -125,7 +126,8 @@ class TaskTranslator(WorkflowTranslator):
         # omit falsy values and join without escapes
         task["cmds"] = [" ".join([i for i in command if i])]
 
-        task["env"] = step_env
+        if step_env:
+            task["env"] = step_env
         return task
 
     # takes a `uses` value and returns the name of the docker image

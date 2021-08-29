@@ -5,6 +5,24 @@ from .test_common import PopperTest
 
 
 class TestTaskTranslator(PopperTest):
+    GIT_VARS = {
+        "GIT_COMMIT": {"sh": "git rev-parse HEAD"},
+        "GIT_BRANCH": {"sh": "git branch --show-current"},
+        "GIT_SHA_SHORT": {"sh": "git rev-parse --short HEAD"},
+        "GIT_REMOTE_ORIGIN_URL": {
+            "sh": 'git config --get remote.origin.url || echo ""'
+        },
+        "GIT_TAG": {"sh": "git tag -l --contains HEAD | head -n 1"},
+    }
+    GIT_ENV = {
+        "GIT_COMMIT": "{{.GIT_COMMIT}}",
+        "GIT_BRANCH": "{{.GIT_BRANCH}}",
+        "GIT_SHA_SHORT": "{{.GIT_SHA_SHORT}}",
+        "GIT_REMOTE_ORIGIN_URL": "{{.GIT_REMOTE_ORIGIN_URL}}",
+        "GIT_TAG": "{{.GIT_TAG}}",
+    }
+    GIT_ENV_FLAGS = "--env GIT_BRANCH --env GIT_COMMIT --env GIT_REMOTE_ORIGIN_URL --env GIT_SHA_SHORT --env GIT_TAG"
+
     def test_detect_type(self):
         tt = TaskTranslator()
         self.assertEqual(tt._detect_type("docker://alpine"), "docker")
@@ -54,7 +72,7 @@ class TestTaskTranslator(PopperTest):
         # minimum
         self.assertEqual(
             tt._translate_docker_step(
-                Box({"id": "id", "uses": "docker://hello-world",})
+                Box({"id": "id", "uses": "docker://hello-world",}), {},
             ),
             Box(
                 {
@@ -67,7 +85,7 @@ class TestTaskTranslator(PopperTest):
         # args
         self.assertEqual(
             tt._translate_docker_step(
-                Box({"id": "id", "uses": "docker://node:14", "args": ["index.js"]})
+                Box({"id": "id", "uses": "docker://node:14", "args": ["index.js"]}), {}
             ),
             Box(
                 {
@@ -87,7 +105,8 @@ class TestTaskTranslator(PopperTest):
                         "runs": ["echo"],
                         "args": ["hello world"],
                     }
-                )
+                ),
+                {},
             ),
             Box(
                 {
@@ -107,7 +126,8 @@ class TestTaskTranslator(PopperTest):
                         "runs": ["/bin/sh", "-c"],
                         "args": ["echo hello world"],
                     }
-                )
+                ),
+                {},
             ),
             Box(
                 {
@@ -120,7 +140,7 @@ class TestTaskTranslator(PopperTest):
         # workdir
         self.assertEqual(
             tt._translate_docker_step(
-                Box({"id": "id", "uses": "docker://hello-world", "dir": "/tmp"})
+                Box({"id": "id", "uses": "docker://hello-world", "dir": "/tmp"}), {}
             ),
             Box(
                 {
@@ -155,7 +175,8 @@ class TestTaskTranslator(PopperTest):
             Box(
                 {
                     "version": "3",
-                    "vars": {"PWD": {"sh": "pwd"}},
+                    "vars": {"PWD": {"sh": "pwd"}, **TestTaskTranslator.GIT_VARS},
+                    "env": {**TestTaskTranslator.GIT_ENV},
                     "tasks": {
                         "default": {"cmds": [{"task": "download"}]},
                         "download": {
@@ -188,12 +209,13 @@ class TestTaskTranslator(PopperTest):
             Box(
                 {
                     "version": "3",
-                    "vars": {"PWD": {"sh": "pwd"}},
+                    "vars": {"PWD": {"sh": "pwd"}, **TestTaskTranslator.GIT_VARS},
+                    "env": {**TestTaskTranslator.GIT_ENV},
                     "tasks": {
                         "default": {"cmds": [{"task": "download"}]},
                         "download": {
                             "cmds": [
-                                "docker run --rm -i --volume {{.PWD}}:/workspace --workdir /workspace byrnedo/alpine-curl:0.1.8 -LO https://github.com/datasets/co2-fossil-global/raw/master/global.csv"
+                                f"docker run {TestTaskTranslator.GIT_ENV_FLAGS} --rm -i --volume {{{{.PWD}}}}:/workspace --workdir /workspace byrnedo/alpine-curl:0.1.8 -LO https://github.com/datasets/co2-fossil-global/raw/master/global.csv"
                             ]
                         },
                     },
