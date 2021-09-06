@@ -42,6 +42,11 @@ class TaskTranslator(WorkflowTranslator):
 
         # translate each step
         for step in wf["steps"]:
+            step_id = step["id"]
+            if step_id == "default":
+                raise AttributeError(
+                    f"'default' cannot be used as a step ID when translating Popper to Task."
+                )
             box["tasks"][step["id"]] = self._translate_step(step, box["env"])
 
         # call steps in order from default task
@@ -140,7 +145,7 @@ class TaskTranslator(WorkflowTranslator):
     def _get_docker_image(self, uses):
         if "docker://" not in uses:
             raise AttributeError(
-                "Only docker images are supported for Drone workflow translation"
+                "Only docker images are supported for Task workflow translation"
             )
         img = uses.replace("docker://", "")
         return img
