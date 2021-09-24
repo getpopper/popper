@@ -278,10 +278,20 @@ The `translate` subcommand supports [Drone CI](https://www.drone.io/). The comma
 
 Restrictions on translation are as follows:
 
-- Running commands on Docker and Host machine is supported. Singularity and podmand are not supported.
+- Running commands on Docker and Host machine is supported. Singularity and Podman are not supported.
 - All steps in a workflow must use either Docker or the host machine. The two cannot be combined in a single workflow.
 - Only pre-built Docker images can be used. Workflows that specify the directory where the Dockerfile is located in the `uses` attribute cannot be translated.
 - If you specify the `dir` attribute, you must also specify the `runs` attribute.
+
+### Task
+
+The `translate` subcommand supports [Task](https://taskfile.dev/). The command converts a Popper workflow to a Taskfile.
+
+Restrictions on translation are as follows:
+
+- Running commands on Docker and Host machine is supported. Singularity and Podman are not supported.
+- Only pre-built Docker images can be used. Workflows that specify the directory where the Dockerfile is located in the `uses` attribute cannot be translated.
+- The Popper workflow to translate must not have a step with an ID of `default`
 
 ## Visualizing workflows
 
