@@ -179,6 +179,24 @@ class TestTaskTranslator(PopperTest):
     def test_translate(self):
         tt = TaskTranslator()
 
+        popper_wf_with_step_default = Box(
+            {
+                "steps": [
+                    {
+                        "id": "default",
+                        "uses": "sh",
+                        "runs": ["curl"],
+                        "args": [
+                            "-LO",
+                            "https://github.com/datasets/co2-fossil-global/raw/master/global.csv",
+                        ],
+                    }
+                ],
+            }
+        )
+        with self.assertRaises(AttributeError):
+            tt.translate(popper_wf_with_step_default)
+
         popper_wf_sh = Box(
             {
                 "steps": [
