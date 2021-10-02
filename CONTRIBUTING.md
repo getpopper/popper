@@ -73,6 +73,8 @@ python -X tracemalloc -m unittest -f src/test/test_*
 python -X tracemalloc -m unittest -f src/test/test_runner.py
 ```
 
+To run tests in a dedicated container, see `dev/README.md`.
+
 ## Codestyle
 
 Popper's code is formatted using the [black](https://github.com/psf/black) style. If code does not conform to this style, merges are prevented to the master and this is checked as a CI step.
